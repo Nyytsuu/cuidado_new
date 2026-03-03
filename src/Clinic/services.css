@@ -1,0 +1,416 @@
+:root {
+  --sidebar-bg: #399a91;
+  --sidebar-text: #0f4242;
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+  --header-height: 55px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== ONLY ADMIN PAGE AFFECTED ===== */
+.services * {
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* WRAPPER */
+.services.with-sidebar {
+  display: flex;
+  height: 100vh;
+  background: #ffffff;
+  padding-left: var(--sidebar-width-collapsed);
+  overflow: hidden;
+}
+
+/* MAIN scroll area */
+.services .preview-canvas {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ================= SIDEBAR ================= */
+.services .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width-collapsed);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: width 0.25s ease;
+}
+
+.services .sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+/* ================= HEADER ================= */
+.services .app-header {
+  background: var(--sidebar-bg);
+  padding: 0 24px 0 calc(var(--sidebar-width-collapsed) + 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width-collapsed);
+  right: 0;
+  height: var(--header-height);
+  z-index: 999;
+}
+
+.services .header-left {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  position: relative;
+  right: 30px;
+}
+
+.services .brand-logo {
+  width: 120px;
+  max-height: 60px;
+  position: relative;
+  right: 130px;
+}
+
+.services .header-search {
+  position: relative;
+  width: 360px;
+  right: 100px;
+}
+
+.services .header-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 46px 0 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.services .search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.services .search-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.services .header-nav {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  position: relative;
+  right: 60px;
+}
+
+.services .nav-link {
+  color: #0f4242;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* dropdown */
+.services .profile-menu {
+  position: relative;
+}
+
+.services .profile-btn {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.services .profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  display: none;
+  z-index: 99999;
+}
+
+.services .profile-menu.open .profile-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.services .profile-dropdown a {
+  text-decoration: none;
+  color: #0f4242;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.services .profile-dropdown a:hover {
+  background: rgba(15, 66, 66, 0.08);
+}
+
+/* ================= ADMIN CONTENT ================= */
+.services .admin-content {
+  padding: calc(var(--header-height) + 20px) 24px 40px;
+}
+
+.services .admin-title h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: #000;
+}
+
+.services .admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 26px;
+  align-items: start;
+}
+
+.services .admin-card {
+  background: #d9d9d9;
+  border-radius: 10px;
+}
+
+.services .admin-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.services .small-card {
+  height: 120px;
+}
+
+.services .big-card {
+  height: 430px;
+  background: #8f8f8f;
+}
+
+.services .admin-table-card {
+  min-height: 520px;
+  padding: 14px 12px;
+  overflow: hidden;
+}
+
+/* ================= TABLE ================= */
+.services .users-table {
+  width: 100%;
+}
+
+/* ✅ Services columns: Name | Desc | Price | Duration | Status | Actions */
+.services .users-row {
+  display: grid;
+  grid-template-columns: 1.7fr 2.4fr 1.1fr 1.1fr 1.1fr 2.6fr;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.services .users-header {
+  font-weight: 800;
+}
+
+.services .users-header .users-cell {
+  color: black;
+  font-size: 1.3rem;
+}
+
+.services .users-cell {
+  min-width: 0;
+  position: relative;
+  padding-left: 18px;
+}
+
+/* first column no line + no padding */
+.services .users-row .users-cell:first-child {
+  padding-left: 0;
+}
+
+/* ✅ VERTICAL LINES */
+.services .users-row .users-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+/* name column */
+.services .users-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: black;
+}
+
+/* ================= PILL STYLES ================= */
+.services .pill {
+  border: none;
+  color: white;
+  border-radius: 999px;
+  padding: 0 12px;
+  min-height: 28px;
+  font-size: 0.99rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  background: #5b5b5b;
+}
+
+.services .pills {
+  border: none;
+  color: black;
+  border-radius: 999px;
+  padding: 0 12px;
+  min-height: 28px;
+  font-size: 0.99rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ✅ description pill (fix wrapping + readability) */
+.services .pills-desc {
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+/* Buttons */
+.services .pill-view {
+  background: #5b5b5b;
+  color: #fff;
+  cursor: pointer;
+}
+
+.services .pill-danger {
+  background: #c62828;
+  cursor: pointer;
+}
+
+.services .pill-success {
+  background: #2e7d32;
+  cursor: pointer;
+}
+
+.services .pill-gray {
+  background: #6b7280;
+  color: #fff;
+  cursor: pointer;
+}
+
+.services .pill-resched {
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ✅ actions (align left so buttons stay inside Actions column nicely) */
+.services .users-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* top title bar with button */
+.services .services-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 18px;
+}
+
+.services .add-btn {
+  min-height: 34px;
+  width: auto;         /* ✅ prevent full width */
+  padding: 0 18px;
+  position: relative;
+  left: 250px
+}
+
+/* ================= RIGHT PANEL CONTENT ================= */
+.services .admin-right-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.services .admin-right-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f4242;
+}
+
+.services .admin-right-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1f2937;
+  line-height: 1.35;
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 900px) {
+  .services .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .services .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .services .users-row {
+    grid-template-columns: 1.6fr 2.2fr 1fr 1fr 1fr 2.2fr;
+  }
+}

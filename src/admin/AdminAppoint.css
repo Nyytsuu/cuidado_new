@@ -1,0 +1,405 @@
+:root {
+  --sidebar-bg: #399a91;
+  --sidebar-text: #0f4242;
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+  --header-height: 55px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== ONLY ADMIN PAGE AFFECTED ===== */
+.admin-UserAppoint * {
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* WRAPPER */
+.admin-UserAppoint.with-sidebar {
+  display: flex;
+  height: 100vh;
+  background: #ffffff;
+  padding-left: var(--sidebar-width-collapsed);
+  overflow: hidden;
+}
+
+/* MAIN scroll area */
+.admin-UserAppoint .preview-canvas {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ================= SIDEBAR ================= */
+.admin-UserAppoint .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width-collapsed);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: width 0.25s ease;
+}
+
+.admin-UserAppoint .sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+/* ================= HEADER ================= */
+.admin-UserAppoint .app-header {
+  background: var(--sidebar-bg);
+  padding: 0 24px 0 calc(var(--sidebar-width-collapsed) + 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width-collapsed);
+  right: 0;
+  height: var(--header-height);
+  z-index: 999;
+}
+
+.admin-UserAppoint .header-left {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  position: relative;
+  right: 30px;
+}
+
+.admin-UserAppoint .brand-logo {
+  width: 120px;
+  max-height: 60px;
+  position: relative;
+  right: 130px;
+}
+
+.admin-UserAppoint .header-search {
+  position: relative;
+  width: 360px;
+  right: 100px;
+}
+
+.admin-UserAppoint .header-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 46px 0 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.admin-UserAppoint .search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.admin-UserAppoint .search-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-UserAppoint .header-nav {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  position: relative;
+  right: 60px;
+}
+
+.admin-UserAppoint .nav-link {
+  color: #0f4242;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* dropdown */
+.admin-UserAppoint .profile-menu {
+  position: relative;
+}
+
+.admin-UserAppoint .profile-btn {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.admin-UserAppoint .profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  display: none;
+  z-index: 99999;
+}
+
+.admin-UserAppoint .profile-menu.open .profile-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-UserAppoint .profile-dropdown a {
+  text-decoration: none;
+  color: #0f4242;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.admin-UserAppoint .profile-dropdown a:hover {
+  background: rgba(15, 66, 66, 0.08);
+}
+
+/* ================= ADMIN CONTENT ================= */
+.admin-UserAppoint .admin-content {
+  padding: calc(var(--header-height) + 20px) 24px 40px;
+}
+
+.admin-UserAppoint .admin-title h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 18px;
+  color: #000;
+}
+
+.admin-UserAppoint .admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 26px;
+  align-items: start;
+}
+
+.admin-UserAppoint .admin-card {
+  background: #d9d9d9;
+  border-radius: 10px;
+}
+
+.admin-UserAppoint .admin-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-UserAppoint .small-card {
+  height: 120px;
+}
+
+.admin-UserAppoint .big-card {
+  height: 430px;
+  background: #8f8f8f;
+}
+
+.admin-UserAppoint .admin-table-card {
+  min-height: 520px;
+  padding: 14px 12px;
+  overflow: hidden;
+}
+
+/* ================= TABLE ================= */
+.admin-UserAppoint .users-row {
+  display: grid;
+  grid-template-columns: 2.1fr 1.6fr 1.5fr 1.5fr 1fr 2fr;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.admin-UserAppoint .users-header {
+  font-weight: 800;
+}
+
+.admin-UserAppoint .users-header .users-cell {
+  color: black;
+  font-size: 1.3rem;
+}
+
+.admin-UserAppoint .users-cell {
+  min-width: 0;
+  position: relative;
+
+  /* spacing before vertical line */
+  padding-left: 18px;
+}
+
+/* first column no line + no padding */
+.admin-UserAppoint .users-row .users-cell:first-child {
+  padding-left: 0;
+}
+
+/* ✅ VERTICAL LINES with adjustable height (NOT border-left) */
+.admin-UserAppoint .users-row .users-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 1px;
+
+  /* 👇 ADJUST THIS HEIGHT */
+  height: 28px;
+
+  background: rgba(0, 0, 0, 0.75);
+}
+
+/* text style */
+.admin-UserAppoint .users-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: black;
+}
+
+/* ================= PILL STYLES ================= */
+.admin-UserAppoint .pill {
+  border: none;
+  color: white;
+  border-radius: 999px;
+  padding: 0 12px;
+  min-height: 28px;
+  font-size: 0.99rem;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+
+  background: #5b5b5b;
+}
+.admin-UserAppoint .pills {
+  border: none;
+  color: black;
+  border-radius: 999px;
+  padding: 0 12px;
+  min-height: 28px;
+  font-size: 0.99rem;
+  font-weight: 600;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.admin-UserAppoint .pill-view {
+  background: #5b5b5b;
+  cursor: pointer;
+}
+
+.admin-UserAppoint .pill-danger {
+  background: #c62828;
+  cursor: pointer;
+}
+
+.admin-UserAppoint .pill-success {
+  background: #2e7d32;
+  cursor: pointer;
+}
+
+.admin-UserAppoint .pill-warning {
+  background: #b7791f;
+}
+
+/* actions */
+.admin-UserAppoint .users-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.admin-UserAppoint .pill:focus,
+.admin-UserAppoint .pill:active {
+  outline: none;
+  box-shadow: none;
+}
+/* Actions layout (side-by-side) */
+.admin-UserAppoint .users-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* View button style */
+.admin-UserAppoint .pill-view {
+  background: #5b5b5b;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Optional: completed pill */
+.admin-UserAppoint .pill-gray {
+  background: #6b7280;
+  color: #fff;
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 900px) {
+  .admin-UserAppoint .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserAppoint .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+}
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+} 

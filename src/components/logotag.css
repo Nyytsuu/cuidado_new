@@ -1,0 +1,40 @@
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background: transparent;
+    height: auto;
+    max-height: 100vh;
+}
+.logotag{
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+.logotag p {
+    text-align: right;
+    font-size: 24px;
+    font-family: 'poppins', sans-serif;
+    font-weight: 300;
+}
+.logotag h1 {
+    text-align: right;
+    font-family: 'poppins', sans-serif;
+    font-weight: bold;
+    font-style: italic;
+    color: black;
+}
+.logotag img {
+    width: 75%;
+    height: 100px;
+    margin-left: 42vh;
+    margin-top: 53vh;
+}
+.h1, .subtitle{
+   margin-right: 180px;
+}

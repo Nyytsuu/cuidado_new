@@ -1,0 +1,97 @@
+.email-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #FFFFFF; /* deep maroon like the screenshot */
+  padding: 28px;
+}
+
+.email-card {
+  width: min(640px, 92vw);
+  background: #ffffff;
+  border-radius: 28px;
+  padding: 56px 46px 44px;
+  text-align: center;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.25);
+}
+
+/* ICON */
+.email-icon {
+  display: grid;
+  place-items: center;
+  margin-bottom: 22px;
+}
+
+.email-icon img {
+  width: 120px;
+  height: auto;
+  display: block;
+}
+
+/* TEXT */
+.email-title {
+  margin: 0 0 18px;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.email-body {
+  margin: 0 auto 34px;
+  max-width: 520px;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #7b8794;
+}
+
+.email-body strong {
+  font-weight: 800;
+  color: #7b8794;
+}
+
+.email-body a {
+  color: #7b8794;
+  text-decoration: none;
+}
+
+.email-body a:hover {
+  text-decoration: underline;
+}
+
+/* BUTTONS */
+.email-primary-btn {
+  width: 100%;
+  height: 58px;
+  border-radius: 14px;
+  border: none;
+  background: #0b4a3d;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(11, 74, 61, 0.25);
+}
+
+.email-primary-btn:hover {
+  opacity: 0.96;
+}
+
+.email-resend-btn {
+  margin-top: 18px;
+  border: none;
+  background: transparent;
+  color: #667085;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.email-card {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}

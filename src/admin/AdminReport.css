@@ -1,0 +1,473 @@
+:root {
+  --sidebar-bg: #399a91;
+  --sidebar-text: #0f4242;
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+  --header-height: 55px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== ONLY ADMIN PAGE AFFECTED ===== */
+.admin-UserReport * {
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* WRAPPER */
+.admin-UserReport.with-sidebar {
+  display: flex;
+  height: 100vh;
+  background: #ffffff;
+  padding-left: var(--sidebar-width-collapsed);
+  overflow: hidden;
+}
+
+/* MAIN scroll area */
+.admin-UserReport .preview-canvas {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ================= SIDEBAR ================= */
+.admin-UserReport .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width-collapsed);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: width 0.25s ease;
+}
+
+.admin-UserReport .sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+/* ================= HEADER ================= */
+.admin-UserReport .app-header {
+  background: var(--sidebar-bg);
+  padding: 0 24px 0 calc(var(--sidebar-width-collapsed) + 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width-collapsed);
+  right: 0;
+  height: var(--header-height);
+  z-index: 999;
+}
+
+.admin-UserReport .header-left {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  position: relative;
+  right: 30px;
+}
+
+.admin-UserReport .brand-logo {
+  width: 120px;
+  max-height: 60px;
+  position: relative;
+  right: 130px;
+}
+
+.admin-UserReport .header-search {
+  position: relative;
+  width: 360px;
+  right: 100px;
+}
+
+.admin-UserReport .header-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 46px 0 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.admin-UserReport .search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.admin-UserReport .search-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-UserReport .header-nav {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  position: relative;
+  right: 60px;
+}
+
+.admin-UserReport .nav-link {
+  color: #0f4242;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* dropdown */
+.admin-UserReport .profile-menu {
+  position: relative;
+}
+
+.admin-UserReport .profile-btn {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 0;
+  color: #0f4242;
+  font-weight: 500;
+  font-size: 1.02rem;
+}
+
+.admin-UserReport .caret {
+  font-size: 0.9rem;
+}
+
+.admin-UserReport .profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  display: none;
+  z-index: 99999;
+}
+
+.admin-UserReport .profile-menu.open .profile-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-UserReport .profile-dropdown a {
+  text-decoration: none;
+  color: #0f4242;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.admin-UserReport .profile-dropdown a:hover {
+  background: rgba(15, 66, 66, 0.08);
+}
+
+/* ================= ADMIN CONTENT ================= */
+.admin-UserReport .admin-content {
+  padding: calc(var(--header-height) + 20px) 24px 40px;
+}
+
+.admin-UserReport .admin-content-inner {
+  padding: 40px;
+}
+
+.admin-UserReport .admin-title h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 6px;
+  color: #000;
+}
+
+/* subtitle (Reports text) */
+.admin-UserReport .admin-subtitle {
+  margin: 6px 0 18px;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.admin-UserReport .admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 26px;
+  align-items: start;
+}
+
+.admin-UserReport .admin-card {
+  background: #d9d9d9;
+  border-radius: 10px;
+}
+
+.admin-UserReport .admin-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-UserReport .small-card {
+  height: 120px;
+}
+
+.admin-UserReport .big-card {
+  height: 430px;
+  background: #8f8f8f;
+}
+
+.admin-UserReport .admin-table-card {
+  min-height: 520px;
+  padding: 14px 12px;
+  overflow: hidden;
+}
+
+.admin-UserReport .admin-table-header {
+  height: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ================= TABLE ================= */
+.admin-UserReport .users-table {
+  width: 100%;
+}
+
+.admin-UserReport .users-row {
+  display: grid;
+  grid-template-columns: 2.1fr 1.6fr 1.5fr 1.5fr 1fr 2fr;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.admin-UserReport .users-header {
+  font-weight: 800;
+}
+
+.admin-UserReport .users-header .users-cell {
+  color: #000;
+  font-size: 1.3rem;
+}
+
+.admin-UserReport .users-cell {
+  min-width: 0;
+  position: relative;
+  padding-left: 18px; /* spacing before vertical line */
+}
+
+/* first column no line + no padding */
+.admin-UserReport .users-row .users-cell:first-child {
+  padding-left: 0;
+}
+
+/* vertical separator lines */
+.admin-UserReport .users-row .users-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 28px; /* adjust line height */
+  background: rgba(0, 0, 0, 0.75);
+}
+
+/* text style */
+.admin-UserReport .users-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #000;
+}
+
+/* ================= PILL STYLES ================= */
+.admin-UserReport .pill {
+  border: none;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 12px;
+  min-height: 28px;
+  font-size: 0.99rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  background: #5b5b5b;
+}
+
+.admin-UserReport .pills {
+  border: none;
+  color: #000;
+  border-radius: 999px;
+  padding: 0 12px;
+  min-height: 28px;
+  font-size: 0.99rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  background: transparent;
+}
+
+.admin-UserReport .pill-view {
+  background: #5b5b5b;
+  cursor: pointer;
+}
+
+.admin-UserReport .pill-danger {
+  background: #c62828;
+  cursor: pointer;
+}
+
+.admin-UserReport .pill-success {
+  background: #2e7d32;
+  cursor: pointer;
+}
+
+.admin-UserReport .pill-warning {
+  background: #b7791f;
+}
+
+.admin-UserReport .pill-gray {
+  background: #6b7280;
+  cursor: default;
+}
+
+/* actions */
+.admin-UserReport .users-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.admin-UserReport .pill:focus,
+.admin-UserReport .pill:active {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ================= REPORTS STYLES ================= */
+.admin-UserReport .reports-card {
+  padding: 16px 18px;
+}
+
+.admin-UserReport .reports-body {
+  padding: 8px 6px 6px;
+}
+
+.admin-UserReport .reports-section-title {
+  margin: 14px 0 10px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #000;
+}
+
+.admin-UserReport .reports-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 10px;
+  font-weight: 600;
+  color: #111;
+}
+
+.admin-UserReport .reports-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.admin-UserReport .reports-preview {
+  margin-top: 18px;
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 12px;
+  padding: 14px 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.admin-UserReport .preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.admin-UserReport .preview-row:last-child {
+  border-bottom: none;
+}
+
+.admin-UserReport .preview-label {
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.admin-UserReport .preview-value {
+  font-weight: 900;
+  color: #0f4242;
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 900px) {
+  .admin-UserReport .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserReport .header-search {
+    width: 100%;
+    max-width: 360px;
+    right: 0;
+  }
+
+  .admin-UserReport .header-left,
+  .admin-UserReport .header-nav,
+  .admin-UserReport .brand-logo {
+    right: 0;
+  }
+
+  .admin-UserReport .app-header {
+    padding: 0 14px 0 calc(var(--sidebar-width-collapsed) + 14px);
+  }
+
+  .admin-UserReport .admin-content-inner {
+    padding: 24px 12px;
+  }
+}

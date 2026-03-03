@@ -1,0 +1,132 @@
+.fp-page {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: 24px;
+}
+
+.fp-card {
+  width: 520px;
+  max-width: 95vw;
+  padding: 40px 28px 28px;
+  border-radius: 16px;
+  background: #fff;
+  text-align: center;
+}
+
+.fp-icon {
+  position: relative;
+  width: 300px;
+  height: 90px;
+  margin: 0 auto 12px;
+}
+
+.fp-lock {
+ width: 300px;
+  height: 70px;
+
+  background-image: url("../img/lock.png"); 
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  margin: 0 auto;
+}
+
+.fp-title {
+  font-size: 30px;
+  font-weight: 700;
+  margin: 10px 0 22px;
+  color: #222;
+}
+
+.fp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 10px;
+}
+
+.fp-input-wrap {
+  position: relative;
+}
+
+.fp-input-wrap input {
+  width: 100%;
+  height: 44px;
+  padding: 0 44px 0 14px;
+  border-radius: 10px;
+  border: 1px solid #0b5d4c;
+  background: #9cc8c6;
+  outline: none;
+  color: #0b0b0b;
+}
+
+.fp-input-wrap input::placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.fp-mail {
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.fp-btn {
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: #004d40;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.fp-btn span {
+  align-self: center;
+  margin-right: 10px;
+  padding: 0 12px;
+}
+
+.fp-btn:hover {
+  filter: brightness(0.95);
+}
+
+.fp-back {
+  text-decoration: none;
+  font-size: 20px;
+  color:  #004d40;
+  opacity: 0.9;
+}
+
+.fp-back:hover {
+  text-decoration: underline;
+  color: #004d40;
+}
+
+.fp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;   /* ✅ FULL WHITE SCREEN */
+  display: grid;
+  place-items: center;
+  padding: 0;            /* no gaps */
+  z-index: 9999;
+}
+
+.fp-modal {
+  position: relative;
+ width: 100vw;
+height: 100vh;
+  border-radius: 28px;
+
+  /* ✅ REMOVE SCROLL */
+  overflow: hidden;
+  max-height: none;
+}

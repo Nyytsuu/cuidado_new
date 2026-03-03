@@ -1,0 +1,212 @@
+/* Remove default spacing */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+.bgimg {
+  background-image: url('../img/userloginbg.png');
+  background-color: #004D40;
+  background-size: cover;        /* cover entire area */
+  background-position: center;   /* center image */
+  background-repeat: no-repeat;
+  min-height: 100vh;             /* FULL screen height */
+  width: 100%;                   /* FULL width */
+  display: flex;                 /* center content */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: auto;
+}
+/* Style for the signup form */
+.wrapper {
+    display: flex;
+    height: 100vh;
+}
+
+.left-bg {
+    height:98vh;
+    width: 80px;
+    background-color: #0b5d4c; /* dark green */
+    border-radius: 20px;
+    position: absolute;
+    left:53%;
+    right: 0%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.signup-container {
+    background-color: rgba(255, 255, 255, 1); /* Semi-transparent background */
+    padding: 20px;
+    border-radius: 10px;
+    width: 100vh;
+    max-height: 100vh;
+    height: 100vh;
+    text-align: center;
+    display: flex;
+    justify-content: flex-end;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+}
+.signup-form{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: -20px;
+    gap: 10px;
+    background-color: #ffffff;
+
+}
+input[type="text"], input[type="password"], input[type="email"], input[type="date"], select, input[type="tel"] {
+  padding: 8px;
+  width: 100%;
+  background-color: #ffffff;
+  border: 1px solid #004D40;
+  border-radius: 4px;
+  color: black;
+  
+}
+p {
+  color: black;
+  font-size: 20px;
+  text-align: left;
+  font-weight: 600;
+}
+.Sign{
+   color: black;
+  font-size: 25px;
+  text-align: left;
+  text-align: center;
+  font-family: 'Lato', sans-serif;
+  font-weight: bold;
+}
+h2{
+    color: black;
+    font-family: 'Lato', sans-serif;
+
+}
+.row {
+  display: flex;
+  gap: 20px; /* space between them */
+}
+
+.input-group {
+  flex: 1; /* makes both equal width */
+  display: flex;
+  flex-direction: column;
+}
+.input-group label {
+  margin-bottom: 5px;
+  color: black;
+  text-align: left;
+}
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: gray; /* text color */
+  position: relative;
+  justify-content: center;
+}
+
+.checkbox-label input[type="checkbox"] {
+  opacity: 0;       /* hide visually but still clickable */
+  width: 16px;
+  height: 16px;
+  position: absolute; /* sit on top so clicks register */
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-label .custom-box {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #004D40;
+  border-radius: 4px;
+  background-color: #ffffff;
+  display: inline-block;
+  flex-shrink: 0;
+  font-size: 10px;
+}
+
+/* checkmark */
+.checkbox-label input[type="checkbox"]:checked + .custom-box {
+  background-color: #004D40;
+  position: relative;
+  
+}
+
+.checkbox-label input[type="checkbox"]:checked + .custom-box::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0px;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+button {
+  display: flex;
+  width: 70%;
+  background-color: #004D40;
+  color: white; 
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 16px;
+  justify-content: center;
+  text-align: center;
+  margin: 0 auto;
+
+}
+.terms-privacy {
+  font-size: 10px;
+  color: gray;
+  text-align: center;
+}
+.login-link {
+  font-size: 15px;
+  color: gray;
+  text-align: center;
+}
+.last-group {
+  flex: 1; /* makes both equal width */
+  display: flex;
+  flex-direction: column;
+  gap:6px;
+}
+.last-group label {
+  margin-bottom: 5px;
+  color: black;
+  text-align: left;
+}
+select {
+  margin-right: 10px;
+}
+/* red highlight */
+.error-input {
+  border: 2px solid #e53935 !important;
+  outline: none;
+}
+
+/* red text */
+.error-text {
+  color: #e53935;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* optional: success highlight */
+.success-input {
+  border: 2px solid #2e7d32 !important;
+}

@@ -1,0 +1,414 @@
+:root {
+  --sidebar-bg: #399a91;
+  --sidebar-text: #0f4242;
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+  --header-height: 55px;
+
+  /* ================================
+     ✅ ACTION CONTROLS (ADJUST HERE)
+     ================================ */
+  --action-slot-w: 92px;          /* width ng bawat action slot */
+  --actions-gap: 16px;            /* spacing between slots */
+  --actions-line-height: 38px;    /* height ng vertical line */
+  --actions-line-color: rgba(0, 0, 0, 0.65);
+  --actions-line-x: 0px;          /* move line left/right (+ right, - left) */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== ONLY THIS PAGE ===== */
+.admin-UserClinics * {
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* WRAPPER */
+.admin-UserClinics.with-sidebar {
+  display: flex;
+  height: 100vh;
+  background: #ffffff;
+  padding-left: var(--sidebar-width-collapsed);
+  overflow: hidden;
+}
+
+/* MAIN scroll area */
+.admin-UserClinics .preview-canvas {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ================= SIDEBAR ================= */
+.admin-UserClinics .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width-collapsed);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: width 0.25s ease;
+}
+
+.admin-UserClinics .sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+/* ================= HEADER ================= */
+.admin-UserClinics .app-header {
+  background: var(--sidebar-bg);
+  padding: 0 24px 0 calc(var(--sidebar-width-collapsed) + 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width-collapsed);
+  right: 0;
+  height: var(--header-height);
+  z-index: 999;
+}
+
+.admin-UserClinics .header-left {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  position: relative;
+  right: 30px;
+}
+
+/* logo */
+.admin-UserClinics .brand-logo {
+  width: 120px;
+  max-height: 60px;
+  position: relative;
+  right: 130px;
+}
+
+/* search */
+.admin-UserClinics .header-search {
+  position: relative;
+  width: 360px;
+  right: 100px;
+}
+
+.admin-UserClinics .header-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 46px 0 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  background: #fff;
+}
+
+.admin-UserClinics .search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.admin-UserClinics .search-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* right nav */
+.admin-UserClinics .header-nav {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  position: relative;
+  right: 60px;
+}
+
+.admin-UserClinics .nav-link {
+  color: #0f4242;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* dropdown */
+.admin-UserClinics .profile-menu {
+  position: relative;
+}
+
+.admin-UserClinics .profile-btn {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.admin-UserClinics .caret {
+  margin-left: 4px;
+  font-size: 0.9rem;
+}
+
+.admin-UserClinics .profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  display: none;
+  z-index: 99999;
+}
+
+.admin-UserClinics .profile-menu.open .profile-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-UserClinics .profile-dropdown a {
+  text-decoration: none;
+  color: #0f4242;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.admin-UserClinics .profile-dropdown a:hover {
+  background: rgba(15, 66, 66, 0.08);
+}
+
+/* ================= CONTENT ================= */
+.admin-UserClinics .admin-content {
+  padding: calc(var(--header-height) + 20px) 24px 40px;
+}
+
+.admin-UserClinics .admin-title h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 14px;
+  color: #000;
+}
+
+.admin-UserClinics .admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 26px;
+  align-items: start;
+}
+
+.admin-UserClinics .admin-card {
+  background: #d9d9d9;
+  border-radius: 10px;
+}
+
+.admin-UserClinics .admin-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.admin-UserClinics .small-card {
+  height: 120px;
+}
+
+.admin-UserClinics .big-card {
+  height: 430px;
+  background: #8f8f8f;
+}
+
+.admin-UserClinics .admin-table-card {
+  min-height: 520px;
+  padding: 14px 12px;
+  overflow: hidden;
+}
+
+/* ================= TABLE ================= */
+/* 3 columns: clinic | status | actions */
+.admin-UserClinics .users-row {
+  display: grid;
+  grid-template-columns: 3.2fr 1.1fr 2.7fr;
+  align-items: center;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+}
+
+/* header */
+.admin-UserClinics .users-header {
+  font-weight: 800;
+}
+
+.admin-UserClinics .users-header .users-cell {
+  color: #000;
+  font-size: 1.3rem;
+}
+
+/* cell base */
+.admin-UserClinics .users-cell {
+  min-width: 0;
+  position: relative;
+  padding-left: 18px;
+}
+
+/* first column no line */
+.admin-UserClinics .users-row .users-cell:first-child {
+  padding-left: 0;
+}
+
+/* vertical lines between columns */
+.admin-UserClinics .users-row .users-cell:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 34px;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* clinic name */
+.admin-UserClinics .users-name {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #000;
+}
+
+/* ================= PILL BUTTONS ================= */
+.admin-UserClinics .pill {
+  border: none;
+  border-radius: 999px;
+  padding: 0 16px;
+  min-height: 30px;
+  line-height: 30px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  color: #fff;
+  cursor: pointer;
+}
+
+.admin-UserClinics .pill-wide {
+  width: 100%;
+}
+
+/* colors */
+.admin-UserClinics .pill-view { background: #5b5b5b; }
+.admin-UserClinics .pill-success { background: #2e7d32; }
+.admin-UserClinics .pill-danger { background: #c62828; }
+.admin-UserClinics .pill-warning { background: #b7791f; }
+.admin-UserClinics .pill-gray { background: #6b7280; }
+.admin-UserClinics .pill-dark { background: #111827; }
+
+.admin-UserClinics .pill:focus,
+.admin-UserClinics .pill:active {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ================= ACTIONS (FIXED 5 SLOTS + LINES) ================= */
+.admin-UserClinics .clinics-actions.slots {
+  display: grid;
+  grid-template-columns: repeat(5, var(--action-slot-w));
+  column-gap: var(--actions-gap);
+  align-items: center;
+  justify-content: start;
+}
+
+/* ✅ hide but KEEP SLOT (so Edit/Deactivate always align) */
+.admin-UserClinics .is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ✅ lines before slot 2..5 (Approve/Reject/Edit/Deactivate) */
+.admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2) {
+  position: relative;
+}
+
+.admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * (var(--actions-gap) / 2) + var(--actions-line-x));
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: var(--actions-line-height);
+  background: var(--actions-line-color);
+}
+
+/* ================= RESPONSIVE ================= */
+@media screen and (max-width: 900px) {
+  .admin-UserClinics .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserClinics .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  /* stack table on small screens */
+  .admin-UserClinics .users-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-UserClinics .users-row .users-cell:not(:first-child)::before {
+    display: none;
+  }
+
+  .admin-UserClinics .users-cell {
+    padding-left: 0;
+  }
+
+  /* actions wrap */
+  .admin-UserClinics .clinics-actions.slots {
+    grid-template-columns: repeat(2, var(--action-slot-w));
+    row-gap: 10px;
+  }
+
+  /* hide slot lines in mobile */
+  .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
+    display: none;
+  }
+}
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+} 

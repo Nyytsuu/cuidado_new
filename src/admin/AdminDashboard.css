@@ -1,0 +1,739 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap");
+/* ================= GLOBAL ================= */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: #ffffff;
+}
+
+/* ================= WRAPPER ================= */
+.ad-wrap {
+  min-height: 100vh;
+  width: 100vw;
+
+  display: flex;
+  flex-direction: row; /* sidebar + main */
+  align-items: stretch;
+
+  overflow-x: hidden;
+  background: #fff;
+  padding: 25px 50px 25px 25px;
+  margin-bottom: 20px;
+
+  overflow: visible;
+}
+
+/* ================= MAIN ================= */
+.ad-main {
+  flex: 1;
+  min-width: 0;
+
+  margin: 16px;
+  margin-top: 80px;
+
+  padding: 14px 15px;
+  padding-top: calc(var(--topbar-h) + 4px);
+  padding-bottom: 24px;
+  padding-left: 70px;
+
+  border-radius: 16px;
+  background: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: calc(100vh - 60px); /* 🔥 important */
+}
+
+/* ================= MAIN LAYOUT (80% + 20%) ================= */
+.dash-layout {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 75% 25%;
+  gap: 25px;
+  align-items: start;
+  width: 100%;
+}
+.dash-layout,
+.dash-grid {
+  align-items: start;
+}
+/* left column */
+.dash-maincol {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* right column */
+.dash-aside {
+  min-width: 0;
+  overflow: hidden;       /* key: stops appt-xaxis from bleeding out */
+  position: relative;
+}
+.dash-aside .dash-panel {
+  position: relative;
+  isolation: isolate;
+}
+/* ================= TOP 4 METRICS ================= */
+.dash-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+  margin: 0 0 10px;
+  width: 100%;
+}
+
+.metric-title {
+  font-weight: 900;
+  color: #0f0f0f;
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.metric-box {
+  height: 90px;
+  border-radius:14px;
+  background: #00bfa6;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.metric-box-inner {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.metric-num {
+  font-size: 34px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.metric-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* ================= CHART ================= */
+.dash-chart {
+  width: 100%;
+  margin-left: 0;
+  margin-bottom: 30px; /* ✅ less gap under chart */
+}
+
+.dash-chart-card {
+  border: 2px dashed rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* ================= GRID (PENDING + USERS + CLINIC) ================= */
+/* ✅ CONTROL HERE: increase to pull more up */
+:root {
+  --grid-pull-up: 40px; /* try 10px / 18px / 24px */
+}
+
+/* container for the bottom sections */
+.dash-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+  margin-top: 20px;
+}
+.dash-grid.dash-grid-2col {
+  max-width: 1000px; /* 👈 adjust this */
+  width: 100%;
+}
+/* 2 columns (left stack + clinic) */
+.dash-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* left stack */
+.dash-left {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* clinic column */
+.dash-center {
+  min-height: 430px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  /* ✅ keep clinic on the RIGHT column */
+  grid-column: 2;
+}
+
+/* ================= PANELS ================= */
+.dash-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+
+.dash-panel-title {
+  font-weight: 900;
+  color: #0f0f0f;
+  margin: 0;
+  line-height: 1.15;
+  font-size: 14px;
+}
+
+/* teal container */
+/* ================= PANELS (MAKE ALL LOOK LIKE SCREENSHOT) ================= */
+.dash-panel-body {
+  background: #ffffff;           /* ✅ white inside */
+  border: 5px solid #00bfa6;     /* ✅ thick teal border */
+  border-radius: 22px;
+  padding: 0;                    /* table will handle spacing */
+  overflow: hidden;              /* keep rounded corners clean */
+  display: flex;
+  flex-direction: column;
+}
+.dash-panel .dash-table {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+/* pad wrapper */
+.dash-panel-pad {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ================= TABLES ================= */
+.dash-table {
+  width: calc(100% - 1px);
+  flex: 1;
+  min-height: 0;
+  margin: 5px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+/* readable text always */
+.dash-table,
+.dash-table * {
+  color: #0f0f0f !important;
+}
+
+.dash-table thead th {
+  padding: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  background: #eef2f2;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dash-table tbody td {
+  padding: 10px;
+  font-size: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  vertical-align: top;
+  background: transparent;
+}
+
+.t-main {
+  font-weight: 900;
+}
+.t-sub {
+  font-size: 11px;
+  opacity: 0.72;
+  margin-top: 1px;
+}
+
+.t-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.th-action-pending,
+.th-action,
+.td-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 170px;
+}
+
+.th-joined {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.btn-view-users {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 10px;
+  white-space: nowrap;
+  width: 100px;
+}
+
+.th-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 150px;
+}
+
+.td-action {
+  text-align: right;
+}
+
+/* Button alignment */
+.td-action .btn-view {
+  display: inline-block;
+}
+
+/* ================= BUTTONS ================= */
+.btn-outline {
+  border: 2px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  color: #0f0f0f;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-sm {
+  border: none;
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-weight: 900;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.btn-approve {
+  background: #57e994;
+  color: #0b6b3c;
+}
+.btn-reject {
+  background: #f14c4c;
+  color: #8d1d1d;
+}
+.btn-view {
+  background: #4eb4f3;
+  color: #0a4f7a;
+}
+
+/* ================= BADGES ================= */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.badge-pending {
+  background: #ebcc68;
+  color: #8b6a00;
+}
+.badge-approved {
+  background: #68e99e;
+  color: #0b6b3c;
+}
+.badge-rejected {
+  background: #e95c5c;
+  color: #8d1d1d;
+}
+
+.badge-scheduled {
+  background: #5db5ec;
+  color: #0a4f7a;
+}
+.badge-completed {
+  background: #e7fff1;
+  color: #65e6a7;
+}
+.badge-cancelled {
+  background: #eb6767;
+  color: #8d1d1d;
+}
+
+/* ================= RECENT ACTIVITY ================= */
+/* NOTE: your aside uses .dash-aside, not .dash-right */
+.dash-aside .dash-right-top .dash-panel-body {
+  background: #ffffff;
+  border: 3px solid #00bfa6;
+  border-radius: 16px;
+  padding: 12px;
+}
+.dash-layout {
+  align-items: start;
+  min-height: max-content;
+}
+.activity-list {
+  height: 100%;
+  display: flex;
+  background: transparent !important;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.activity-item {
+  background: #ffffff !important;
+  color: #0f0f0f !important;
+  border-radius: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.activity-item:hover {
+  transform: translateY(-1px);
+}
+
+.activity-title {
+  font-weight: 900;
+  font-size: 12px;
+}
+.activity-time {
+  font-size: 11px;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+.activity-meta {
+  font-size: 11px;
+  opacity: 0.75;
+  margin-top: 2px;
+}
+
+/* ================= FOOTER ================= */
+.ad-footer {
+  text-align: center;
+  opacity: 0.65;
+  font-size: 12px;
+  color: #0f0f0f;
+  margin-top: 780px;
+}
+
+/* === PULL UP TABLE SECTIONS BY FIXING CHART === */
+.dash-chart h3 {
+  color: black;
+  margin-bottom: 10px;
+}
+.dash-chart {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.dash-chart-card {
+  margin-bottom: 0 !important;
+}
+
+/* optional: kung may extra height pa */
+.dash-chart-card {
+  min-height: 260px;
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ================= APPOINTMENT SCROLL (ONLY THIS PANEL) ================= */
+.appointment-panel .dash-panel-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* optional scrollbar style */
+.appointment-panel .dash-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.appointment-panel .dash-panel-body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+}
+
+.appointment-panel .dash-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* ================= APPOINTMENT PANEL (MATCH SCREENSHOT) ================= */
+.dash-panel.appointment-panel .dash-panel-body {
+  background: #ffffff;           /* white inside */
+  border: 5px solid #00bfa6;     /* thick teal border */
+  border-radius: 22px;
+  padding: 0;                   /* let table fill */
+  overflow: hidden;             /* keep rounded corners clean */          /* keep scroll (adjust if you want) */
+  overflow-y: auto;
+  overflow-x: hidden;
+    height: auto !important;
+  min-height: 500px !important;   /* adjust */
+  max-height: none !important;    /* removes 360 cap */
+  overflow-y: auto !important;}
+
+/* remove table margin so it fits perfectly */
+.dash-panel.appointment-panel .dash-table {
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+}
+
+/* header */
+.dash-panel.appointment-panel .dash-table thead th {
+  background: #eef2f2;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 12px 14px;
+}
+
+/* body */
+.dash-panel.appointment-panel .dash-table tbody td {
+  padding: 14px 14px;
+  border-top: 1px solid rgba(0,0,0,0.07);
+}
+
+/* status pill like screenshot */
+.dash-panel.appointment-panel .badge {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* button alignment */
+.dash-panel.appointment-panel .td-action,
+.dash-panel.appointment-panel .th-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ✅ ensure button not pushed */
+.dash-panel.appointment-panel .btn-sm.btn-view {
+  position: static;
+}
+/* ===== FIX: SHOW ACTION COLUMN + BLUE BUTTON IN APPOINTMENT ===== */
+.dash-panel.appointment-panel .dash-table {
+  table-layout: fixed;     /* prevents columns from stealing space */
+  width: 100%;
+}
+
+.dash-panel.appointment-panel .dash-table th,
+.dash-panel.appointment-panel .dash-table td {
+  overflow: visible;       /* allow button to show */
+}
+
+/* make action column guaranteed visible */
+.dash-panel.appointment-panel .th-action,
+.dash-panel.appointment-panel .td-action {
+  width: 140px;            /* adjust if you want bigger */
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* keep status from becoming too wide */
+.dash-panel.appointment-panel .dash-table th:nth-child(3),
+.dash-panel.appointment-panel .dash-table td:nth-child(3) {
+  width: 110px;
+}
+
+/* button look */
+.dash-panel.appointment-panel .btn-view {
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+/* ================= FIX APPOINTMENT HEADER OVERLAP + COLUMN WIDTHS ================= */
+.dash-panel.appointment-panel .dash-table {
+  width: 100%;
+  table-layout: fixed;          /* stable columns */
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* give header + cells consistent padding */
+.dash-panel.appointment-panel .dash-table th,
+.dash-panel.appointment-panel .dash-table td {
+  padding: 12px 14px;
+  vertical-align: top;
+}
+
+/* prevent header words from crashing into each other */
+.dash-panel.appointment-panel .dash-table thead th {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;      /* if narrow, show ... not overlap */
+}
+
+/* ✅ column widths (adjust if you want) */
+.dash-panel.appointment-panel .dash-table th:nth-child(1),
+.dash-panel.appointment-panel .dash-table td:nth-child(1) {
+  width: 14%;
+}
+
+.dash-panel.appointment-panel .dash-table th:nth-child(2),
+.dash-panel.appointment-panel .dash-table td:nth-child(2) {
+  width: 17%;
+}
+
+.dash-panel.appointment-panel .dash-table th:nth-child(3),
+.dash-panel.appointment-panel .dash-table td:nth-child(3) {
+  width: 15%;
+}
+
+.dash-panel.appointment-panel .dash-table th:nth-child(4),
+.dash-panel.appointment-panel .dash-table td:nth-child(4) {
+  width: 14%;
+  text-align: left;
+  white-space: nowrap;
+}
+/* ✅ APPOINTMENT: FORCE ACTION COLUMN TO THE RIGHT */
+.dash-panel.appointment-panel .dash-table th:nth-child(4),
+.dash-panel.appointment-panel .dash-table td:nth-child(4) {   /* Action + button on the right */
+  padding-right: 0 !important;   /* space from border */
+  padding-left: 10px !important;
+}
+
+/* optional: make the button hug the right edge */
+.dash-panel.appointment-panel .dash-table td:nth-child(4) .btn-view {
+  display: inline-flex !important;
+  justify-content: center;
+}
+
+/* keep the blue button visible + aligned */
+.dash-panel.appointment-panel .td-action {
+  text-align: right;
+}
+
+.dash-panel.appointment-panel .btn-view {
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+/* ================= FIX X-AXIS CLIPPING ================= */
+.dash-chart-card {
+  overflow: visible; /* allow X-axis labels to show */
+}/* ================= APPOINTMENT "X-AXIS" (HORIZONTAL SCROLL) ================= */
+.dash-panel.appointment-panel .dash-panel-body {
+  overflow-y: auto;    /* keep vertical scroll */
+  overflow-x: hidden;  /* x-scroll will be on wrapper below */
+}
+
+/* this is the x-axis container */
+
+  .appt-xaxis {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;      /* ✅ makes scrollbar visible */
+}
+
+/* optional: style the x-axis scrollbar */
+.appt-xaxis::-webkit-scrollbar {
+  height: 8px;
+}
+.appt-xaxis::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+}
+.appt-xaxis::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* make appointment table wider so X scroll appears when needed */
+.dash-table-appt {
+  min-width: 520px;  /* ✅ increase if you want more space */
+  width: 100%;
+  table-layout: auto;
+}
+
+/* keep Action always visible and not squished */
+.dash-table-appt .th-action,
+.dash-table-appt .td-action {
+  white-space: nowrap;
+  text-align: right;
+  min-width: 140px;
+}/* ================= APPOINTMENT X-AXIS (HORIZONTAL SCROLL) ================= */
+.dash-panel.appointment-panel .dash-panel-body {
+  overflow: hidden !important;   /* parent clips */
+  padding-bottom: 10px;  
+}
+
+/* the actual x-axis/slider container */
+.appt-xaxis {
+  width: 100%;
+  overflow-x: auto;          /* ✅ show horizontal scrollbar */
+  overflow-y: hidden
+  padding-bottom: 10px;      /* ✅ make scrollbar visible */
+}
+
+/* force table wider so scrollbar appears */
+.dash-table-appt {
+  width: 100%;
+  min-width: 700px; 
+}
+
+/* optional scrollbar style */
+.appt-xaxis::-webkit-scrollbar { height: 10px; }
+.appt-xaxis::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+}
+/* Move Action column a bit left (appointment only) */
+.dash-panel.appointment-panel .th-action,
+.dash-panel.appointment-panel .td-action {
+  text-align: right;
+  padding-right: 4px; /* ✅ increase = move left more */
+}
+

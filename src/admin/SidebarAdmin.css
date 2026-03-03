@@ -1,0 +1,427 @@
+/* ✅ Same design as adminuser.css, but kept SidebarAdmin.css structure intact */
+
+.SidebarAdmin {
+  --sidebar-bg: #399a91;
+  --sidebar-text: #0f4242;
+
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+
+  --header-height: 55px;
+}
+
+/* ================= SIDEBAR ================= */
+.SidebarAdmin .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: var(--sidebar-width-collapsed);
+  height: 100vh;
+
+  box-shadow: none;
+  background: var(--sidebar-bg);
+
+  display: flex;
+  flex-direction: column;
+
+  padding-top: 0;
+
+  z-index: 1000;
+  transition: width 0.25s ease;
+}
+
+.SidebarAdmin .sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+/* top bar */
+.SidebarAdmin .sidebar-top {
+  height: var(--header-height);
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* kept from SidebarAdmin structure */
+  padding: 0 12px;
+}
+
+/* move ☰ left when expanded (match adminuser.css behavior) */
+.SidebarAdmin .sidebar.expanded .sidebar-top {
+  justify-content: flex-start;
+  position: relative;
+  padding-right: 100px;
+}
+
+/* toggle */
+.SidebarAdmin .sidebar-toggle {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  cursor: pointer;
+  color: var(--sidebar-text);
+  font-size: 30px;
+  line-height: 1;
+  padding: 0;
+
+  border-radius: 0;
+}
+
+.SidebarAdmin .sidebar-toggle:focus,
+.SidebarAdmin .sidebar-toggle:active {
+  outline: none;
+  box-shadow: none;
+}
+
+/* content */
+.SidebarAdmin .sidebar-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  gap: 22px;            /* ✅ from adminuser.css */
+  padding-top: 18px;    /* ✅ from adminuser.css */
+  padding-left: 0;
+  padding-right: 0;
+
+  align-items: center;
+}
+
+/* when expanded, align left + padding (match adminuser.css) */
+.SidebarAdmin .sidebar.expanded .sidebar-content {
+  align-items: flex-start;
+  padding-left: 10px;
+  padding-right: 20px;
+}
+
+/* items */
+.SidebarAdmin .sidebar-item {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.SidebarAdmin .sidebar-item a,
+.SidebarAdmin .sidebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+
+  text-decoration: none;
+  color: var(--sidebar-text);
+  font-weight: 600;
+  letter-spacing: 0.1em; /* ✅ from adminuser.css */
+
+  width: 100%;
+  padding: 6px 1px;      /* ✅ from adminuser.css */
+
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  cursor: pointer;
+
+  /* remove SidebarAdmin rounded hover-card look */
+  border-radius: 0;
+}
+
+.SidebarAdmin .sidebar-item a:focus,
+.SidebarAdmin .sidebar-item a:active,
+.SidebarAdmin .sidebar-btn:focus,
+.SidebarAdmin .sidebar-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+/* remove hover background (adminuser.css has none) */
+.SidebarAdmin .sidebar-item a:hover,
+.SidebarAdmin .sidebar-btn:hover {
+  background: transparent;
+}
+
+.SidebarAdmin .sidebar-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+/* push logout to bottom */
+.SidebarAdmin .sidebar-item.logout {
+  margin-top: auto;
+}
+
+/* hide text when collapsed (match adminuser.css) */
+.SidebarAdmin .sidebar-item span {
+  font-size: 0.80rem;
+  display: inline-flex;
+
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+
+  white-space: nowrap;
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+
+  transition: 0.2s ease;
+}
+
+/* show text when expanded */
+.SidebarAdmin .sidebar.expanded .sidebar-item span {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  max-height: 60px;
+  max-width: 200px;
+}
+
+/* collapsed spacing (match adminuser.css) */
+.SidebarAdmin .sidebar:not(.expanded) .sidebar-item a,
+.SidebarAdmin .sidebar:not(.expanded) .sidebar-btn {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 4px 0 4px 16px;
+}
+
+/* submenu (optional) */
+.SidebarAdmin .submenu {
+  display: none;
+  flex-direction: column;
+
+  margin-left: 35px; /* ✅ from adminuser.css */
+  gap: 6px;
+  width: 100%;
+}
+
+.SidebarAdmin .sidebar-item.open .submenu {
+  display: flex;
+}
+
+/* submenu links (match adminuser.css style) */
+.SidebarAdmin .submenu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  text-decoration: none;
+  color: var(--sidebar-text);
+}
+
+.SidebarAdmin .submenu img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+.SidebarAdmin .submenu .sub {
+  font-size: 0.7rem;
+  font-weight: 300;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* ================= HEADER ================= */
+.SidebarAdmin .app-header {
+  background: var(--sidebar-bg);
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  box-shadow: none;
+
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: var(--header-height);
+
+  z-index: 999;
+
+  left: var(--sidebar-width-collapsed);
+}
+
+/* shift header when sidebar expanded */
+.admin-Userpage.sidebar-expanded .SidebarAdmin .app-header {
+  left: var(--sidebar-width-expanded);
+}
+
+/* left group */
+.SidebarAdmin .header-left {
+  display: flex;
+  align-items: center;
+  gap: 50px; 
+  position: relative;
+  left: 40px;
+}
+
+.SidebarAdmin .brand-logo {
+  width: 120px;
+  max-height: 60px;
+  object-fit: contain;
+
+  position: relative;
+  right: 130px; /* ✅ from adminuser.css */
+}
+
+/* search */
+.SidebarAdmin .header-search {
+  position: relative;
+  width: 360px;
+
+  right: 100px; /* ✅ from adminuser.css */
+  max-width: 42vw;
+}
+
+.SidebarAdmin .header-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 46px 0 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.SidebarAdmin .search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+}
+
+.SidebarAdmin .search-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* right nav */
+.SidebarAdmin .header-nav {
+  display: flex;
+  align-items: center;
+  gap: 70px; /* ✅ from adminuser.css */
+  position: relative;
+  right: 60px;
+}
+
+.SidebarAdmin .nav-link {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* dropdown */
+.SidebarAdmin .profile-menu {
+  position: relative;
+}
+
+.SidebarAdmin .profile-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.SidebarAdmin .profile-btn:focus,
+.SidebarAdmin .profile-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.SidebarAdmin .caret {
+  margin-left: 4px;
+  font-size: 0.9rem;
+}
+
+.SidebarAdmin .profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+
+  padding: 10px;
+  display: none;
+  z-index: 99999;
+}
+
+.SidebarAdmin .profile-menu.open .profile-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.SidebarAdmin .profile-dropdown a {
+  text-decoration: none;
+  color: var(--sidebar-text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.SidebarAdmin .profile-dropdown a:hover {
+  background: rgba(15, 66, 66, 0.08);
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 900px) {
+  .SidebarAdmin .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+}
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+} 

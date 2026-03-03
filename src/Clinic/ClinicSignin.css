@@ -1,0 +1,150 @@
+/* MAIN CONTAINER */
+.signin-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;   
+}
+
+/* LEFT SIDE */
+.left-side {
+  flex: 1;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* LOGIN CARD */
+.login-card {
+  width: 450px;
+  padding: 60px 50px;
+  border-radius: 40px;
+  background: white;
+  color: black;
+}
+
+.login-card h1 {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.login-card label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #000;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid #004d40;
+  background-color: #f0f0f0;
+  outline: none;
+}
+
+.forgot {
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.forgot span {
+  color: #004d40;
+  cursor: pointer;
+}
+
+
+.login-card button {
+  width: 100%;
+  padding: 15px;
+  background-color: #004d40;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.logsides {
+  position: absolute;
+  left: 870px;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  height: 95vh;
+  width: 40px;
+  background-color: #0b5d4c;
+
+  border-top-right-radius: 60px;
+  border-bottom-right-radius: 60px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+
+  z-index: 2;
+}
+
+/* RIGHT SIDE */
+.right-side {
+  flex: 1;
+  background-image: url("../img/Loginbg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.right-side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(212, 245, 239, 0.5);
+}
+
+.right-content {
+  position: relative;
+  color: black;
+  text-align: right;
+  max-width: 450px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; 
+  height: 100%; 
+  padding: 60px; 
+  box-sizing: border-box;
+}
+
+.brand {
+  position: absolute; 
+  top: 60px;         
+  left: -350px;        
+  font-size: 48px;
+  margin: 0;
+  z-index: 3;
+}
+
+.cs-brand-img {
+  width: 450px;       /* adjust size */
+  max-width: 200%;
+  height: auto;
+}
+
+.right-content h2 {
+  font-size: 40px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  margin-right: 40px;
+}
+
+.right-content p {
+  font-size: 18px;
+  margin-right: -40px;
+}
+
+.bottom-text {
+  align-self: flex-end;
+}
