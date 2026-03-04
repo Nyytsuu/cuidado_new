@@ -8,6 +8,7 @@ import LandingPage from "./SigninUser/Landingpage";
 import Categories from "./Categories/Categories";
 
 // admin
+import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 import AdminUser from "./admin/AdminUser";
 import AdminDashboard from "./admin/AdminDashboard";
 import AdminServices from "./admin/AdminServices";
@@ -21,15 +22,18 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route>
         <Route path="/" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgetPass />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/landing" element={<LandingPage />} />
+        </Route>
         {/* clinic */}
         <Route path="/Clinicsignup" element={<ClinicSignup />} />
         {/* admin */}
+        <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/services" element={<AdminServices />} />
@@ -37,7 +41,7 @@ function App() {
       <Route path="/admin/clinics" element={<AdminClinic />} />
       <Route path="/admin/settings" element={<AdminProfile/>} />
       <Route path="/admin/reports" element={<AdminReport />} />
-
+        </Route>
       
       </Routes>
     </BrowserRouter>
