@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./AdminReport.css";
 import SidebarAdmin from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
@@ -9,6 +9,33 @@ export default function AdminReport() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
+const [loadingSummary, setLoadingSummary] = useState(true);
+
+  type ReportSummary = {
+  totalAppointmentsThisMonth: number;
+  mostActiveClinic: string;
+  newUsersThisWeek: number;
+};
+
+useEffect(() => {
+  const loadSummary = async () => {
+    try {
+      setLoadingSummary(true);
+      const res = await fetch("http://localhost:5000/api/admin/reports/summary");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: ReportSummary = await res.json();
+      setSummary(data);
+    } catch (e) {
+      console.error("Load report summary error:", e);
+      setSummary(null);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  loadSummary();
+}, []);
   const handleExportPDF = async () => {
   try {
     const res = await fetch("http://localhost:5000/api/admin/reports/export/pdf", {
@@ -119,19 +146,27 @@ export default function AdminReport() {
                                     </div>
 
                 <div className="reports-preview">
-                  <div className="preview-row">
-                    <span className="preview-label">Total appointments (this month)</span>
-                    <span className="preview-value">—</span>
-                  </div>
-                  <div className="preview-row">
-                    <span className="preview-label">Most active clinic</span>
-                    <span className="preview-value">—</span>
-                  </div>
-                  <div className="preview-row">
-                    <span className="preview-label">New users (this week)</span>
-                    <span className="preview-value">—</span>
-                  </div>
-                </div>
+  <div className="preview-row">
+    <span className="preview-label">Total appointments (this month)</span>
+    <span className="preview-value">
+      {loadingSummary ? "Loading..." : summary ? summary.totalAppointmentsThisMonth : "—"}
+    </span>
+  </div>
+
+  <div className="preview-row">
+    <span className="preview-label">Most active clinic</span>
+    <span className="preview-value">
+      {loadingSummary ? "Loading..." : summary ? summary.mostActiveClinic : "—"}
+    </span>
+  </div>
+
+  <div className="preview-row">
+    <span className="preview-label">New users (this week)</span>
+    <span className="preview-value">
+      {loadingSummary ? "Loading..." : summary ? summary.newUsersThisWeek : "—"}
+    </span>
+  </div>
+</div>
               </div>
             </section>
 

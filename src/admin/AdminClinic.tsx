@@ -13,7 +13,8 @@ type ClinicRow = {
   email: string;
   phone: string | null;
   created_at: string;
-  status: string; // backend: pending/approved/rejected/active/disabled
+  status: "pending" | "approved" | "rejected";
+  account_status:"active" | "disabled";
 };
 
 type ClinicProfile = {
@@ -23,7 +24,8 @@ type ClinicProfile = {
   phone: string | null;
   address: string | null;
   created_at: string;
-  status: string;
+  status: "pending" | "approved" | "rejected";
+  account_status: "active" | "disabled";
 };
 type ActivityItem = {
   id: string;
@@ -106,6 +108,7 @@ const loadAppointments = async () => {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
+    console.log("CLINICS API SAMPLE:", data?.[0]);
 
     const mapped: AppointmentRow[] = data.map((a: any) => ({
       id: a.id,
@@ -179,24 +182,23 @@ const loadAppointments = async () => {
   };
 
   // ✅ Activate / Disable (Deactive)
-  const setClinicStatus = async (id: number, status: "active" | "disabled") => {
-    try {
-      const res = await fetch(
-        `http://localhost:5000/api/admin/clinics/${id}/status`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status }),
-        }
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+const setClinicStatus = async (id: number, accountStatus: "active" | "disabled") => {
+  try {
+    const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: accountStatus }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      setClinics((prev) => prev.map((c) => (c.id === id ? { ...c, status } : c)));
-    } catch (e) {
-      console.error("Update clinic status error:", e);
-      alert("Failed to update clinic status.");
-    }
-  };
+    setClinics((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, account_status: accountStatus } : c))
+    );
+  } catch (e) {
+    console.error("Update clinic status error:", e);
+    alert("Failed to update clinic status.");
+  }
+};
 
   // ✅ Edit (simple example: rename only)
   const editClinicName = async (id: number) => {
@@ -296,129 +298,137 @@ const onViewAppointment = (id: number) => {
             </div>
 
             <div className="admin-grid">
-              <section className="admin-card admin-table-card">
-                <div className="admin-table-header" />
+            <section className="admin-card admin-table-card">
+  <div className="admin-table-header" />
 
-                <div className="users-table clinics-table">
-                  <div className="users-row users-header clinics-row">
-                    <div className="users-cell">Registered Clinics</div>
-                    <div className="users-cell">Status</div>
-                    <div className="users-cell">Actions:</div>
-                  </div>
+ <table className="admin-table clinics-table">
+  <thead>
+    <tr>
+      <th>Registered Clinics</th>
+      <th>Approval</th>
+      <th>Account</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
 
-                  {loading ? (
-                    <div className="users-row">
-                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
-                        Loading...
-                      </div>
-                    </div>
-                  ) : filtered.length === 0 ? (
-                    <div className="users-row">
-                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
-                        No clinics found.
-                      </div>
-                    </div>
+  <tbody>
+    {loading ? (
+      <tr>
+        <td colSpan={4} style={{ textAlign: "center" }}>Loading...</td>
+      </tr>
+    ) : filtered.length === 0 ? (
+      <tr>
+        <td colSpan={4} style={{ textAlign: "center" }}>No clinics found.</td>
+      </tr>
+    ) : (
+      filtered.map((c) => {
+        const isPending = c.status === "pending";
+        const isApproved = c.status === "approved";
+        const isRejected = c.status === "rejected";
+
+        const isActive = c.account_status === "active";
+        const isDisabled = c.account_status === "disabled";
+
+        return (
+          <tr key={c.id}>
+            <td className="users-name">{c.clinic_name}</td>
+
+            {/* ✅ Approval Status */}
+            <td>
+              <span
+                className={[
+                  "pill",
+                  isPending ? "pill-warning" : "",
+                  isApproved ? "pill-success" : "",
+                  isRejected ? "pill-danger" : "",
+                ].join(" ")}
+              >
+                {c.status}
+              </span>
+            </td>
+
+            {/* ✅ Account Status */}
+            <td>
+              <span
+                className={[
+                  "pill",
+                  isActive ? "pill-success" : "",
+                  isDisabled ? "pill-dark" : "",
+                ].join(" ")}
+              >
+                {c.account_status}
+              </span>
+            </td>
+
+            {/* ✅ Actions */}
+            <td>
+              <div className="users-actions clinics-actions slots">
+                <button
+                  type="button"
+                  className="pill pill-view pill-wide"
+                  onClick={() => viewClinic(c.id)}
+                >
+                  View
+                </button>
+
+                {/* Approve / Reject ONLY if pending */}
+                {isPending && (
+                  <>
+                    <button
+                      type="button"
+                      className="pill pill-success pill-wide"
+                      onClick={() => approveClinic(c.id)}
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      type="button"
+                      className="pill pill-danger pill-wide"
+                      onClick={() => rejectClinic(c.id)}
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  className="pill pill-gray pill-wide"
+                  onClick={() => editClinicName(c.id)}
+                >
+                  Edit
+                </button>
+
+                {/* Activate / Deactivate ONLY if approved */}
+                {isApproved && (
+                  isDisabled ? (
+                    <button
+                      type="button"
+                      className="pill pill-success pill-wide"
+                      onClick={() => setClinicStatus(c.id, "active")}
+                    >
+                      Activate
+                    </button>
                   ) : (
-                    filtered.map((c) => {
-                      const statusLower = c.status.toLowerCase();
-                      const isPending = statusLower === "pending";
-                      const isApproved = statusLower === "approved";
-                      const isRejected = statusLower === "rejected";
-                      const isDisabled = statusLower === "disabled";
-
-                      return (
-                        <div className="users-row clinics-row" key={c.id}>
-                          <div className="users-cell users-name">{c.clinic_name}</div>
-
-                          <div className="users-cell">
-                            <span
-                              className={[
-                                "pill",
-                                isPending ? "pill-warning" : "",
-                                isApproved ? "pill-success" : "",
-                                isRejected ? "pill-danger" : "",
-                                isDisabled ? "pill-dark" : "",
-                              ].join(" ")}
-                            >
-                              {c.status}
-                            </span>
-                          </div>
-
-                          <div className="users-cell">
-                            <div className="users-actions clinics-actions slots">
-                              {/* View */}
-                              <button
-                                type="button"
-                                className="pill pill-view pill-wide"
-                                onClick={() => viewClinic(c.id)}
-                              >
-                                View
-                              </button>
-
-                              {/* Approve/Reject only if pending */}
-                              {isPending ? (
-                                <button
-                                  type="button"
-                                  className="pill pill-success pill-wide"
-                                  onClick={() => approveClinic(c.id)}
-                                >
-                                  Approve
-                                </button>
-                              ) : (
-                                <span className="action-placeholder" aria-hidden="true" />
-                              )}
-
-                              {isPending ? (
-                                <button
-                                  type="button"
-                                  className="pill pill-danger pill-wide"
-                                  onClick={() => rejectClinic(c.id)}
-                                >
-                                  Reject
-                                </button>
-                              ) : (
-                                <span className="action-placeholder" aria-hidden="true" />
-                              )}
-
-                              {/* Edit */}
-                              <button
-                                type="button"
-                                className="pill pill-gray pill-wide"
-                                onClick={() => editClinicName(c.id)}
-                              >
-                                Edit
-                              </button>
-
-                              {/* Deactivate / Activate */}
-                              {!isRejected ? (
-                                isDisabled ? (
-                                  <button
-                                    type="button"
-                                    className="pill pill-success pill-wide"
-                                    onClick={() => setClinicStatus(c.id, "active")}
-                                  >
-                                    Activate
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    className="pill pill-dark pill-wide"
-                                    onClick={() => setClinicStatus(c.id, "disabled")}
-                                  >
-                                    Deactivate
-                                  </button>
-                                )
-                              ) : (
-                                <span className="action-placeholder" aria-hidden="true" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </section>
+                    <button
+                      type="button"
+                      className="pill pill-dark pill-wide"
+                      onClick={() => setClinicStatus(c.id, "disabled")}
+                    >
+                      Deactivate
+                    </button>
+                  )
+                )}
+              </div>
+            </td>
+          </tr>
+        );
+      })
+    )}
+  </tbody>
+</table>
+</section>
 
               <aside className="admin-right">
                  <div className="dash-panel dash-right-top">
