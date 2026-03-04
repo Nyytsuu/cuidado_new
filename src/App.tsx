@@ -13,6 +13,8 @@ import AdminDashboard from "./admin/AdminDashboard";
 import AdminServices from "./admin/AdminServices";
 import AdminAppoint from "./admin/AdminAppoint";
 import AdminClinic from "./admin/AdminClinic";
+import AdminProfile from "./admin/AdminProfile";
+import AdminReport from "./admin/AdminReport";
 //clinic
 import ClinicSignup from "./Clinic/ClinicSignup";
 function App() {
@@ -33,6 +35,9 @@ function App() {
       <Route path="/admin/services" element={<AdminServices />} />
       <Route path="/admin/appointments" element={<AdminAppoint />} />
       <Route path="/admin/clinics" element={<AdminClinic />} />
+      <Route path="/admin/settings" element={<AdminProfile/>} />
+      <Route path="/admin/reports" element={<AdminReport />} />
+
       
       </Routes>
     </BrowserRouter>

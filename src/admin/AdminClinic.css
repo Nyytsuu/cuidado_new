@@ -240,6 +240,8 @@ body {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
+  background: #ffffff;           /* ✅ white inside */
+  border: 5px solid #00bfa6; 
 }
 
 /* ================= TABLE ================= */
@@ -321,7 +323,17 @@ body {
 .admin-UserClinics .pill-warning { background: #b7791f; }
 .admin-UserClinics .pill-gray { background: #6b7280; }
 .admin-UserClinics .pill-dark { background: #111827; }
+.pill-active {
+  background: rgba(16, 185, 129, 0.15); /* soft green */
+  color: #065f46;                        /* deep green */
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
 
+.pill-disabled {
+  background: rgba(55, 65, 81, 0.15);   /* soft gray */
+  color: #111827;                       /* near black */
+  border: 1px solid rgba(55, 65, 81, 0.35);
+}
 .admin-UserClinics .pill:focus,
 .admin-UserClinics .pill:active {
   outline: none;
@@ -412,3 +424,92 @@ body {
 .profile-dropdown button:hover {
   background: rgba(0, 0, 0, 0.05);
 } 
+.admin-table {
+  width: calc(100% - 1px);
+  flex: 1;
+  min-height: 0;
+  margin: 5px;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+/* readable text always */
+.admin-table,
+.admin-table * {
+  color: #0f0f0f !important;
+}
+
+.admin-table thead th {
+  padding: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  background: #eef2f2;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.admin-table tbody td {
+  padding: 10px;
+  font-size: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  vertical-align: top;
+  background: transparent;
+}
+
+.t-main {
+  font-weight: 900;
+}
+.t-sub {
+  font-size: 11px;
+  opacity: 0.72;
+  margin-top: 1px;
+}
+
+.t-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.th-action-pending,
+.th-action,
+.td-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 170px;
+}
+
+.th-joined {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.btn-view-users {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 10px;
+  white-space: nowrap;
+  width: 100px;
+}
+
+.th-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 150px;
+}
+
+.td-action {
+  text-align: right;
+}
+
+/* Button alignment */
+.td-action .btn-view {
+  display: inline-block;
+}

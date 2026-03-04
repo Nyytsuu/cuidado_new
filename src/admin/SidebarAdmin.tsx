@@ -110,6 +110,14 @@ const handleLogout = () => {
             </Link>
           </div>
 
+          <div className="sidebar-item">
+            <Link to="/admin/reports">
+              <img src={reportIcon} alt="report icon" />
+              <span>reports</span>
+            </Link>
+          </div>
+
+
           
 
               

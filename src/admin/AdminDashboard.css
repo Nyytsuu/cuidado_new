@@ -521,9 +521,8 @@ body,
   overflow: hidden;             /* keep rounded corners clean */          /* keep scroll (adjust if you want) */
   overflow-y: auto;
   overflow-x: hidden;
-    height: auto !important;
-  min-height: 500px !important;   /* adjust */
-  max-height: none !important;    /* removes 360 cap */
+    height: auto !important; /* adjust */
+  max-height: 300vh !important;    /* removes 360 cap */
   overflow-y: auto !important;}
 
 /* remove table margin so it fits perfectly */
@@ -704,6 +703,7 @@ body,
   white-space: nowrap;
   text-align: right;
   min-width: 140px;
+  
 }/* ================= APPOINTMENT X-AXIS (HORIZONTAL SCROLL) ================= */
 .dash-panel.appointment-panel .dash-panel-body {
   overflow: hidden !important;   /* parent clips */
@@ -714,7 +714,7 @@ body,
 .appt-xaxis {
   width: 100%;
   overflow-x: auto;          /* ✅ show horizontal scrollbar */
-  overflow-y: hidden
+  overflow-y: hidden;
   padding-bottom: 10px;      /* ✅ make scrollbar visible */
 }
 

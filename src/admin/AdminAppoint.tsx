@@ -294,14 +294,6 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
                               View Details
                             </button>
 
-                            <button
-                              type="button"
-                              className="pill pill-danger"
-                              disabled={a.status === "cancelled" || a.status === "completed"}
-                              onClick={() => cancelAppointment(a.id)}
-                            >
-                              Cancel
-                            </button>
                           </div>
                         </div>
                       </div>
