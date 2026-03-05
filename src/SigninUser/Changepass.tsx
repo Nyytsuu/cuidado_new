@@ -4,7 +4,13 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 
 type Props = {
   onClose?: () => void;
-  onSuccess: () => void; // this should set fpStep("success") in Signin
+  onSuccess: () => void;
+};
+
+type ToastState = {
+  open: boolean;
+  message: string;
+  type: "error" | "success" | "info";
 };
 
 export default function Changepass({ onClose, onSuccess }: Props) {
@@ -15,11 +21,25 @@ export default function Changepass({ onClose, onSuccess }: Props) {
   const [showRe, setShowRe] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<string>("");
+
+  const [touchedNew, setTouchedNew] = useState(false);
+  const [touchedRe, setTouchedRe] = useState(false);
+
+  const [toast, setToast] = useState<ToastState>({
+    open: false,
+    message: "",
+    type: "info",
+  });
+
+  const showToast = (message: string, type: ToastState["type"] = "info") => {
+    setToast({ open: true, message, type });
+    window.setTimeout(() => {
+      setToast((t) => ({ ...t, open: false }));
+    }, 3000);
+  };
 
   const apiBase = "http://localhost:5000";
 
-  // ✅ password rules
   const hasMinLen = newPassword.length >= 8;
   const hasUpper = /[A-Z]/.test(newPassword);
   const hasLower = /[a-z]/.test(newPassword);
@@ -29,20 +49,25 @@ export default function Changepass({ onClose, onSuccess }: Props) {
   const passwordOk = hasMinLen && hasUpper && hasLower && hasNumber && hasSymbol;
   const passwordsMatch = newPassword === rePassword;
 
+  const newPwError = touchedNew && !passwordOk;
+  const rePwError = touchedRe && rePassword.length > 0 && !passwordsMatch;
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setStatus("");
 
-    // ✅ validations (no <p>, just warning text)
+    setTouchedNew(true);
+    setTouchedRe(true);
+
     if (!passwordOk) {
-      setStatus(
-        "Password must contain 8+ characters, uppercase, lowercase, number, and symbol."
+      showToast(
+        "Password must contain 8+ characters, uppercase, lowercase, number, and symbol.",
+        "error"
       );
       return;
     }
 
     if (!passwordsMatch) {
-      setStatus("Passwords do not match.");
+      showToast("Passwords do not match.", "error");
       return;
     }
 
@@ -50,7 +75,7 @@ export default function Changepass({ onClose, onSuccess }: Props) {
     const resetToken = sessionStorage.getItem("resetToken");
 
     if (!email || !resetToken) {
-      setStatus("Missing reset session. Please request OTP again.");
+      showToast("Missing reset session. Please request OTP again.", "error");
       return;
     }
 
@@ -66,21 +91,19 @@ export default function Changepass({ onClose, onSuccess }: Props) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setStatus(data?.message || "Failed to reset password.");
+        showToast(data?.message || "Failed to reset password.", "error");
         return;
       }
 
-      // ✅ clear session + fields
       sessionStorage.removeItem("fp_email");
       sessionStorage.removeItem("resetToken");
-      setNewPassword("");
-      setRePassword("");
 
-      // ✅ GO TO PasswordChanged POPUP RIGHT AWAY
+      showToast("Password changed successfully!", "success");
+
       onSuccess();
     } catch (err) {
       console.error("RESET PASSWORD ERROR:", err);
-      setStatus("Server error. Please try again.");
+      showToast("Server error. Please try again.", "error");
     } finally {
       setLoading(false);
     }
@@ -88,52 +111,50 @@ export default function Changepass({ onClose, onSuccess }: Props) {
 
   return (
     <div className="fpr-card">
-      <div className="fpr-icon" aria-hidden="true" />
+      <div className="fpr-icon" />
+
       <h1 className="fpr-title">Forgot Password?</h1>
 
       <form className="fpr-form" onSubmit={handleSubmit}>
         {/* NEW PASSWORD */}
         <div className="fpr-input-wrap">
           <input
-            className={`fpr-input ${
-              status.includes("Password must") ? "fpr-input-error" : ""
-            }`}
+            className={`fpr-input ${newPwError ? "fpr-input-error" : ""}`}
             type={showNew ? "text" : "password"}
             placeholder="New Password"
             value={newPassword}
             onChange={(e) => {
               setNewPassword(e.target.value);
-              setStatus("");
+              if (!touchedNew) setTouchedNew(true);
             }}
+            onBlur={() => setTouchedNew(true)}
             required
           />
-          <span className="fpr-eye" onClick={() => setShowNew((p) => !p)}>
+
+          <span className="fpr-eye" onClick={() => setShowNew(!showNew)}>
             {showNew ? <FiEyeOff /> : <FiEye />}
           </span>
         </div>
 
-        {/* RE-ENTER PASSWORD */}
+        {/* CONFIRM PASSWORD */}
         <div className="fpr-input-wrap">
           <input
-            className={`fpr-input ${
-              status.includes("match") ? "fpr-input-error" : ""
-            }`}
+            className={`fpr-input ${rePwError ? "fpr-input-error" : ""}`}
             type={showRe ? "text" : "password"}
             placeholder="Re-enter Password"
             value={rePassword}
             onChange={(e) => {
               setRePassword(e.target.value);
-              setStatus("");
+              if (!touchedRe) setTouchedRe(true);
             }}
+            onBlur={() => setTouchedRe(true)}
             required
           />
-          <span className="fpr-eye" onClick={() => setShowRe((p) => !p)}>
+
+          <span className="fpr-eye" onClick={() => setShowRe(!showRe)}>
             {showRe ? <FiEyeOff /> : <FiEye />}
           </span>
         </div>
-
-        {/* ✅ warning (no <p>) */}
-        {status && <div className="fpr-status">{status}</div>}
 
         <button className="fpr-btn" type="submit" disabled={loading}>
           {loading ? "Changing..." : "Change Password"}
@@ -145,6 +166,13 @@ export default function Changepass({ onClose, onSuccess }: Props) {
           </button>
         )}
       </form>
+
+      {/* TOAST CENTERED INSIDE MODAL */}
+      {toast.open && (
+        <div className="fpr-toast-wrap">
+          <div className={`toast toast-${toast.type}`}>{toast.message}</div>
+        </div>
+      )}
     </div>
   );
 }

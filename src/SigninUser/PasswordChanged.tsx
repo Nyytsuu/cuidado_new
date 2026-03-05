@@ -9,10 +9,6 @@ type Props = {
 const PasswordChanged: React.FC<Props> = ({ onClose }) => {
   return (
     <div className="pc-card">
-      <button className="pc-close" onClick={onClose} type="button" aria-label="Close">
-        ✕
-      </button>
-
       <div className="pc-icon">
         <img src={image14} alt="Password changed" />
       </div>
