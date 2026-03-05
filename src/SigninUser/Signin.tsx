@@ -2,6 +2,8 @@ import "./Signin.css";
 import { useState } from "react";
 import { login } from "../api/api";
 import { Link, useNavigate } from "react-router-dom";
+import { FiEye, FiEyeOff } from "react-icons/fi";
+
 function Signin() {
   const navigate = useNavigate();
 
@@ -9,23 +11,26 @@ function Signin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 👁 password visibility state
+  const [showPassword, setShowPassword] = useState(false);
+
   const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const data = await login(email, password);
-    localStorage.setItem("token", data.token);
+    try {
+      const data = await login(email, password);
+      localStorage.setItem("token", data.token);
 
-    if (data.user.role === "admin") navigate("/admin");
-    else if (data.user.role === "clinic") navigate("/clinic");
-    else navigate("/dashboard");
-  } catch (err: any) {
-    alert(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      if (data.user.role === "admin") navigate("/admin");
+      else if (data.user.role === "clinic") navigate("/clinic");
+      else navigate("/dashboard");
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="signin-container">
@@ -44,13 +49,24 @@ function Signin() {
             />
 
             <label>Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+
+            {/* PASSWORD FIELD */}
+            <div className="password-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+
+              <span
+                className="eye-icon"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </span>
+            </div>
 
             <p className="forgot">
               Forgot Password?{" "}
@@ -73,18 +89,24 @@ function Signin() {
         </div>
       </div>
 
-        <div className="logsides"></div>
+      <div className="logsides"></div>
 
       <div className="right-side">
         <div className="right-content">
-          <div className="brand"><img src="/src/img/logo.png" alt="logo" /></div>
-             <div className="bottom-text">
-                <h2>GOOD TO SEE <br></br> YOU AGAIN!</h2>
-                 <p>
-                     Log in to continue your journey toward better health and manage
-                     your appointments with ease.
-                </p>
-             </div>
+          <div className="brand">
+            <img src="/src/img/logo.png" alt="logo" />
+          </div>
+
+          <div className="bottom-text">
+            <h2>
+              GOOD TO SEE <br /> YOU AGAIN!
+            </h2>
+
+            <p>
+              Log in to continue your journey toward better health and manage
+              your appointments with ease.
+            </p>
+          </div>
         </div>
       </div>
     </div>

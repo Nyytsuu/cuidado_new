@@ -3,6 +3,7 @@
     import { useState, useEffect } from "react";
     import { handleSubmit, type SignupPayload } from "../components/handleSubmit";
     import { Link } from "react-router-dom";
+    import { FiEye, FiEyeOff } from "react-icons/fi";
     interface Province {
     id: number;
     province_name: string;
@@ -34,8 +35,11 @@ function Signup() {
         const [barangayId, setBarangayId] = useState<string>("");
         const [password, setPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
+        const [showPassword, setShowPassword] = useState(false);
+        const [showConfirmPassword, setShowConfirmPassword] = useState(false);
         const [consent, setConsent] = useState(false);
         const [isSubmitting, setIsSubmitting] = useState(false);
+        const today = new Date().toISOString().split("T")[0];
         useEffect(() => {
         fetch("http://localhost:5000/api/provinces")
             .then((res) => {
@@ -277,12 +281,12 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             id="dob"
             name="dob"
             value={dob}
+            max={today}  // ✅ blocks dates beyond current date/year
             className={errors.dob ? "error-input" : ""}
             onChange={(e) => {
-                setDob(e.target.value);
-                clearError("dob");
+            setDob(e.target.value);
+            clearError("dob");
             }}
-            placeholder='MM/DD/YYYY'
             required
             />
             {errors.dob && <div className="error-text">{errors.dob} </div>}
@@ -343,37 +347,54 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             />
             {errors.address && <div className="error-text">{errors.address}</div>}
             <label htmlFor="password">Password:</label>
-            <input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            className={errors.password ? "error-input" : ""}
-            onChange={(e) => {
-                setPassword(e.target.value);
-                clearError("password");
-            }}
-            autoComplete="new-password"
-            required
-            />
+
+<div className="password-field">
+  <input
+    type={showPassword ? "text" : "password"}
+    id="password"
+    name="password"
+    value={password}
+    className={errors.password ? "error-input" : ""}
+    onChange={(e) => {
+      setPassword(e.target.value);
+      clearError("password");
+    }}
+    autoComplete="new-password"
+    required
+  />
+
+  <span className="eye-icon" onClick={() => setShowPassword(!showPassword)}>
+    {showPassword ? <FiEyeOff /> : <FiEye />}
+  </span>
+</div>
             {errors.password && <div className="error-text">{errors.password}</div>}
-            <label htmlFor="confirm-password">Confirm Password:</label>
-            <input
-            type="password"
-            id="confirm-password"
-            name="confirmPassword"
-            value={confirmPassword}
-            className={errors.confirmPassword ? "error-input" : ""}
-            onChange={(e) => {
-                setConfirmPassword(e.target.value);
-                clearError("confirmPassword");
-            }}
-            autoComplete="new-password"
-            required
-            />
-            {errors.confirmPassword && <div className="error-text">{errors.confirmPassword}</div>}
-            </div>
-                <label className="checkbox-label">
+                <label htmlFor="confirm-password">Confirm Password:</label>
+
+<div className="password-field">
+  <input
+    type={showConfirmPassword ? "text" : "password"}
+    id="confirm-password"
+    name="confirmPassword"
+    value={confirmPassword}
+    className={errors.confirmPassword ? "error-input" : ""}
+    onChange={(e) => {
+      setConfirmPassword(e.target.value);
+      clearError("confirmPassword");
+    }}
+    autoComplete="new-password"
+    required
+  />
+
+  <span
+    className="eye-icon"
+    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+  >
+    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+  </span>
+</div>
+                {errors.confirmPassword && <div className="error-text">{errors.confirmPassword}</div>}
+                </div>
+                    <label className="checkbox-label">
                 <input
             type="checkbox"
             checked={consent}

@@ -210,3 +210,23 @@ select {
 .success-input {
   border: 2px solid #2e7d32 !important;
 }
+
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 45px; /* space for eye */
+}
+
+.eye-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #004d40; /* change eye color here */
+  font-size: 20px;
+}
