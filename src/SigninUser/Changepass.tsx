@@ -1,34 +1,51 @@
 import React, { useState } from "react";
 import "./Changedpass.css";
-import PasswordChanged from "./PasswordChanged"; // ✅ adjust path if needed
-import { useNavigate } from "react-router-dom";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
-export default function Changepass() {
+type Props = {
+  onClose?: () => void;
+  onSuccess: () => void; // this should set fpStep("success") in Signin
+};
+
+export default function Changepass({ onClose, onSuccess }: Props) {
   const [newPassword, setNewPassword] = useState("");
   const [rePassword, setRePassword] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
+
+  const [showNew, setShowNew] = useState(false);
+  const [showRe, setShowRe] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string>("");
 
-  const navigate = useNavigate();
   const apiBase = "http://localhost:5000";
+
+  // ✅ password rules
+  const hasMinLen = newPassword.length >= 8;
+  const hasUpper = /[A-Z]/.test(newPassword);
+  const hasLower = /[a-z]/.test(newPassword);
+  const hasNumber = /\d/.test(newPassword);
+  const hasSymbol = /[^A-Za-z0-9]/.test(newPassword);
+
+  const passwordOk = hasMinLen && hasUpper && hasLower && hasNumber && hasSymbol;
+  const passwordsMatch = newPassword === rePassword;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus("");
 
-    // ✅ validations
-    if (newPassword !== rePassword) {
+    // ✅ validations (no <p>, just warning text)
+    if (!passwordOk) {
+      setStatus(
+        "Password must contain 8+ characters, uppercase, lowercase, number, and symbol."
+      );
+      return;
+    }
+
+    if (!passwordsMatch) {
       setStatus("Passwords do not match.");
       return;
     }
 
-    if (newPassword.length < 8) {
-      setStatus("Password must be at least 8 characters.");
-      return;
-    }
-
-    // ✅ get email + resetToken saved from previous steps
     const email = sessionStorage.getItem("fp_email");
     const resetToken = sessionStorage.getItem("resetToken");
 
@@ -38,15 +55,12 @@ export default function Changepass() {
     }
 
     setLoading(true);
+
     try {
       const res = await fetch(`${apiBase}/api/auth/password/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          resetToken,
-          newPassword,
-        }),
+        body: JSON.stringify({ email, resetToken, newPassword }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -56,16 +70,14 @@ export default function Changepass() {
         return;
       }
 
-      // ✅ success popup
-      setShowSuccess(true);
-
-      // ✅ clear stored session
+      // ✅ clear session + fields
       sessionStorage.removeItem("fp_email");
       sessionStorage.removeItem("resetToken");
-
-      // optional: clear inputs
       setNewPassword("");
       setRePassword("");
+
+      // ✅ GO TO PasswordChanged POPUP RIGHT AWAY
+      onSuccess();
     } catch (err) {
       console.error("RESET PASSWORD ERROR:", err);
       setStatus("Server error. Please try again.");
@@ -74,58 +86,65 @@ export default function Changepass() {
     }
   };
 
-  const closePopup = () => {
-    setShowSuccess(false);
-    navigate("/signin"); // ✅ go back to login after success
-  };
-
   return (
-    <div className="fpr-page">
-      <div className="fpr-card">
-        <div className="fpr-icon" aria-hidden="true" />
+    <div className="fpr-card">
+      <div className="fpr-icon" aria-hidden="true" />
+      <h1 className="fpr-title">Forgot Password?</h1>
 
-        <h1 className="fpr-title">Change Password</h1>
-
-        <form className="fpr-form" onSubmit={handleSubmit}>
+      <form className="fpr-form" onSubmit={handleSubmit}>
+        {/* NEW PASSWORD */}
+        <div className="fpr-input-wrap">
           <input
-            className="fpr-input"
-            type="password"
+            className={`fpr-input ${
+              status.includes("Password must") ? "fpr-input-error" : ""
+            }`}
+            type={showNew ? "text" : "password"}
             placeholder="New Password"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={(e) => {
+              setNewPassword(e.target.value);
+              setStatus("");
+            }}
             required
           />
+          <span className="fpr-eye" onClick={() => setShowNew((p) => !p)}>
+            {showNew ? <FiEyeOff /> : <FiEye />}
+          </span>
+        </div>
 
+        {/* RE-ENTER PASSWORD */}
+        <div className="fpr-input-wrap">
           <input
-            className="fpr-input"
-            type="password"
+            className={`fpr-input ${
+              status.includes("match") ? "fpr-input-error" : ""
+            }`}
+            type={showRe ? "text" : "password"}
             placeholder="Re-enter Password"
             value={rePassword}
-            onChange={(e) => setRePassword(e.target.value)}
+            onChange={(e) => {
+              setRePassword(e.target.value);
+              setStatus("");
+            }}
             required
           />
-
-          {/* ✅ status/error message */}
-          {status && (
-            <div style={{ marginTop: 8, fontSize: 14, color: "#b00020" }}>
-              {status}
-            </div>
-          )}
-
-          <button className="fpr-btn" type="submit" disabled={loading}>
-            {loading ? "Changing..." : "Change Password"}
-          </button>
-        </form>
-      </div>
-
-      {/* ✅ POPUP OVERLAY */}
-      {showSuccess && (
-        <div className="fpr-modal-overlay" onClick={closePopup}>
-          <div className="fpr-modal" onClick={(e) => e.stopPropagation()}>
-            <PasswordChanged onClose={closePopup} />
-          </div>
+          <span className="fpr-eye" onClick={() => setShowRe((p) => !p)}>
+            {showRe ? <FiEyeOff /> : <FiEye />}
+          </span>
         </div>
-      )}
+
+        {/* ✅ warning (no <p>) */}
+        {status && <div className="fpr-status">{status}</div>}
+
+        <button className="fpr-btn" type="submit" disabled={loading}>
+          {loading ? "Changing..." : "Change Password"}
+        </button>
+
+        {onClose && (
+          <button type="button" className="fpr-cancel" onClick={onClose}>
+            Cancel
+          </button>
+        )}
+      </form>
     </div>
   );
 }

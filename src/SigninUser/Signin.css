@@ -2,7 +2,7 @@
 .signin-container {
   display: flex;
   height: 100vh;
-  width: 100vw;   
+  width: 100vw;
 }
 
 /* LEFT SIDE */
@@ -78,9 +78,14 @@
   margin-bottom: 30px;
 }
 
-.forgot span {
+/* ✅ forgot link to open modal */
+.forgot-link {
   color: #004d40;
   cursor: pointer;
+  font-weight: 600;
+}
+.forgot-link:hover {
+  text-decoration: underline;
 }
 
 .login-card button {
@@ -140,13 +145,13 @@
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-end; 
-  height: 100%; 
-  padding: 60px; 
+  justify-content: flex-end;
+  height: 100%;
+  padding: 60px;
   box-sizing: border-box;
 }
 
-.brand{
+.brand {
   position: absolute;
   top: 60px;
   left: -250px;
@@ -154,9 +159,9 @@
   z-index: 3;
 }
 
-.brand img{
-  width: 80%;    
-  height: 50%;   
+.brand img {
+  width: 80%;
+  height: 50%;
   display: block;
   object-fit: contain;
 }
@@ -179,4 +184,48 @@
 
 .bottom-text {
   align-self: flex-end;
+}
+
+/* =========================
+   ✅ MODAL STYLES (Forgot)
+   ========================= */
+.fp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 99999;
+  padding: 16px;
+}
+
+.fp-modal-card {
+  position: relative;
+  width: 720px;
+  height: 520px;
+  max-width: 95vw;
+  background: #fff;
+  border-radius: 28px;
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.fp-modal-close {
+  all: unset;                
+  position: absolute;
+  top: 16px;
+  right: 18px;                
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 999px;
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+  z-index: 10;
 }

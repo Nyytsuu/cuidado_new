@@ -1,104 +1,115 @@
-.fpr-page {
-  min-height: 100vh;
-  width: 100%;
-  background: #ffffff;
-  display: grid;
-  place-items: center;
-  padding: 32px 18px;
-}
-
+/* modal card */
 .fpr-card {
-  width: min(560px, 92vw);
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  padding: 34px;
   text-align: center;
 }
 
+/* icon */
 .fpr-icon {
-  width: 140px;
-  height: 140px;
-  margin: 0 auto 16px;
-  background-image: url("../img/image13.png"); /* ✅ changed */
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 10px;
+  background-image: url("../img/image13.png");
+  background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: contain;
 }
 
+/* title */
 .fpr-title {
-  margin: 0 0 26px;
-  font-size: 44px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
+  font-size: 40px;
+  margin-bottom: 20px;
   color: #0f172a;
 }
 
+/* form */
 .fpr-form {
   display: flex;
   flex-direction: column;
-  gap: 26px;
-  align-items: center;
+  gap: 18px;
+}
+
+/* input wrapper */
+.fpr-input-wrap {
+  position: relative;
 }
 
 .fpr-input {
   width: 100%;
-  height: 62px;
-  border-radius: 25px;
-  border: 1px solid #b6d3cf;
-  background: #90C1BE;   /* ✅ background color */
-  padding: 0 18px;
-  font-size: 18px;
-  outline: none;
-  color: #ffffff;        /* text color for contrast */
+  height: 60px;
+  border-radius: 12px;
+  border: 1px solid #004d40;
+  padding: 0 45px 0 15px;
+  font-size: 16px;
 }
 
-.fpr-input::placeholder {
-  color: rgba(255, 255, 255, 0.85);
+/* red input */
+.fpr-input-error {
+  border: 2px solid #e53935;
 }
 
-.fpr-btn {
-  width: 100%;
-  height: 66px;
-  border: none; 
-  border-radius: 10px;
-  background: #064b3b;
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 700;
+/* eye icon */
+.fpr-eye {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
-  margin-top: 6px;
+  color: #004d40;
 }
 
-.fpr-btn:hover {
-  filter: brightness(0.96);
-}
-.fpr-input,
-.fpr-input:focus,
-.fpr-input:active {
-  background-color: #90C1BE !important;
-  color: #022624;
-  border-color: #90C1BE;
-}
-
-.fpr-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Chrome autofill fix */
-.fpr-input:-webkit-autofill {
-  -webkit-box-shadow: 0 0 0 1000px #90C1BE inset;
-  -webkit-text-fill-color: #022624;
-}
-.fpr-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  z-index: 9999;
+/* button */
+.fpr-btn {
+  height: 55px;
+  border-radius: 30px;
+  background: #064b3b;
+  color: white;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.fpr-modal {
-  width: 100%;
-  max-width: 720px;
-  border-radius: 18px;
-  overflow: hidden; /* no scroll inside */
+.fpr-cancel {
+  background: none;
+  border: none;
+  color: #064b3b;
+  margin-top: 5px;
+  cursor: pointer;
+}
+
+/* CENTERED TOAST */
+.fpr-toast-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  width: calc(100% - 40px);
+}
+
+/* toast */
+.toast {
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: white;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* colors */
+.toast-error {
+  background: #e53935;
+}
+
+.toast-success {
+  background: #16a34a;
+}
+
+.toast-info {
+  background: #334155;
 }
