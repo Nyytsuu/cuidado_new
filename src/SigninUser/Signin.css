@@ -45,6 +45,34 @@
   outline: none;
 }
 
+/* PASSWORD FIELD WRAPPER */
+.password-field {
+  position: relative;
+}
+
+/* INPUT INSIDE PASSWORD FIELD */
+.password-field input {
+  width: 100%;
+  padding: 12px;
+  padding-right: 45px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid #004d40;
+  background-color: #f0f0f0;
+  outline: none;
+}
+
+/* EYE ICON */
+.eye-icon {
+  position: absolute;
+  right: 15px;
+  top: 40%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #004d40;
+  font-size: 20px;
+}
+
 .forgot {
   font-size: 14px;
   margin-bottom: 30px;
@@ -68,7 +96,7 @@
 
 .logsides {
   position: relative;
-  left: 500px;
+  left: 60px;
   top: 50%;
   transform: translate(-50%, -50%);
   height: 95vh;
@@ -139,7 +167,7 @@
   font-weight: bold;
   font-style: italic;
   margin-bottom: 20px;
-  left: 70px;
+  right: 10px;
 }
 
 .right-content p {
