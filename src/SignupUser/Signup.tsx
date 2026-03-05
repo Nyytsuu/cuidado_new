@@ -1,9 +1,11 @@
     import Logotag from '../components/Logotag';
     import './Signup.css';
-    import { useState, useEffect } from "react";
+    import { useState, useEffect, useMemo } from "react";
     import { handleSubmit, type SignupPayload } from "../components/handleSubmit";
     import { Link } from "react-router-dom";
-    import { FiEye, FiEyeOff } from "react-icons/fi";
+    import zxcvbn from "zxcvbn";
+    import { FiCalendar, FiEye, FiEyeOff} from "react-icons/fi";
+
     interface Province {
     id: number;
     province_name: string;
@@ -33,13 +35,21 @@ function Signup() {
         const [provinceId, setProvinceId] = useState<string>("");
         const [municipalityId, setMunicipalityId] = useState<string>("");
         const [barangayId, setBarangayId] = useState<string>("");
-        const [password, setPassword] = useState("");
         const [confirmPassword, setConfirmPassword] = useState("");
         const [showPassword, setShowPassword] = useState(false);
         const [showConfirmPassword, setShowConfirmPassword] = useState(false);
         const [consent, setConsent] = useState(false);
         const [isSubmitting, setIsSubmitting] = useState(false);
-        const today = new Date().toISOString().split("T")[0];
+        const [password, setPassword] = useState("");
+        const result = useMemo(() => zxcvbn(password), [password]);
+        const score = result.score;
+        const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
+        const percent = ((score + 1) / 5) * 100;
+        const today = new Date();
+        const minAgeDate = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+        const maxDob = minAgeDate.toISOString().split("T")[0];
+        const [showPassword, setShowPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
         useEffect(() => {
         fetch("http://localhost:5000/api/provinces")
             .then((res) => {
@@ -112,8 +122,6 @@ const clearError = (key: keyof Errors) => {
 const passwordOk =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password);
 
-const passwordsMatch = password === confirmPassword;
-
 const phPhoneOk = /^(\+63|09)\d{9}$/.test(phone);
 const validate = (): Errors => {
   const e: Errors = {};
@@ -139,8 +147,39 @@ const validate = (): Errors => {
   return e;
 };
 
+const passwordRules = {
+  length: password.length >= 8,
+  upper: /[A-Z]/.test(password),
+  lower: /[a-z]/.test(password),
+  number: /\d/.test(password),
+  symbol: /[^A-Za-z0-9]/.test(password),
+};
+
+const isPasswordValid =
+  passwordRules.length &&
+  passwordRules.upper &&
+  passwordRules.lower &&
+  passwordRules.number &&
+  passwordRules.symbol;
+const rules = {
+    length: password.length >= 8,
+    upper: /[A-Z]/.test(password),
+    lower: /[a-z]/.test(password),
+    number: /\d/.test(password),
+  };
+const passwordsMatch = password === confirmPassword;
 const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
+
+  if (!passwordOk) {
+    showToast("Password must contain 8+ characters, uppercase, lowercase, number, and symbol.", "error");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    showToast("Passwords do not match.", "error");
+    return;
+  }
 
   const newErrors: Errors = {};
 
@@ -194,7 +233,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setIsSubmitting(false);
   }
 };
-    return (
+return (
         <div>
         <div className="bgimg">
             <Logotag />
@@ -287,8 +326,12 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             setDob(e.target.value);
             clearError("dob");
             }}
+            min="1900-01-01"
+            max={maxDob}
+            placeholder='MM/DD/YYYY'
             required
             />
+            <FiCalendar className="date-icon" />
             {errors.dob && <div className="error-text">{errors.dob} </div>}
             </div>
             </div>
@@ -346,55 +389,68 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             required
             />
             {errors.address && <div className="error-text">{errors.address}</div>}
+            <div className="input-con">
             <label htmlFor="password">Password:</label>
-
-<div className="password-field">
-  <input
-    type={showPassword ? "text" : "password"}
-    id="password"
-    name="password"
-    value={password}
-    className={errors.password ? "error-input" : ""}
-    onChange={(e) => {
-      setPassword(e.target.value);
-      clearError("password");
-    }}
-    autoComplete="new-password"
-    required
-  />
-
-  <span className="eye-icon" onClick={() => setShowPassword(!showPassword)}>
-    {showPassword ? <FiEyeOff /> : <FiEye />}
-  </span>
+            <input
+            type="password"
+            id="password"
+            name="password"
+            value={password}
+            className={errors.password ? "error-input" : ""}
+            onChange={(e) => {
+                setPassword(e.target.value);
+                clearError("password");
+            }}
+            autoComplete="new-password"
+            required
+            />
+                   <span className="eye-icon" onClick={() => setShowPassword(!showPassword)}>
+  {showPassword ? <FiEyeOff /> : <FiEye />}
+</span>
 </div>
             {errors.password && <div className="error-text">{errors.password}</div>}
-                <label htmlFor="confirm-password">Confirm Password:</label>
-
-<div className="password-field">
-  <input
-    type={showConfirmPassword ? "text" : "password"}
-    id="confirm-password"
-    name="confirmPassword"
-    value={confirmPassword}
-    className={errors.confirmPassword ? "error-input" : ""}
-    onChange={(e) => {
-      setConfirmPassword(e.target.value);
-      clearError("confirmPassword");
-    }}
-    autoComplete="new-password"
-    required
-  />
-
-  <span
-    className="eye-icon"
-    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-  >
-    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-  </span>
-</div>
-                {errors.confirmPassword && <div className="error-text">{errors.confirmPassword}</div>}
+            {/* ✅ Strength Meter */}
+            {password.length > 0 && (
+            <div className="pw-meter-wrap">
+                <div className="pw-meter">
+                <div
+                    className={`pw-meter-fill score-${score}`}
+                    style={{ width: `${((score + 1) / 5) * 100}%` }}
+                />
                 </div>
-                    <label className="checkbox-label">
+
+                <small className="pw-label">{labels[score]}</small>
+                 <ul className="pw-criteria">
+      <li className={password.length >= 8 ? "ok" : ""}>8+ characters</li>
+      <li className={/[A-Z]/.test(password) ? "ok" : ""}>Uppercase letter</li>
+      <li className={/[a-z]/.test(password) ? "ok" : ""}>Lowercase letter</li>
+      <li className={/\d/.test(password) ? "ok" : ""}>Number</li>
+      <li className={/[^A-Za-z0-9]/.test(password) ? "ok" : ""}>Symbol</li>
+    </ul>
+            </div>
+            )}
+            <div className="input-icon">
+            <label htmlFor="confirm-password">Confirm Password:</label>
+            <input
+            type="password"
+            id="confirm-password"
+            name="confirmPassword"
+            value={confirmPassword}
+            className={errors.confirmPassword ? "error-input" : ""}
+            onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                clearError("confirmPassword");
+            }}
+            autoComplete="new-password"
+            required
+            />
+            <span className="eye-icon" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+</span>
+</div>
+            {errors.confirmPassword && <div className="error-text">{errors.confirmPassword}</div>}
+            </div>
+                <label className="checkbox-label">
                 <input
             type="checkbox"
             checked={consent}
@@ -408,9 +464,7 @@ const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         </label>
         {errors.consent && <div className="error-text">{errors.consent}</div>}
             <p className="terms-privacy">By signing up, you agree to our Terms of Service and Privacy Policy.</p>
-            <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Signing up..." : "Sign Up"}
-            </button>
+           <button type="submit" disabled={isSubmitting}>Sign Up</button>
             <p className="login-link">Already have an account? <a href="/signin" style={{color: '#004D40'}}>Login here</a>.</p>
         </form>
         </div>

@@ -32,16 +32,20 @@ export default function SidebarAdmin({
   setHeaderProfileOpen,
 }: SidebarProps) {
   const navigate = useNavigate();
-
 const handleLogout = () => {
-  // remove auth data
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+    localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("admin_token");
+  localStorage.removeItem("clinic_token");
+  localStorage.removeItem("user_token");
 
-  // optional: clear session cookie via API
-  // await fetch("/api/logout", { method: "POST", credentials: "include" });
+  console.log("AFTER LOGOUT:", {
+    token: localStorage.getItem("token"),
+    role: localStorage.getItem("role"),
+    admin_token: localStorage.getItem("admin_token"),
+  });
 
-  navigate("/login");
+  navigate("/signin", { replace: true });
 };
   return (
     <div className="SidebarAdmin">
@@ -110,12 +114,20 @@ const handleLogout = () => {
             </Link>
           </div>
 
+          <div className="sidebar-item">
+            <Link to="/admin/reports">
+              <img src={reportIcon} alt="report icon" />
+              <span>reports</span>
+            </Link>
+          </div>
+
+
           
 
               
 
           <div className="sidebar-item logout">
-            <Link to="/login">
+            <Link to="/Signin">
               <img src={logoutIcon} alt="Logout icon" />
               <span>LOGOUT</span>
             </Link>
@@ -154,7 +166,7 @@ const handleLogout = () => {
 
   <Link to="/admin/settings">Settings</Link>
 
-  <button
+  <button 
     type="button"
     className="dropdown-logout"
     onClick={handleLogout}

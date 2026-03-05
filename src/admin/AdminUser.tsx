@@ -58,20 +58,24 @@ const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
   // ✅ Load users
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("http://localhost:5000/api/admin/users");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: UserRow[] = await res.json();
-      setUsers(data);
-    } catch (e) {
-      console.error("Load users error:", e);
-      setUsers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+const loadUsers = async () => {
+  try {
+    setLoading(true);
+
+    const res = await fetch("http://localhost:5000/api/admin/users");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data: UserRow[] = await res.json();
+
+    console.log("USERS API RESPONSE:", data); // ✅ check what's coming back
+    setUsers(data);
+  } catch (e) {
+    console.error("Load users error:", e);
+    setUsers([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ✅ Load recent activity
   const loadActivity = async () => {
@@ -87,7 +91,7 @@ const [loadingAppointments, setLoadingAppointments] = useState(true);
   };
 
   // ✅ (Optional) Load appointments later (leave empty if no API yet)
-  const loadAppointments = async () => {
+const loadAppointments = async () => {
   try {
     setLoadingAppointments(true);
 
@@ -95,6 +99,9 @@ const [loadingAppointments, setLoadingAppointments] = useState(true);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
+
+    // ✅ This is appointments, not clinics
+    console.log("APPOINTMENTS API SAMPLE:", data?.[0]);
 
     const mapped: AppointmentRow[] = data.map((a: any) => ({
       id: a.id,
@@ -107,6 +114,10 @@ const [loadingAppointments, setLoadingAppointments] = useState(true);
     }));
 
     setAppointments(mapped);
+
+    // ❌ REMOVE THIS:
+    // setClinics(data);
+
   } catch (e) {
     console.error("Load appointments error:", e);
     setAppointments([]);

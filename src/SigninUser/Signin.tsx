@@ -10,27 +10,34 @@ function Signin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
 
-  // 👁 password visibility state
-  const [showPassword, setShowPassword] = useState(false);
+  try {
+    const data = await login(email, password);
 
-  const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const data = await login(email, password);
-      localStorage.setItem("token", data.token);
-
-      if (data.user.role === "admin") navigate("/admin");
-      else if (data.user.role === "clinic") navigate("/clinic");
-      else navigate("/dashboard");
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
-      setLoading(false);
+    // ✅ save token + role
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.user.role);
+    
+    // ✅ redirect based on role
+    if (data.user.role === "admin") {
+      navigate("/admin/dashboard", { replace: true });
+    } 
+    else if (data.user.role === "clinic") {
+      navigate("/clinic/dashboard", { replace: true });
+    } 
+    else {
+      navigate("/user/dashboard", { replace: true });
     }
-  };
+
+  } catch (err: any) {
+    alert(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="signin-container">
