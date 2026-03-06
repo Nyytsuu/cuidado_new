@@ -6,7 +6,6 @@
   const mysql = require("mysql2/promise");
   require("dotenv").config();
   const adminRoutes = require("./routes/admin.routes");
-
   const clinicRoutes = require("./routes/clinic.routes");
   const locationRoutes = require("./routes/location.routes");
   const authRoutes = require("./routes/auth.routes");
@@ -173,6 +172,7 @@
   app.use("/api", locationRoutes);
   app.use("/api", clinicRoutes);
   app.use("/api/admin", adminRoutes);
+  
 
   /* ✅ ERROR HANDLER LAST */
   app.use((err, req, res, next) => {

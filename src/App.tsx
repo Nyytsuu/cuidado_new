@@ -42,6 +42,7 @@ function App() {
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/admin/services" element={<AdminServices />} />
       <Route path="/admin/appointments" element={<AdminAppoint />} />
       <Route path="/admin/clinics" element={<AdminClinic />} />

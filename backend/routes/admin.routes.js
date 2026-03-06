@@ -2,43 +2,30 @@ console.log("✅ admin.routes.js loaded from:", __filename);
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
-
+const PDFDocument = require("pdfkit");
 /* =========================
    USERS
 ========================= */
-// GET /api/admin/users?limit=6
+// ✅ GET all users: GET /api/admin/users
 router.get("/users", async (req, res) => {
   try {
-    const limit = Math.min(Number(req.query.limit || 6), 30);
+    const limitParam = req.query.limit ? Number(req.query.limit) : null;
 
-    const [rows] = await pool.query(
-      `
-      SELECT id, full_name, email, created_at
+    const sql = `
+      SELECT id, full_name, email, phone, created_at, status
       FROM users
       ORDER BY created_at DESC
-      LIMIT ?
-      `,
-      [limit]
-    );
+      ${limitParam ? "LIMIT ?" : ""}
+    `;
+
+    const [rows] = limitParam
+      ? await pool.query(sql, [Math.min(limitParam, 30)])
+      : await pool.query(sql);
 
     res.json(rows);
   } catch (err) {
     console.error("Fetch users error:", err);
     res.status(500).json({ message: "Failed to fetch users", error: err.message });
-  }
-});
-// ✅ GET all users: GET /api/admin/users
-router.get("/users", async (req, res) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT id, full_name, email, phone, created_at, status
-      FROM users
-      ORDER BY created_at DESC
-    `);
-    res.json(rows);
-  } catch (err) {
-    console.error("Fetch users error:", err);
-    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -95,7 +82,7 @@ router.patch("/users/:id/status", async (req, res) => {
 router.get("/clinics", async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT id, clinic_name, email, phone, address, created_at, status
+      SELECT id, clinic_name, email, phone, address, created_at, status, account_status
       FROM clinics
       ORDER BY created_at DESC
     `);
@@ -105,26 +92,6 @@ router.get("/clinics", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch clinics" });
   }
 });
-
-// ✅ GET one clinic: GET /api/admin/clinics/:id
-router.get("/clinics/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [rows] = await pool.query(
-      `SELECT id, clinic_name, email, phone, address, created_at, status
-       FROM clinics
-       WHERE id = ?`,
-      [id]
-    );
-
-    if (!rows.length) return res.status(404).json({ message: "Clinic not found" });
-    res.json(rows[0]);
-  } catch (err) {
-    console.error("View clinic error:", err);
-    res.status(500).json({ message: "Failed to view clinic" });
-  }
-});
-
 // ✅ APPROVE: PATCH /api/admin/clinics/:id/approve
 router.patch("/clinics/:id/approve", async (req, res) => {
   try {
@@ -153,11 +120,35 @@ router.patch("/clinics/:id/reject", async (req, res) => {
 router.patch("/clinics/:id/deactivate", async (req, res) => {
   try {
     const { id } = req.params;
-    await pool.query("UPDATE clinics SET status='disabled' WHERE id=?", [id]);
+    await pool.query("UPDATE clinics SET account_status='disabled' WHERE id=?", [id]);
     res.json({ message: "Clinic deactivated" });
   } catch (err) {
     console.error("Deactivate clinic error:", err);
     res.status(500).json({ message: "Failed to deactivate clinic" });
+  }
+});
+router.patch("/clinics/:id/status", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body; // "active" | "disabled"
+
+    if (!["active", "disabled"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const [result] = await pool.query(
+      "UPDATE clinics SET account_status = ? WHERE id = ?",
+      [status, id]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ message: "Clinic not found" });
+    }
+
+    res.json({ message: "Account status updated", id: Number(id), account_status: status });
+  } catch (err) {
+    console.error("Update clinic account_status error:", err);
+    res.status(500).json({ message: "Failed to update clinic status" });
   }
 });
 // GET /api/admin/clinics
@@ -174,7 +165,8 @@ router.get("/clinics", async (req, res) => {
         c.barangay_id,
         c.address,
         c.status,
-        c.created_at
+        c.created_at,
+        c.account_status
       FROM clinics c
       ORDER BY c.created_at DESC
     `);
@@ -183,7 +175,7 @@ router.get("/clinics", async (req, res) => {
     console.error("Fetch clinics error:", err);
     res.status(500).json({ message: "Failed to fetch clinics", error: err.message });
   }
-}); 
+});   
 
 /* =========================
    APPOINTMENTS (detailed)
@@ -393,4 +385,169 @@ router.get("/services-test", (req, res) => {
   res.json({ ok: true });
 });
 
+// ✅ SUMMARY for preview cards
+// GET /api/admin/reports/summary
+router.get("/reports/summary", async (req, res) => {
+  try {
+    const [[appt]] = await pool.query(`
+      SELECT
+        COUNT(*) AS total_all,
+        SUM(DATE(start_at) = CURDATE()) AS total_today,
+        SUM(status='pending') AS pending,
+        SUM(status='confirmed') AS confirmed,
+        SUM(status='cancelled') AS cancelled,
+        SUM(status='completed') AS completed,
+        SUM(status='no_show') AS no_show,
+
+        SUM(start_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+            AND start_at <  DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+        ) AS this_month
+      FROM appointments
+    `);
+
+    const [[topClinic]] = await pool.query(`
+      SELECT c.clinic_name, COUNT(a.id) AS total
+      FROM appointments a
+      JOIN clinics c ON c.id = a.clinic_id
+      WHERE a.start_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      GROUP BY a.clinic_id
+      ORDER BY total DESC
+      LIMIT 1
+    `);
+
+    const [[newUsers]] = await pool.query(`
+      SELECT COUNT(*) AS total
+      FROM users
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    `);
+
+    res.json({
+      totalAppointmentsThisMonth: appt.this_month || 0,
+      mostActiveClinic: topClinic?.clinic_name || "—",
+      newUsersThisWeek: newUsers.total || 0,
+      statusBreakdown: {
+        pending: appt.pending || 0,
+        confirmed: appt.confirmed || 0,
+        cancelled: appt.cancelled || 0,
+        completed: appt.completed || 0,
+        no_show: appt.no_show || 0,
+      },
+      totals: {
+        all: appt.total_all || 0,
+        today: appt.total_today || 0,
+      },
+    });
+  } catch (err) {
+    console.error("Reports summary error:", err);
+    res.status(500).json({ message: "Failed to load report summary" });
+  }
+});
+
+// ✅ PDF EXPORT
+// GET /api/admin/reports/export/pdf
+
+router.get("/reports/export/pdf", async (req, res) => {
+  try {
+    const [[appt]] = await pool.query(`
+      SELECT
+        COUNT(*) AS total_all,
+        SUM(DATE(start_at) = CURDATE()) AS total_today,
+        SUM(status='pending') AS pending,
+        SUM(status='confirmed') AS confirmed,
+        SUM(status='cancelled') AS cancelled,
+        SUM(status='completed') AS completed,
+        SUM(status='no_show') AS no_show
+      FROM appointments
+    `);
+
+    const [monthly] = await pool.query(`
+      SELECT DATE_FORMAT(start_at, '%Y-%m') AS month, COUNT(*) AS total
+      FROM appointments
+      GROUP BY DATE_FORMAT(start_at, '%Y-%m')
+      ORDER BY month DESC
+      LIMIT 6
+    `);
+
+    const [topClinics] = await pool.query(`
+      SELECT c.clinic_name, COUNT(a.id) AS totalBookings
+      FROM clinics c
+      LEFT JOIN appointments a ON a.clinic_id = c.id
+      GROUP BY c.id
+      ORDER BY totalBookings DESC
+      LIMIT 5
+    `);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'attachment; filename="reports.pdf"');
+
+    const doc = new PDFDocument({ margin: 50 });
+    doc.pipe(res);
+
+    doc.fontSize(18).text("CUIDADO Admin Reports", { align: "center" });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text(`Generated: ${new Date().toLocaleString()}`, { align: "center" });
+    doc.moveDown(1.5);
+
+    doc.fontSize(14).text("Appointment Summary", { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(`Total appointments: ${appt.total_all || 0}`);
+    doc.text(`Appointments today: ${appt.total_today || 0}`);
+    doc.text(`Pending: ${appt.pending || 0}`);
+    doc.text(`Confirmed: ${appt.confirmed || 0}`);
+    doc.text(`Cancelled: ${appt.cancelled || 0}`);
+    doc.text(`Completed: ${appt.completed || 0}`);
+    doc.text(`No-show: ${appt.no_show || 0}`);
+    doc.moveDown(1.2);
+
+    doc.fontSize(14).text("Appointments per Month (Last 6)", { underline: true });
+    doc.moveDown(0.5);
+    monthly.forEach((r) => doc.fontSize(12).text(`${r.month}: ${r.total}`));
+    doc.moveDown(1.2);
+
+    doc.fontSize(14).text("Top Clinics (All-time bookings)", { underline: true });
+    doc.moveDown(0.5);
+    topClinics.forEach((r, i) => doc.fontSize(12).text(`${i + 1}. ${r.clinic_name} — ${r.totalBookings}`));
+
+    doc.end();
+  } catch (err) {
+    console.error("PDF export error:", err);
+    res.status(500).json({ message: "Failed to export PDF" });
+  }
+});
+router.get("/reports/summary", async (req, res) => {
+  try {
+    const [[apptMonth]] = await pool.query(`
+      SELECT COUNT(*) AS total
+      FROM appointments
+      WHERE start_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+        AND start_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+    `);
+
+    const [[topClinic]] = await pool.query(`
+      SELECT c.clinic_name, COUNT(a.id) AS total
+      FROM appointments a
+      JOIN clinics c ON c.id = a.clinic_id
+      WHERE a.start_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      GROUP BY a.clinic_id
+      ORDER BY total DESC
+      LIMIT 1
+    `);
+
+    const [[newUsers]] = await pool.query(`
+      SELECT COUNT(*) AS total
+      FROM users
+      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    `);
+
+    res.json({
+      totalAppointmentsThisMonth: apptMonth.total || 0,
+      mostActiveClinic: topClinic?.clinic_name || "—",
+      newUsersThisWeek: newUsers.total || 0,
+    });
+  } catch (err) {
+    console.error("Reports summary error:", err);
+    res.status(500).json({ message: "Failed to load report summary" });
+  }
+});
+router.get("/reports/ping", (req, res) => res.send("REPORTS PONG"));
 module.exports = router;
