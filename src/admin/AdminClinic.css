@@ -412,3 +412,50 @@ body {
 .profile-dropdown button:hover {
   background: rgba(0, 0, 0, 0.05);
 } 
+
+.modal-backdrop {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 40%;
+  height: 30%;
+border-radius: 20px;
+  transform: translate(-50%, -50%);
+
+  background-color: #8b9190;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+/* modal container */
+.modal-card {
+  
+  position: relative; /* important */
+  background-color: #8b9190;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  height: auto;
+}
+
+/* close button */
+.modal-close {
+  position: absolute;
+  top: 1px;
+  right: -20px;
+ color: rgb(2, 2, 2);
+ background-color: #8b9190;
+ 
+  border: none;
+  width: 30px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.modal-body {
+  margin-top: 10px;
+}
