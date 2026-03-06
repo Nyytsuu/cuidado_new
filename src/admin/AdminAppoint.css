@@ -180,6 +180,24 @@ body {
   background: rgba(15, 66, 66, 0.08);
 }
 
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 /* ================= ADMIN CONTENT ================= */
 .admin-UserAppoint .admin-content {
   padding: calc(var(--header-height) + 20px) 24px 40px;
@@ -199,96 +217,102 @@ body {
   align-items: start;
 }
 
-.admin-UserAppoint .admin-card {
-  background: #d9d9d9;
-  border-radius: 10px;
-}
-
+/* keep other cards normal */
 .admin-UserAppoint .admin-right {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
-.admin-UserAppoint .small-card {
-  height: 120px;
+/* =========================================================
+   ✅ MAIN TABLE BOX (MATCH FIRST PIC: teal border + clean)
+   ========================================================= */
+
+/* remove old gray default */
+.admin-UserAppoint .admin-card {
+  background: transparent;
+  border-radius: 10px;
 }
 
-.admin-UserAppoint .big-card {
-  height: 430px;
-  background: #8f8f8f;
-}
-
+/* the box itself */
 .admin-UserAppoint .admin-table-card {
   min-height: 520px;
-  padding: 14px 12px;
+  padding: 0;                 /* ✅ pantay sa border */
   overflow: hidden;
+  background: #ffffff;
+  border: 5px solid #00bfa6;  /* ✅ teal border */
+  border-radius: 14px;
 }
 
-/* ================= TABLE ================= */
+/* optional blank header div */
+.admin-UserAppoint .admin-table-header {
+  display: none;
+}
+
+/* ================= TABLE (DIV GRID ROWS) ================= */
 .admin-UserAppoint .users-row {
   display: grid;
-  grid-template-columns: 2.1fr 1.6fr 1.5fr 1.5fr 1fr 2fr;
+  grid-template-columns: 2fr 1.4fr 1.4fr 2fr 1fr 1.6fr;
   align-items: center;
   gap: 12px;
-  padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 16px 18px;
+  background: #ffffff;
 }
 
+/* header strip like first pic */
 .admin-UserAppoint .users-header {
-  font-weight: 800;
+  background: #eef2f2;
+  font-weight: 900;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+/* header text */
 .admin-UserAppoint .users-header .users-cell {
-  color: black;
-  font-size: 1.3rem;
+  color: #0f0f0f;
+  font-size: 20px;   /* ✅ match first pic header size */
+  font-weight: 900;
+  white-space: nowrap;
 }
 
+/* body row separators like first pic */
+.admin-UserAppoint .users-row:not(.users-header) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* cells */
 .admin-UserAppoint .users-cell {
   min-width: 0;
   position: relative;
-
-  /* spacing before vertical line */
-  padding-left: 18px;
 }
 
-/* first column no line + no padding */
-.admin-UserAppoint .users-row .users-cell:first-child {
+/* name style */
+.admin-UserAppoint .users-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f0f0f;
+}
+
+/* =========================================================
+   ✅ REMOVE VERTICAL LINES (para clean like first pic)
+   ========================================================= */
+.admin-UserAppoint .users-row .users-cell {
   padding-left: 0;
 }
 
-/* ✅ VERTICAL LINES with adjustable height (NOT border-left) */
 .admin-UserAppoint .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-
-  width: 1px;
-
-  /* 👇 ADJUST THIS HEIGHT */
-  height: 28px;
-
-  background: rgba(0, 0, 0, 0.75);
-}
-
-/* text style */
-.admin-UserAppoint .users-name {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: black;
+  content: none; /* ✅ alisin vertical dividers */
 }
 
 /* ================= PILL STYLES ================= */
 .admin-UserAppoint .pill {
   border: none;
-  color: white;
+  color: #ffffff;
   border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
-  font-weight: 600;
+  padding: 0 14px;
+  min-height: 32px;
+  line-height: 32px;
+  font-size: 14px;
+  font-weight: 800;
 
   display: inline-flex;
   align-items: center;
@@ -298,16 +322,17 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-
   background: #5b5b5b;
 }
+
+/* for plain text pills (clinic/date/service) */
 .admin-UserAppoint .pills {
   border: none;
-  color: black;
+  color: #0f0f0f;
   border-radius: 999px;
   padding: 0 12px;
   min-height: 28px;
-  font-size: 0.99rem;
+  font-size: 14px;
   font-weight: 600;
 
   display: inline-flex;
@@ -320,59 +345,26 @@ body {
   max-width: 100%;
 }
 
-.admin-UserAppoint .pill-view {
-  background: #5b5b5b;
-  cursor: pointer;
-}
-
-.admin-UserAppoint .pill-danger {
-  background: #c62828;
-  cursor: pointer;
-}
-
-.admin-UserAppoint .pill-success {
-  background: #2e7d32;
-  cursor: pointer;
-}
-
-.admin-UserAppoint .pill-warning {
-  background: #b7791f;
-}
+/* status colors */
+.admin-UserAppoint .pill-view { background: #5b5b5b; cursor: pointer; }
+.admin-UserAppoint .pill-danger { background: #c62828; cursor: pointer; }
+.admin-UserAppoint .pill-success { background: #2e7d32; cursor: pointer; }
+.admin-UserAppoint .pill-warning { background: #b7791f; }
+.admin-UserAppoint .pill-gray { background: #6b7280; color: #fff; }
 
 /* actions */
 .admin-UserAppoint .users-actions {
   display: flex;
   gap: 10px;
-  justify-content: center;
+  justify-content: flex-start; /* nicer like first pic */
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .admin-UserAppoint .pill:focus,
 .admin-UserAppoint .pill:active {
   outline: none;
   box-shadow: none;
-}
-/* Actions layout (side-by-side) */
-.admin-UserAppoint .users-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;
-}
-
-/* View button style */
-.admin-UserAppoint .pill-view {
-  background: #5b5b5b;
-  color: #fff;
-  cursor: pointer;
-}
-
-/* Optional: completed pill */
-.admin-UserAppoint .pill-gray {
-  background: #6b7280;
-  color: #fff;
 }
 
 /* RESPONSIVE */
@@ -385,21 +377,14 @@ body {
     width: 100%;
     max-width: 360px;
   }
-}
-.profile-dropdown a,
-.profile-dropdown button {
-  display: block;
-  width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  font: inherit;
-  color: #0f0f0f;
-  cursor: pointer;
-}
 
-.profile-dropdown a:hover,
-.profile-dropdown button:hover {
-  background: rgba(0, 0, 0, 0.05);
-} 
+  /* allow wrap on small screens */
+  .admin-UserAppoint .users-row {
+    grid-template-columns: 1.7fr 1.4fr 1.4fr 1.4fr 1fr 1.6fr;
+    gap: 10px;
+  }
+
+  .admin-UserAppoint .users-actions {
+    flex-wrap: wrap;
+  }
+}

@@ -137,7 +137,7 @@ export default function AdminDashboard() {
       try {
         const [clinicsRes, usersRes] = await Promise.all([
           fetch("http://localhost:5000/api/admin/clinics?limit=20"),
-          fetch("http://localhost:5000/api/admin/users/latest?limit=8"),
+          fetch("http://localhost:5000/api/admin/users?limit=8")
         ]);
 
         if (!clinicsRes.ok) throw new Error(`Clinics HTTP ${clinicsRes.status}`);
@@ -499,59 +499,51 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* ✅ Appointment Section (MATCH DESIGN) */}
-            <Panel title="Appointment Section" className="appointment-panel">
-  <div className="appt-xaxis">
-    <table className="dash-table dash-table-appt">
-      <thead>
-        <tr>
-          <th>Patient</th>
-          <th>Schedule</th>
-          <th>Status</th>
-          <th className="th-action">Action</th>
-        </tr>
-      </thead>
+           {/* ✅ Appointment Section PANEL inside aside */}
+                                 <Panel title="Appointment Section" className="appointment-panel">
+                 
+                  <table className="dash-table">
+                    <thead>
+                      <tr>
+                        <th>Patient</th>
+                        <th>Status</th>
+                        <th className="th-action">Action</th>
+                      </tr>
+                    </thead>
 
-      <tbody>
-        {loadingAppointments ? (
-          <tr>
-            <td colSpan={4} className="td-empty">Loading appointments…</td>
-          </tr>
-        ) : appointments.length === 0 ? (
-          <tr>
-            <td colSpan={4} className="td-empty">No appointments yet.</td>
-          </tr>
-        ) : (
-          appointments.map((ap) => (
-            <tr key={ap.id}>
-              <td>
-                <div className="t-main">{ap.patient}</div>
-                <div className="t-sub">{ap.clinic}</div>
-              </td>
-
-              <td>{ap.schedule}</td>
-
-              <td>
-                <span className={`badge badge-${ap.status.toLowerCase()}`}>
-                  {ap.status}
-                </span>
-              </td>
-
-              <td className="td-action">
-                <button
-                  className="btn-sm btn-view"
-                  onClick={() => onViewAppointment(ap.id)}
-                >
-                  View details
-                </button>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-  </div>
-</Panel>
+                    <tbody>
+                      {appointments.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="td-empty">
+                            Appointments API not connected yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        appointments.map((ap) => (
+                          <tr key={ap.id}>
+                            <td>
+                              <div className="t-main">{ap.patient}</div>
+                              <div className="t-sub">{ap.clinic}</div>
+                            </td>
+                            <td>
+                              <span className={`badge badge-${ap.status.toLowerCase()}`}>
+                                {ap.status}
+                              </span>
+                            </td>
+                            <td className="td-action">
+                              <button
+                                className="btn-sm btn-view"
+                                onClick={() => onViewAppointment(ap.id)}
+                              >
+                                View details
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </Panel>
           </aside>
         </section>
       </main>

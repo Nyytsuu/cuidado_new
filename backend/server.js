@@ -1,11 +1,11 @@
   console.log("✅ RUNNING THIS FILE:", __filename);
   console.log("✅ LOADED admin.routes.js");
+  require("dotenv").config();
   const express = require("express");
   const cors = require("cors");
   const mysql = require("mysql2/promise");
   require("dotenv").config();
   const adminRoutes = require("./routes/admin.routes");
-
   const clinicRoutes = require("./routes/clinic.routes");
   const locationRoutes = require("./routes/location.routes");
   const authRoutes = require("./routes/auth.routes");
@@ -24,11 +24,11 @@
   app.use("/uploads", express.static("uploads"));
 
   const pool = mysql.createPool({
-    host: process.env.DB_HOST || "localhost",
+    host: process.env.DB_HOST || "127.0.0.1",
     user: process.env.DB_USER || "root",
-    password: process.env.DB_PASS || "Cuidado_2026-cp1!",
+    password: process.env.DB_PASS || "root123",
     database: process.env.DB_NAME || "cuidado_medihelp",
-    port: Number(process.env.DB_PORT || 3306),
+    port: Number(process.env.DB_PORT || 3307),
     waitForConnections: true,
     connectionLimit: 10,
   });
@@ -172,6 +172,7 @@
   app.use("/api", locationRoutes);
   app.use("/api", clinicRoutes);
   app.use("/api/admin", adminRoutes);
+  
 
   /* ✅ ERROR HANDLER LAST */
   app.use((err, req, res, next) => {

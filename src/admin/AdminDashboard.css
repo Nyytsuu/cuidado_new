@@ -521,9 +521,8 @@ body,
   overflow: hidden;             /* keep rounded corners clean */          /* keep scroll (adjust if you want) */
   overflow-y: auto;
   overflow-x: hidden;
-    height: auto !important;
-  min-height: 500px !important;   /* adjust */
-  max-height: none !important;    /* removes 360 cap */
+    height: auto !important; /* adjust */
+  max-height: 300vh !important;    /* removes 360 cap */
   overflow-y: auto !important;}
 
 /* remove table margin so it fits perfectly */
@@ -704,6 +703,7 @@ body,
   white-space: nowrap;
   text-align: right;
   min-width: 140px;
+  
 }/* ================= APPOINTMENT X-AXIS (HORIZONTAL SCROLL) ================= */
 .dash-panel.appointment-panel .dash-panel-body {
   overflow: hidden !important;   /* parent clips */
@@ -714,7 +714,7 @@ body,
 .appt-xaxis {
   width: 100%;
   overflow-x: auto;          /* ✅ show horizontal scrollbar */
-  overflow-y: hidden
+  overflow-y: hidden;
   padding-bottom: 10px;      /* ✅ make scrollbar visible */
 }
 
@@ -734,6 +734,62 @@ body,
 .dash-panel.appointment-panel .th-action,
 .dash-panel.appointment-panel .td-action {
   text-align: right;
-  padding-right: 4px; /* ✅ increase = move left more */
+  padding-right: 1px; /* ✅ increase = move left more */
+}
+/* align button to the right */
+.dash-table .btn-view{
+  margin-left: auto;
+}
+/* ✅ ACTION column (header + cells) to RIGHT only */
+.dash-table th.th-action,
+.dash-table td.td-action{
+  text-align: right !important;
+  padding-left: 33px !important;   /* remove left push */
+  padding-right: 10px !important;  /* spacing from border */
+}
+
+/* keep button right */
+.dash-table td.td-action .btn-view{
+  margin-left: 10px !important; /* remove old margin tweaks */
+}
+/* ✅ move ONLY the Action header text */
+.dash-table th.th-action{
+  text-align: left !important;
+}
+/* ✅ keep the button cell as-is (don’t move) */
+.dash-table td.td-action{
+  text-align: center !important;
+  padding-right: px !important; /* keep fixed */
+  padding-left: 0 !important;
+}
+.dash-right-top{
+  margin-bottom: 18px; /* ✅ space before appointment */
+}
+/* ✅ Move STATUS column a bit to the left */
+.dash-table th:nth-child(2),
+.dash-table td:nth-child(2) {
+  padding-left: 1px !important;   /* adjust: 0-12 */
+}
+/* ✅ Move ACTION column a bit to the LEFT (Appointment table only) */
+.dash-panel.appointment-panel .dash-table th.th-action,
+.dash-panel.appointment-panel .dash-table td.td-action {
+  padding-right: 58px !important;  /* adjust: 20 / 24 / 28 / 32 */
+  padding-left: 5px !important;      /* stop pushing to the right */
+  text-align: right !important;
+}
+/* ✅ correct widths for 3 columns */
+.dash-panel.appointment-panel .dash-table th:nth-child(1),
+.dash-panel.appointment-panel .dash-table td:nth-child(1) {
+  width: 30% !important;
+}
+
+.dash-panel.appointment-panel .dash-table th:nth-child(2),
+.dash-panel.appointment-panel .dash-table td:nth-child(2) {
+  width: 20% !important;
+}
+
+.dash-panel.appointment-panel .dash-table th:nth-child(3),
+.dash-panel.appointment-panel .dash-table td:nth-child(3) {
+  width: 30% !important;
 }
 

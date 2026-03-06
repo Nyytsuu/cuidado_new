@@ -1,40 +1,135 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./AdminReport.css";
 import SidebarAdmin from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
+
+type ReportSummary = {
+  totalAppointmentsThisMonth: number;
+  mostActiveClinic: string;
+  newUsersThisWeek: number;
+};
+
+type ActivityItem = {
+  id: string;
+  type: "user" | "clinic" | "clinic-approved" | "clinic-rejected" | "appointment";
+  text: string;
+  time: string;
+};
+
+type AppointmentRow = {
+  id: number;
+  patient: string;
+  clinic: string;
+  schedule: string;
+  status: string;
+};
 
 export default function AdminReport() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-  const handleExportPDF = async () => {
-  try {
-    const res = await fetch("http://localhost:5000/api/admin/reports/export/pdf", {
-      method: "GET",
-    });
 
-    if (!res.ok) {
-      throw new Error("Failed to export PDF");
+  const [summary, setSummary] = useState<ReportSummary | null>(null);
+  const [loadingSummary, setLoadingSummary] = useState(true);
+
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(true);
+
+  useEffect(() => {
+    const loadSummary = async () => {
+      try {
+        setLoadingSummary(true);
+        const res = await fetch("http://localhost:5000/api/admin/reports/summary");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data: ReportSummary = await res.json();
+        setSummary(data);
+      } catch (e) {
+        console.error("Load report summary error:", e);
+        setSummary(null);
+      } finally {
+        setLoadingSummary(false);
+      }
+    };
+
+    loadSummary();
+  }, []);
+
+  const loadActivity = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/recent-activity?limit=8");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: ActivityItem[] = await res.json();
+      setActivities(data);
+    } catch (e) {
+      console.error("Recent activity error:", e);
+      setActivities([]);
     }
+  };
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
+  const loadAppointments = async () => {
+    try {
+      setLoadingAppointments(true);
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "reports.pdf";
-    document.body.appendChild(a);
-    a.click();
+      const res = await fetch("http://localhost:5000/api/admin/appointments");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (err) {
-    alert("Error exporting PDF");
-    console.error(err);
-  }
-};
+      const data = await res.json();
+
+      const mapped: AppointmentRow[] = data.map((a: any) => ({
+        id: a.id,
+        patient: a.patient_name,
+        clinic: a.clinic_name,
+        schedule: `${new Date(a.start_at).toLocaleDateString()} • ${new Date(
+          a.start_at
+        ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        status: a.status,
+      }));
+
+      setAppointments(mapped);
+    } catch (e) {
+      console.error("Load appointments error:", e);
+      setAppointments([]);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  useEffect(() => {
+    loadActivity();
+    loadAppointments();
+  }, []);
+
+  const handleExportPDF = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/reports/export/pdf", {
+        method: "GET",
+      });
+
+      if (!res.ok) throw new Error("Failed to export PDF");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "reports.pdf";
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Error exporting PDF");
+      console.error(err);
+    }
+  };
+
+  const onViewAppointment = (id: number) => {
+    console.log("View appointment:", id);
+  };
 
   return (
     <div className={`admin-UserReport with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
@@ -90,7 +185,7 @@ export default function AdminReport() {
           </div>
 
           <div className="admin-grid">
-            {/* LEFT CARD */}
+            {/* LEFT CARD (UNCHANGED) */}
             <section className="admin-card admin-table-card reports-card">
               <div className="admin-table-header" />
 
@@ -109,40 +204,131 @@ export default function AdminReport() {
                   <button type="button" className="pill pill-view">
                     Export CSV
                   </button>
-                <button
-                    type="button"
-                    className="pill pill-danger"
-                    onClick={handleExportPDF}
-                    >
+                  <button type="button" className="pill pill-danger" onClick={handleExportPDF}>
                     Export PDF
-                    </button>
-                                    </div>
+                  </button>
+                </div>
 
                 <div className="reports-preview">
                   <div className="preview-row">
                     <span className="preview-label">Total appointments (this month)</span>
-                    <span className="preview-value">—</span>
+                    <span className="preview-value">
+                      {loadingSummary
+                        ? "Loading..."
+                        : summary
+                        ? summary.totalAppointmentsThisMonth
+                        : "—"}
+                    </span>
                   </div>
+
                   <div className="preview-row">
                     <span className="preview-label">Most active clinic</span>
-                    <span className="preview-value">—</span>
+                    <span className="preview-value">
+                      {loadingSummary ? "Loading..." : summary ? summary.mostActiveClinic : "—"}
+                    </span>
                   </div>
+
                   <div className="preview-row">
                     <span className="preview-label">New users (this week)</span>
-                    <span className="preview-value">—</span>
+                    <span className="preview-value">
+                      {loadingSummary ? "Loading..." : summary ? summary.newUsersThisWeek : "—"}
+                    </span>
                   </div>
                 </div>
               </div>
             </section>
 
-            {/* RIGHT SIDE CARDS */}
-            <aside className="admin-right">
-              <div className="admin-card admin-right-card small-card" />
-              <div className="admin-card admin-right-card big-card" />
+            {/* RIGHT SIDE (REPLACED with Recent activity + Appointment Section) */}
+            <aside className="dash-aside">
+              {/* Recent activity */}
+              <div className="dash-panel dash-right-top">
+                <div className="dash-panel-title">Recent activity</div>
+
+                <div className="dash-panel-body dash-body-small">
+                  {activities.length === 0 ? (
+                    <div className="activity-empty">No recent activity yet.</div>
+                  ) : (
+                    <ul className="activity-list">
+                      {activities.map((item) => (
+                        <li key={item.id} className={`activity-item ${item.type}`}>
+                          <div className="activity-icon">
+                            {item.type === "user" && "👤"}
+                            {item.type === "clinic" && "🏥"}
+                            {item.type === "clinic-approved" && "✅"}
+                            {item.type === "clinic-rejected" && "❌"}
+                            {item.type === "appointment" && "📅"}
+                          </div>
+
+                          <div className="activity-content">
+                            <div className="activity-text">{item.text}</div>
+                            <div className="activity-time">{new Date(item.time).toLocaleString()}</div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+
+             <Panel title="Appointment Section" className="appointment-panel">
+                <table className="dash-table">
+                  <thead>
+                    <tr>
+                      <th>Patient</th>
+                      <th>Status</th>
+                      <th className="th-action">Action</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {loadingAppointments ? (
+                      <tr>
+                        <td colSpan={3} className="td-empty">
+                          Loading...
+                        </td>
+                      </tr>
+                    ) : appointments.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="td-empty">
+                          Appointments API not connected yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      appointments.map((ap) => (
+                        <tr key={ap.id}>
+                          <td>
+                            <div className="t-main">{ap.patient}</div>
+                            <div className="t-sub">{ap.clinic}</div>
+                          </td>
+                          <td>
+                            <span className={`badge badge-${ap.status.toLowerCase()}`}>{ap.status}</span>
+                          </td>
+                          <td className="td-action">
+                            <button className="btn-sm btn-view" onClick={() => onViewAppointment(ap.id)}>
+                              View details
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </Panel>
             </aside>
           </div>
         </section>
       </main>
+    </div>
+  );
+}
+
+function Panel({ title, children, className = "" }: any) {
+  return (
+    <div className={`dash-panel ${className}`}>
+      <div className="dash-panel-head">
+        <div className="dash-panel-title">{title}</div>
+      </div>
+      <div className="dash-panel-body dash-panel-pad">{children}</div>
     </div>
   );
 }

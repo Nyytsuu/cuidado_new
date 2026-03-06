@@ -1,16 +1,6 @@
-.fp-page {
-  min-height: 100vh;
-  width: 100vw;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  padding: 24px;
-}
-
 .fp-card {
-  width: 520px;
-  max-width: 95vw;
+  width: 100%;
+  max-width: 520px;
   padding: 40px 28px 28px;
   border-radius: 16px;
   background: #fff;
@@ -25,14 +15,12 @@
 }
 
 .fp-lock {
- width: 300px;
+  width: 300px;
   height: 70px;
-
-  background-image: url("../img/lock.png"); 
+  background-image: url("../img/lock.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-
   margin: 0 auto;
 }
 
@@ -88,45 +76,37 @@
   cursor: pointer;
 }
 
+.fp-btn:hover {
+  filter: brightness(0.95);
+}
+
 .fp-btn span {
   align-self: center;
   margin-right: 10px;
   padding: 0 12px;
 }
 
-.fp-btn:hover {
-  filter: brightness(0.95);
-}
-
-.fp-back {
-  text-decoration: none;
-  font-size: 20px;
-  color:  #004d40;
-  opacity: 0.9;
-}
-
-.fp-back:hover {
+/* ✅ back button inside modal */
+.fp-back-btn {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  cursor: pointer;
   text-decoration: underline;
-  color: #004d40;
+  padding: 8px 0 0;
 }
 
-.fp-modal-overlay {
+/* ✅ EmailSent popup overlay (inside modal flow) */
+.fp-inner-overlay {
   position: fixed;
   inset: 0;
-  background: #ffffff;   /* ✅ FULL WHITE SCREEN */
+  background: rgba(0, 0, 0, 0.35);
   display: grid;
   place-items: center;
-  padding: 0;            /* no gaps */
-  z-index: 9999;
+  z-index: 999999;
+  padding: 16px;
 }
 
-.fp-modal {
-  position: relative;
- width: 100vw;
-height: 100vh;
-  border-radius: 28px;
-
-  /* ✅ REMOVE SCROLL */
-  overflow: hidden;
-  max-height: none;
+.fp-inner-modal {
+  width: min(720px, 92vw);
 }

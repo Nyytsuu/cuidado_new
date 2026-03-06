@@ -197,6 +197,24 @@ body {
   background: rgba(15, 66, 66, 0.08);
 }
 
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 /* ================= CONTENT ================= */
 .admin-UserClinics .admin-content {
   padding: calc(var(--header-height) + 20px) 24px 40px;
@@ -236,61 +254,65 @@ body {
   background: #8f8f8f;
 }
 
+/* ✅ CARD: pantay sa gilid (remove extra inner padding) */
 .admin-UserClinics .admin-table-card {
   min-height: 520px;
-  padding: 14px 12px;
+  padding: 0;                 /* ✅ pantay sa border */
   overflow: hidden;
+  background: #ffffff;
+  border: 5px solid #00bfa6;
+  border-radius: 14px;
 }
 
 /* ================= TABLE ================= */
-/* 3 columns: clinic | status | actions */
-.admin-UserClinics .users-row {
-  display: grid;
-  grid-template-columns: 3.2fr 1.1fr 2.7fr;
-  align-items: center;
-  padding: 14px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+.admin-UserClinics .admin-table {
+  width: 100%;
+  margin: 0;                 /* ✅ remove inset margin */
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 0;          /* card handles radius */
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
 }
 
-/* header */
-.admin-UserClinics .users-header {
-  font-weight: 800;
+/* ✅ keep normal table text dark */
+.admin-UserClinics .admin-table td,
+.admin-UserClinics .admin-table th {
+  color: #0f0f0f;
 }
 
-.admin-UserClinics .users-header .users-cell {
-  color: #000;
-  font-size: 1.3rem;
+/* ✅ header bigger */
+.admin-UserClinics .admin-table thead th {
+  padding: 16px 18px;
+  font-size: 20px;           /* ✅ larger */
+  font-weight: 900;
+  background: #eef2f2;
+  text-align: left;
+  white-space: nowrap;
 }
 
-/* cell base */
-.admin-UserClinics .users-cell {
-  min-width: 0;
-  position: relative;
-  padding-left: 18px;
+/* ✅ body bigger */
+.admin-UserClinics .admin-table tbody td {
+  padding: 16px 18px;
+  font-size: 15px;           /* ✅ larger */
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  vertical-align: middle;    /* ✅ align nicely */
+  background: transparent;
 }
 
-/* first column no line */
-.admin-UserClinics .users-row .users-cell:first-child {
-  padding-left: 0;
-}
-
-/* vertical lines between columns */
-.admin-UserClinics .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 34px;
-  background: rgba(0, 0, 0, 0.65);
-}
-
-/* clinic name */
+/* clinic name bigger */
 .admin-UserClinics .users-name {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 999;
   color: #000;
+}
+
+/* Optional: center pills under Approval + Account */
+.admin-UserClinics .clinics-table tbody td:nth-child(2),
+.admin-UserClinics .clinics-table tbody td:nth-child(3) {
+  text-align: center;
 }
 
 /* ================= PILL BUTTONS ================= */
@@ -298,16 +320,20 @@ body {
   border: none;
   border-radius: 999px;
   padding: 0 16px;
-  min-height: 30px;
-  line-height: 30px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  min-height: 34px;
+  line-height: 34px;
+  font-size: 14px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  color: #fff;
   cursor: pointer;
+}
+
+/* ✅ VERY IMPORTANT: make pills text WHITE */
+.admin-UserClinics .admin-table .pill {
+  color: #ffffff !important;
 }
 
 .admin-UserClinics .pill-wide {
@@ -343,7 +369,7 @@ body {
   pointer-events: none;
 }
 
-/* ✅ lines before slot 2..5 (Approve/Reject/Edit/Deactivate) */
+/* ✅ lines before slot 2..5 */
 .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2) {
   position: relative;
 }
@@ -359,6 +385,61 @@ body {
   background: var(--actions-line-color);
 }
 
+/* ================= DASH TABLE (RIGHT SIDE) ================= */
+.t-main {
+  font-weight: 900;
+}
+
+.t-sub {
+  font-size: 11px;
+  opacity: 0.72;
+  margin-top: 1px;
+}
+
+.t-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.th-action-pending,
+.th-action,
+.td-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 170px;
+}
+
+.th-joined {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.btn-view-users {
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 10px;
+  white-space: nowrap;
+  width: 100px;
+}
+
+.th-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 150px;
+}
+
+.td-action {
+  text-align: right;
+}
+
+/* Button alignment */
+.td-action .btn-view {
+  display: inline-block;
+}
+
 /* ================= RESPONSIVE ================= */
 @media screen and (max-width: 900px) {
   .admin-UserClinics .admin-grid {
@@ -368,20 +449,6 @@ body {
   .admin-UserClinics .header-search {
     width: 100%;
     max-width: 360px;
-  }
-
-  /* stack table on small screens */
-  .admin-UserClinics .users-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .admin-UserClinics .users-row .users-cell:not(:first-child)::before {
-    display: none;
-  }
-
-  .admin-UserClinics .users-cell {
-    padding-left: 0;
   }
 
   /* actions wrap */
@@ -395,17 +462,15 @@ body {
     display: none;
   }
 }
-.profile-dropdown a,
-.profile-dropdown button {
-  display: block;
+/* ===========================
+   APPOINTMENT PANEL TABLE FIX
+   =========================== */
+
+/* make table full width + breathing space inside panel */
+.admin-UserClinics .dash-table {
   width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  font: inherit;
-  color: #0f0f0f;
-  cursor: pointer;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .profile-dropdown a:hover,

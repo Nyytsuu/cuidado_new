@@ -4,10 +4,26 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = mysql.createConnection({
-  host: "localhost",
+  host: "127.0.0.1",
   user: "root",
-  password: "Cuidado_2026-cp1!",
+  password: "root123",
   database: "cuidado_medihelp",
+  port: 3307,
+});
+
+const nodemailer = require("nodemailer");
+
+const mailer = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASS,
+  },
+});
+
+mailer.verify((err) => {
+  if (err) console.error("MAILER ERROR:", err);
+  else console.log("✅ Mailer ready");
 });
 // LOGIN
 // LOGIN (admin + clinic + user)
@@ -146,6 +162,215 @@ router.post("/signup", async (req, res) => {
     );
   } catch (err) {
     console.error("SERVER ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+const crypto = require("crypto");
+
+// ✅ SEND OTP (Forgot Password)
+router.post("/auth/otp/send", async (req, res) => {
+  try {
+    const { identifier, purpose = "forgot_password" } = req.body;
+    const email = String(identifier || "").trim().toLowerCase();
+
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    db.query("SELECT id FROM users WHERE email = ? LIMIT 1", [email], async (err, rows) => {
+      if (err) {
+        console.error("OTP SEND DB ERROR:", err);
+        return res.status(500).json({ message: "Server error" });
+      }
+
+      // Safer UX: don't reveal if email exists
+      if (!rows.length) return res.json({ message: "OTP sent (if the account exists)" });
+
+      const otp = String(Math.floor(100000 + Math.random() * 900000));
+      const otpHash = await bcrypt.hash(otp, 10);
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+      db.query(
+        "DELETE FROM otp_requests WHERE email = ? AND purpose = ?",
+        [email, purpose],
+        (delErr) => {
+          if (delErr) {
+            console.error("OTP DELETE ERROR:", delErr);
+            return res.status(500).json({ message: "Server error" });
+          }
+
+          db.query(
+            "INSERT INTO otp_requests (email, otp_hash, purpose, expires_at) VALUES (?, ?, ?, ?)",
+            [email, otpHash, purpose, expiresAt],
+            async (insErr) => {
+              if (insErr) {
+                console.error("OTP INSERT ERROR:", insErr);
+                return res.status(500).json({ message: "Server error" });
+              }
+
+              try {
+                const subject = "Your Cuidado Medihelp OTP Code";
+
+                const html = `
+                  <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+                    <h2 style="color:#004d40;">OTP Verification</h2>
+                    <p>Use this 6-digit code to reset your password:</p>
+
+                    <div style="
+                      font-size: 28px;
+                      font-weight: 700;
+                      letter-spacing: 6px;
+                      margin: 12px 0;
+                      color: #111;">
+                      ${otp}
+                    </div>
+
+                    <p>This code will expire in <b>5 minutes</b>.</p>
+                    <p style="font-size:12px;color:#6b7280;">If you didn’t request this, ignore this email.</p>
+                  </div>
+                `;
+
+                await mailer.sendMail({
+                  from: `"Cuidado Medihelp" <${process.env.GMAIL_USER}>`,
+                  to: email,
+                  subject,
+                  html,
+                });
+
+                return res.json({ message: "OTP sent" });
+              } catch (mailErr) {
+                console.error("MAIL SEND ERROR:", mailErr);
+                return res.status(500).json({ message: "Failed to send OTP email" });
+              }
+            }
+          );
+        }
+      );
+    });
+  } catch (e) {
+    console.error("OTP SEND ERROR:", e);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ✅ VERIFY OTP (returns resetToken)
+router.post("/auth/otp/verify", (req, res) => {
+  const { identifier, otp, purpose = "forgot_password" } = req.body;
+  const email = String(identifier || "").trim().toLowerCase();
+  const code = String(otp || "").trim();
+
+  if (!email || !code) return res.status(400).json({ message: "Email and OTP are required" });
+
+  db.query(
+    "SELECT * FROM otp_requests WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1",
+    [email, purpose],
+    async (err, rows) => {
+      if (err) {
+        console.error("OTP VERIFY ERROR:", err);
+        return res.status(500).json({ message: "Server error" });
+      }
+      if (!rows.length) return res.status(400).json({ message: "No OTP request found" });
+
+      const record = rows[0];
+
+      // Expired?
+      if (new Date(record.expires_at).getTime() < Date.now()) {
+        db.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
+        return res.status(400).json({ message: "OTP expired" });
+      }
+
+      // Attempts limit
+      if (record.attempts >= 5) {
+        db.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
+        return res.status(429).json({ message: "Too many attempts. Request a new OTP." });
+      }
+
+      const ok = await bcrypt.compare(code, record.otp_hash);
+
+      if (!ok) {
+      db.query("UPDATE otp_requests SET attempts = attempts + 1 WHERE id = ?", [record.id]);
+      return res.status(400).json({ message: "Invalid OTP" });
+      }
+
+      // valid OTP -> delete OTP row
+      db.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
+
+      // generate reset token
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const tokenExp = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+
+      // replace old reset tokens
+      db.query("DELETE FROM password_reset_tokens WHERE email = ?", [email], (delErr) => {
+        if (delErr) {
+          console.error("RESET TOKEN DELETE ERROR:", delErr);
+          return res.status(500).json({ message: "Server error" });
+        }
+
+        db.query(
+          "INSERT INTO password_reset_tokens (email, token, expires_at) VALUES (?, ?, ?)",
+          [email, resetToken, tokenExp],
+          (insErr) => {
+            if (insErr) {
+              console.error("RESET TOKEN INSERT ERROR:", insErr);
+              return res.status(500).json({ message: "Server error" });
+            }
+
+            return res.json({ message: "Verified", resetToken });
+          }
+        );
+      });
+    }
+  );
+});
+
+// ✅ RESET PASSWORD (updates users.password_hash)
+router.post("/auth/password/reset", async (req, res) => {
+  try {
+    const { email, resetToken, newPassword } = req.body;
+    const e = String(email || "").trim().toLowerCase();
+
+    if (!e || !resetToken || !newPassword) {
+      return res.status(400).json({ message: "Missing data" });
+    }
+    if (String(newPassword).length < 8) {
+      return res.status(400).json({ message: "Password must be at least 8 characters" });
+    }
+
+    // verify reset token
+    db.query(
+      "SELECT * FROM password_reset_tokens WHERE email = ? AND token = ? ORDER BY id DESC LIMIT 1",
+      [e, resetToken],
+      async (err, rows) => {
+        if (err) {
+          console.error("RESET VERIFY ERROR:", err);
+          return res.status(500).json({ message: "Server error" });
+        }
+        if (!rows.length) return res.status(400).json({ message: "Invalid reset session" });
+
+        const record = rows[0];
+        if (new Date(record.expires_at).getTime() < Date.now()) {
+          db.query("DELETE FROM password_reset_tokens WHERE id = ?", [record.id]);
+          return res.status(400).json({ message: "Reset session expired" });
+        }
+
+        const hashed = await bcrypt.hash(String(newPassword), 10);
+
+        db.query(
+          "UPDATE users SET password_hash = ? WHERE email = ?",
+          [hashed, e],
+          (upErr, upRes) => {
+            if (upErr) {
+              console.error("PASSWORD UPDATE ERROR:", upErr);
+              return res.status(500).json({ message: "Server error" });
+            }
+
+            db.query("DELETE FROM password_reset_tokens WHERE email = ?", [e]);
+            return res.json({ message: "Password updated ✅" });
+          }
+        );
+      }
+    );
+  } catch (e) {
+    console.error("RESET ERROR:", e);
     return res.status(500).json({ message: "Server error" });
   }
 });

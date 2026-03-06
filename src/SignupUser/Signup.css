@@ -9,6 +9,7 @@ html, body, #root {
   height: 100%;
   width: 100%;
 }
+
 .bgimg {
   background-image: url('../img/userloginbg.png');
   background-color: #004D40;
@@ -55,6 +56,7 @@ html, body, #root {
     top: 50%;
     transform: translateY(-50%);
     flex-direction: column;
+   height: min(100vh, 760px); 
 }
 .signup-form{
     display: flex;
@@ -62,8 +64,38 @@ html, body, #root {
     margin-bottom: -20px;
     gap: 10px;
     background-color: #ffffff;
-
+flex: 1;
+  padding-right: 8px;
+  overflow-y: auto;
+  scrollbar-width: none; 
 }
+
+.signup-form::-webkit-scrollbar {
+  display: none; /* Chrome, Edge, Safari */
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(27%) sepia(33%) saturate(615%) hue-rotate(130deg);
+  cursor: pointer;
+}
+.eye-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #004D40;
+}
+.input-icon {
+  position: relative;
+  width: 100%;
+}
+
+.input-icon input {
+  width: 100%;
+  padding-right: 40px;
+}
+
 input[type="text"], input[type="password"], input[type="email"], input[type="date"], select, input[type="tel"] {
   padding: 8px;
   width: 100%;
@@ -209,4 +241,110 @@ select {
 /* optional: success highlight */
 .success-input {
   border: 2px solid #2e7d32 !important;
+}
+
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 45px; /* space for eye */
+}
+
+.eye-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #004d40; /* change eye color here */
+  font-size: 20px;
+}
+.pw-meter-wrap {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.pw-meter {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pw-meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 150ms ease;
+}
+
+/* colors per score */
+.pw-meter-fill.score-0 { background: #ef4444; }
+.pw-meter-fill.score-1 { background: #f97316; }
+.pw-meter-fill.score-2 { background: #f59e0b; }
+.pw-meter-fill.score-3 { background: #22c55e; }
+.pw-meter-fill.score-4 { background: #16a34a; }
+
+.pw-label {
+  font-size: 12px;
+  color: #374151;
+}
+
+.pw-criteria li.ok {
+  color: #16a34a;
+}
+
+.pw-suggestions {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #6b7280;
+}
+/* wrapper under the password input */
+.pw-meter-wrap {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+/* ✅ criteria list: remove default spacing + make it compact */
+.pw-criteria {
+  list-style: none;      /* remove bullets */
+  padding: 0;            /* remove default left padding */
+  margin: 0;             /* remove default top/bottom margin */
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+/* ✅ each item as a neat row */
+.pw-criteria li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6b7280;
+  white-space: nowrap;   /* prevents wrapping that can stretch height */
+}
+
+/* ✅ little dot icon (default = gray) */
+.pw-criteria li::before {
+  content: "•";
+  display: inline-block;
+  width: 12px;
+  text-align: center;
+  color: #9ca3af;
+}
+
+/* ✅ rule satisfied */
+.pw-criteria li.ok {
+  color: #16a34a;
+}
+.pw-criteria li.ok::before {
+  content: "✓";
+  color: #16a34a;
+  font-weight: 700;
 }

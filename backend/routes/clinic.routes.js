@@ -6,10 +6,11 @@ const multer = require("multer");
 
 /* ================= DB CONNECTION ================= */
 const db = mysql.createConnection({
-  host: "localhost",
+  host: "127.0.0.1",
   user: "root",
-  password: "Cuidado_2026-cp1!",
+  password: "root123",
   database: "cuidado_medihelp",
+  port: 3307,
 });
 
 /* ================= MULTER SETUP ================= */

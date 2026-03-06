@@ -4,6 +4,11 @@
   --sidebar-width-collapsed: 70px;
   --sidebar-width-expanded: 220px;
   --header-height: 55px;
+
+  /* ✅ appoint-like box */
+  --accent: #00bfa6;
+  --table-head: #eef2f2;
+  --line: rgba(0, 0, 0, 0.10);
 }
 
 body {
@@ -95,7 +100,8 @@ body {
   border-radius: 999px;
   border: none;
   font-size: 0.9rem;
-  background: white;
+  background: #ffffff;
+  color: #000;
 }
 
 .admin-UserServices .search-btn {
@@ -127,7 +133,7 @@ body {
 }
 
 .admin-UserServices .nav-link {
-  color: #0f4242;
+  color: var(--sidebar-text);
   text-decoration: none;
   font-weight: 500;
   font-size: 1.02rem;
@@ -147,6 +153,10 @@ body {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+}
+
+.admin-UserServices .caret {
+  font-size: 0.95rem;
 }
 
 .admin-UserServices .profile-dropdown {
@@ -180,243 +190,6 @@ body {
   background: rgba(15, 66, 66, 0.08);
 }
 
-/* ================= ADMIN CONTENT ================= */
-.admin-UserServices .admin-content {
-  padding: calc(var(--header-height) + 20px) 24px 40px;
-}
-
-.admin-UserServices .admin-title h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 18px;
-  color: #000;
-}
-
-.admin-UserServices .admin-grid {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 26px;
-  align-items: start;
-}
-
-.admin-UserServices .admin-card {
-  background: #d9d9d9;
-  border-radius: 10px;
-}
-
-.admin-UserServices .admin-right {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.admin-UserServices .small-card {
-  height: 120px;
-}
-
-.admin-UserServices .big-card {
-  height: 430px;
-  background: #8f8f8f;
-}
-
-.admin-UserServices .admin-table-card {
-  min-height: 520px;
-  padding: 14px 12px;
-  overflow: hidden;
-}
-
-/* ================= TABLE ================= */
-.admin-UserServices .users-row {
-  display: grid;
-  grid-template-columns: 2.1fr 1.6fr 1.5fr 1.5fr 1fr 2fr;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-}
-
-.admin-UserServices .users-header {
-  font-weight: 800;
-}
-
-.admin-UserServices .users-header .users-cell {
-  color: black;
-  font-size: 1.3rem;
-}
-
-.admin-UserServices .users-cell {
-  min-width: 0;
-  position: relative;
-
-  /* spacing before vertical line */
-  padding-left: 18px;
-}
-
-/* first column no line + no padding */
-.admin-UserServices .users-row .users-cell:first-child {
-  padding-left: 0;
-}
-
-/* ✅ VERTICAL LINES with adjustable height (NOT border-left) */
-.admin-UserServices .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-
-  width: 1px;
-
-  /* 👇 ADJUST THIS HEIGHT */
-  height: 28px;
-
-  background: rgba(0, 0, 0, 0.75);
-}
-
-/* text style */
-.admin-UserServices .users-name {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: black;
-}
-
-/* ================= PILL STYLES ================= */
-.admin-UserServices .pill {
-  border: none;
-  color: white;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
-  font-weight: 600;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-
-  background: #5b5b5b;
-}
-.admin-UserServices .pills {
-  border: none;
-  color: black;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
-  font-weight: 600;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.admin-UserServices .pill-view {
-  background: #5b5b5b;
-  cursor: pointer;
-}
-
-.admin-UserServices .pill-danger {
-  background: #c62828;
-  cursor: pointer;
-}
-
-.admin-UserServices .pill-success {
-  background: #2e7d32;
-  cursor: pointer;
-}
-
-.admin-UserServices .pill-warning {
-  background: #b7791f;
-}
-
-/* actions */
-.admin-UserServices .users-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.admin-UserServices .pill:focus,
-.admin-UserServices .pill:active {
-  outline: none;
-  box-shadow: none;
-}
-/* Actions layout (side-by-side) */
-.admin-UserServices .users-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;
-}
-
-/* View button style */
-.admin-UserServices .pill-view {
-  background: #5b5b5b;
-  color: #fff;
-  cursor: pointer;
-}
-
-/* Optional: completed pill */
-.admin-UserServices .pill-gray {
-  background: #6b7280;
-  color: #fff;
-}
-/* ✅ Add button (header right) */
-.admin-UserServices .admin-table-header{
-  display: flex;
-  justify-content: flex-end;
-  padding: 6px 6px 12px;
-}
-
-.admin-UserServices .btn-add{
-  border: none;
-  border-radius: 999px;
-  padding: 10px 14px;
-  font-weight: 700;
-  cursor: pointer;
-  background: #c9edab;
-}
-
-/* ✅ Services table = 2 columns only */
-.admin-UserServices .services-row{
-  grid-template-columns: 1fr 280px; /* Service | Actions */
-}
-
-/* better header size (optional) */
-.admin-UserServices .users-header .users-cell{
-  font-size: 1.15rem;
-}
-
-/* keep buttons side-by-side */
-.admin-UserServices .users-actions{
-  flex-wrap: nowrap;
-}
-
-
-/* RESPONSIVE */
-@media screen and (max-width: 900px) {
-  .admin-UserServices .admin-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-UserServices .header-search {
-    width: 100%;
-    max-width: 360px;
-  }
-}
 .profile-dropdown a,
 .profile-dropdown button {
   display: block;
@@ -433,4 +206,240 @@ body {
 .profile-dropdown a:hover,
 .profile-dropdown button:hover {
   background: rgba(0, 0, 0, 0.05);
-} 
+}
+
+/* ================= ADMIN CONTENT ================= */
+.admin-UserServices .admin-content {
+  padding: calc(var(--header-height) + 20px) 24px 40px;
+}
+
+.admin-UserServices .admin-title h2 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 18px;
+  color: #000;
+}
+
+.admin-UserServices .admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 26px;
+  align-items: start;
+}
+
+/* =========================================================
+   ✅ ONLY THIS BOX CHANGES (SERVICES LIST BOX)
+   ========================================================= */
+
+/* left card base */
+.admin-UserServices .admin-card {
+  background: transparent;
+  border-radius: 14px;
+}
+
+/* main services box */
+.admin-UserServices .admin-table-card {
+  min-height: 520px;
+  padding: 0;
+  overflow: hidden;
+  background: #ffffff;
+  border: 5px solid var(--accent);
+  border-radius: 16px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* list container */
+.admin-UserServices .users-table {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ✅ header row (List of services | Actions) */
+.admin-UserServices .users-row.users-header.services-row {
+  background: var(--table-head);
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+/* ✅ normal rows */
+.admin-UserServices .users-row.services-row {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 18px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+/* header text */
+.admin-UserServices .users-header.services-row .users-cell {
+  font-size: 20px;
+  font-weight: 900;
+  color: #0f0f0f;
+  white-space: nowrap;
+}
+
+/* cells */
+.admin-UserServices .users-cell {
+  min-width: 0;
+}
+
+/* service name */
+.admin-UserServices .users-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #000;
+}
+
+/* actions (right aligned like your screenshot) */
+.admin-UserServices .users-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* pill buttons */
+.admin-UserServices .pill {
+  border: none;
+  border-radius: 999px;
+  padding: 0 16px;
+  min-height: 34px;
+  line-height: 34px;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #fff;
+}
+
+.admin-UserServices .pill-view { background: #5b5b5b; }
+.admin-UserServices .pill-danger { background: #c62828; }
+.admin-UserServices .pill-success { background: #2e7d32; }
+
+/* inactive badge */
+.admin-UserServices .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.admin-UserServices .badge-cancelled {
+  background: #e95c5c;
+  color: #8d1d1d;
+}
+
+/* ✅ ADD BUTTON AT BOTTOM (VISIBLE) */
+.admin-UserServices .admin-table-header {
+  margin-top: auto; /* push to bottom */
+  padding: 14px 16px 16px;
+  background: #ffffff;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.admin-UserServices .btn-add {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-weight: 900;
+  cursor: pointer;
+  background: #c9edab;
+  color: #ffffff;
+
+  width: min(620px, calc(100% - 10px));
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+
+  box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 900px) {
+  .admin-UserServices .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserServices .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .admin-UserServices .users-row.services-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .admin-UserServices .users-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+/* make the services card a column layout */
+.admin-UserServices .admin-table-card{
+  display: flex;
+  flex-direction: column;
+}
+
+/* table takes the remaining space */
+.admin-UserServices .users-table{
+  flex: 1;
+}
+
+/* push +Add service to the bottom */
+.admin-UserServices .admin-table-header{
+  margin-top: auto;
+  padding: 16px;
+}
+/* ======================================================
+   ✅ SERVICES ONLY: Move "+ Add service" to BOTTOM
+   (NO TOUCH sa appointment section)
+   ====================================================== */
+
+/* make card flex column */
+.admin-UserServices .admin-table-card{
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* put table FIRST */
+.admin-UserServices .users-table{
+  order: 1 !important;
+  flex: 1 1 auto !important;
+}
+
+/* put add button LAST (bottom) */
+.admin-UserServices .admin-table-header{
+  order: 2 !important;
+  margin-top: auto !important;
+  padding: 14px 16px 16px !important;
+  background: #ffffff !important;
+  border-top: 1px solid rgba(0,0,0,0.06) !important;
+}
+
+/* button style */
+.admin-UserServices .btn-add{
+  width: min(620px, calc(100% - 10px)) !important;
+  display: block !important;
+  margin: 0 auto !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 12px 16px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  background: #c9edab !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 18px rgba(0,0,0,0.08) !important;
+}
