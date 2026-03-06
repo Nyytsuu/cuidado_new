@@ -331,51 +331,50 @@ const onViewAppointment = (id: number) => {
                 </div>
 
                   {/* ✅ Appointment Section PANEL inside aside */}
-                  <Panel title="Appointment Section">
-                    <table className="dash-table">
-                      <thead>
-                        <tr>
-                          <th>Patient</th>
-                          <th>Schedule</th>
-                          <th>Status</th>
-                          <th className="th-action">Action</th>
-                        </tr>
-                      </thead>
+                                  <Panel title="Appointment Section">
+                 
+                  <table className="dash-table">
+                    <thead>
+                      <tr>
+                        <th>Patient</th>
+                        <th>Status</th>
+                        <th className="th-action">Action</th>
+                      </tr>
+                    </thead>
 
-                      <tbody>
-                        {appointments.length === 0 ? (
-                          <tr>
-                            <td colSpan={4} className="td-empty">
-                              Appointments API not connected yet.
+                    <tbody>
+                      {appointments.length === 0 ? (
+                        <tr>
+                          <td colSpan={3} className="td-empty">
+                            Appointments API not connected yet.
+                          </td>
+                        </tr>
+                      ) : (
+                        appointments.map((ap) => (
+                          <tr key={ap.id}>
+                            <td>
+                              <div className="t-main">{ap.patient}</div>
+                              <div className="t-sub">{ap.clinic}</div>
+                            </td>
+                            <td>
+                              <span className={`badge badge-${ap.status.toLowerCase()}`}>
+                                {ap.status}
+                              </span>
+                            </td>
+                            <td className="td-action">
+                              <button
+                                className="btn-sm btn-view"
+                                onClick={() => onViewAppointment(ap.id)}
+                              >
+                                View details
+                              </button>
                             </td>
                           </tr>
-                        ) : (
-                          appointments.map((ap) => (
-                            <tr key={ap.id}>
-                              <td>
-                                <div className="t-main">{ap.patient}</div>
-                                <div className="t-sub">{ap.clinic}</div>
-                              </td>
-                              <td>{ap.schedule}</td>
-                              <td>
-                                <span className={`badge badge-${ap.status.toLowerCase()}`}>
-                                  {ap.status}
-                                </span>
-                              </td>
-                              <td className="td-action">
-                                <button
-                                  className="btn-sm btn-view"
-                                  onClick={() => onViewAppointment(ap.id)}
-                                >
-                                  View details
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </Panel>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </Panel>
               </aside>
             </div>
           </div>

@@ -7,9 +7,14 @@
 
   --header-height: 55px;
 
+  /* ✅ appoint-like */
+  --accent: #00bfa6;
+  --table-head: #eef2f2;
+  --line: rgba(0, 0, 0, 0.10);
+
+  /* legacy vars (safe) */
   --card-bg: #d9d9d9;
   --header-bg: #bfbfbf;
-  --line: rgba(0, 0, 0, 0.25);
 }
 
 body {
@@ -72,7 +77,6 @@ body {
   left: var(--sidebar-width-collapsed);
   right: 0;
   height: var(--header-height);
-
   z-index: 999;
 }
 
@@ -204,6 +208,24 @@ body {
   background: rgba(15, 66, 66, 0.08);
 }
 
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 /* ================= CONTENT ================= */
 .admin-Userpage .admin-content {
   padding: calc(var(--header-height) + 20px) 24px 40px;
@@ -228,105 +250,176 @@ body {
   align-items: start;
 }
 
-/* LEFT CARD (TABLE CARD) */
+/* =========================================================
+   ✅ LEFT CARD (APPOINT-LIKE BOX) + NO X-AXIS
+   ========================================================= */
+
+/* keep card container "neutral" */
 .admin-Userpage .admin-card {
-  background: var(--card-bg);
-  border-radius: 10px;
+  background: transparent;
+  border-radius: 14px;
 }
 
+/* main box */
 .admin-Userpage .admin-table-card {
   min-height: 520px;
-  padding: 14px 12px;
+  padding: 0;
   overflow: hidden;
+
+  background: #ffffff;
+  border: 5px solid var(--accent);
+  border-radius: 16px;
 }
 
-/* ================= USERS TABLE ================= */
+/* ✅ IMPORTANT: remove horizontal scroll */
 .admin-Userpage .users-table-wrap {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;      /* ✅ NO x-axis */
+  overflow-y: hidden;
 }
 
+/* table fits container */
 .admin-Userpage .users-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: var(--card-bg);
-  border-radius: 10px;
+  background: #ffffff;
+  border-radius: 0;
   overflow: hidden;
+
+  table-layout: fixed;     /* ✅ force fit, no overflow */
 }
 
+/* header strip */
 .admin-Userpage .users-table thead th {
-  background: var(--header-bg);
-  color: #000;
+  background: var(--table-head);
+  color: #0f0f0f;
 
   font-weight: 900;
-  font-size: 14px;
-  padding: 14px 12px;
+  font-size: 14px;        /* ✅ ok kahit smaller */
+  padding: 16px 14px;
   text-align: left;
   white-space: nowrap;
 
-  border-bottom: 2px solid var(--line);
+  border-bottom: 1px solid var(--line);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.35px;
 
   position: sticky;
   top: 0;
   z-index: 2;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* body cells */
 .admin-Userpage .users-table tbody td {
-  color: #000;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 14px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+  color: #0f0f0f;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 16px 14px;
+
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
   vertical-align: middle;
+
+  overflow: hidden;         /* ✅ keep inside */
+  text-overflow: ellipsis;  /* ✅ ... */
+  white-space: nowrap;      /* ✅ keep row compact */
 }
 
+/* clean rows (no zebra) */
 .admin-Userpage .users-table tbody tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.35);
+  background: transparent;
 }
 
+/* remove vertical lines */
 .admin-Userpage .users-table thead th + th,
 .admin-Userpage .users-table tbody td + td {
-  border-left: 1px solid rgba(0, 0, 0, 0.35);
+  border-left: none;
 }
 
+/* name emphasis */
 .admin-Userpage .users-name {
-  font-weight: 700;
-  color: #000;
+  font-weight: 900;
+  font-size: 14px;
+  color: #0f0f0f;
 }
 
+/* empty */
 .admin-Userpage .users-empty {
   text-align: center;
   padding: 18px;
   color: #000;
-  font-weight: 700;
+  font-weight: 800;
+  white-space: normal;
 }
 
-/* ================= BUTTON PILLS ================= */
+/* ✅ column sizing (adjustable) */
+.admin-Userpage .users-table thead th:nth-child(1),
+.admin-Userpage .users-table tbody td:nth-child(1) { width: 16%; }
+
+.admin-Userpage .users-table thead th:nth-child(2),
+.admin-Userpage .users-table tbody td:nth-child(2) { width: 24%; }
+
+.admin-Userpage .users-table thead th:nth-child(3),
+.admin-Userpage .users-table tbody td:nth-child(3) { width: 13%; }
+
+.admin-Userpage .users-table thead th:nth-child(4),
+.admin-Userpage .users-table tbody td:nth-child(4) { width: 11%; }
+
+.admin-Userpage .users-table thead th:nth-child(5),
+.admin-Userpage .users-table tbody td:nth-child(5) { width: 12%; }
+
+.admin-Userpage .users-table thead th:nth-child(6),
+.admin-Userpage .users-table tbody td:nth-child(6) { width: 12%; }
+
+.admin-Userpage .users-table thead th:nth-child(7),
+.admin-Userpage .users-table tbody td:nth-child(7) { width: 12%; }
+
+/* ================= BUTTON PILLS (match appoint feel) ================= */
 .admin-Userpage .users-actions-wrap {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+
+  overflow: hidden;     /* ✅ keep inside cell */
 }
 
 .admin-Userpage .pill-btn {
-  border: 0;
-  cursor: pointer;
-  padding: 8px 12px;
+  border: none;
   border-radius: 999px;
-  font-weight: 800;
+  padding: 0 12px;
+  min-height: 32px;
+  line-height: 32px;
+  font-weight: 900;
   font-size: 12px;
-  line-height: 1;
-  color: #000;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+
+  max-width: 100%;
 }
 
-.admin-Userpage .pill-view { background: #eaf2ff; }
-.admin-Userpage .pill-success { background: #e8fff1; }
-.admin-Userpage .pill-danger { background: #ffecec; }
+.admin-Userpage .pill-view {
+  background: #5b5b5b;
+  color: #ffffff;
+}
+
+.admin-Userpage .pill-success {
+  background: #2e7d32;
+  color: #ffffff;
+}
+
+.admin-Userpage .pill-danger {
+  background: #c62828;
+  color: #ffffff;
+}
 
 .admin-Userpage .pill-btn:disabled {
   opacity: 0.55;
@@ -335,17 +428,22 @@ body {
 
 /* ================= STATUS BADGES ================= */
 .admin-Userpage .status-badge {
-  display: inline-block;
-  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  min-height: 30px;
+  line-height: 30px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
-  color: #000;
+  color: #ffffff;
   text-transform: capitalize;
+  white-space: nowrap;
 }
 
-.admin-Userpage .status-badge.is-active { background: #e8fff1; }
-.admin-Userpage .status-badge.is-disabled { background: #ffecec; }
+.admin-Userpage .status-badge.is-active { background: #2e7d32; }
+.admin-Userpage .status-badge.is-disabled { background: #111827; }
 
 /* ===================================================================== */
 /* ================= ASIDE (SAME AS DASHBOARD CSS) ====================== */
@@ -401,7 +499,6 @@ body {
 }
 
 /* ================= RECENT ACTIVITY (dashboard override) ================= */
-/* Dashboard note: aside recent activity becomes WHITE with teal border */
 .admin-Userpage .dash-aside .dash-right-top .dash-panel-body {
   background: #ffffff;
   border: 3px solid #00bfa6;
@@ -421,7 +518,6 @@ body {
   opacity: 0.85;
 }
 
-/* dashboard list */
 .admin-Userpage .activity-list {
   height: 100%;
   display: flex;
@@ -433,7 +529,6 @@ body {
   list-style: none;
 }
 
-/* dashboard item */
 .admin-Userpage .activity-item {
   background: #ffffff !important;
   color: #0f0f0f !important;
@@ -450,7 +545,6 @@ body {
   box-shadow: 0 10px 18px rgba(0,0,0,0.08);
 }
 
-/* dashboard icon/content */
 .admin-Userpage .activity-icon {
   width: 36px;
   height: 36px;
@@ -482,7 +576,6 @@ body {
   white-space: nowrap;
 }
 
-/* keep the same optional type tint */
 .admin-Userpage .activity-item.user .activity-icon,
 .admin-Userpage .activity-item.clinic .activity-icon,
 .admin-Userpage .activity-item.clinic-approved .activity-icon,
@@ -558,9 +651,16 @@ body {
   .admin-Userpage .header-search {
     right: 0;
   }
+
+  .admin-Userpage .users-actions-wrap {
+    flex-wrap: wrap;
+  }
 }
 
-/* ================= APPOINTMENT SECTION PANEL ================= */
+/* ============================================================
+   ✅ APPOINTMENT SECTION PANEL (DO NOT TOUCH)
+   (kept exactly as you gave)
+   ============================================================ */
 
 /* Panel wrapper (already shared with other panels) */
 .dash-panel {
@@ -702,20 +802,299 @@ body {
 
 .btn-sm.btn-view:hover {
   opacity: 0.9;
-}.profile-dropdown a,
-.profile-dropdown button {
-  display: block;
-  width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  font: inherit;
-  color: #0f0f0f;
-  cursor: pointer;
 }
 
-.profile-dropdown a:hover,
-.profile-dropdown button:hover {
-  background: rgba(0, 0, 0, 0.05);
-} 
+/* =========================
+   APPOINTMENT SECTION ONLY
+   ========================= */
+
+/* scroll area (vertical only) */
+.dash-panel-body.dash-panel-pad{
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+}
+
+/* table */
+.dash-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+/* header */
+.dash-table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #eef2f2;
+  padding: 14px 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(0,0,0,0.10);
+}
+
+/* remove header vertical dividers */
+.dash-table thead th::before{
+  content: none !important;
+}
+
+/* body cells */
+.dash-table tbody td{
+  padding: 16px 16px;
+  vertical-align: top;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* remove body dividers */
+.dash-table tbody td::before{
+  content: none !important;
+}
+
+/* patient text */
+.dash-table .t-main{
+  font-weight: 900;
+  margin-bottom: 2px;
+}
+.dash-table .t-sub{
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 0;
+}
+
+/* ✅ Status column (so pill won't be cut) */
+.dash-table td:nth-child(2){
+  overflow: visible;
+  text-overflow: unset;
+}
+
+/* ✅ Status badge/pill */
+.dash-table td:nth-child(2) .badge{
+  display: inline-flex;
+  width: fit-content;
+  max-width: none;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ✅ Action column */
+.dash-table .th-action,
+.dash-table .td-action{
+  width: 120px;
+  text-align: right;
+  padding-right: 18px;
+  white-space: nowrap;
+}
+
+/* ✅ View details button */
+.dash-table .btn-view{
+  width: auto !important;
+  min-width: 90px;
+  padding: 6px 10px;
+  font-size: 11px;
+  display: inline-block;
+  border-radius: 999px;
+}
+
+/* ✅ Move ONLY the "Action" header text LEFT (not the buttons) */
+.admin-Userpage .dash-table thead th.th-action{
+  text-align: left !important;
+  padding-left: 16px !important;
+  padding-right: 12px !important;
+}
+
+/* ✅ Keep the Action cell (buttons) fixed on the right */
+.admin-Userpage .dash-table tbody td.td-action{
+  text-align: right !important;
+  padding-left: 9px !important;
+  padding-right: 20px !important;
+}
+
+/* ✅ Keep button position stable */
+.admin-Userpage .dash-table tbody td.td-action .btn-view{
+  margin: 0 !important;
+}
+/* ===============================
+   ✅ FIX: NO OVERFLOW / NO X-AXIS
+   USERS TABLE ONLY
+   =============================== */
+
+/* make sure wrapper never scrolls sideways */
+.admin-Userpage .users-table-wrap {
+  overflow-x: hidden !important;
+}
+
+/* force table to fit */
+.admin-Userpage .users-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+/* allow cells to shrink properly */
+.admin-Userpage .users-table thead th,
+.admin-Userpage .users-table tbody td {
+  min-width: 0 !important;
+}
+
+/* ✅ Actions area: WRAP so it won't overflow */
+.admin-Userpage .users-actions-wrap {
+  display: flex !important;
+  flex-wrap: wrap !important;     /* ✅ wrap to next line */
+  gap: 8px !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+
+/* ✅ make buttons smaller so they fit better */
+.admin-Userpage .pill-btn {
+  min-height: 28px !important;
+  line-height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
+}
+
+/* ✅ adjust column widths (more space for actions) */
+.admin-Userpage .users-table thead th:nth-child(1),
+.admin-Userpage .users-table tbody td:nth-child(1) { width: 14% !important; } /* Name */
+
+.admin-Userpage .users-table thead th:nth-child(2),
+.admin-Userpage .users-table tbody td:nth-child(2) { width: 22% !important; } /* Gmail */
+
+.admin-Userpage .users-table thead th:nth-child(3),
+.admin-Userpage .users-table tbody td:nth-child(3) { width: 12% !important; } /* Contact */
+
+.admin-Userpage .users-table thead th:nth-child(4),
+.admin-Userpage .users-table tbody td:nth-child(4) { width: 10% !important; } /* Date */
+
+.admin-Userpage .users-table thead th:nth-child(5),
+.admin-Userpage .users-table tbody td:nth-child(5) { width: 11% !important; } /* Status */
+
+.admin-Userpage .users-table thead th:nth-child(6),
+.admin-Userpage .users-table tbody td:nth-child(6) { width: 11% !important; } /* View profile */
+
+.admin-Userpage .users-table thead th:nth-child(7),
+.admin-Userpage .users-table tbody td:nth-child(7) { width: 20% !important; } /* Actions */
+
+/* ✅ allow the Actions cell to show wrapped content nicely */
+.admin-Userpage .users-table tbody td:nth-child(7) {
+  white-space: normal !important;  /* ✅ allow wrap inside cell */
+  overflow: hidden !important;     /* still no x-axis */
+}
+
+/* OPTIONAL: make header "VIEW PROFILE" not push too wide */
+.admin-Userpage .users-table thead th:nth-child(6) {
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+}
+/* =========================================
+   ✅ FINAL: NO X-AXIS + CLEAN ACTIONS STACK
+   (USERS TABLE ONLY — appointment untouched)
+   ========================================= */
+
+/* no horizontal scroll ever */
+.admin-Userpage .users-table-wrap { overflow-x: hidden !important; }
+
+/* force fit */
+.admin-Userpage .users-table { width: 100% !important; table-layout: fixed !important; }
+.admin-Userpage .users-table th,
+.admin-Userpage .users-table td { min-width: 0 !important; }
+
+/* keep content inside cells */
+.admin-Userpage .users-table tbody td {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ✅ column widths (balanced) */
+.admin-Userpage .users-table th:nth-child(1),
+.admin-Userpage .users-table td:nth-child(1) { width: 14% !important; } /* Name */
+
+.admin-Userpage .users-table th:nth-child(2),
+.admin-Userpage .users-table td:nth-child(2) { width: 22% !important; } /* Gmail */
+
+.admin-Userpage .users-table th:nth-child(3),
+.admin-Userpage .users-table td:nth-child(3) { width: 12% !important; } /* Contact */
+
+.admin-Userpage .users-table th:nth-child(4),
+.admin-Userpage .users-table td:nth-child(4) { width: 10% !important; } /* Date */
+
+.admin-Userpage .users-table th:nth-child(5),
+.admin-Userpage .users-table td:nth-child(5) { width: 11% !important; } /* Status */
+
+.admin-Userpage .users-table th:nth-child(6),
+.admin-Userpage .users-table td:nth-child(6) { width: 11% !important; } /* View */
+
+.admin-Userpage .users-table th:nth-child(7),
+.admin-Userpage .users-table td:nth-child(7) { width: 20% !important; } /* Actions */
+
+/* ✅ ACTIONS: stack buttons vertically (clean + always fits) */
+.admin-Userpage .users-table td:nth-child(7) {
+  white-space: normal !important;     /* allow wrap inside actions cell */
+  overflow: hidden !important;
+}
+
+.admin-Userpage .users-actions-wrap{
+  display: flex !important;
+  flex-direction: column !important;  /* ✅ stack */
+  gap: 10px !important;
+  align-items: flex-end !important;   /* ✅ align to right like your screenshot */
+  justify-content: center !important;
+}
+
+/* ✅ buttons same width so they look clean */
+.admin-Userpage .users-actions-wrap .pill-btn{
+  width: 140px !important;            /* adjust 120-160 */
+  min-height: 34px !important;
+  line-height: 34px !important;
+  font-size: 12px !important;
+  padding: 0 12px !important;
+}
+
+/* keep header short */
+.admin-Userpage .users-table thead th:nth-child(6){
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+/* =====================================
+   ✅ MAKE "VIEW" SAME SIZE AS ACTIONS
+   (USERS TABLE ONLY)
+   ===================================== */
+
+/* apply same sizing to ALL buttons inside actions column */
+.admin-Userpage .users-table td:nth-child(6) .pill,
+.admin-Userpage .users-table td:nth-child(6) .pill-btn,
+.admin-Userpage .users-table td:nth-child(7) .pill,
+.admin-Userpage .users-table td:nth-child(7) .pill-btn{
+  width: 140px !important;
+  min-height: 34px !important;
+  line-height: 34px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* optional: make view column align like actions */
+.admin-Userpage .users-table td:nth-child(6){
+  text-align: right !important; /* para pantay sa right */
+}
+/* ✅ Bold the main row texts (users table only) */
+.admin-Userpage .users-table tbody td{
+  font-weight: 800 !important;
+}
+
+/* optional: mas bold pa yung NAME column */
+.admin-Userpage .users-table tbody td:nth-child(1){
+  font-weight: 900 !important;
+}

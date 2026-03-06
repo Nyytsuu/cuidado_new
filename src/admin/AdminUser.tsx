@@ -231,8 +231,8 @@ const loadAppointments = async () => {
                         <th>Contact</th>
                         <th>Date</th>
                         <th>Status</th>
-                        <th>View Profile</th>
-                        <th>Actions</th>
+                        <th>Profiles</th>
+                        <th>Actions:</th>
                       </tr>
                     </thead>
 
@@ -339,13 +339,11 @@ const loadAppointments = async () => {
                   </div>
                 </div>
 
-                {/* ✅ Appointment Section PANEL inside aside */}
                 <Panel title="Appointment Section">
                   <table className="dash-table">
                     <thead>
                       <tr>
                         <th>Patient</th>
-                        <th>Schedule</th>
                         <th>Status</th>
                         <th className="th-action">Action</th>
                       </tr>
@@ -354,7 +352,7 @@ const loadAppointments = async () => {
                     <tbody>
                       {appointments.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="td-empty">
+                          <td colSpan={3} className="td-empty">
                             Appointments API not connected yet.
                           </td>
                         </tr>
@@ -365,7 +363,6 @@ const loadAppointments = async () => {
                               <div className="t-main">{ap.patient}</div>
                               <div className="t-sub">{ap.clinic}</div>
                             </td>
-                            <td>{ap.schedule}</td>
                             <td>
                               <span className={`badge badge-${ap.status.toLowerCase()}`}>
                                 {ap.status}

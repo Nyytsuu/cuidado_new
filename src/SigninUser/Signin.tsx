@@ -14,8 +14,8 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 
   try {
     const data = await login(email, password);
-
-    // ✅ save token + role
+    console.log("LOGIN RESPONSE:", data);
+    // ✅ save token + role 
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", data.user.role);
     
@@ -36,7 +36,6 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     setLoading(false);
   }
 };
-
   return (
     <div className="signin-container">
       <div className="left-side">

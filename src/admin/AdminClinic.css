@@ -197,6 +197,24 @@ body {
   background: rgba(15, 66, 66, 0.08);
 }
 
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 /* ================= CONTENT ================= */
 .admin-UserClinics .admin-content {
   padding: calc(var(--header-height) + 20px) 24px 40px;
@@ -236,63 +254,65 @@ body {
   background: #8f8f8f;
 }
 
+/* ✅ CARD: pantay sa gilid (remove extra inner padding) */
 .admin-UserClinics .admin-table-card {
   min-height: 520px;
-  padding: 14px 12px;
+  padding: 0;                 /* ✅ pantay sa border */
   overflow: hidden;
-  background: #ffffff;           /* ✅ white inside */
-  border: 5px solid #00bfa6; 
+  background: #ffffff;
+  border: 5px solid #00bfa6;
+  border-radius: 14px;
 }
 
 /* ================= TABLE ================= */
-/* 3 columns: clinic | status | actions */
-.admin-UserClinics .users-row {
-  display: grid;
-  grid-template-columns: 3.2fr 1.1fr 2.7fr;
-  align-items: center;
-  padding: 14px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+.admin-UserClinics .admin-table {
+  width: 100%;
+  margin: 0;                 /* ✅ remove inset margin */
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 0;          /* card handles radius */
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
 }
 
-/* header */
-.admin-UserClinics .users-header {
-  font-weight: 800;
+/* ✅ keep normal table text dark */
+.admin-UserClinics .admin-table td,
+.admin-UserClinics .admin-table th {
+  color: #0f0f0f;
 }
 
-.admin-UserClinics .users-header .users-cell {
-  color: #000;
-  font-size: 1.3rem;
+/* ✅ header bigger */
+.admin-UserClinics .admin-table thead th {
+  padding: 16px 18px;
+  font-size: 20px;           /* ✅ larger */
+  font-weight: 900;
+  background: #eef2f2;
+  text-align: left;
+  white-space: nowrap;
 }
 
-/* cell base */
-.admin-UserClinics .users-cell {
-  min-width: 0;
-  position: relative;
-  padding-left: 18px;
+/* ✅ body bigger */
+.admin-UserClinics .admin-table tbody td {
+  padding: 16px 18px;
+  font-size: 15px;           /* ✅ larger */
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  vertical-align: middle;    /* ✅ align nicely */
+  background: transparent;
 }
 
-/* first column no line */
-.admin-UserClinics .users-row .users-cell:first-child {
-  padding-left: 0;
-}
-
-/* vertical lines between columns */
-.admin-UserClinics .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 34px;
-  background: rgba(0, 0, 0, 0.65);
-}
-
-/* clinic name */
+/* clinic name bigger */
 .admin-UserClinics .users-name {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: 999;
   color: #000;
+}
+
+/* Optional: center pills under Approval + Account */
+.admin-UserClinics .clinics-table tbody td:nth-child(2),
+.admin-UserClinics .clinics-table tbody td:nth-child(3) {
+  text-align: center;
 }
 
 /* ================= PILL BUTTONS ================= */
@@ -300,16 +320,20 @@ body {
   border: none;
   border-radius: 999px;
   padding: 0 16px;
-  min-height: 30px;
-  line-height: 30px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  min-height: 34px;
+  line-height: 34px;
+  font-size: 14px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  color: #fff;
   cursor: pointer;
+}
+
+/* ✅ VERY IMPORTANT: make pills text WHITE */
+.admin-UserClinics .admin-table .pill {
+  color: #ffffff !important;
 }
 
 .admin-UserClinics .pill-wide {
@@ -323,17 +347,7 @@ body {
 .admin-UserClinics .pill-warning { background: #b7791f; }
 .admin-UserClinics .pill-gray { background: #6b7280; }
 .admin-UserClinics .pill-dark { background: #111827; }
-.pill-active {
-  background: rgba(16, 185, 129, 0.15); /* soft green */
-  color: #065f46;                        /* deep green */
-  border: 1px solid rgba(16, 185, 129, 0.35);
-}
 
-.pill-disabled {
-  background: rgba(55, 65, 81, 0.15);   /* soft gray */
-  color: #111827;                       /* near black */
-  border: 1px solid rgba(55, 65, 81, 0.35);
-}
 .admin-UserClinics .pill:focus,
 .admin-UserClinics .pill:active {
   outline: none;
@@ -355,7 +369,7 @@ body {
   pointer-events: none;
 }
 
-/* ✅ lines before slot 2..5 (Approve/Reject/Edit/Deactivate) */
+/* ✅ lines before slot 2..5 */
 .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2) {
   position: relative;
 }
@@ -371,99 +385,11 @@ body {
   background: var(--actions-line-color);
 }
 
-/* ================= RESPONSIVE ================= */
-@media screen and (max-width: 900px) {
-  .admin-UserClinics .admin-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-UserClinics .header-search {
-    width: 100%;
-    max-width: 360px;
-  }
-
-  /* stack table on small screens */
-  .admin-UserClinics .users-row {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .admin-UserClinics .users-row .users-cell:not(:first-child)::before {
-    display: none;
-  }
-
-  .admin-UserClinics .users-cell {
-    padding-left: 0;
-  }
-
-  /* actions wrap */
-  .admin-UserClinics .clinics-actions.slots {
-    grid-template-columns: repeat(2, var(--action-slot-w));
-    row-gap: 10px;
-  }
-
-  /* hide slot lines in mobile */
-  .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
-    display: none;
-  }
-}
-.profile-dropdown a,
-.profile-dropdown button {
-  display: block;
-  width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  font: inherit;
-  color: #0f0f0f;
-  cursor: pointer;
-}
-
-.profile-dropdown a:hover,
-.profile-dropdown button:hover {
-  background: rgba(0, 0, 0, 0.05);
-} 
-.admin-table {
-  width: calc(100% - 1px);
-  flex: 1;
-  min-height: 0;
-  margin: 5px;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 0;
-  overflow: hidden;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-}
-
-/* readable text always */
-.admin-table,
-.admin-table * {
-  color: #0f0f0f !important;
-}
-
-.admin-table thead th {
-  padding: 10px;
-  font-size: 11px;
-  font-weight: 900;
-  background: #eef2f2;
-  text-align: left;
-  white-space: nowrap;
-}
-
-.admin-table tbody td {
-  padding: 10px;
-  font-size: 12px;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  vertical-align: top;
-  background: transparent;
-}
-
+/* ================= DASH TABLE (RIGHT SIDE) ================= */
 .t-main {
   font-weight: 900;
 }
+
 .t-sub {
   font-size: 11px;
   opacity: 0.72;
@@ -512,4 +438,473 @@ body {
 /* Button alignment */
 .td-action .btn-view {
   display: inline-block;
+}
+
+/* ================= RESPONSIVE ================= */
+@media screen and (max-width: 900px) {
+  .admin-UserClinics .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserClinics .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  /* actions wrap */
+  .admin-UserClinics .clinics-actions.slots {
+    grid-template-columns: repeat(2, var(--action-slot-w));
+    row-gap: 10px;
+  }
+
+  /* hide slot lines in mobile */
+  .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
+    display: none;
+  }
+}
+/* ===========================
+   APPOINTMENT PANEL TABLE FIX
+   =========================== */
+
+/* make table full width + breathing space inside panel */
+.admin-UserClinics .dash-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* bigger spacing and better alignment */
+.admin-UserClinics .dash-table thead th,
+.admin-UserClinics .dash-table tbody td {
+  padding: 14px 16px;         /* ✅ spacing */
+  vertical-align: top;
+}
+
+/* ✅ add a little padding on the right edge so button won't stick */
+.admin-UserClinics .dash-table thead th:last-child,
+.admin-UserClinics .dash-table tbody td:last-child {
+  padding-right: 22px;        /* ✅ space from right border */
+}
+
+/* ✅ vertical "sidebar" divider between columns */
+.admin-UserClinics .dash-table thead th,
+.admin-UserClinics .dash-table tbody td {
+  position: relative;
+}
+
+.admin-UserClinics .dash-table thead th:not(:first-child)::before,
+.admin-UserClinics .dash-table tbody td:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 26px;               /* ✅ height ng divider */
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* ✅ keep Action column aligned + not too tight */
+.admin-UserClinics .dash-table .th-action,
+.admin-UserClinics .dash-table .td-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 150px;
+}
+
+/* ✅ make button not stick and look consistent */
+.admin-UserClinics .dash-table .td-action .btn-sm,
+.admin-UserClinics .dash-table .td-action .btn-view {
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin-right: 6px;          /* ✅ little gap from border */
+}
+
+/* ✅ optional: tighten patient cell spacing */
+.admin-UserClinics .dash-table .t-main {
+  font-weight: 900;
+  margin-bottom: 2px;
+}
+
+.admin-UserClinics .dash-table .t-sub {
+  font-size: 12px;
+  opacity: 0.75;
+  margin-top: 0;
+}
+
+/* ✅ optional: give rows separation */
+.admin-UserClinics .dash-table tbody tr + tr td {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+/* =========================================
+   ✅ APPOINTMENT SECTION - CLEAN DIVIDERS
+   (HEADER ONLY) + FIX VIEW BUTTON SPACING
+   ========================================= */
+
+/* table layout */
+.admin-UserClinics .dash-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* spacing */
+.admin-UserClinics .dash-table thead th {
+  padding: 14px 16px;
+  background: #eef2f2;
+  font-weight: 900;
+  white-space: nowrap;
+  position: relative;
+}
+
+.admin-UserClinics .dash-table tbody td {
+  padding: 16px 16px;
+  vertical-align: top;
+  position: relative;
+}
+
+/* ✅ remove dividers in BODY (para walang guhit sa rows) */
+.admin-UserClinics .dash-table tbody td::before {
+  content: none !important;
+}
+
+/* ✅ dividers ONLY in HEADER */
+.admin-UserClinics .dash-table thead th:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* row separators */
+.admin-UserClinics .dash-table tbody tr + tr td {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ✅ Action column: give safe space at the right */
+.admin-UserClinics .dash-table .th-action,
+.admin-UserClinics .dash-table .td-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 160px;
+  padding-right: 26px; /* ✅ para di dikit sa border */
+}
+
+/* button spacing (View details) */
+.admin-UserClinics .dash-table .td-action .btn-sm,
+.admin-UserClinics .dash-table .td-action .btn-view {
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin-right: 4px; /* maliit nalang */
+}
+/* =========================
+   APPOINTMENT PANEL SCROLL
+   ========================= */
+
+.admin-UserClinics .dash-panel-body {
+  max-height: 300px;   /* adjust kung gusto mo mas mataas */
+  overflow-y: auto;    /* ito yung scrollbar */
+  overflow-x: hidden;
+}
+
+/* nicer scrollbar (optional) */
+.admin-UserClinics .dash-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.admin-UserClinics .dash-panel-body::-webkit-scrollbar-thumb {
+  background: #c7c7c7;
+  border-radius: 10px;
+}
+
+.admin-UserClinics .dash-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* =========================================
+   ✅ APPOINTMENT TABLE: FIXED HEADER + SCROLL BODY
+   ========================================= */
+
+/* 1) Scroll container: panel body ang mag scroll */
+.admin-UserClinics .dash-panel-body.dash-panel-pad {
+  max-height: 320px;      /* adjust height */
+  overflow-y: auto;       /* ✅ scrollbar here */
+  overflow-x: hidden;
+  padding: 0;             /* para pantay */
+}
+
+/* 2) Table basics */
+.admin-UserClinics .dash-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* 3) Sticky header */
+.admin-UserClinics .dash-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #eef2f2;    /* must have bg para di transparent */
+  padding: 14px 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.10);
+}
+
+/* 4) Header dividers only */
+.admin-UserClinics .dash-table thead th {
+  position: sticky; /* keep sticky + relative effects */
+}
+
+.admin-UserClinics .dash-table thead th:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 26px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+/* 5) Body cells */
+.admin-UserClinics .dash-table tbody td {
+  padding: 16px 16px;
+  vertical-align: top;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* remove old body dividers if meron */
+.admin-UserClinics .dash-table tbody td::before {
+  content: none !important;
+}
+
+/* 6) Action column spacing so button not stuck */
+.admin-UserClinics .dash-table .th-action,
+.admin-UserClinics .dash-table .td-action {
+  text-align: right;
+  white-space: nowrap;
+  width: 160px;
+  padding-right: 22px;
+}
+
+/* button spacing */
+.admin-UserClinics .dash-table .td-action .btn-sm,
+.admin-UserClinics .dash-table .td-action .btn-view {
+  padding: 8px 14px;
+  border-radius: 999px;
+  margin-right: 4px;
+}
+
+/* Optional: nicer scrollbar */
+.admin-UserClinics .dash-panel-body.dash-panel-pad::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-UserClinics .dash-panel-body.dash-panel-pad::-webkit-scrollbar-thumb {
+  background: #c7c7c7;
+  border-radius: 10px;
+}
+.admin-UserClinics .dash-panel-body.dash-panel-pad::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* ✅ Allow horizontal scroll so Action column is visible */
+.admin-UserClinics .dash-panel-body.dash-panel-pad {
+  overflow-x: auto;     /* ✅ show horizontal scrollbar if needed */
+  overflow-y: auto;
+}
+
+/* ✅ Force table to keep its natural width (so columns don't collapse) */
+.admin-UserClinics .dash-table {
+  min-width: 520px;     /* adjust: 520-650 depende sa gusto */
+  width: 100%;
+  table-layout: auto;
+}
+
+/* ✅ Make sure Action column never shrinks too much */
+.admin-UserClinics .dash-table .th-action,
+.admin-UserClinics .dash-table .td-action {
+  width: 170px;
+  min-width: 170px;     /* ✅ important */
+  padding-right: 22px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* ✅ prevent text wrapping in headers (para di nagiging sobrang sikip) */
+.admin-UserClinics .dash-table thead th {
+  white-space: nowrap;
+}
+/* =========================================
+   ✅ APPOINTMENT: FIXED HEADER + VERTICAL SCROLL ONLY
+   ========================================= */
+
+/* scroll area (dito lalabas yung scrollbar pataas-pababa) */
+.admin-UserClinics .dash-panel-body.dash-panel-pad{
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;      /* ✅ bawal slide */
+  padding: 0;
+}
+
+/* table fits container (no horizontal overflow) */
+.admin-UserClinics .dash-table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;     /* ✅ para di lumampas */
+}
+
+/* sticky header */
+.admin-UserClinics .dash-table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #eef2f2;
+  padding: 14px 16px;
+  font-weight: 900;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(0,0,0,0.10);
+}
+
+/* body cells */
+.admin-UserClinics .dash-table tbody td{
+  padding: 16px 16px;
+  vertical-align: top;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  overflow: hidden;        /* ✅ avoid push out */
+  text-overflow: ellipsis;
+}
+
+/* ✅ make Action column visible but not too wide */
+.admin-UserClinics .dash-table .th-action,
+.admin-UserClinics .dash-table .td-action{
+  width: 120px;            /* adjust: 110-140 */
+  text-align: right;
+  padding-right: 18px;
+  white-space: nowrap;
+}
+
+/* button never causes overflow */
+.admin-UserClinics .dash-table .td-action .btn-view,
+.admin-UserClinics .dash-table .td-action .btn-sm{
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ✅ IMPORTANT: if you previously added body dividers, remove them */
+.admin-UserClinics .dash-table tbody td::before{
+  content: none !important;
+}
+/* ✅ make columns use full width nicely */
+.admin-UserClinics .clinics-table {
+  width: 100%;
+  table-layout: fixed; /* important: lets widths work */
+}
+
+/* set widths so Actions gets the remaining space */
+.admin-UserClinics .clinics-table th:nth-child(1),
+.admin-UserClinics .clinics-table td:nth-child(1) {
+  width: 32%;
+}
+
+.admin-UserClinics .clinics-table th:nth-child(2),
+.admin-UserClinics .clinics-table td:nth-child(2) {
+  width: 16%;
+}
+
+.admin-UserClinics .clinics-table th:nth-child(3),
+.admin-UserClinics .clinics-table td:nth-child(3) {
+  width: 16%;
+}
+
+/* Actions column consumes the rest */
+.admin-UserClinics .clinics-table th:nth-child(4),
+.admin-UserClinics .clinics-table td:nth-child(4) {
+  width: 36%;
+}
+
+/* ✅ actions: stretch to fill the Actions cell */
+.admin-UserClinics .clinics-actions.slots {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(var(--action-slot-w), 1fr));
+  column-gap: var(--actions-gap);
+  align-items: center;
+  justify-content: stretch;
+  width: 100%;
+}
+/* ✅ make Approval + Account headers align with their pills */
+.admin-UserClinics .clinics-table thead th:nth-child(2),
+.admin-UserClinics .clinics-table thead th:nth-child(3) {
+  text-align: center;
+}
+
+/* optional: align Actions header too (para pantay sa buttons) */
+.admin-UserClinics .clinics-table thead th:nth-child(4) {
+  text-align: left; /* or center kung gusto mo */
+}
+/* Remove all vertical dividers in appointment table header */
+.admin-UserClinics .dash-table thead th::before {
+  content: none !important;
+}
+
+/* make sure body cells also have no divider */
+.admin-UserClinics .dash-table tbody td::before {
+  content: none !important;
+}
+/* ✅ Appointment table: move Status + Action to LEFT */
+.admin-UserClinics .dash-table th:nth-child(2),
+.admin-UserClinics .dash-table td:nth-child(2),
+.admin-UserClinics .dash-table th:nth-child(3),
+.admin-UserClinics .dash-table td:nth-child(3){
+  text-align: left !important;
+}
+
+/* ✅ Reduce column widths so they don't push to the right */
+.admin-UserClinics .dash-table th:nth-child(2),
+.admin-UserClinics .dash-table td:nth-child(2){
+  width: 22% !important;
+}
+
+.admin-UserClinics .dash-table th:nth-child(3),
+.admin-UserClinics .dash-table td:nth-child(3){
+  width: 53% !important;
+  white-space: nowrap;
+}
+
+/* ✅ Make button stick left too */
+.admin-UserClinics .dash-table .td-action{
+  text-align: left !important;
+  padding-left: 5px;
+}
+/* Fix View details button size */
+.admin-UserClinics .dash-table .btn-view{
+  width: auto !important;     /* alisin full width */
+  min-width: 90px;            /* control size */
+  padding: 6px 10px;          /* mas maliit */
+  font-size: 11px;
+  display: inline-block;
+}
+/* ✅ Move ONLY the "Action" header text LEFT (not the buttons) */
+.admin-UserClinics .dash-table thead th.th-action{
+  text-align: left !important;
+  padding-left: 10px !important;  /* adjust: 16-40 */
+  padding-right: px !important;
+}
+
+/* ✅ Keep the Action cell (buttons) fixed on the right */
+.admin-UserClinics .dash-table tbody td.td-action{
+  text-align: center !important;
+  padding-left: px !important;
+  padding-right: 185px !important;
+}
+
+/* ✅ Keep button position stable */
+.admin-UserClinics .dash-table tbody td.td-action .btn-view{
+  margin: 0 !important;
 }
