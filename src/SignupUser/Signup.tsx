@@ -36,6 +36,8 @@ function Signup() {
         const [municipalityId, setMunicipalityId] = useState<string>("");
         const [barangayId, setBarangayId] = useState<string>("");
         const [confirmPassword, setConfirmPassword] = useState("");
+        const [showPassword, setShowPassword] = useState(false);
+        const [showConfirmPassword, setShowConfirmPassword] = useState(false);
         const [consent, setConsent] = useState(false);
         const [isSubmitting, setIsSubmitting] = useState(false);
         const [password, setPassword] = useState("");
@@ -318,10 +320,11 @@ return (
             id="dob"
             name="dob"
             value={dob}
+            max={today}  // ✅ blocks dates beyond current date/year
             className={errors.dob ? "error-input" : ""}
             onChange={(e) => {
-                setDob(e.target.value);
-                clearError("dob");
+            setDob(e.target.value);
+            clearError("dob");
             }}
             min="1900-01-01"
             max={maxDob}

@@ -6,6 +6,8 @@ import Signin from "./SigninUser/Signin";
 import ForgetPass from "./SigninUser/Forgetpass";
 import LandingPage from "./SigninUser/Landingpage";
 import Categories from "./Categories/Categories";
+import Changepass from "./SigninUser/Changepass";
+import VerifyOtp from "./SigninUser/VerifyOtp";
 
 // admin
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
@@ -22,16 +24,23 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route>
         <Route path="/" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgetPass />} />
+        <Route path="/change-password" element={<Changepass />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/landing" element={<LandingPage />} />
+        
+        
+        </Route>
         {/* clinic */}
         <Route path="/Clinicsignup" element={<ClinicSignup />} />
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
+      <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/admin/services" element={<AdminServices />} />

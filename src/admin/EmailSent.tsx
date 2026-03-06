@@ -2,7 +2,12 @@ import React from "react";
 import "./EmailSent.css";
 import image10 from "../img/calendar.png";
 
-const EmailSent: React.FC = () => {
+type Props = {
+  onOpenEmail: () => void;
+  onResend: () => void;
+};
+
+const EmailSent: React.FC<Props> = ({ onOpenEmail, onResend }) => {
   return (
     <div className="email-page">
       <div className="email-card">
@@ -15,21 +20,31 @@ const EmailSent: React.FC = () => {
         <h1 className="email-title">Email Sent!</h1>
 
         <p className="email-body">
-          <strong>Thanks!</strong> The email was sent that will ask you to click on
-          a link to verify that you own the account. If you don't get the email
-          please contact{" "}
+          <strong>Thanks!</strong> We've sent a <b>6-digit verification code</b> to your
+          email address. Please check your inbox and enter the code to continue
+          resetting your password.
+          <br /><br />
+          If you don't receive the email, please check your spam folder or contact{" "}
           <a href="mailto:cuidadosupport@gmail.com">
             cuidadosupport@gmail.com
-          </a>
+          </a>.
         </p>
 
-        <button className="email-primary-btn">
-          Open Email Box
+        {/* OPEN EMAIL */}
+        <button
+          className="email-primary-btn"
+          onClick={onOpenEmail}
+        >
+          Open Email Inbox
         </button>
 
-        <button className="email-resend-btn">
+        {/* RESEND EMAIL */}
+        <button
+          className="email-resend-btn"
+          onClick={onResend}
+        >
           <span className="chevron">‹</span>
-          Resend Email
+          Resend Code
         </button>
 
       </div>

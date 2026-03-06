@@ -1,62 +1,69 @@
 import "./ForgetPass.css";
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import EmailSent from "../admin/EmailSent";
 
-export default function ForgotPassword() {
+type Props = {
+  onClose?: () => void;
+  onSubmitEmail: (email: string) => Promise<void>;
+};
+
+export default function ForgotPassword({ onClose, onSubmitEmail }: Props) {
   const [email, setEmail] = useState("");
-  const [showEmailSent, setShowEmailSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<string>("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // alert(`Reset link will be sent to: ${email}`);
-    setShowEmailSent(true); // ✅ open popup
+    setStatus("");
+
+    if (!email.trim()) {
+      setStatus("Please enter your email.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onSubmitEmail(email.trim());
+    } catch (err: any) {
+      setStatus(err?.message || "Failed to send OTP.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="fp-page">
-      <div className="fp-card">
-        <div className="fp-icon">
-          <div className="fp-lock"></div>
-        </div>
-
-        <h2 className="fp-title">Forgot Password?</h2>
-
-        <form className="fp-form" onSubmit={handleSubmit}>
-          <div className="fp-input-wrap">
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <span className="fp-mail">✉</span>
-          </div>
-
-          <button className="fp-btn" type="submit">
-            <span>Send Email</span>
-          </button>
-
-          <Link className="fp-back" to="/signin">
-            Back to login
-          </Link>
-        </form>
+    <div className="fp-card">
+      <div className="fp-icon">
+        <div className="fp-lock"></div>
       </div>
 
-      {/* ✅ POPUP */}
-      {showEmailSent && (
-        <div
-          className="fp-modal-overlay"
-          onClick={() => setShowEmailSent(false)}
-        >
-          <div className="fp-modal" onClick={(e) => e.stopPropagation()}>
-            
+      <h2 className="fp-title">Forgot Password?</h2>
 
-            <EmailSent />
-          </div>
+      <form className="fp-form" onSubmit={handleSubmit}>
+        <div className="fp-input-wrap">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <span className="fp-mail">✉</span>
         </div>
-      )}
+
+        {status && (
+          <div style={{ fontSize: 14, color: "#b00020", marginTop: -4 }}>
+            {status}
+          </div>
+        )}
+
+        <button className="fp-btn" type="submit" disabled={loading}>
+          <span>{loading ? "Sending..." : "Send Email"}</span>
+        </button>
+
+        <button type="button" className="fp-back-btn" onClick={() => onClose?.()}>
+          Back to login
+        </button>
+      </form>
     </div>
   );
 }

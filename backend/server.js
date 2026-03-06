@@ -1,5 +1,6 @@
   console.log("✅ RUNNING THIS FILE:", __filename);
   console.log("✅ LOADED admin.routes.js");
+  require("dotenv").config();
   const express = require("express");
   const cors = require("cors");
   const mysql = require("mysql2/promise");
@@ -23,11 +24,11 @@
   app.use("/uploads", express.static("uploads"));
 
   const pool = mysql.createPool({
-    host: process.env.DB_HOST || "localhost",
+    host: process.env.DB_HOST || "127.0.0.1",
     user: process.env.DB_USER || "root",
-    password: process.env.DB_PASS || "Cuidado_2026-cp1!",
+    password: process.env.DB_PASS || "root123",
     database: process.env.DB_NAME || "cuidado_medihelp",
-    port: Number(process.env.DB_PORT || 3306),
+    port: Number(process.env.DB_PORT || 3307),
     waitForConnections: true,
     connectionLimit: 10,
   });
