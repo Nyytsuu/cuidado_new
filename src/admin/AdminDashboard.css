@@ -11,6 +11,7 @@ body,
   margin: 0;
   font-family: "Poppins", sans-serif;
   background: #ffffff;
+  -ms-overflow-style: none;
 }
 
 /* ================= WRAPPER ================= */
@@ -166,7 +167,9 @@ body,
   gap: 16px;
   align-items: start;
 }
-
+::-webkit-scrollbar {
+  display: none;
+} 
 /* left stack */
 .dash-left {
   min-height: 0;
