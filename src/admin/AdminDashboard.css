@@ -11,6 +11,7 @@ body,
   margin: 0;
   font-family: "Poppins", sans-serif;
   background: #ffffff;
+  -ms-overflow-style: none;
 }
 
 /* ================= WRAPPER ================= */
@@ -247,7 +248,9 @@ body,
   overflow: hidden;
   box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
 }
-
+::-webkit-scrollbar {
+  display: none;
+}
 /* readable text always */
 .dash-table,
 .dash-table * {
@@ -592,6 +595,7 @@ body,
 .dash-panel.appointment-panel .btn-view {
   padding: 8px 12px;
   border-radius: 999px;
+  width: auto;
 }
 /* ================= FIX APPOINTMENT HEADER OVERLAP + COLUMN WIDTHS ================= */
 .dash-panel.appointment-panel .dash-table {

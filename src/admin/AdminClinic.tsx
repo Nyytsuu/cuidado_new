@@ -4,7 +4,6 @@ import "./AdminClinic.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
-import SidebarAdmin from "./SidebarAdmin";
 
 type ClinicStatusUI = "Pending" | "Approved" | "Rejected" | "active" | "disabled";
 
@@ -237,7 +236,7 @@ const onViewAppointment = (id: number) => {
   };
   return (
     <div className="admin-UserClinics with-sidebar">
-      <SidebarAdmin
+      <Sidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
@@ -308,7 +307,7 @@ const onViewAppointment = (id: number) => {
       <th>Registered Clinics</th>
       <th>Approval</th>
       <th>Account</th>
-      <th>Actions:</th>
+      <th>Actions</th>
     </tr>
   </thead>
 
@@ -465,11 +464,11 @@ const onViewAppointment = (id: number) => {
 
                 {/* ✅ Appointment Section PANEL inside aside */}
                 <Panel title="Appointment Section">
-                 
                   <table className="dash-table">
                     <thead>
                       <tr>
                         <th>Patient</th>
+                        <th>Schedule</th>
                         <th>Status</th>
                         <th className="th-action">Action</th>
                       </tr>
@@ -489,6 +488,7 @@ const onViewAppointment = (id: number) => {
                               <div className="t-main">{ap.patient}</div>
                               <div className="t-sub">{ap.clinic}</div>
                             </td>
+                            <td>{ap.schedule}</td>
                             <td>
                               <span className={`badge badge-${ap.status.toLowerCase()}`}>
                                 {ap.status}

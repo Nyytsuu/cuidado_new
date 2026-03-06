@@ -4,11 +4,11 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = mysql.createConnection({
-  host: "127.0.0.1",
+  host: "localhost",
   user: "root",
-  password: "root123",
+  password: "Cuidado_2026-cp1!",
   database: "cuidado_medihelp",
-  port: 3307,
+  port: 3306,
 });
 
 const nodemailer = require("nodemailer");
@@ -16,8 +16,8 @@ const nodemailer = require("nodemailer");
 const mailer = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASS,
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
   },
 });
 
