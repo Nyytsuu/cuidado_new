@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import "./Changedpass.css";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import zxcvbn from "zxcvbn";
 
 type Props = {
   onClose?: () => void;
@@ -52,6 +53,11 @@ export default function Changepass({ onClose, onSuccess }: Props) {
   const newPwError = touchedNew && !passwordOk;
   const rePwError = touchedRe && rePassword.length > 0 && !passwordsMatch;
 
+  /* ✅ password strength */
+  const result = useMemo(() => zxcvbn(newPassword), [newPassword]);
+  const score = result.score;
+  const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -99,7 +105,6 @@ export default function Changepass({ onClose, onSuccess }: Props) {
       sessionStorage.removeItem("resetToken");
 
       showToast("Password changed successfully!", "success");
-
       onSuccess();
     } catch (err) {
       console.error("RESET PASSWORD ERROR:", err);
@@ -131,10 +136,37 @@ export default function Changepass({ onClose, onSuccess }: Props) {
             required
           />
 
-          <span className="fpr-eye" onClick={() => setShowNew(!showNew)}>
+          <button
+            type="button"
+            className="fpr-eye"
+            onClick={() => setShowNew(!showNew)}
+            aria-label={showNew ? "Hide password" : "Show password"}
+          >
             {showNew ? <FiEyeOff /> : <FiEye />}
-          </span>
+          </button>
         </div>
+
+        {/* ✅ PASSWORD STRENGTH METER */}
+        {newPassword.length > 0 && (
+          <div className="pw-meter-wrap">
+            <div className="pw-meter">
+              <div
+                className={`pw-meter-fill score-${score}`}
+                style={{ width: `${((score + 1) / 5) * 100}%` }}
+              />
+            </div>
+
+            <small className="pw-label">{labels[score]}</small>
+
+            <ul className="pw-criteria">
+              <li className={hasMinLen ? "ok" : ""}>8+ characters</li>
+              <li className={hasUpper ? "ok" : ""}>Uppercase letter</li>
+              <li className={hasLower ? "ok" : ""}>Lowercase letter</li>
+              <li className={hasNumber ? "ok" : ""}>Number</li>
+              <li className={hasSymbol ? "ok" : ""}>Symbol</li>
+            </ul>
+          </div>
+        )}
 
         {/* CONFIRM PASSWORD */}
         <div className="fpr-input-wrap">
@@ -151,9 +183,14 @@ export default function Changepass({ onClose, onSuccess }: Props) {
             required
           />
 
-          <span className="fpr-eye" onClick={() => setShowRe(!showRe)}>
+          <button
+            type="button"
+            className="fpr-eye"
+            onClick={() => setShowRe(!showRe)}
+            aria-label={showRe ? "Hide password" : "Show password"}
+          >
             {showRe ? <FiEyeOff /> : <FiEye />}
-          </span>
+          </button>
         </div>
 
         <button className="fpr-btn" type="submit" disabled={loading}>
@@ -167,7 +204,6 @@ export default function Changepass({ onClose, onSuccess }: Props) {
         )}
       </form>
 
-      {/* TOAST CENTERED INSIDE MODAL */}
       {toast.open && (
         <div className="fpr-toast-wrap">
           <div className={`toast toast-${toast.type}`}>{toast.message}</div>
