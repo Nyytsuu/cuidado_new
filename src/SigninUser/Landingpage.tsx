@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import "./LandingPage.css";
-
+import {Link, useNavigate} from "react-router-dom";
 export default function LandingPage() {
   useEffect(() => {
     const prevHtmlOverflow = document.documentElement.style.overflowY;
@@ -39,7 +39,9 @@ export default function LandingPage() {
             <a href="#about">About Us</a>
           </nav>
 
-          <button className="lp-login-btn">LOGIN</button>
+          <Link to="/signin" className="lp-login-btn">
+  LOGIN
+</Link>
         </div>
       </header>
 

@@ -108,7 +108,7 @@ input[type="tel"] {
 
 /* date picker color */
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(27%) sepia(33%) saturate(615%) hue-rotate(130deg);
+  filter: invert(100%) sepia(3%) saturate(615%) hue-rotate(130deg);
   cursor: pointer;
 }
 

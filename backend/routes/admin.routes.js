@@ -550,4 +550,5 @@ router.get("/reports/summary", async (req, res) => {
   }
 });
 router.get("/reports/ping", (req, res) => res.send("REPORTS PONG"));
+
 module.exports = router;

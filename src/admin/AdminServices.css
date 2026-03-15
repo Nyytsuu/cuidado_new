@@ -87,37 +87,6 @@ body {
   right: 130px;
 }
 
-.admin-UserServices .header-search {
-  position: relative;
-  width: 360px;
-  right: 100px;
-}
-
-.admin-UserServices .header-search input {
-  width: 100%;
-  height: 38px;
-  padding: 0 46px 0 18px;
-  border-radius: 999px;
-  border: none;
-  font-size: 0.9rem;
-  background: #ffffff;
-  color: #000;
-}
-
-.admin-UserServices .search-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
 
 .admin-UserServices .search-btn img {
   width: 18px;
@@ -226,18 +195,14 @@ body {
   gap: 26px;
   align-items: start;
 }
-
 /* =========================================================
-   ✅ ONLY THIS BOX CHANGES (SERVICES LIST BOX)
+   ✅ SERVICES BOX DESIGN - same style as previous tables
    ========================================================= */
-
-/* left card base */
 .admin-UserServices .admin-card {
   background: transparent;
   border-radius: 14px;
 }
 
-/* main services box */
 .admin-UserServices .admin-table-card {
   min-height: 520px;
   padding: 0;
@@ -245,12 +210,11 @@ body {
   background: #ffffff;
   border: 5px solid var(--accent);
   border-radius: 16px;
-
   display: flex;
   flex-direction: column;
 }
 
-/* list container */
+/* table/list area */
 .admin-UserServices .users-table {
   flex: 1;
   width: 100%;
@@ -258,40 +222,52 @@ body {
   flex-direction: column;
 }
 
-/* ✅ header row (List of services | Actions) */
-.admin-UserServices .users-row.users-header.services-row {
-  background: var(--table-head);
-  padding: 16px 18px;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-
-/* ✅ normal rows */
+/* all rows */
 .admin-UserServices .users-row.services-row {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: 1.4fr 0.9fr;
   align-items: center;
-  gap: 18px;
-  padding: 18px 18px;
-  border-top: 1px solid rgba(0,0,0,0.06);
+  gap: 0;
+  background: #ffffff;
 }
 
-/* header text */
-.admin-UserServices .users-header.services-row .users-cell {
-  font-size: 20px;
-  font-weight: 900;
-  color: #0f0f0f;
-  white-space: nowrap;
+/* header row */
+.admin-UserServices .users-row.users-header.services-row {
+  background: #bfbfbf;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.10);
+}
+
+/* body row */
+.admin-UserServices .users-row.services-row:not(.users-header) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
 }
 
 /* cells */
 .admin-UserServices .users-cell {
   min-width: 0;
+  padding: 18px 20px;
+}
+
+/* vertical divider between columns */
+.admin-UserServices .users-row.services-row .users-cell + .users-cell {
+  border-left: 1px solid rgba(0, 0, 0, 0.35);
+}
+
+/* header text */
+.admin-UserServices .users-header.services-row .users-cell {
+  font-size: 15px;
+  font-weight: 900;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  padding: 14px 20px;
 }
 
 /* service name */
 .admin-UserServices .users-name {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   color: #000;
 }
 

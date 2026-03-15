@@ -239,9 +239,8 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
             <div className="admin-grid">
               <section className="admin-card admin-table-card">
                 <div className="admin-table-header"></div>
-
+                  <div className="appoint-table-wrap">
                 <div className="users-table">
-                  {/* header row */}
                   <div className="users-row users-header">
                     <div className="users-cell">Patient Name</div>
                     <div className="users-cell">Clinic Name</div>
@@ -299,6 +298,7 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
                       </div>
                     ))
                   )}
+                  </div>
                 </div>
               </section>
 
@@ -311,7 +311,7 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
                       <div className="activity-empty">No recent activity yet.</div>
                     ) : (
                       <ul className="activity-list">
-                        {activities.map((item) => (
+                        {activities.slice(0, 3).map((item) => (
                           <li key={item.id} className={`activity-item ${item.type}`}>
                             <div className="activity-icon">
                               {item.type === "user" && "👤"}
@@ -340,43 +340,58 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
       </main>
 
       {/* ✅ VIEW DETAILS MODAL */}
-      {isPopupOpen && selected && (
-        <div className="modal-backdrop" onClick={() => setIsPopupOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h3>Appointment Details</h3>
-              <button className="modal-close" onClick={() => setIsPopupOpen(false)}>
-                ✕
-              </button>
-            </div>
+{isPopupOpen && selected && (
+  <div className="modal-backdrop" onClick={() => setIsPopupOpen(false)}>
+    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-head">
+        <h3>Appointment Details</h3>
+        <button
+          className="modal-close"
+          onClick={() => setIsPopupOpen(false)}
+          type="button"
+        >
+          ✕
+        </button>
+      </div>
 
-            <div className="modal-body">
-              <p><b>Patient:</b> {selected.patient_name_snapshot ?? "—"}</p>
-<p><b>Clinic:</b> {selected.clinic_name_snapshot ?? "—"}</p>
-<p><b>Schedule:</b> {formatDateTime(selected.start_at)}</p>
-<p><b>Purpose:</b> {selected.purpose ?? "—"}</p>
-<p><b>Status:</b> {selected.status}</p>
-{selected.patient_note ? <p><b>Patient Note:</b> {selected.patient_note}</p> : null}
-{selected.clinic_note ? <p><b>Clinic Note:</b> {selected.clinic_note}</p> : null}
-            </div>
+      <div className="modal-body">
+        <p><b>Patient:</b> {selected.patient_name_snapshot ?? "—"}</p>
+        <p><b>Clinic:</b> {selected.clinic_name_snapshot ?? "—"}</p>
+        <p><b>Schedule:</b> {formatDateTime(selected.start_at)}</p>
+        <p><b>Purpose:</b> {selected.purpose ?? "—"}</p>
+        <p><b>Status:</b> {selected.status}</p>
+        {selected.patient_note ? (
+          <p><b>Patient Note:</b> {selected.patient_note}</p>
+        ) : null}
+        {selected.clinic_note ? (
+          <p><b>Clinic Note:</b> {selected.clinic_note}</p>
+        ) : null}
+      </div>
 
-            <div className="modal-foot">
-              <button className="pill pill-gray" onClick={() => setIsPopupOpen(false)}>
-                Close
-              </button>
+      <div className="modal-foot">
+        <button
+          className="pill pill-gray"
+          onClick={() => setIsPopupOpen(false)}
+          type="button"
+        >
+          Close
+        </button>
 
-              <button
-  type="button"
-  className="pill pill-danger"
-  disabled={selected.status === "cancelled" || selected.status === "completed"}
-  onClick={() => cancelAppointment(selected.id)}
->
-  Cancel
-</button>
-            </div>
-          </div>
-        </div>
-      )}
+        <button
+          type="button"
+          className="pill pill-danger"
+          disabled={
+            selected.status === "cancelled" ||
+            selected.status === "completed"
+          }
+          onClick={() => cancelAppointment(selected.id)}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

@@ -4,12 +4,13 @@
   const express = require("express");
   const cors = require("cors");
   const mysql = require("mysql2/promise");
-  require("dotenv").config();
   const adminRoutes = require("./routes/admin.routes");
   const clinicRoutes = require("./routes/clinic.routes");
   const locationRoutes = require("./routes/location.routes");
   const authRoutes = require("./routes/auth.routes");
-
+const adminConditionsRoutes = require("./routes/admin.condition.routes");
+const adminSymptomsRoutes = require("./routes/admin.symptoms.routes");
+const adminConditionSymptomsRoutes = require("./routes/admin.conditionSymptoms.routes");
   const app = express();
 
   app.use(cors());
@@ -172,7 +173,9 @@
   app.use("/api", locationRoutes);
   app.use("/api", clinicRoutes);
   app.use("/api/admin", adminRoutes);
-  
+  app.use("/api/admin/conditions", adminConditionsRoutes);
+  app.use("/api/admin/symptoms", adminSymptomsRoutes);
+  app.use("/api/admin/condition-symptoms", adminConditionSymptomsRoutes);
 
   /* ✅ ERROR HANDLER LAST */
   app.use((err, req, res, next) => {

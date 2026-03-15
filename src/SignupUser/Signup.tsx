@@ -2,9 +2,10 @@ import Logotag from "../components/Logotag";
 import "./Signup.css";
 import React, { useState, useEffect, useMemo } from "react";
 import { handleSubmit, type SignupPayload } from "../components/handleSubmit";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import zxcvbn from "zxcvbn";
-import { FiCalendar, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
+import OtpPopup from "../SigninUser/OtpPopup";
 
 interface Province {
   id: number;
@@ -51,6 +52,7 @@ function Signup() {
   const [gender, setGender] = useState("");
   const [dob, setDob] = useState("");
   const [address, setAddress] = useState("");
+  const navigate = useNavigate();
 
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
@@ -76,24 +78,30 @@ function Signup() {
     type: "info",
   });
 
+  // signup OTP state
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
+  const [loadingResend, setLoadingResend] = useState(false);
+  const [pendingSignupData, setPendingSignupData] = useState<SignupPayload | null>(null);
+
+  const apiBase = "http://localhost:5000";
+
   const showToast = (message: string, type: ToastState["type"] = "info") => {
     setToast({ open: true, message, type });
-    window.setTimeout(
-      () => setToast((t) => ({ ...t, open: false })),
-      3000
-    );
+    window.setTimeout(() => {
+      setToast((t) => ({ ...t, open: false }));
+    }, 3000);
   };
 
   const clearError = (key: keyof Errors) => {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  // ✅ password strength
   const result = useMemo(() => zxcvbn(password), [password]);
   const score = result.score;
   const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
 
-  // ✅ DOB max (your logic preserved)
   const today = new Date();
   const minAgeDate = new Date(
     today.getFullYear(),
@@ -102,15 +110,12 @@ function Signup() {
   );
   const maxDob = minAgeDate.toISOString().split("T")[0];
 
-  // ✅ validators
   const passwordOk =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password);
 
-  const phPhoneOk = /^(\+63|09)\d{9}$/.test(phone);
-
+  const phPhoneOk = /^(\+639|09)\d{9}$/.test(phone);
   const passwordsMatch = password === confirmPassword;
 
-  // ✅ fetch provinces
   useEffect(() => {
     fetch("http://localhost:5000/api/provinces")
       .then((res) => {
@@ -118,7 +123,6 @@ function Signup() {
         return res.json();
       })
       .then((data: Province[]) => {
-        console.log("PROVINCES FROM API:", data);
         setProvinces(data);
       })
       .catch((err) => {
@@ -126,7 +130,6 @@ function Signup() {
       });
   }, []);
 
-  // ✅ fetch municipalities
   useEffect(() => {
     if (!provinceId) return;
     fetch(`http://localhost:5000/api/municipalities/${provinceId}`)
@@ -140,7 +143,6 @@ function Signup() {
       .catch(console.error);
   }, [provinceId]);
 
-  // ✅ fetch barangays
   useEffect(() => {
     if (!municipalityId) return;
     fetch(`http://localhost:5000/api/barangays/${municipalityId}`)
@@ -152,6 +154,30 @@ function Signup() {
       .catch(console.error);
   }, [municipalityId]);
 
+  const sendSignupOtp = async (emailToSend: string) => {
+    const res = await fetch(`${apiBase}/api/auth/otp/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier: emailToSend,
+        purpose: "signup_verification",
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data?.message || "Failed to send verification OTP.");
+    }
+  };
+
+  const closeOtpModal = () => {
+    setOtpOpen(false);
+    setOtpError("");
+    setLoadingConfirm(false);
+    setLoadingResend(false);
+    setPendingSignupData(null);
+  };
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -160,20 +186,16 @@ function Signup() {
     if (fullname.trim().length < 2) newErrors.fullname = "Please enter your full name.";
     if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Please enter a valid email.";
     if (!phPhoneOk) newErrors.phone = "Use +63XXXXXXXXXX or 09XXXXXXXXX.";
-
     if (!gender) newErrors.gender = "Please select gender.";
     if (!dob) newErrors.dob = "Please select date of birth.";
-
     if (!provinceId) newErrors.provinceId = "Select a province.";
     if (!municipalityId) newErrors.municipalityId = "Select a municipality.";
     if (!barangayId) newErrors.barangayId = "Select a barangay.";
-
     if (address.trim().length < 5) newErrors.address = "Address must be at least 5 characters.";
-
-    if (!passwordOk)
+    if (!passwordOk) {
       newErrors.password = "8+ chars with uppercase, lowercase, number, and symbol.";
+    }
     if (!passwordsMatch) newErrors.confirmPassword = "Passwords do not match.";
-
     if (!consent) newErrors.consent = "Consent is required.";
 
     setErrors(newErrors);
@@ -197,15 +219,81 @@ function Signup() {
     };
 
     setIsSubmitting(true);
+    setOtpError("");
 
     try {
-      const data = await handleSubmit(payload);
-      showToast(data?.message ?? "Signup successful ✅", "success");
+      setPendingSignupData(payload);
+      await sendSignupOtp(email);
+      setOtpOpen(true);
+      showToast("Verification code sent to your email.", "info");
     } catch (err: any) {
-      console.error("SIGNUP ERROR", err);
-      showToast("Signup failed. Please try again.", "error");
+      console.error("SEND OTP ERROR", err);
+      showToast(err?.message || "Failed to send verification OTP.", "error");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmSignupOtp = async (otp: string) => {
+    if (!pendingSignupData) {
+      setOtpError("Missing signup data. Please try again.");
+      return;
+    }
+
+    setOtpError("");
+    setLoadingConfirm(true);
+
+    try {
+      const verifyRes = await fetch(`${apiBase}/api/auth/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: pendingSignupData.email,
+          otp,
+          purpose: "signup_verification",
+        }),
+      });
+
+      const verifyData = await verifyRes.json().catch(() => ({}));
+
+      if (!verifyRes.ok) {
+        setOtpError(verifyData?.message || "Invalid OTP.");
+        return;
+      }
+
+      const signupData = await handleSubmit(pendingSignupData);
+
+      showToast(signupData?.message ?? "Signup successful ✅", "success");
+      setOtpOpen(false);
+      setPendingSignupData(null);
+
+      setTimeout(() => {
+        navigate("/signin");
+      }, 1500);
+    } catch (err: any) {
+      console.error("VERIFY OTP / SIGNUP ERROR", err);
+      setOtpError(err?.message || "Signup failed. Please try again.");
+    } finally {
+      setLoadingConfirm(false);
+    }
+  };
+
+  const handleResendSignupOtp = async () => {
+    if (!email) {
+      setOtpError("Missing email address.");
+      return;
+    }
+
+    setOtpError("");
+    setLoadingResend(true);
+
+    try {
+      await sendSignupOtp(email);
+      showToast("Verification code resent.", "info");
+    } catch (err: any) {
+      setOtpError(err?.message || "Failed to resend OTP.");
+    } finally {
+      setLoadingResend(false);
     }
   };
 
@@ -222,7 +310,6 @@ function Signup() {
               <p className="Sign">Sign Up</p>
               <p>Create an Account</p>
 
-              {/* FULL NAME + EMAIL */}
               <div className="row">
                 <div className="input-group">
                   <label htmlFor="fullname">Full Name:</label>
@@ -259,13 +346,13 @@ function Signup() {
                       clearError("email");
                     }}
                     autoComplete="email"
+                    placeholder="@gmail.com"
                     required
                   />
                   {errors.email && <div className="error-text">{errors.email}</div>}
                 </div>
               </div>
 
-              {/* PHONE + GENDER + DOB */}
               <div className="row">
                 <div className="input-group">
                   <label htmlFor="phone">Phone Number:</label>
@@ -278,14 +365,14 @@ function Signup() {
                     onChange={(e) => {
                       let v = e.target.value.replace(/[^\d+]/g, "");
                       v = v.replace(/(?!^)\+/g, "");
-                      if (v.startsWith("+") && !v.startsWith("+63")) v = "+63";
+                      if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
                       if (v.startsWith("0") && !v.startsWith("09")) v = "09";
                       setPhone(v);
                       clearError("phone");
                     }}
                     inputMode="numeric"
                     placeholder="+63XXXXXXXXXX"
-                    pattern="^(\+63|09)\d{9}$"
+                    pattern="^(\+639|09)\d{9}$"
                     maxLength={13}
                     autoComplete="tel"
                     required
@@ -330,12 +417,10 @@ function Signup() {
                     max={maxDob}
                     required
                   />
-                  <FiCalendar className="date-icon" />
                   {errors.dob && <div className="error-text">{errors.dob}</div>}
                 </div>
               </div>
 
-              {/* PROVINCE + MUNICIPALITY + BARANGAY */}
               <div className="row">
                 <div className="input-group">
                   <label htmlFor="province">Province:</label>
@@ -411,7 +496,6 @@ function Signup() {
                 </div>
               </div>
 
-              {/* ADDRESS */}
               <div className="last-group">
                 <label htmlFor="address">Address:</label>
                 <input
@@ -427,11 +511,11 @@ function Signup() {
                   minLength={5}
                   maxLength={255}
                   autoComplete="street-address"
+                  placeholder="Blk L St. Subd. Barangay"
                   required
                 />
                 {errors.address && <div className="error-text">{errors.address}</div>}
 
-                {/* PASSWORD (✅ eye fixed + toggle works) */}
                 <label htmlFor="password">Password:</label>
                 <div className="field-with-icon">
                   <input
@@ -458,7 +542,6 @@ function Signup() {
                 </div>
                 {errors.password && <div className="error-text">{errors.password}</div>}
 
-                {/* ✅ Strength Meter */}
                 {password.length > 0 && (
                   <div className="pw-meter-wrap">
                     <div className="pw-meter">
@@ -479,7 +562,6 @@ function Signup() {
                   </div>
                 )}
 
-                {/* CONFIRM PASSWORD (✅ eye fixed + toggle works) */}
                 <label htmlFor="confirm-password">Confirm Password:</label>
                 <div className="field-with-icon">
                   <input
@@ -509,7 +591,6 @@ function Signup() {
                 )}
               </div>
 
-              {/* CONSENT */}
               <label className="checkbox-label">
                 <input
                   type="checkbox"
@@ -529,7 +610,7 @@ function Signup() {
               </p>
 
               <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Signing Up..." : "Sign Up"}
+                {isSubmitting ? "Sending OTP..." : "Sign Up"}
               </button>
 
               <p className="login-link">
@@ -543,6 +624,27 @@ function Signup() {
           </div>
         </div>
       </div>
+
+      {otpOpen && (
+        <div className="fp-modal-overlay" onClick={closeOtpModal}>
+          <div className="fp-modal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="fp-modal-close" type="button" onClick={closeOtpModal}>
+              <FiX />
+            </button>
+
+            <OtpPopup
+              open={true}
+              email={email}
+              error={otpError}
+              loadingConfirm={loadingConfirm}
+              loadingResend={loadingResend}
+              onClose={closeOtpModal}
+              onConfirm={handleConfirmSignupOtp}
+              onResend={handleResendSignupOtp}
+            />
+          </div>
+        </div>
+      )}
 
       {toast.open && <div className={`toast toast-${toast.type}`}>{toast.message}</div>}
     </div>
