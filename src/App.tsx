@@ -24,6 +24,8 @@ import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
 import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
 import ClinicSignup from "./Clinic/ClinicSignup";
+import ClinicDashboard from "./Clinic/ClinicDashboard";
+
 function App() {
   return (
     <BrowserRouter>
@@ -43,6 +45,8 @@ function App() {
         </Route>
         {/* clinic */}
         <Route path="/Clinicsignup" element={<ClinicSignup />} />
+        <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
+
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />

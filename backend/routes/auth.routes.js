@@ -6,9 +6,9 @@ const jwt = require("jsonwebtoken");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "Cuidado_2026-cp1!",
+  password: "root123",
   database: "cuidado_medihelp",
-  port: 3306,
+  port: 3307,
 });
 
 const nodemailer = require("nodemailer");
