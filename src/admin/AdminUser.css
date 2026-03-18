@@ -484,22 +484,6 @@ body {
 /* ===================================================================== */
 /* ================= MODAL ================= */
 /* ===================================================================== */
-.admin-Userpage .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.admin-Userpage .modal-card {
-  width: min(520px, 92vw);
-  background: #fff;
-  border-radius: 14px;
-  padding: 16px;
-}
 
 
 .admin-Userpage .modal-head {
@@ -515,6 +499,7 @@ body {
 }
 
 .admin-Userpage .modal-close {
+ margin-right:20px;
   border: none;
   background: transparent;
   font-size: 22px;
