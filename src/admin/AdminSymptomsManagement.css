@@ -16,7 +16,7 @@
 
 .app-header {
   height: 84px;
-  background: #46a7a0 !important;
+  background: #46a7a0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,7 +168,7 @@
   height: 54px;
   border: none;
   border-radius: 999px;
-  background: #004D40;
+  background: #005f52;
   color: #fff;
   font-size: 17px;
   font-weight: 700;
@@ -186,7 +186,7 @@
 }
 
 .symptom-form-header {
-  background: #109C85;
+  background: #0b8f88;
   color: #fff;
   font-size: 22px;
   font-weight: 700;
@@ -434,125 +434,4 @@
   .header-nav {
     gap: 20px;
   }
-}
-
-/* ===== SYMPTOM TOAST ===== */
-.symptom-toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 10000;
-  animation: fadeSlideIn 0.3s ease;
-}
-
-.symptom-toast-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  color: #fff;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-/* SUCCESS */
-.symptom-toast.success .symptom-toast-content {
-  background: #0b8f88;
-}
-
-/* ERROR */
-.symptom-toast.error .symptom-toast-content {
-  background: #de4040;
-}
-
-.toast-icon {
-  font-size: 15px;
-}
-
-/* animation */
-@keyframes fadeSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px) translateX(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) translateX(0);
-  }
-}
- /* WARNING */
-.symptom-toast.warning .symptom-toast-content {
-  background: #f59e0b;
-  color: #fff;
-}
-
-
-
-/* ===== DELETE MODAL (SYMPTOMS) ===== */
-.delete-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000;
-}
-
-.delete-modal {
-  width: 100%;
-  max-width: 380px;
-  background: #fff;
-  border-radius: 14px;
-  padding: 22px 20px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-  animation: fadeInScale 0.2s ease;
-}
-
-/* TEXT */
-.delete-modal-content h3 {
-  margin: 0 0 8px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #0b8f88;
-}
-
-.delete-modal-content p {
-  margin: 0 0 18px;
-  font-size: 14px;
-  color: #4b5563;
-}
-
-/* ACTIONS */
-.delete-modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* BUTTONS */
-.btn-cancel {
-  background: #eef3f3;
-  color: #374151;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-delete {
-  background: #de4040;
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 10px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-delete:hover {
-  background: #c53030;
 }

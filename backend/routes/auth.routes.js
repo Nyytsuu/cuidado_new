@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "Cuidado_2026-cp1!",
+  password: "root123",
   database: "Cuidado_medihelp",
   port: 3306,
 });
@@ -451,14 +451,6 @@ router.post("/auth/otp/verify", (req, res) => {
     return res.status(400).json({ message: "Email and OTP are required" });
   }
 
-  if (!EMAIL_RE.test(email)) {
-    return res.status(400).json({ message: "Please enter a valid email." });
-  }
-
-  if (!OTP_PURPOSES.has(purpose)) {
-    return res.status(400).json({ message: "Invalid OTP purpose." });
-  }
-
   db.query(
     "SELECT * FROM otp_requests WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1",
     [email, purpose],
@@ -491,29 +483,11 @@ router.post("/auth/otp/verify", (req, res) => {
         return res.status(400).json({ message: "Invalid OTP" });
       }
 
-      await dbQuery("DELETE FROM otp_requests WHERE id = ?", [record.id]);
+      db.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
 
       // signup verification -> just return verified
-      if (SIGNUP_OTP_PURPOSES.has(purpose)) {
-        try {
-          const verificationToken = crypto.randomBytes(32).toString("hex");
-          const tokenExp = new Date(Date.now() + 10 * 60 * 1000);
-
-          await ensureEmailVerificationTokensTable();
-          await dbQuery(
-            "DELETE FROM email_verification_tokens WHERE email = ? AND purpose = ?",
-            [email, purpose]
-          );
-          await dbQuery(
-            "INSERT INTO email_verification_tokens (email, purpose, token, expires_at) VALUES (?, ?, ?, ?)",
-            [email, purpose, verificationToken, tokenExp]
-          );
-
-          return res.json({ message: "Verified", verificationToken });
-        } catch (tokenErr) {
-          console.error("EMAIL VERIFICATION TOKEN ERROR:", tokenErr);
-          return res.status(500).json({ message: "Server error" });
-        }
+      if (purpose === "signup_verification") {
+        return res.json({ message: "Verified" });
       }
 
       // forgot password -> create reset token

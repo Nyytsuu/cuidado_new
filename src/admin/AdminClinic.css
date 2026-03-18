@@ -5,6 +5,7 @@
   --sidebar-width-expanded: 220px;
   --header-height: 45px;
 
+  /* ACTION CONTROLS */
   --action-slot-w: 92px;
   --actions-gap: 16px;
   --actions-line-height: 38px;
@@ -90,17 +91,6 @@ body {
   right: 130px;
 }
 
-.header-search input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--admin-text);
-  font: inherit;
-  font-size: 14px;
-  box-shadow: none;
-}
 
 /* NAV */
 .admin-dashboard-page .header-nav {
@@ -223,6 +213,12 @@ body {
   align-items: start;
 }
 
+.admin-UserClinics .admin-right {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 .admin-UserClinics .small-card {
   height: 120px;
 }
@@ -232,27 +228,31 @@ body {
   background: #8f8f8f;
 }
 
-/* ================= MAIN TABLE ================= */
+/* general table text */
 .admin-UserClinics .admin-table td,
 .admin-UserClinics .admin-table th {
   color: #0f0f0f;
 }
 
+/* clinic name */
 .admin-UserClinics .users-name {
   font-size: 18px;
   font-weight: 800;
   color: #000;
 }
 
+/* ================= MAIN CARD ================= */
 .admin-UserClinics .admin-card {
   background: transparent;
   border-radius: 14px;
 }
 
+/* ================= CLINICS TABLE ================= */
 .admin-UserClinics .admin-table-card {
   min-height: 520px;
   padding: 0;
   overflow: hidden;
+  border: 5px solid #00bfa6;
   border-radius: 16px;
   background: linear-gradient(
     to bottom,
@@ -271,24 +271,34 @@ body {
   overflow-y: hidden;
 }
 
-
+.admin-UserClinics .clinics-table {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: transparent;
+}
 
 .admin-UserClinics .clinics-table thead tr {
   background: #bfbfbf !important;
 }
 
 .admin-UserClinics .clinics-table thead th {
-  background: rgb(16, 156, 133) !important;
-  color: white !important;
+  background: #bfbfbf !important;
+  color: black !important;
   font-weight: 900;
   font-size: 14px;
-  padding: 24px 18px !important;
+  padding: 24px 18px;
   text-align: left;
   text-transform: uppercase;
   white-space: nowrap;
   border: none;
 }
 
+.admin-UserClinics .clinics-table thead th + th {
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+}
 
 .admin-UserClinics .clinics-table tbody {
   background: #ffffff;
@@ -299,13 +309,16 @@ body {
   color: #000000;
   font-size: 14px;
   font-weight: 500;
-  padding: 24px 16px;
+  padding: 22px 16px;
   vertical-align: middle;
   border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 
+.admin-UserClinics .clinics-table tbody td + td {
+  border-left: 1px solid rgba(0, 0, 0, 0.18);
+}
 
-
+/* column widths */
 .admin-UserClinics .clinics-table th:nth-child(1),
 .admin-UserClinics .clinics-table td:nth-child(1) {
   width: 33%;
@@ -328,13 +341,14 @@ body {
   width: 34%;
 }
 
+/* empty / loading row */
 .admin-UserClinics .clinics-table td[colspan="4"] {
   text-align: center;
   font-weight: 700;
   padding: 18px;
 }
 
-/* ================= PILLS ================= */
+/* ================= PILL BUTTONS ================= */
 .admin-UserClinics .pill {
   border: none;
   border-radius: 999px;
@@ -359,11 +373,11 @@ body {
 }
 
 .admin-UserClinics .pill-view {
-  background: rgb(16, 156, 133);
+  background: #414242;
 }
 
 .admin-UserClinics .pill-success {
-  background: green;
+  background: #51be1f;
 }
 
 .admin-UserClinics .pill-danger {
@@ -375,7 +389,7 @@ body {
 }
 
 .admin-UserClinics .pill-gray {
-  background: rgb(11, 122, 104);
+  background: #4eb4f3;
 }
 
 .admin-UserClinics .pill-dark {
@@ -408,11 +422,13 @@ body {
   width: 100%;
 }
 
+/* keep slot but hide content */
 .admin-UserClinics .is-hidden {
   opacity: 0;
   pointer-events: none;
 }
 
+/* lines before slot 2..5 */
 .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2) {
   position: relative;
 }
@@ -430,151 +446,7 @@ body {
   content: none !important;
 }
 
-/* ================= RIGHT SIDE ================= */
-.admin-UserClinics .dash-aside {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.admin-UserClinics .dash-panel {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  border-radius: 12px;
-  box-shadow: none;
-}
-
-.admin-UserClinics .dash-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 0 0 8px;
-}
-
-.admin-UserClinics .dash-panel-title {
-  font-weight: 900;
-  color: #0f0f0f;
-  margin: 0;
-  line-height: 1.15;
-  font-size: 17px !important;
-}
-.admin-UserClinics .appointment-panel {
-  margin-top: 50px !important;
-}
-/* ================= RECENT ACTIVITY ONLY ================= */
-.admin-UserClinics .recent-activity-box {
-  display: flex;
-  flex-direction: column;
-}
-
-.admin-UserClinics .recent-activity-box .dash-panel-head {
-  margin-bottom: 8px;
-}
-
-.admin-UserClinics .recent-activity-box .dash-panel-title {
-  font-size: 16px;
-  font-weight: 900;
-  color: #000;
-  margin: 0;
-}
-
-.admin-UserClinics .recent-activity-box .dash-panel-body {
-  background: #d3d3d3;
-  border: 3px solid #00bfa6;
-  border-radius: 16px;
-  padding: 18px;
-  min-height: 120px;
-  overflow: hidden;
-  box-sizing: border-box;
-}
-
-.admin-UserClinics .recent-activity-box .activity-empty {
-  color: #333;
-  font-weight: 700;
-  font-size: 16px;
-  opacity: 1;
-}
-
-.admin-UserClinics .recent-activity-box .dash-body-small {
-  max-height: 360px;
-  overflow-y: auto;
-}
-.admin-UserClinics .dash-right-top .dash-panel-body {
-  min-height: 345px !important;
-}
-
-.admin-UserClinics .recent-activity-box .activity-list {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.admin-UserClinics .recent-activity-box .activity-item {
-  background: #ffffff;
-  color: #0f0f0f;
-  border-radius: 12px;
-  width: 100%;
-  padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-  display: flex;
-  gap: 12px;
-  box-sizing: border-box;
-}
-
-.admin-UserClinics .recent-activity-box .activity-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
-}
-
-.admin-UserClinics .recent-activity-box .activity-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.06);
-  flex: 0 0 36px;
-  font-size: 16px;
-}
-
-.admin-UserClinics .recent-activity-box .activity-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.admin-UserClinics .recent-activity-box .activity-text {
-  font-weight: 600;
-  font-size: 12px;
-  color: #0f0f0f;
-  line-height: 1.25;
-}
-
-.admin-UserClinics .recent-activity-box .activity-time {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #0f0f0f;
-  opacity: 0.65;
-  white-space: nowrap;
-}
-
-.admin-UserClinics .recent-activity-box .activity-item.user .activity-icon,
-.admin-UserClinics .recent-activity-box .activity-item.clinic .activity-icon,
-.admin-UserClinics .recent-activity-box .activity-item.clinic-approved .activity-icon,
-.admin-UserClinics .recent-activity-box .activity-item.clinic-rejected .activity-icon,
-.admin-UserClinics .recent-activity-box .activity-item.appointment .activity-icon {
-  background: transparent;
-}
-
-/* ================= APPOINTMENT PANEL ================= */
+/* ================= DASH / RIGHT PANEL ================= */
 .t-main {
   font-weight: 900;
 }
@@ -618,20 +490,36 @@ body {
   display: inline-block;
 }
 
-.admin-UserClinics .appointment-panel .dash-panel-body {
+/* ================= APPOINTMENT PANEL ================= */
+.admin-UserClinics .dash-panel {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.admin-UserClinics .dash-panel-head {
+  margin-bottom: 8px;
+}
+
+.admin-UserClinics .dash-panel-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #000;
+}
+
+.admin-UserClinics .dash-panel-body {
   background: #ffffff;
-  border: 3px solid #00bfa6 !important;
+  border: 5px solid #00bfa6;
   border-radius: 30px;
   overflow: hidden;
   padding: 0;
+  max-height: none;
 }
 
-.admin-UserClinics .dash-panel-pad {
-  width: 100%;
-  height: 100%;
+.admin-UserClinics .dash-panel-body.dash-panel-pad {
   padding: 0;
-  display: flex;
-  flex-direction: column;
+  max-height: none;
+  overflow: hidden;
 }
 
 .admin-UserClinics .dash-table {
@@ -752,13 +640,13 @@ body {
   align-items: center;
   justify-content: center;
   width: 128px;
-  min-width: 100px !important;
+  min-width: 128px;
   height: 36px;
   padding: 0 12px;
   border: none;
   border-radius: 999px;
   background: #58b6f3;
-  color: white !important;
+  color: #000;
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
@@ -778,295 +666,119 @@ body {
   padding: 22px 16px;
 }
 
-/* ===== EDIT POPUP ONLY ===== */
-.admin-UserClinics .clinic-edit-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999999;
-  padding: 20px;
-}
 
-.admin-UserClinics .clinic-edit-popup-card {
-  width: 100%;
-  max-width: 430px;
-  background: #fff;
+/* ================= RECENT ACTIVITY ================= */
+.dash-aside .dash-right-top .dash-panel-body {
+  background: #ffffff;
+  border: 3px solid #00bfa6;
   border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
-  text-align: center;
+  padding: 12px;
 }
 
-.admin-UserClinics .clinic-edit-popup-title {
-  margin: 0 0 16px;
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f4242;
+.dash-body-small {
+  max-height: 360px;
+  overflow-y: auto;
 }
 
-.admin-UserClinics .clinic-edit-popup-input {
-  width: 100%;
-  height: 46px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+.activity-empty {
+  color: #0f0f0f;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.activity-list {
+  height: 100%;
+  display: flex;
+  background: transparent !important;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.activity-item {
+  background: #ffffff !important;
+  color: #0f0f0f !important;
   border-radius: 12px;
-  padding: 0 14px;
-  font-size: 15px;
-  outline: none;
-  margin-bottom: 18px;
-}
-
-.admin-UserClinics .clinic-edit-popup-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.admin-UserClinics .clinic-edit-popup-btn {
-  min-width: 110px;
-  height: 40px;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.admin-UserClinics .clinic-edit-popup-cancel {
-  background: #e8e8e8;
-  color: #333;
-}
-
-.admin-UserClinics .clinic-edit-popup-save {
-  background: #399a91;
-  color: #fff;
-}
-
-/* ===== STATUS POPUP ONLY ===== */
-.admin-UserClinics .clinic-status-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999999;
-  padding: 20px;
-}
-
-.admin-UserClinics .clinic-status-popup-card {
   width: 100%;
-  max-width: 430px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
-  text-align: center;
-}
-
-.admin-UserClinics .clinic-status-popup-title {
-  margin: 0 0 16px;
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f4242;
-}
-
-.admin-UserClinics .clinic-status-popup-text {
-  margin: 0 0 18px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-}
-
-.admin-UserClinics .clinic-status-popup-name {
-  font-weight: 700;
-  color: #0f4242;
-}
-
-.admin-UserClinics .clinic-status-popup-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.admin-UserClinics .clinic-status-popup-btn {
-  min-width: 110px;
-  height: 40px;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 800;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
-.admin-UserClinics .clinic-status-popup-cancel {
-  background: #e8e8e8;
-  color: #333;
+.activity-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
 }
 
-.admin-UserClinics .clinic-status-popup-save {
-  background: #399a91;
-  color: #fff;
+.activity-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.06);
+  flex: 0 0 36px;
+  font-size: 16px;
 }
 
-.admin-UserClinics .clinic-status-popup-danger {
-  background: #c62828;
-  color: #fff;
-}
-.admin-UserClinics .badge-cancelled {
-  background: #ea6666 !important;
-  color: #000;
+.activity-content {
+  flex: 1;
+  min-width: 0;
 }
 
-.admin-UserClinics .badge-pending {
-  background: #e2c457 !important;
-  color: #000;
+.activity-text {
+  font-weight: 600;
+  font-size: 12px;
+  color: #0f0f0f;
+  line-height: 1.25;
 }
 
-.admin-UserClinics .badge-approved {
-  background: #7ed36d !important;
-  color: #000;
-}
-.admin-UserClinics .btn-view {
-  background: #58b6f3 !important;
-  color: white !important;
-  padding: 6px 1px !important;
-  border-radius: 999px !important;
-  font-weight: 700;
-}
-/* STATUS COLORS */
-.admin-UserClinics .badge-cancelled {
-  background: #ea6666 !important;
+.activity-time {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #0f0f0f;
+  opacity: 0.65;
+  white-space: nowrap;
 }
 
-.admin-UserClinics .badge-pending {
-  background: #e2c457 !important;
+.activity-item.user .activity-icon,
+.activity-item.clinic .activity-icon,
+.activity-item.clinic-approved .activity-icon,
+.activity-item.clinic-rejected .activity-icon,
+.activity-item.appointment .activity-icon {
+  background: transparent !important;
 }
 
-.admin-UserClinics .badge-approved {
-  background: #7ed36d !important;
+.admin-UserClinics .admin-table-card {
+  background: linear-gradient(
+    to bottom,
+    #bfbfbf 0,
+    #bfbfbf 78px,
+    #ffffff 78px,
+    #ffffff 100%
+  );
 }
 
-/* VIEW BUTTON */
-.admin-UserClinics .btn-view {
-  background: #58b6f3 !important;
-  color: #000 !important;
-  border-radius: 999px !important;
-  padding: 6px 14px !important;
-}
+/* ================= RESPONSIVE ================= */
+@media screen and (max-width: 900px) {
+  .admin-UserClinics .admin-grid {
+    grid-template-columns: 1fr;
+  }
 
-/* ALIGN LEFT */
-.admin-UserClinics .td-action {
-  text-align: left !important;
-  padding-left: 10px !important;
-}
-/* ===== APPOINTMENT PANEL FINAL FIX ===== */
-.admin-UserClinics .appointment-panel .dash-table .badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 60px !important;
-  height: 30px !important;
-  padding: 0 12px !important;
-  border-radius: 999px !important;
-  font-size: 11px !important;
-  font-weight: 900 !important;
-  text-transform: lowercase !important;
-  border: none !important;
-}
+  .admin-UserClinics .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
 
-.admin-UserClinics .appointment-panel .dash-table .badge-cancelled,
-.admin-UserClinics .appointment-panel .dash-table .badge-rejected,
-.admin-UserClinics .appointment-panel .dash-table .badge-declined {
-  background: #ea6666 !important;
-  color: #000 !important;
-}
+  .admin-UserClinics .clinics-actions.slots {
+    grid-template-columns: repeat(2, var(--action-slot-w));
+    row-gap: 10px;
+  }
 
-.admin-UserClinics .appointment-panel .dash-table .badge-pending {
-  background: #e2c457 !important;
-  color: #000 !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table .badge-approved,
-.admin-UserClinics .appointment-panel .dash-table .badge-confirmed,
-.admin-UserClinics .appointment-panel .dash-table .badge-completed {
-  background: #7ed36d !important;
-  color: #000 !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table .btn-view,
-.admin-UserClinics .appointment-panel .dash-table .btn-sm {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 110px !important;
-  height: 36px !important;
-  padding: 0 12px !important;
-  border: none !important;
-  border-radius: 999px !important;
-  background: #58b6f3 !important;
-  color: #000 !important;
-  font-size: 11px !important;
-  font-weight: 900 !important;
-  white-space: nowrap !important;
-  cursor: pointer !important;
-  box-shadow: none !important;
-  appearance: none !important;
-  -webkit-appearance: none !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table .td-action,
-.admin-UserClinics .appointment-panel .dash-table td.td-action {
-  text-align: left !important;
-  padding-left: 1px !important;
-}
-/* ===== APPOINTMENT LAYOUT FIX ===== */
-.admin-UserClinics .appointment-panel .dash-table {
-  width: 100%;
-  table-layout: fixed !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table th:nth-child(1),
-.admin-UserClinics .appointment-panel .dash-table td:nth-child(1) {
-  width: 30% !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table th:nth-child(2),
-.admin-UserClinics .appointment-panel .dash-table td:nth-child(2) {
-  width: 30% !important;
-  text-align: center !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table th:nth-child(3),
-.admin-UserClinics .appointment-panel .dash-table td:nth-child(3) {
-  width: 30% !important;
-  text-align: left !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table .td-action,
-.admin-UserClinics .appointment-panel .dash-table td.td-action {
-  text-align: left !important;
-  padding-left: 1px !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table .badge {
-  min-width: 76px !important;
-  height: 30px !important;
-  padding: 0 10px !important;
-  font-size: 11px !important;
-}
-
-.admin-UserClinics .appointment-panel .dash-table .btn-view,
-.admin-UserClinics .appointment-panel .dash-table .btn-sm {
-  min-width: 96px !important;
-  width: 96px !important;
-  height: 34px !important;
-  padding: 0 10px !important;
-  font-size: 11px !important;
-}
-.admin-Userpage .dash-right-top .dash-panel-body {
-  min-height: 345px !important;
+  .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
+    display: none;
+  }
 }

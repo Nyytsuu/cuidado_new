@@ -323,6 +323,7 @@ export default function AdminServices() {
                   <div className="users-row users-header services-row">
                     <div className="users-cell">List of services</div>
                     <div className="users-cell">Actions:</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {loading ? (
@@ -383,7 +384,7 @@ export default function AdminServices() {
                       <div className="activity-empty">No recent activity yet.</div>
                     ) : (
                       <ul className="activity-list">
-                        {filteredActivities.slice(0, 3).map((item) => (
+                        {activities.slice(0, 3).map((item) => (
                           <li key={item.id} className={`activity-item ${item.type}`}>
                             <div className="activity-icon">
                               {item.type === "user" && "👤"}
@@ -412,7 +413,7 @@ export default function AdminServices() {
                       <tr>
                         <th>Patient</th>
                         <th>Status</th>
-                        <th className="th-action">Action</th>
+                        <th className="th-action">Action:</th>
                       </tr>
                     </thead>
 

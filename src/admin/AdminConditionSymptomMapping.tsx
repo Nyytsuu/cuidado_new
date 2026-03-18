@@ -39,12 +39,6 @@ export default function AdminConditionSymptomMapping() {
   const [selectedSymptoms, setSelectedSymptoms] = useState<SelectedSymptom[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{
-  type: "success" | "error" | "warning";
-  message: string;
-} | null>(null);
-
-
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -100,6 +94,10 @@ export default function AdminConditionSymptomMapping() {
     );
   }, [symptoms, q]);
 
+  const isSelected = (symptomId: number) => {
+    return selectedSymptoms.some((item) => item.symptom_id === symptomId);
+  };
+
   const toggleSymptom = (symptomId: number) => {
     setSelectedSymptoms((prev) => {
       const exists = prev.find((item) => item.symptom_id === symptomId);
@@ -120,14 +118,10 @@ export default function AdminConditionSymptomMapping() {
   };
 
   const updateWeight = (symptomId: number, weight: number) => {
-    const safeImportance = Number.isFinite(weight)
-      ? Math.min(5, Math.max(1, weight))
-      : 1;
-
     setSelectedSymptoms((prev) =>
       prev.map((item) =>
         item.symptom_id === symptomId
-          ? { ...item, weight: safeImportance }
+          ? { ...item, weight: weight < 1 ? 1 : weight }
           : item
       )
     );
@@ -145,13 +139,8 @@ export default function AdminConditionSymptomMapping() {
 
   const handleSave = async () => {
     if (!selectedConditionId) {
-     setToast({
-  type: "warning",
-  message: "Please select a condition first.",
-});
-
-setTimeout(() => setToast(null), 2500);
-return;
+      alert("Please select a condition first.");
+      return;
     }
 
     try {
@@ -170,12 +159,7 @@ return;
         return;
       }
 
-     setToast({
-  type: "success",
-  message: "Condition-symptom mapping saved successfully.",
-});
-
-setTimeout(() => setToast(null), 2500);
+      alert("Condition-symptom mapping saved successfully.");
     } catch (err) {
       console.error("Save mapping error:", err);
       alert("Something went wrong while saving mapping.");
@@ -302,11 +286,8 @@ setTimeout(() => setToast(null), 2500);
                           <th>Symptom</th>
                           <th>Category</th>
                           <th>Red Flag</th>
-                          <th>
-                            Importance
-                            <span className="mapping-column-hint">1 low - 5 high</span>
-                          </th>
-                          <th>Required Symptom</th>
+                          <th>Weight</th>
+                          <th>Required</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -348,7 +329,6 @@ setTimeout(() => setToast(null), 2500);
                                   <input
                                     type="number"
                                     min={1}
-                                    max={5}
                                     className="weight-input"
                                     disabled={!selected}
                                     value={selected ? selected.weight : 1}
@@ -405,24 +385,6 @@ setTimeout(() => setToast(null), 2500);
           </div>
         </section>
       </main>
-      
-
-      {toast && (
-  <div className={`mapping-toast ${toast.type}`}>
-    <div className="mapping-toast-content">
-      <span className="toast-icon">
-        {toast.type === "success"
-          ? "✔"
-          : toast.type === "error"
-          ? "✖"
-          : "⚠"}
-      </span>
-      <span>{toast.message}</span>
-    </div>
-  </div>
-)}
-
-
     </div>
   );
 }

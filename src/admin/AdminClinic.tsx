@@ -52,7 +52,7 @@ export default function AdminClinics() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState<any | null>(null);
-  const [isClinicPopupOpen, setIsClinicPopupOpen] = useState(false);
+const [isClinicPopupOpen, setIsClinicPopupOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [profile, setProfile] = useState<ClinicProfile | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -339,9 +339,176 @@ export default function AdminClinics() {
             </div>
 
             <div className="admin-grid">
-              <section className="admin-card admin-table-card">
-                <div className="clinics-table-wrap">
-                  <table className="admin-table clinics-table">
+            <section className="admin-card admin-table-card">
+  <div className="clinics-table-wrap">
+    <table className="admin-table clinics-table">
+  <thead>
+    <tr>
+      <th>Registered Clinics</th>
+      <th>Approval</th>
+      <th>Account</th>
+      <th>Actions:</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {loading ? (
+      <tr>
+        <td colSpan={4} style={{ textAlign: "center" }}>Loading...</td>
+      </tr>
+    ) : filtered.length === 0 ? (
+      <tr>
+        <td colSpan={4} style={{ textAlign: "center" }}>No clinics found.</td>
+      </tr>
+    ) : (
+      filtered.map((c) => {
+        const isPending = c.status === "pending";
+        const isApproved = c.status === "approved";
+        const isRejected = c.status === "rejected";
+
+        const isActive = c.account_status === "active";
+        const isDisabled = c.account_status === "disabled";
+
+        return (
+          <tr key={c.id}>
+            <td className="users-name">{c.clinic_name}</td>
+
+            {/* ✅ Approval Status */}
+            <td>
+              <span
+                className={[
+                  "pill",
+                  isPending ? "pill-warning" : "",
+                  isApproved ? "pill-success" : "",
+                  isRejected ? "pill-danger" : "",
+                ].join(" ")}
+              >
+                {c.status}
+              </span>
+            </td>
+
+            {/* ✅ Account Status */}
+            <td>
+              <span
+                className={[
+                  "pill",
+                  isActive ? "pill-success" : "",
+                  isDisabled ? "pill-dark" : "",
+                ].join(" ")}
+              >
+                {c.account_status}
+              </span>
+            </td>
+
+            {/* ✅ Actions */}
+            <td>
+              <div className="users-actions clinics-actions slots">
+                <button
+  type="button"
+  className="pill pill-view pill-wide"
+  onClick={() => {
+    setSelectedClinic(c);
+    setIsClinicPopupOpen(true);
+  }}
+>
+  View
+</button>
+
+                {/* Approve / Reject ONLY if pending */}
+                {isPending && (
+                  <>
+                    <button
+                      type="button"
+                      className="pill pill-success pill-wide"
+                      onClick={() => approveClinic(c.id)}
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      type="button"
+                      className="pill pill-danger pill-wide"
+                      onClick={() => rejectClinic(c.id)}
+                    >
+                      Reject
+                    </button>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  className="pill pill-gray pill-wide"
+                  onClick={() => editClinicName(c.id)}
+                >
+                  Edit
+                </button>
+
+                {/* Activate / Deactivate ONLY if approved */}
+                {isApproved && (
+                  isDisabled ? (
+                    <button
+                      type="button"
+                      className="pill pill-success pill-wide"
+                      onClick={() => setClinicStatus(c.id, "active")}
+                    >
+                      Activate
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="pill pill-dark pill-wide"
+                      onClick={() => setClinicStatus(c.id, "disabled")}
+                    >
+                      Deactivate
+                    </button>
+                  )
+                )}
+              </div>
+            </td>
+          </tr>
+        );
+      })
+    )}
+           </tbody>
+        </table>
+    </div>
+</section>
+
+              <aside className="admin-right">
+                 <div className="dash-panel dash-right-top">
+                  <div className="dash-panel-title">Recent activity</div>
+
+                  <div className="dash-panel-body dash-body-small">
+                    {activities.length === 0 ? (
+                      <div className="activity-empty">No recent activity yet.</div>
+                    ) : (
+                      <ul className="activity-list">
+                        {activities.slice(0, 3).map((item) => (
+                          <li key={item.id} className={`activity-item ${item.type}`}>
+                            <div className="activity-icon">
+                              {item.type === "user" && "👤"}
+                              {item.type === "clinic" && "🏥"}
+                              {item.type === "clinic-approved" && "✅"}
+                              {item.type === "clinic-rejected" && "❌"}
+                              {item.type === "appointment" && "📅"}
+                            </div>
+
+                            <div className="activity-content">
+                              <div className="activity-text">{item.text}</div>
+                              <div className="activity-time">
+                                {new Date(item.time).toLocaleString()}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                {/* ✅ Appointment Section PANEL inside aside */}
+                 <Panel title="Appointment Section">
+                  <table className="dash-table">
                     <thead>
                       <tr>
                         <th>Registered Clinics</th>
@@ -354,11 +521,9 @@ export default function AdminClinics() {
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan={4} style={{ textAlign: "center" }}>Loading...</td>
-                        </tr>
-                      ) : filtered.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} style={{ textAlign: "center" }}>No clinics found.</td>
+                          <td colSpan={3} className="td-empty">
+                            Appointments API not connected yet.
+                          </td>
                         </tr>
                       ) : (
                         filtered.map((c) => {
@@ -549,137 +714,50 @@ export default function AdminClinics() {
         </section>
       </main>
 
-      {isClinicPopupOpen && selectedClinic && (
-        <div
-          className="modal-backdrop"
+     {isClinicPopupOpen && selectedClinic && (
+  <div
+    className="modal-backdrop"
+    onClick={() => setIsClinicPopupOpen(false)}
+  >
+    <div
+      className="modal-card"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="modal-head">
+        <h3>Clinic Details</h3>
+        <button
+          type="button"
+          className="modal-close"
           onClick={() => setIsClinicPopupOpen(false)}
         >
-          <div
-            className="modal-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="modal-head">
-              <h3>Clinic Details</h3>
-              <button
-                type="button"
-                className="modal-close"
-                onClick={() => setIsClinicPopupOpen(false)}
-              >
-                ✕
-              </button>
-            </div>
+          ✕
+        </button>
+      </div>
 
-            <div className="modal-body">
-              <p><b>Clinic Name:</b> {selectedClinic.clinic_name ?? "—"}</p>
-              <p><b>Approval:</b> {selectedClinic.status ?? "—"}</p>
-              <p><b>Account:</b> {selectedClinic.account_status ?? "—"}</p>
-              <p><b>Email:</b> {selectedClinic.email ?? "—"}</p>
-              <p><b>Phone:</b> {selectedClinic.phone ?? "—"}</p>
-              <p><b>Address:</b> {selectedClinic.address ?? "—"}</p>
-              <p><b>Created At:</b> {selectedClinic.created_at ?? "—"}</p>
-            </div>
+      <div className="modal-body">
+        <p><b>Clinic Name:</b> {selectedClinic.clinic_name ?? "—"}</p>
+        <p><b>Approval:</b> {selectedClinic.status ?? "—"}</p>
+        <p><b>Account:</b> {selectedClinic.account_status ?? "—"}</p>
 
-            <div className="modal-foot">
-              <button
-                type="button"
-                className="pill pill-gray"
-                onClick={() => setIsClinicPopupOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        <p><b>Email:</b> {selectedClinic.email ?? "—"}</p>
+        <p><b>Phone:</b> {selectedClinic.phone ?? "—"}</p>
+        <p><b>Address:</b> {selectedClinic.address ?? "—"}</p>
 
-      {editPopupOpen && editingClinic && (
-        <div
-          className="clinic-edit-popup-overlay"
-          onClick={closeEditPopup}
+        <p><b>Created At:</b> {selectedClinic.created_at ?? "—"}</p>
+      </div>
+
+      <div className="modal-foot">
+        <button
+          type="button"
+          className="pill pill-gray"
+          onClick={() => setIsClinicPopupOpen(false)}
         >
-          <div
-            className="clinic-edit-popup-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="clinic-edit-popup-title">Edit Clinic</h3>
-
-            <input
-              className="clinic-edit-popup-input"
-              type="text"
-              value={editClinicNameInput}
-              onChange={(e) => setEditClinicNameInput(e.target.value)}
-              placeholder="Enter clinic name..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") saveEditedClinic();
-                if (e.key === "Escape") closeEditPopup();
-              }}
-              autoFocus
-            />
-
-            <div className="clinic-edit-popup-actions">
-              <button
-                type="button"
-                className="clinic-edit-popup-btn clinic-edit-popup-cancel"
-                onClick={closeEditPopup}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="clinic-edit-popup-btn clinic-edit-popup-save"
-                onClick={saveEditedClinic}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {statusPopupOpen && statusClinic && pendingAccountStatus && (
-        <div
-          className="clinic-status-popup-overlay"
-          onClick={closeStatusPopup}
-        >
-          <div
-            className="clinic-status-popup-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="clinic-status-popup-title">
-              {pendingAccountStatus === "disabled" ? "Deactivate Clinic" : "Activate Clinic"}
-            </h3>
-
-            <p className="clinic-status-popup-text">
-              Are you sure you want to{" "}
-              <strong>
-                {pendingAccountStatus === "disabled" ? "deactivate" : "activate"}
-              </strong>{" "}
-              <span className="clinic-status-popup-name">"{statusClinic.clinic_name}"</span>?
-            </p>
-
-            <div className="clinic-status-popup-actions">
-              <button
-                type="button"
-                className="clinic-status-popup-btn clinic-status-popup-cancel"
-                onClick={closeStatusPopup}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={`clinic-status-popup-btn ${
-                  pendingAccountStatus === "disabled"
-                    ? "clinic-status-popup-danger"
-                    : "clinic-status-popup-save"
-                }`}
-                onClick={confirmStatusChange}
-              >
-                {pendingAccountStatus === "disabled" ? "Deactivate" : "Activate"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

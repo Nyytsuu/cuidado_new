@@ -343,7 +343,7 @@ export default function AdminReport() {
                     <div className="activity-empty">No recent activity yet.</div>
                   ) : (
                     <ul className="activity-list">
-                      {filteredActivities.slice(0, 3).map((item) => (
+                      {activities.slice(0, 3).map((item) => (
                         <li key={item.id} className={`activity-item ${item.type}`}>
                           <div className="activity-icon">
                             {item.type === "user" && "👤"}

@@ -1,7 +1,17 @@
-console.log("✅ RUNNING THIS FILE:", __filename);
-console.log("✅ LOADED admin.routes.js");
-
-require("dotenv").config();
+  console.log("✅ RUNNING THIS FILE:", __filename);
+  console.log("✅ LOADED admin.routes.js");
+  require("dotenv").config();
+  const express = require("express");
+  const cors = require("cors");
+  const mysql = require("mysql2/promise");
+  const adminRoutes = require("./routes/admin.routes");
+  const clinicRoutes = require("./routes/clinic.routes");
+  const locationRoutes = require("./routes/location.routes");
+  const authRoutes = require("./routes/auth.routes");
+const adminConditionsRoutes = require("./routes/admin.condition.routes");
+const adminSymptomsRoutes = require("./routes/admin.symptoms.routes");
+const adminConditionSymptomsRoutes = require("./routes/admin.conditionSymptoms.routes");
+  const app = express();
 
 const express = require("express");
 const cors = require("cors");
@@ -23,6 +33,15 @@ const articlesRouter = require("./routes/articles");
 const app = express();
 
 
+  const pool = mysql.createPool({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "root123",
+    database: process.env.DB_NAME || "cuidado_medihelp",
+    port: Number(process.env.DB_PORT || 3307),
+    waitForConnections: true,
+    connectionLimit: 10,
+  });
 
 
 
@@ -181,6 +200,15 @@ app.get("/api/admin/recent-activity", async (req, res) => {
       const [r] = await pool.query(unionNoStatus, [limit]);
       rows = r;
     }
+  });
+  /* ✅ ROUTES */
+  app.use("/api", authRoutes);
+  app.use("/api", locationRoutes);
+  app.use("/api", clinicRoutes);
+  app.use("/api/admin", adminRoutes);
+  app.use("/api/admin/conditions", adminConditionsRoutes);
+  app.use("/api/admin/symptoms", adminSymptomsRoutes);
+  app.use("/api/admin/condition-symptoms", adminConditionSymptomsRoutes);
 
     res.json(
       rows.map((x) => ({

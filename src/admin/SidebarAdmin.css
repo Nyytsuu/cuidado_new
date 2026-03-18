@@ -2,6 +2,9 @@
   --sidebar-bg: #58aea8;
   --sidebar-text: #0f2f2f;
   --sidebar-width-collapsed: 78px;
+  --sidebar-bg: #58aea8;
+  --sidebar-text: #0f2f2f;
+  --sidebar-width-collapsed: 78px;
   --sidebar-width-expanded: 220px;
 }
 
@@ -17,9 +20,13 @@
   z-index: 1000;
   transition: width 0.25s ease;
   overflow: hidden;
+  overflow: hidden;
 }
 
 .SidebarAdmin .sidebar-top {
+  height: 0;
+  padding: 0;
+  margin: 0;
   height: 0;
   padding: 0;
   margin: 0;
@@ -30,16 +37,28 @@
   top: 10px;   /* change to 4px or 0 if you want it even higher */
   left: 50%;
   transform: translateX(-50%);
+  position: absolute;
+  top: 10px;   /* change to 4px or 0 if you want it even higher */
+  left: 50%;
+  transform: translateX(-50%);
   background: transparent;
   border: none;
   color: var(--sidebar-text);
   font-size: 34px;
+  font-size: 34px;
   line-height: 1;
+  cursor: pointer;
   cursor: pointer;
   padding: 0;
   outline: none;
   box-shadow: none;
   z-index: 1001;
+  z-index: 1001;
+}
+
+.SidebarAdmin .sidebar.expanded .sidebar-toggle {
+  left: 16px;
+  transform: none;
 }
 
 .SidebarAdmin .sidebar.expanded .sidebar-toggle {
@@ -51,6 +70,16 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 4px;
+
+  padding: 1px 6px 12px; /* adjust this number */
+}
+
+
+
+
+.SidebarAdmin .sidebar-group {
+  margin-top: 6px;
   gap: 4px;
 
   padding: 1px 6px 12px; /* adjust this number */
@@ -75,6 +104,18 @@
   letter-spacing: 0.08em;
   color: rgba(15, 47, 47, 0.7);
   padding: 10px 14px 6px;
+.SidebarAdmin .sidebar-label {
+  display: none;
+}
+
+.SidebarAdmin .sidebar.expanded .sidebar-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(15, 47, 47, 0.7);
+  padding: 10px 14px 6px;
 }
 
 .SidebarAdmin .sidebar-item {
@@ -84,17 +125,31 @@
 .SidebarAdmin .sidebar-item a {
   width: 100%;
   min-height: 42px;
+.SidebarAdmin .sidebar-item a {
+  width: 100%;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
+  justify-content: center;
   gap: 12px;
+  padding: 0 12px;
   padding: 0 12px;
   text-decoration: none;
   color: var(--sidebar-text);
   background: transparent;
   border: none;
   border-radius: 12px;
+  border-radius: 12px;
   cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  box-sizing: border-box;
+}
+
+.SidebarAdmin .sidebar.expanded .sidebar-item a {
+  justify-content: flex-start;
   font: inherit;
   font-weight: 600;
   transition: background 0.2s ease;
@@ -107,12 +162,17 @@
 
 .SidebarAdmin .sidebar-item a:hover {
   background: rgba(255, 255, 255, 0.16);
+.SidebarAdmin .sidebar-item a:hover {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 .SidebarAdmin .sidebar-item img {
   width: 22px;
   height: 22px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
+  flex-shrink: 0;
   flex-shrink: 0;
 }
 
@@ -120,13 +180,20 @@
   opacity: 0;
   width: 0;
   overflow: hidden;
+  width: 0;
+  overflow: hidden;
   white-space: nowrap;
   transition: 0.2s ease;
+  font-size: 14px;
   font-size: 14px;
 }
 
 .SidebarAdmin .sidebar.expanded .sidebar-item span {
   opacity: 1;
+  width: auto;
+}
+.logout-btn {
+  display: flex;          /* enable flex */
   width: auto;
 }
 .logout-btn {
@@ -143,94 +210,3 @@
   width: 80%;            /* makes alignment work properly */
 }
 
-/* CONFIRM MODAL */
-.logout-confirm-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-}
-
-.logout-confirm-modal {
-  background: #ffffff;
-  padding: 26px 30px;
-  border-radius: 16px;
-  width: 320px;
-  text-align: center;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-}
-
-.logout-confirm-modal h3 {
-  margin-bottom: 6px;
-  font-size: 1.1rem;
-  color: #0f2f2f;
-}
-
-.logout-confirm-modal p {
-  font-size: 0.9rem;
-  color: #6b7280;
-  margin-bottom: 20px;
-}
-
-.logout-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.logout-actions button {
-  flex: 1;
-  padding: 10px 0;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-}
-
-/* buttons */
-.btn-cancel {
-  background: #f3f4f6;
-}
-
-.btn-confirm {
-  background: #58aea8;
-  color: white;
-}
-
-/* SUCCESS POPUP */
-.logout-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999;
-}
-
-.logout-popup {
-  background: #ffffff;
-  padding: 22px 28px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-  text-align: center;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.logout-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: #58aea8;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
-}

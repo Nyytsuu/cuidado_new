@@ -387,58 +387,22 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
         >
           Close
         </button>
-      </div>
-    </div>
-  </div>
-)}
 
-
-      {cancelPopupOpen && (
-  <div className="modal-backdrop" onClick={() => setCancelPopupOpen(false)}>
-    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-      
-      <div className="modal-head">
-        <h3>Cancel Appointment</h3>
         <button
-          className="modal-close"
-          onClick={() => setCancelPopupOpen(false)}
           type="button"
-        >
-          ✕
-        </button>
-      </div>
-
-      <div className="modal-body">
-        <p>Are you sure you want to cancel this appointment?</p>
-        <p style={{ color: "#6b7280", fontSize: "14px" }}>
-          This action cannot be undone.
-        </p>
-      </div>
-
-      <div className="modal-foot">
-        <button
-          className="pill pill-gray"
-          onClick={() => setCancelPopupOpen(false)}
-          type="button"
-        >
-          No, Keep It
-        </button>
-
-        <button
           className="pill pill-danger"
-          onClick={confirmCancel}
-          type="button"
+          disabled={
+            selected.status === "cancelled" ||
+            selected.status === "completed"
+          }
+          onClick={() => cancelAppointment(selected.id)}
         >
-          Yes, Cancel
+          Cancel
         </button>
       </div>
-
     </div>
   </div>
 )}
-
-
-
     </div>
   );
 }

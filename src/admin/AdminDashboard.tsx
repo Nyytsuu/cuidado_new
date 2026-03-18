@@ -15,8 +15,6 @@ import {
 import logo from "../img/logo.png";
 import searchIcon from "../img/search.png";
 
-const ADMIN_API = "http://localhost:5000/api/admin";
-
 /* ---------- TYPES ---------- */
 type MetricsResponse = {
   totalUsers: number;
@@ -62,14 +60,6 @@ type AppointmentRow = {
   status: string;
 };
 
-type AdminAppointmentApiRow = {
-  id: number;
-  patient_name: string;
-  clinic_name: string;
-  start_at: string;
-  status: string;
-};
-
 type AppointmentStatus =
   | "pending"
   | "approved"
@@ -100,22 +90,14 @@ type AppointmentDetails = {
   updated_at: string;
 };
 
-const matchesSearch = (
-  query: string,
-  ...values: Array<string | number | null | undefined>
-) =>
-  !query ||
-  values.some((value) =>
-    String(value ?? "")
-      .toLowerCase()
-      .includes(query)
-  );
-
 export default function AdminDashboard() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+
+  const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<AppointmentDetails | null>(null);
 
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<AppointmentDetails | null>(null);
@@ -150,13 +132,13 @@ export default function AdminDashboard() {
       }
     };
     loadClinics();
-  }, []);
+  }, [API]);
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoadingMetrics(true);
-        const res = await fetch(`${ADMIN_API}/dashboard-metrics`);
+        const res = await fetch(`${API}/dashboard-metrics`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: MetricsResponse = await res.json();
         setMetrics(data);
@@ -168,12 +150,12 @@ export default function AdminDashboard() {
       }
     };
     load();
-  }, []);
+  }, [API]);
 
   useEffect(() => {
     const loadActivity = async () => {
       try {
-        const res = await fetch(`${ADMIN_API}/recent-activity?limit=8`);
+        const res = await fetch(`${API}/recent-activity?limit=8`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ActivityItem[] = await res.json();
         setActivities(data);
@@ -183,14 +165,14 @@ export default function AdminDashboard() {
       }
     };
     loadActivity();
-  }, []);
+  }, [API]);
 
   useEffect(() => {
     const loadTables = async () => {
       try {
         const [clinicsRes, usersRes] = await Promise.all([
-          fetch(`${ADMIN_API}/clinics?limit=20`),
-          fetch(`${ADMIN_API}/users?limit=8`),
+          fetch(`${API}/clinics?limit=20`),
+          fetch(`${API}/users?limit=8`),
         ]);
 
         if (!clinicsRes.ok) throw new Error(`Clinics HTTP ${clinicsRes.status}`);
@@ -209,7 +191,7 @@ export default function AdminDashboard() {
     };
 
     loadTables();
-  }, []);
+  }, [API]);
 
   const userTrend = useMemo(() => {
     if (!metrics?.userTrend) return [];
@@ -238,47 +220,6 @@ export default function AdminDashboard() {
   const locationText = (c: ClinicRow) =>
     `${c.address ?? "No address"} (P:${c.province_id}, M:${c.municipality_id}, B:${c.barangay_id})`;
 
-  const dashboardQuery = q.trim().toLowerCase();
-  const filteredClinics = clinics.filter((clinic) =>
-    matchesSearch(
-      dashboardQuery,
-      clinic.clinic_name,
-      clinic.email,
-      clinic.phone,
-      clinic.status,
-      locationText(clinic),
-      fmtDate(clinic.created_at)
-    )
-  );
-  const pendingClinics = filteredClinics.filter(
-    (clinic) => clinic.status === "pending"
-  );
-  const filteredLatestUsers = latestUsers.filter((user) =>
-    matchesSearch(
-      dashboardQuery,
-      user.full_name,
-      user.email,
-      fmtDate(user.created_at)
-    )
-  );
-  const filteredActivities = activities.filter((activity) =>
-    matchesSearch(
-      dashboardQuery,
-      activity.text,
-      activity.type,
-      new Date(activity.time).toLocaleString()
-    )
-  );
-  const filteredAppointments = appointments.filter((appointment) =>
-    matchesSearch(
-      dashboardQuery,
-      appointment.patient,
-      appointment.clinic,
-      appointment.schedule,
-      appointment.status
-    )
-  );
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -287,7 +228,7 @@ export default function AdminDashboard() {
 
   const updateClinicStatus = async (id: number, status: "approved" | "rejected") => {
     try {
-      const res = await fetch(`${ADMIN_API}/clinics/${id}/status`, {
+      const res = await fetch(`${API}/clinics/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -305,7 +246,7 @@ export default function AdminDashboard() {
     try {
       setLoadingAppointments(true);
 
-      const res = await fetch(`${ADMIN_API}/appointments`);
+      const res = await fetch(`${API}/appointments`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data: AdminAppointmentApiRow[] = await res.json();
@@ -332,7 +273,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadAppointments();
-  }, []);
+  }, [API]);
 
   const loadLatestUsers = async () => {
     try {
@@ -351,11 +292,11 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadLatestUsers();
-  }, []);
+  }, [API]);
 
   const viewDetails = async (id: number) => {
     try {
-      const res = await fetch(`${ADMIN_API}/appointments/${id}`);
+      const res = await fetch(`${API}/appointments/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: AppointmentDetails = await res.json();
       setSelected(data);
@@ -411,7 +352,7 @@ export default function AdminDashboard() {
                 className="nav-link profile-btn"
                 onClick={() => setHeaderProfileOpen((v) => !v)}
               >
-                Profile <span className="caret">v</span>
+                Profile <span className="caret">▾</span>
               </button>
 
               <div className="profile-dropdown">
@@ -462,12 +403,12 @@ export default function AdminDashboard() {
               <div className="dash-chart-head">
                 <h3>User Trend (Last 7 Days)</h3>
               </div>
+            <section className="dash-chart">
+              <div className="dash-chart-head">
+                <h3>User Trend (Last 7 Days)</h3>
+              </div>
 
-              <div
-                className={`dash-chart-card ${
-                  hasUserTrendData ? "" : "is-empty-trend"
-                }`}
-              >
+              <div className="dash-chart-card">
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart
                     data={userTrend}
@@ -480,27 +421,17 @@ export default function AdminDashboard() {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" height={30} tickMargin={10} interval={0} />
-                    <YAxis
-                      allowDecimals={false}
-                      domain={[0, userTrendYAxisMax]}
-                      tickCount={4}
-                    />
+                    <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Line
                       type="monotone"
                       dataKey="total"
                       stroke="#00bfa6"
                       strokeWidth={3}
-                      dot={{ r: 4, strokeWidth: 2 }}
-                      activeDot={{ r: 6 }}
+                      dot={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                {!loadingMetrics && !hasUserTrendData && (
-                  <div className="trend-empty-note">
-                    No new users in the last 7 days.
-                  </div>
-                )}
               </div>
             </section>
 
@@ -523,9 +454,15 @@ export default function AdminDashboard() {
                           <td colSpan={4} className="td-empty">
                             Loading...
                           </td>
+                          <td colSpan={4} className="td-empty">
+                            Loading...
+                          </td>
                         </tr>
                       ) : pendingClinics.length === 0 ? (
                         <tr>
+                          <td colSpan={4} className="td-empty">
+                            No pending clinics.
+                          </td>
                           <td colSpan={4} className="td-empty">
                             No pending clinics.
                           </td>
@@ -584,9 +521,15 @@ export default function AdminDashboard() {
                           <td colSpan={2} className="td-empty">
                             Loading...
                           </td>
+                          <td colSpan={2} className="td-empty">
+                            Loading...
+                          </td>
                         </tr>
                       ) : filteredLatestUsers.length === 0 ? (
                         <tr>
+                          <td colSpan={2} className="td-empty">
+                            No users yet.
+                          </td>
                           <td colSpan={2} className="td-empty">
                             No users yet.
                           </td>
@@ -625,6 +568,9 @@ export default function AdminDashboard() {
                           <td colSpan={4} className="td-empty">
                             No clinics yet.
                           </td>
+                          <td colSpan={4} className="td-empty">
+                            No clinics yet.
+                          </td>
                         </tr>
                       ) : (
                         filteredClinics.slice(0, 10).map((c) => (
@@ -656,7 +602,7 @@ export default function AdminDashboard() {
                   <div className="activity-empty">No recent activity yet.</div>
                 ) : (
                   <ul className="activity-list">
-                    {filteredActivities.slice(0, 3).map((item) => (
+                    {activities.slice(0, 3).map((item) => (
                       <li key={item.id} className={`activity-item ${item.type}`}>
                         <div className="activity-icon">
                           {item.type === "user" && "👤"}
@@ -679,13 +625,13 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <Panel title="Appointments" className="appointment-panel">
+            <Panel title="Appointment Section">
               <table className="dash-table">
                 <thead>
                   <tr>
                     <th>Patient</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th className="th-action">Action</th>
                   </tr>
                 </thead>
 
@@ -696,37 +642,30 @@ export default function AdminDashboard() {
                         Loading...
                       </td>
                     </tr>
-                  ) : filteredAppointments.length === 0 ? (
+                  ) : appointments.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="td-empty">
-                        No appointments yet.
+                        Appointments API not connected yet.
                       </td>
                     </tr>
                   ) : (
-                    filteredAppointments.map((ap) => (
+                    appointments.map((ap) => (
                       <tr key={ap.id}>
-                        <td className="appt-patient-cell">
+                        <td>
                           <div className="t-main">{ap.patient}</div>
-                          <div className="t-sub">
-                            {ap.clinic} - {ap.schedule}
-                          </div>
+                          <div className="t-sub">{ap.clinic}</div>
                         </td>
-
-                        <td className="appt-status-cell">
-                          <span
-                            className={`appt-badge appt-status-badge badge-${ap.status.toLowerCase()}`}
-                          >
+                        <td>
+                          <span className={`badge badge-${ap.status.toLowerCase()}`}>
                             {ap.status}
                           </span>
                         </td>
-
-                        <td className="appt-action-cell">
+                        <td className="td-action">
                           <button
-                            type="button"
-                            className="appt-badge appt-view-btn badge-view"
+                            className="btn-sm btn-view"
                             onClick={() => viewDetails(ap.id)}
                           >
-                            View
+                            View details
                           </button>
                         </td>
                       </tr>

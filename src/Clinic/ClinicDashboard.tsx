@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
@@ -34,85 +34,11 @@ type AppointmentRow = {
   status: string;
 };
 
-type AppointmentService = {
-  id?: number;
-  service_id?: number;
-  service_name_snapshot?: string | null;
-  price_snapshot?: number | string | null;
-  duration_minutes_snapshot?: number | string | null;
-  description?: string | null;
-};
-
-type AppointmentDetails = {
-  id: number;
-  user_id: number;
-  clinic_id: number;
-  start_at: string;
-  end_at: string | null;
-  purpose: string | null;
-  symptoms: string | null;
-  patient_note: string | null;
-  clinic_note: string | null;
-  status: string;
-  cancelled_at?: string | null;
-  cancelled_by?: "patient" | "clinic" | "admin" | null;
-  cancel_reason?: string | null;
-  completed_at?: string | null;
-  patient_name_snapshot: string | null;
-  patient_phone_snapshot: string | null;
-  clinic_name_snapshot: string | null;
-  created_at?: string;
-  updated_at?: string;
-  services?: AppointmentService[];
-};
-
-type RawAppointmentRow = {
-  id?: number | string;
-  patient?: string;
-  full_name?: string;
-  service?: string;
-  service_name?: string;
-  schedule?: string;
-  appointment_date?: string;
-  created_at?: string;
-  status?: string;
-};
-
-type RawPatientRow = {
-  id?: number | string;
-  full_name?: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  created_at?: string;
-  joined_at?: string;
-};
-
-type RawActivityItem = {
-  id?: number | string;
-  type?: ActivityItem["type"];
-  text?: string;
-  message?: string;
-  time?: string;
-  created_at?: string;
-};
-
 type PanelProps = {
   title: string;
-  children: ReactNode;
+  children: React.ReactNode;
   className?: string;
 };
-
-const matchesSearch = (
-  query: string,
-  ...values: Array<string | number | null | undefined>
-) =>
-  !query ||
-  values.some((value) =>
-    String(value ?? "")
-      .toLowerCase()
-      .includes(query)
-  );
 
 /* ---------- SMALL PANEL COMPONENT ---------- */
 function Panel({ title, children, className = "" }: PanelProps) {
@@ -124,36 +50,11 @@ function Panel({ title, children, className = "" }: PanelProps) {
   );
 }
 
-const getStoredClinicId = () => {
-  try {
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (user?.role === "clinic" && user?.id) {
-      return Number(user.id);
-    }
-
-    const role = localStorage.getItem("role");
-    const userId = localStorage.getItem("userId");
-
-    if (role === "clinic" && userId) {
-      return Number(userId);
-    }
-  } catch {
-    return 1;
-  }
-
-  return 1;
-};
-
 export default function ClinicDashboard() {
   const API = "http://localhost:5000/api";
-  const [clinicId] = useState(() => getStoredClinicId());
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
 
   /* ---------- METRICS ---------- */
   const [loadingMetrics, setLoadingMetrics] = useState(true);
@@ -165,11 +66,6 @@ export default function ClinicDashboard() {
   /* ---------- APPOINTMENTS ---------- */
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [detailsLoading, setDetailsLoading] = useState(false);
-  const [detailsError, setDetailsError] = useState("");
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<AppointmentDetails | null>(null);
 
   /* ---------- PATIENTS ---------- */
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -208,82 +104,13 @@ export default function ClinicDashboard() {
     });
   };
 
-  const fmtOptionalDateTime = (value?: string | null) =>
-    value ? fmtDateTime(value) : "-";
-
-  const fallbackText = (
-    value: string | number | null | undefined,
-    fallback = "-"
-  ) => {
-    const text = String(value ?? "").trim();
-    return text || fallback;
-  };
-
   const safeStatusClass = (status: string) => {
     return (status || "pending").toLowerCase().replace(/\s+/g, "-");
   };
 
-  const closeAppointmentDetails = () => {
-    setDetailsOpen(false);
-    setDetailsLoading(false);
-    setDetailsError("");
-    setSelectedAppointment(null);
+  const onViewAppointment = (id: number) => {
+    console.log("View appointment:", id);
   };
-
-  const onViewAppointment = async (id: number) => {
-    try {
-      setDetailsOpen(true);
-      setDetailsLoading(true);
-      setDetailsError("");
-      setSelectedAppointment(null);
-
-      const res = await fetch(`${API}/appointments/details/${id}`);
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data?.message || "Failed to load appointment details.");
-      }
-
-      setSelectedAppointment(data as AppointmentDetails);
-    } catch (error) {
-      console.error("View appointment details error:", error);
-      setDetailsError(
-        error instanceof Error
-          ? error.message
-          : "Failed to load appointment details."
-      );
-    } finally {
-      setDetailsLoading(false);
-    }
-  };
-
-  const dashboardQuery = searchTerm.trim().toLowerCase();
-  const filteredAppointments = appointments.filter((appointment) =>
-    matchesSearch(
-      dashboardQuery,
-      appointment.patient,
-      appointment.service,
-      fmtDateTime(appointment.schedule),
-      appointment.status
-    )
-  );
-  const filteredPatients = patients.filter((patient) =>
-    matchesSearch(
-      dashboardQuery,
-      patient.full_name,
-      patient.email,
-      patient.phone,
-      fmtDate(patient.created_at)
-    )
-  );
-  const filteredActivities = activities.filter((activity) =>
-    matchesSearch(
-      dashboardQuery,
-      activity.text,
-      activity.type,
-      fmtDate(activity.time)
-    )
-  );
 
   /* ---------- FETCH METRICS ---------- */
   useEffect(() => {
@@ -291,9 +118,7 @@ export default function ClinicDashboard() {
       try {
         setLoadingMetrics(true);
 
-        const res = await fetch(
-          `${API}/clinic/dashboard/metrics?clinic_id=${clinicId}`
-        );
+        const res = await fetch(`${API}/clinic/dashboard/metrics`);
         if (!res.ok) throw new Error("Failed to fetch metrics");
 
         const data: MetricsResponse = await res.json();
@@ -314,7 +139,7 @@ export default function ClinicDashboard() {
     };
 
     fetchMetrics();
-  }, [API, clinicId]);
+  }, []);
 
   /* ---------- FETCH APPOINTMENTS ---------- */
   useEffect(() => {
@@ -322,16 +147,14 @@ export default function ClinicDashboard() {
       try {
         setLoadingAppointments(true);
 
-        const res = await fetch(
-          `${API}/clinic/dashboard/appointments?clinic_id=${clinicId}`
-        );
+        const res = await fetch(`${API}/clinic/dashboard/appointments`);
         if (!res.ok) throw new Error("Failed to fetch appointments");
 
-        const data = (await res.json()) as RawAppointmentRow[];
+        const data = await res.json();
 
         const normalized: AppointmentRow[] = Array.isArray(data)
-          ? data.map((item) => ({
-              id: Number(item.id || 0),
+          ? data.map((item: any) => ({
+              id: Number(item.id),
               patient: item.patient || item.full_name || "Unknown Patient",
               service: item.service || item.service_name || "General Checkup",
               schedule:
@@ -350,7 +173,7 @@ export default function ClinicDashboard() {
     };
 
     fetchAppointments();
-  }, [API, clinicId]);
+  }, []);
 
   /* ---------- FETCH PATIENTS ---------- */
   useEffect(() => {
@@ -358,16 +181,14 @@ export default function ClinicDashboard() {
       try {
         setLoadingPatients(true);
 
-        const res = await fetch(
-          `${API}/clinic/dashboard/patients?clinic_id=${clinicId}`
-        );
+        const res = await fetch(`${API}/clinic/dashboard/patients`);
         if (!res.ok) throw new Error("Failed to fetch patients");
 
-        const data = (await res.json()) as RawPatientRow[];
+        const data = await res.json();
 
         const normalized: PatientRow[] = Array.isArray(data)
-          ? data.map((item) => ({
-              id: Number(item.id || 0),
+          ? data.map((item: any) => ({
+              id: Number(item.id),
               full_name: item.full_name || item.name || "Unknown Patient",
               email: item.email || "No email",
               phone: item.phone || "",
@@ -385,7 +206,7 @@ export default function ClinicDashboard() {
     };
 
     fetchPatients();
-  }, [API, clinicId]);
+  }, []);
 
   /* ---------- FETCH ACTIVITIES ---------- */
   useEffect(() => {
@@ -393,15 +214,13 @@ export default function ClinicDashboard() {
       try {
         setLoadingActivities(true);
 
-        const res = await fetch(
-          `${API}/clinic/dashboard/activities?clinic_id=${clinicId}`
-        );
+        const res = await fetch(`${API}/clinic/dashboard/activities`);
         if (!res.ok) throw new Error("Failed to fetch activities");
 
-        const data = (await res.json()) as RawActivityItem[];
+        const data = await res.json();
 
         const normalized: ActivityItem[] = Array.isArray(data)
-          ? data.map((item, index) => ({
+          ? data.map((item: any, index: number) => ({
               id: String(item.id ?? index),
               type: item.type || "appointment",
               text: item.text || item.message || "No activity",
@@ -419,24 +238,15 @@ export default function ClinicDashboard() {
     };
 
     fetchActivities();
-  }, [API, clinicId]);
+  }, []);
 
   return (
-    <div
-      className={`ad-wrap clinic-dashboard-page ${
-        sidebarExpanded ? "modal-open" : ""
-      }`}
-    >
+    <div className={`ad-wrap ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
-        headerProfileOpen={headerProfileOpen}
-        setHeaderProfileOpen={setHeaderProfileOpen}
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search dashboard..."
       />
 
       <main className="ad-main">
@@ -472,7 +282,7 @@ export default function ClinicDashboard() {
               </div>
 
               <div className="metric-card">
-                <div className="metric-title">Completed This Week</div>
+                <div className="metric-title">This Week’s Bookings</div>
                 <div className="metric-box">
                   <div className="metric-value">
                     {loadingMetrics ? "..." : completedAppointments}
@@ -491,11 +301,11 @@ export default function ClinicDashboard() {
                   <div className="dash-chart-card schedule-card">
                     {loadingAppointments ? (
                       <div className="box-empty">Loading schedule...</div>
-                    ) : filteredAppointments.length === 0 ? (
+                    ) : appointments.length === 0 ? (
                       <div className="box-empty">No schedule today.</div>
                     ) : (
                       <div className="simple-list">
-                        {filteredAppointments.slice(0, 5).map((ap) => (
+                        {appointments.slice(0, 5).map((ap) => (
                           <div key={ap.id} className="simple-list-item">
                             <div className="simple-main">{ap.patient}</div>
                             <div className="simple-sub">
@@ -554,14 +364,14 @@ export default function ClinicDashboard() {
                             Loading appointments...
                           </td>
                         </tr>
-                      ) : filteredAppointments.length === 0 ? (
+                      ) : appointments.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="td-empty">
                             No appointments yet.
                           </td>
                         </tr>
                       ) : (
-                        filteredAppointments.slice(0, 6).map((ap) => (
+                        appointments.slice(0, 6).map((ap) => (
                           <tr key={ap.id}>
                             <td>
                               <div className="t-main">{ap.patient}</div>
@@ -607,11 +417,11 @@ export default function ClinicDashboard() {
               <div className="dash-panel-body dash-body-small right-small-box">
                 {loadingActivities ? (
                   <div className="box-empty">Loading...</div>
-                ) : filteredActivities.length === 0 ? (
+                ) : activities.length === 0 ? (
                   <div className="box-empty">No schedule summary.</div>
                 ) : (
                   <div className="simple-list compact">
-                    {filteredActivities.slice(0, 3).map((item) => (
+                    {activities.slice(0, 3).map((item) => (
                       <div key={item.id} className="simple-list-item">
                         <div className="simple-main">{item.text}</div>
                         <div className="simple-sub">{fmtDate(item.time)}</div>
@@ -639,14 +449,14 @@ export default function ClinicDashboard() {
                           Loading patients...
                         </td>
                       </tr>
-                    ) : filteredPatients.length === 0 ? (
+                    ) : patients.length === 0 ? (
                       <tr>
                         <td colSpan={2} className="td-empty">
                           No patients yet.
                         </td>
                       </tr>
                     ) : (
-                      filteredPatients.slice(0, 6).map((p) => (
+                      patients.slice(0, 6).map((p) => (
                         <tr key={p.id}>
                           <td>
                             <div className="t-main">{p.full_name}</div>
@@ -663,188 +473,6 @@ export default function ClinicDashboard() {
           </aside>
         </section>
       </main>
-
-      {detailsOpen && (
-        <div
-          className="clinic-dash-modal-overlay"
-          onClick={closeAppointmentDetails}
-        >
-          <div
-            className="clinic-dash-modal"
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="clinicDashboardAppointmentTitle"
-          >
-            <div className="clinic-dash-modal-head">
-              <div>
-                <h3 id="clinicDashboardAppointmentTitle">Appointment Details</h3>
-                <p>
-                  {selectedAppointment
-                    ? `Appointment #${selectedAppointment.id}`
-                    : "Loading appointment"}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="clinic-dash-modal-close"
-                onClick={closeAppointmentDetails}
-                aria-label="Close appointment details"
-              >
-                x
-              </button>
-            </div>
-
-            <div className="clinic-dash-modal-body">
-              {detailsLoading ? (
-                <div className="clinic-dash-modal-empty">
-                  Loading appointment details...
-                </div>
-              ) : detailsError ? (
-                <div className="clinic-dash-modal-alert">{detailsError}</div>
-              ) : selectedAppointment ? (
-                <>
-                  <div className="clinic-dash-detail-grid">
-                    <div>
-                      <span>Patient</span>
-                      <strong>
-                        {fallbackText(
-                          selectedAppointment.patient_name_snapshot,
-                          `User #${selectedAppointment.user_id}`
-                        )}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Phone</span>
-                      <strong>
-                        {fallbackText(selectedAppointment.patient_phone_snapshot)}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Clinic</span>
-                      <strong>
-                        {fallbackText(
-                          selectedAppointment.clinic_name_snapshot,
-                          `Clinic #${selectedAppointment.clinic_id}`
-                        )}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Status</span>
-                      <strong
-                        className={`badge badge-${safeStatusClass(
-                          selectedAppointment.status
-                        )}`}
-                      >
-                        {selectedAppointment.status}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <span>Start</span>
-                      <strong>{fmtOptionalDateTime(selectedAppointment.start_at)}</strong>
-                    </div>
-
-                    <div>
-                      <span>End</span>
-                      <strong>{fmtOptionalDateTime(selectedAppointment.end_at)}</strong>
-                    </div>
-                  </div>
-
-                  <div className="clinic-dash-detail-section">
-                    <h4>Visit Information</h4>
-                    <p>
-                      <b>Purpose:</b>{" "}
-                      {fallbackText(selectedAppointment.purpose, "No purpose provided")}
-                    </p>
-                    <p>
-                      <b>Symptoms:</b>{" "}
-                      {fallbackText(selectedAppointment.symptoms, "No symptoms listed")}
-                    </p>
-                    <p>
-                      <b>Patient Note:</b>{" "}
-                      {fallbackText(selectedAppointment.patient_note, "No patient note")}
-                    </p>
-                    <p>
-                      <b>Clinic Note:</b>{" "}
-                      {fallbackText(selectedAppointment.clinic_note, "No clinic note")}
-                    </p>
-                  </div>
-
-                  {selectedAppointment.services &&
-                    selectedAppointment.services.length > 0 && (
-                      <div className="clinic-dash-detail-section">
-                        <h4>Services</h4>
-                        <div className="clinic-dash-service-list">
-                          {selectedAppointment.services.map((service, index) => (
-                            <div
-                              className="clinic-dash-service-item"
-                              key={`${service.service_id ?? service.id ?? index}`}
-                            >
-                              <strong>
-                                {fallbackText(
-                                  service.service_name_snapshot,
-                                  `Service #${service.service_id ?? index + 1}`
-                                )}
-                              </strong>
-                              <span>
-                                {service.duration_minutes_snapshot
-                                  ? `${service.duration_minutes_snapshot} mins`
-                                  : "Duration not set"}
-                                {" | "}
-                                {service.price_snapshot
-                                  ? `PHP ${Number(service.price_snapshot).toFixed(2)}`
-                                  : "No price"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                  {selectedAppointment.status === "cancelled" && (
-                    <div className="clinic-dash-detail-section">
-                      <h4>Cancellation</h4>
-                      <p>
-                        <b>Cancelled By:</b>{" "}
-                        {fallbackText(selectedAppointment.cancelled_by)}
-                      </p>
-                      <p>
-                        <b>Reason:</b>{" "}
-                        {fallbackText(
-                          selectedAppointment.cancel_reason,
-                          "No reason provided"
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="clinic-dash-modal-empty">
-                  No appointment selected.
-                </div>
-              )}
-            </div>
-
-            <div className="clinic-dash-modal-actions">
-              <Link to="/clinic/appointments" className="btn-sm btn-view">
-                Open Appointments
-              </Link>
-              <button
-                type="button"
-                className="btn-sm clinic-dash-secondary-btn"
-                onClick={closeAppointmentDetails}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -230,77 +230,23 @@
   background: rgba(15, 23, 42, 0.06);
   z-index: 10;
 }
-/* CAPTCHA */
+/*captcha*/
 .captcha-wrap {
-  width: 100%;
-  margin: 15px 0 20px;
+  margin: 15px 0;
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.captcha-box {
-  width: 304px;
   min-height: 78px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
   overflow: visible;
 }
 
-.captcha-wrap > div {
-  transform: scale(0.95);
-  transform-origin: center;
+.captcha-wrap iframe {
+  display: block;
 }
 
-/* force correct iframe size */
-.captcha-box iframe {
-  width: 304px !important;
-  height: 78px !important;
-  border: none;
-}
-
-/* error text */
 .captcha-error {
   color: red;
   font-size: 14px;
   text-align: center;
-}
-
-.error-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999999;
-}
-
-.error-popup {
-  background: white;
-  width: 380px;
-  padding: 30px;
-  border-radius: 20px;
-  text-align: center;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
-}
-
-.error-popup h2 {
-  color: #b00020;
-  margin-bottom: 15px;
-}
-
-.error-popup p {
-  margin: 8px 0;
-}
-
-.error-popup button {
-  margin-top: 20px;
-  padding: 12px 25px;
-  border: none;
-  background: #004d40;
-  color: white;
-  border-radius: 10px;
-  cursor: pointer;
 }

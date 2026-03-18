@@ -99,6 +99,7 @@ body {
 /* SEARCH */
 
 
+
 .admin-Userpage .search-btn img {
   width: 18px;
   height: 18px;
@@ -251,15 +252,10 @@ body {
   border-top-right-radius: 16px !important;
 }
 
-/* remove vertical divider lines if meron */
-.admin-Userpage .users-table thead th + th,
-.admin-Userpage .users-table tbody td + td {
-  border-left: none !important;
-}
-
 /* ================= USERS TABLE ================= */
 .admin-Userpage .users-table-wrap {
   width: 100%;
+  overflow-x: auto;
   overflow-x: auto;
 }
 
@@ -268,21 +264,28 @@ body {
   border-collapse: separate;
   border-spacing: 0;
   border-radius: 10px;
+  border-radius: 10px;
   overflow: hidden;
 }
 
 .admin-Userpage .users-table thead th {
   background: var(--header-bg);
   color: #000;
+  background: var(--header-bg);
+  color: #000;
 
   font-weight: 900;
+  font-size: 14px;
+  padding: 14px 12px;
   font-size: 14px;
   padding: 14px 12px;
   text-align: left;
   white-space: nowrap;
 
   border-bottom: 2px solid var(--line);
+  border-bottom: 2px solid var(--line);
   text-transform: uppercase;
+  letter-spacing: 0.4px;
   letter-spacing: 0.4px;
 
   position: sticky;
@@ -296,6 +299,11 @@ body {
   font-weight: 500;
   padding: 14px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
   vertical-align: middle;
 }
 
@@ -303,7 +311,14 @@ body {
   background: rgba(255, 255, 255, 0.35);
 }
 
+.admin-Userpage .users-table thead th + th,
+.admin-Userpage .users-table tbody td + td {
+  border-left: 1px solid rgba(0, 0, 0, 0.35);
+}
+
 .admin-Userpage .users-name {
+  font-weight: 700;
+  color: #000;
   font-weight: 700;
   color: #000;
 }
@@ -314,13 +329,18 @@ body {
   color: #000;
   font-weight: 700;
 }
+  font-weight: 700;
+}
 
+/* ================= BUTTON PILLS ================= */
 /* ================= BUTTON PILLS ================= */
 .admin-Userpage .users-actions-wrap {
   display: flex;
   gap: 8px;
+  gap: 8px;
   flex-wrap: nowrap;
   align-items: center;
+  justify-content: center;
   justify-content: center;
 }
 
@@ -328,16 +348,20 @@ body {
   border: 0;
   cursor: pointer;
   padding: 8px 12px;
+  border: 0;
+  cursor: pointer;
+  padding: 8px 12px;
   border-radius: 999px;
+  font-weight: 800;
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
-  color: white;
+  color: #000;
 }
 
-.admin-Userpage .pill-view { background: #109C85; }
-.admin-Userpage .pill-success { background: #008000; }
-.admin-Userpage .pill-danger { background: #c62828; }
+.admin-Userpage .pill-view { background: #eaf2ff; }
+.admin-Userpage .pill-success { background: #e8fff1; }
+.admin-Userpage .pill-danger { background: #ffecec; }
 
 .admin-Userpage .pill-btn:disabled {
   opacity: 0.55;
@@ -346,20 +370,17 @@ body {
 
 /* ================= STATUS BADGES ================= */
 .admin-Userpage .status-badge {
-  display: inline-flex;
+  display: inline-block;
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
-  color: white !important;
+  color: #000;
   text-transform: capitalize;
-  text-align: center;
-  position: relative;
-  left: 12px;
 }
 
-.admin-Userpage .status-badge.is-active { background: #008000; color: #0f0f0f;}
-.admin-Userpage .status-badge.is-disabled { background: #c62828; color: #0f0f0f;}  
+.admin-Userpage .status-badge.is-active { background: #e8fff1; }
+.admin-Userpage .status-badge.is-disabled { background: #ffecec; }  
 
 /* ===================================================================== */
 /* ================= ASIDE (SAME AS DASHBOARD CSS) ====================== */
@@ -468,8 +489,10 @@ body {
 
 .admin-Userpage .activity-text {
   font-weight: 600;
+  font-weight: 600;
   font-size: 12px;
   color: #0f0f0f;
+  line-height: 1  .25;
   line-height: 1  .25;
 }
 
@@ -494,6 +517,7 @@ body {
 /* ===================================================================== */
 
 
+
 .admin-Userpage .modal-head {
   display: flex;
   align-items: center;
@@ -511,7 +535,17 @@ body {
   border: none;
   background: transparent;
   font-size: 22px;
+  font-size: 22px;
   cursor: pointer;
+  color: black;
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+  margin-right: 10px;
+  padding: 0;
+  line-height: 1;
   color: black;
   width: 34px;
   height: 34px;
@@ -528,6 +562,8 @@ body {
   color: #000;
 }
 .admin-Userpage .modal-card {
+  width: 600px;
+  max-width: 50%;
   width: 600px;
   max-width: 50%;
 }

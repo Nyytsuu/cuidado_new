@@ -1,8 +1,10 @@
+
 import "./Signin.css";
 import { useState } from "react";
 import { login } from "../api/api";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
+import ReCAPTCHA from "react-google-recaptcha";
 import ReCAPTCHA from "react-google-recaptcha";
 
 import ForgotPassword from "./Forgetpass";
@@ -26,9 +28,6 @@ function Signin() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loginError, setLoginError] = useState("");
 
-  // error popup
-  const [showErrorPopup, setShowErrorPopup] = useState(false);
-
   // forgot flow state
   const [fpOpen, setFpOpen] = useState(false);
   const [fpStep, setFpStep] = useState<FPFlowStep>("forgot");
@@ -40,6 +39,9 @@ function Signin() {
   const [loadingResend, setLoadingResend] = useState(false);
 
   const apiBase = "http://localhost:5000";
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+  const showCaptcha = failedAttempts >= 5;
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
   const showCaptcha = failedAttempts >= 5;
@@ -65,51 +67,52 @@ function Signin() {
   const handlePasswordResetSuccess = () => {
     setOtpError("");
     setFpStep("success");
+    setFpStep("success");
   };
 
   // login submit
   // login submit
-const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setLoading(true);
-  setLoginError("");
+  const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setLoginError("");
 
-  // require captcha after 5 failed attempts
-  if (showCaptcha && !captchaToken) {
-    setLoginError("Please complete the CAPTCHA first.");
-    setLoading(false);
-    return;
-  }
-
-  console.log("CAPTCHA KEY:", siteKey);
-
-  try {
-    const data = await login(email, password, captchaToken || undefined);
-
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("role", data.user.role);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    localStorage.setItem("userId", String(data.user.id));
-
-    // reset on success
-    setFailedAttempts(0);
-    setCaptchaToken(null);
-
-    if (data.user.role === "admin") navigate("/admin/dashboard", { replace: true });
-    else if (data.user.role === "clinic") navigate("/clinic/dashboard", { replace: true });
-    else navigate("/homepage", { replace: true });
-  } catch (err: any) {
-    const newAttempts = failedAttempts + 1;
-    setFailedAttempts(newAttempts);
-    setLoginError(err.message || "Login failed.");
-
-    if (newAttempts >= 5) {
-      setCaptchaToken(null);
+    // require captcha after 5 failed attempts
+    if (showCaptcha && !captchaToken) {
+      setLoginError("Please complete the CAPTCHA first.");
+      setLoading(false);
+      return;
     }
-  } finally {
-    setLoading(false);
-  }
-};
+console.log("CAPTCHA KEY:", siteKey);
+    try {
+      // If your backend supports captcha verification,
+      // pass captchaToken to login(email, password, captchaToken)
+     const data = await login(email, password, captchaToken || undefined);
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.user.role);
+
+      // reset on success
+      setFailedAttempts(0);
+      setCaptchaToken(null);
+
+      if (data.user.role === "admin") navigate("/admin/dashboard", { replace: true });
+      else if (data.user.role === "clinic") navigate("/clinic/dashboard", { replace: true });
+      else navigate("/user/dashboard", { replace: true });
+    } catch (err: any) {
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      setLoginError(err.message || "Login failed.");
+
+      // optional: clear captcha so user solves again after failed try
+      if (newAttempts >= 5) {
+        setCaptchaToken(null);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 1) send otp
   const sendOtp = async (emailToSend: string) => {
     const res = await fetch(`${apiBase}/api/auth/otp/send`, {
@@ -241,7 +244,7 @@ console.log("CAPTCHA KEY:", siteKey);
             </p>
 
             {loginError && (
-              <p style={{ color: "red", fontSize: "14px" }}>
+              <p style={{ color: "red", fontSize: "14px", marginTop: "8px" }}>
                 {loginError}
               </p>
             )}
@@ -249,17 +252,13 @@ console.log("CAPTCHA KEY:", siteKey);
             {showCaptcha && (
   <div className="captcha-wrap">
     {!siteKey ? (
-      <p className="captcha-error">
-        Missing reCAPTCHA site key.
-      </p>
+      <p className="captcha-error">Missing reCAPTCHA site key.</p>
     ) : (
-      <div className="captcha-box">
-        <ReCAPTCHA
-          sitekey={siteKey}
-          onChange={(token) => setCaptchaToken(token)}
-          onExpired={() => setCaptchaToken(null)}
-        />
-      </div>
+      <ReCAPTCHA
+        sitekey={siteKey}
+        onChange={(token) => setCaptchaToken(token)}
+        onExpired={() => setCaptchaToken(null)}
+      />
     )}
   </div>
 )}
@@ -304,7 +303,6 @@ console.log("CAPTCHA KEY:", siteKey);
         </div>
       </div>
 
-      {/* Forgot Password Modal */}
       {fpOpen && (
         <div className="fp-modal-overlay" onClick={closeAllFp}>
           <div
