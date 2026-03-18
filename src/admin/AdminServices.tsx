@@ -244,7 +244,7 @@ const onViewAppointment = (id: number) => {
                 <div className="users-table">
                   <div className="users-row users-header services-row">
                     <div className="users-cell">List of services</div>
-                    <div className="users-cell">Actions</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {loading ? (
@@ -307,7 +307,7 @@ const onViewAppointment = (id: number) => {
                       <div className="activity-empty">No recent activity yet.</div>
                     ) : (
                       <ul className="activity-list">
-                        {activities.map((item) => (
+                        {activities.slice(0, 3).map((item) => (
                           <li key={item.id} className={`activity-item ${item.type}`}>
                             <div className="activity-icon">
                               {item.type === "user" && "👤"}
@@ -338,7 +338,7 @@ const onViewAppointment = (id: number) => {
                       <tr>
                         <th>Patient</th>
                         <th>Status</th>
-                        <th className="th-action">Action</th>
+                        <th className="th-action">Action:</th>
                       </tr>
                     </thead>
 

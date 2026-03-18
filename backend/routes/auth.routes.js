@@ -4,7 +4,7 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = mysql.createConnection({
-  host: "127.0.0.1",
+  host: "localhost",
   user: "root",
   password: "root123",
   database: "cuidado_medihelp",
@@ -16,8 +16,8 @@ const nodemailer = require("nodemailer");
 const mailer = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASS,
+    user: process.env.MAIL_USER,
+    pass: process.env.MAIL_PASS,
   },
 });
 
@@ -116,50 +116,56 @@ router.post("/signup", async (req, res) => {
       password,
     } = req.body;
 
-    // Basic required checks
     if (!fullname || !email || !phone || !gender || !dob || !address || !password) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // PH phone validation
-   
-
-    // Location required
     if (!province_id || !municipality_id || !barangay_id) {
       return res.status(400).json({ message: "Please complete location selection." });
     }
 
-    // Password hash
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const sql = `
-      INSERT INTO users
-      (full_name, email, phone, gender, date_of_birth, province_id, municipality_id, barangay_id, address, password_hash)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-
-    db.query(
-      sql,
-      [
-        fullname,
-        email,
-        phone,
-        gender,
-        dob,
-        province_id,
-        municipality_id,
-        barangay_id,
-        address,
-        hashedPassword,
-      ],
-      (err) => {
-        if (err) {
-          console.error("DB ERROR:", err);
-          return res.status(500).json({ message: err.message });
-        }
-        return res.json({ message: "Signup successful ✅" });
+    db.query("SELECT id FROM users WHERE email = ? LIMIT 1", [email], async (checkErr, rows) => {
+      if (checkErr) {
+        console.error("EMAIL CHECK ERROR:", checkErr);
+        return res.status(500).json({ message: "Server error" });
       }
-    );
+
+      if (rows.length > 0) {
+        return res.status(400).json({ message: "Email is already registered." });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const sql = `
+        INSERT INTO users
+        (full_name, email, phone, gender, date_of_birth, province_id, municipality_id, barangay_id, address, password_hash)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      db.query(
+        sql,
+        [
+          fullname,
+          email,
+          phone,
+          gender,
+          dob,
+          province_id,
+          municipality_id,
+          barangay_id,
+          address,
+          hashedPassword,
+        ],
+        (err) => {
+          if (err) {
+            console.error("DB ERROR:", err);
+            return res.status(500).json({ message: err.message });
+          }
+
+          return res.json({ message: "Signup successful ✅" });
+        }
+      );
+    });
   } catch (err) {
     console.error("SERVER ERROR:", err);
     return res.status(500).json({ message: "Server error" });
@@ -174,7 +180,9 @@ router.post("/auth/otp/send", async (req, res) => {
     const { identifier, purpose = "forgot_password" } = req.body;
     const email = String(identifier || "").trim().toLowerCase();
 
-    if (!email) return res.status(400).json({ message: "Email is required" });
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
 
     db.query("SELECT id FROM users WHERE email = ? LIMIT 1", [email], async (err, rows) => {
       if (err) {
@@ -182,8 +190,17 @@ router.post("/auth/otp/send", async (req, res) => {
         return res.status(500).json({ message: "Server error" });
       }
 
-      // Safer UX: don't reveal if email exists
-      if (!rows.length) return res.json({ message: "OTP sent (if the account exists)" });
+      const userExists = rows.length > 0;
+
+      // forgot password: email must exist
+      if (purpose === "forgot_password" && !userExists) {
+        return res.json({ message: "OTP sent (if the account exists)" });
+      }
+
+      // signup verification: email must NOT already exist
+      if (purpose === "signup_verification" && userExists) {
+        return res.status(400).json({ message: "Email is already registered." });
+      }
 
       const otp = String(Math.floor(100000 + Math.random() * 900000));
       const otpHash = await bcrypt.hash(otp, 10);
@@ -208,12 +225,21 @@ router.post("/auth/otp/send", async (req, res) => {
               }
 
               try {
-                const subject = "Your Cuidado Medihelp OTP Code";
+                const subject =
+                  purpose === "signup_verification"
+                    ? "Your Cuidado Medihelp Signup Verification Code"
+                    : "Your Cuidado Medihelp Password Reset Code";
 
                 const html = `
                   <div style="font-family: Arial, sans-serif; line-height: 1.5;">
                     <h2 style="color:#004d40;">OTP Verification</h2>
-                    <p>Use this 6-digit code to reset your password:</p>
+                    <p>
+                      ${
+                        purpose === "signup_verification"
+                          ? "Use this 6-digit code to verify your email and complete signup:"
+                          : "Use this 6-digit code to reset your password:"
+                      }
+                    </p>
 
                     <div style="
                       font-size: 28px;
@@ -225,12 +251,18 @@ router.post("/auth/otp/send", async (req, res) => {
                     </div>
 
                     <p>This code will expire in <b>5 minutes</b>.</p>
-                    <p style="font-size:12px;color:#6b7280;">If you didn’t request this, ignore this email.</p>
+                    <p style="font-size:12px;color:#6b7280;">
+                      If you didn’t request this, ignore this email.
+                    </p>
                   </div>
                 `;
 
+                console.log("Sending OTP to:", email);
+                console.log("Purpose:", purpose);
+                console.log("OTP:", otp);
+
                 await mailer.sendMail({
-                  from: `"Cuidado Medihelp" <${process.env.GMAIL_USER}>`,
+                  from: `"Cuidado Medihelp" <${process.env.MAIL_USER}>`,
                   to: email,
                   subject,
                   html,
@@ -258,7 +290,9 @@ router.post("/auth/otp/verify", (req, res) => {
   const email = String(identifier || "").trim().toLowerCase();
   const code = String(otp || "").trim();
 
-  if (!email || !code) return res.status(400).json({ message: "Email and OTP are required" });
+  if (!email || !code) {
+    return res.status(400).json({ message: "Email and OTP are required" });
+  }
 
   db.query(
     "SELECT * FROM otp_requests WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1",
@@ -268,17 +302,18 @@ router.post("/auth/otp/verify", (req, res) => {
         console.error("OTP VERIFY ERROR:", err);
         return res.status(500).json({ message: "Server error" });
       }
-      if (!rows.length) return res.status(400).json({ message: "No OTP request found" });
+
+      if (!rows.length) {
+        return res.status(400).json({ message: "No OTP request found" });
+      }
 
       const record = rows[0];
 
-      // Expired?
       if (new Date(record.expires_at).getTime() < Date.now()) {
         db.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
         return res.status(400).json({ message: "OTP expired" });
       }
 
-      // Attempts limit
       if (record.attempts >= 5) {
         db.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
         return res.status(429).json({ message: "Too many attempts. Request a new OTP." });
@@ -287,18 +322,21 @@ router.post("/auth/otp/verify", (req, res) => {
       const ok = await bcrypt.compare(code, record.otp_hash);
 
       if (!ok) {
-      db.query("UPDATE otp_requests SET attempts = attempts + 1 WHERE id = ?", [record.id]);
-      return res.status(400).json({ message: "Invalid OTP" });
+        db.query("UPDATE otp_requests SET attempts = attempts + 1 WHERE id = ?", [record.id]);
+        return res.status(400).json({ message: "Invalid OTP" });
       }
 
-      // valid OTP -> delete OTP row
       db.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
 
-      // generate reset token
-      const resetToken = crypto.randomBytes(32).toString("hex");
-      const tokenExp = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+      // signup verification -> just return verified
+      if (purpose === "signup_verification") {
+        return res.json({ message: "Verified" });
+      }
 
-      // replace old reset tokens
+      // forgot password -> create reset token
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const tokenExp = new Date(Date.now() + 10 * 60 * 1000);
+
       db.query("DELETE FROM password_reset_tokens WHERE email = ?", [email], (delErr) => {
         if (delErr) {
           console.error("RESET TOKEN DELETE ERROR:", delErr);

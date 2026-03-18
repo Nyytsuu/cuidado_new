@@ -1,8 +1,10 @@
+
 import "./Signin.css";
 import { useState } from "react";
 import { login } from "../api/api";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
+import ReCAPTCHA from "react-google-recaptcha";
 
 import ForgotPassword from "./Forgetpass";
 import OtpPopup from "../SigninUser/OtpPopup";
@@ -20,6 +22,11 @@ function Signin() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // failed login / captcha
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState("");
+
   // forgot flow state
   const [fpOpen, setFpOpen] = useState(false);
   const [fpStep, setFpStep] = useState<FPFlowStep>("forgot");
@@ -31,6 +38,9 @@ function Signin() {
   const [loadingResend, setLoadingResend] = useState(false);
 
   const apiBase = "http://localhost:5000";
+  const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
+  const showCaptcha = failedAttempts >= 5;
 
   const closeAllFp = () => {
     setFpOpen(false);
@@ -50,28 +60,48 @@ function Signin() {
     setOtpError("");
   };
 
-  // ✅ THIS is the missing connection
   const handlePasswordResetSuccess = () => {
     setOtpError("");
-    setFpStep("success"); // <-- show PasswordChanged
+    setFpStep("success");
   };
 
   // login submit
   const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError("");
 
+    // require captcha after 5 failed attempts
+    if (showCaptcha && !captchaToken) {
+      setLoginError("Please complete the CAPTCHA first.");
+      setLoading(false);
+      return;
+    }
+console.log("CAPTCHA KEY:", siteKey);
     try {
-      const data = await login(email, password);
+      // If your backend supports captcha verification,
+      // pass captchaToken to login(email, password, captchaToken)
+     const data = await login(email, password, captchaToken || undefined);
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.user.role);
+
+      // reset on success
+      setFailedAttempts(0);
+      setCaptchaToken(null);
 
       if (data.user.role === "admin") navigate("/admin/dashboard", { replace: true });
       else if (data.user.role === "clinic") navigate("/clinic/dashboard", { replace: true });
       else navigate("/user/dashboard", { replace: true });
     } catch (err: any) {
-      alert(err.message);
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      setLoginError(err.message || "Login failed.");
+
+      // optional: clear captcha so user solves again after failed try
+      if (newAttempts >= 5) {
+        setCaptchaToken(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -153,7 +183,6 @@ function Signin() {
     }
   };
 
-  // close success -> back to sign in
   const closeSuccess = () => {
     closeAllFp();
   };
@@ -196,6 +225,26 @@ function Signin() {
               </span>
             </p>
 
+            {loginError && (
+              <p style={{ color: "red", fontSize: "14px", marginTop: "8px" }}>
+                {loginError}
+              </p>
+            )}
+
+            {showCaptcha && (
+  <div className="captcha-wrap">
+    {!siteKey ? (
+      <p className="captcha-error">Missing reCAPTCHA site key.</p>
+    ) : (
+      <ReCAPTCHA
+        sitekey={siteKey}
+        onChange={(token) => setCaptchaToken(token)}
+        onExpired={() => setCaptchaToken(null)}
+      />
+    )}
+  </div>
+)}
+
             <button type="submit" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </button>
@@ -230,7 +279,6 @@ function Signin() {
         </div>
       </div>
 
-      {/* ✅ ONE OVERLAY, MANY STEPS */}
       {fpOpen && (
         <div className="fp-modal-overlay" onClick={closeAllFp}>
           <div className="fp-modal-card" onClick={(e) => e.stopPropagation()}>

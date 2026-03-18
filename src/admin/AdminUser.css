@@ -97,42 +97,7 @@ body {
 }
 
 /* SEARCH */
-.admin-Userpage .header-search {
-  position: relative;
-  width: 360px;
-  right: 100px;
-}
 
-.admin-Userpage .header-search input {
-  width: 100%;
-  height: 38px;
-  padding: 0 46px 0 18px;
-
-  border-radius: 999px;
-  border: none;
-
-  font-size: 0.9rem;
-  background: #ffffff;
-  color: #000;
-}
-
-.admin-Userpage .search-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-
-  width: 34px;
-  height: 34px;
-
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-
-  display: grid;
-  place-items: center;
-}
 
 .admin-Userpage .search-btn img {
   width: 18px;
@@ -271,155 +236,92 @@ body {
   border-radius: 16px;
 }
 
-/* ✅ IMPORTANT: remove horizontal scroll */
+/* ================= USERS TABLE ================= */
 .admin-Userpage .users-table-wrap {
   width: 100%;
-  overflow-x: hidden;      /* ✅ NO x-axis */
-  overflow-y: hidden;
+  overflow-x: auto;
 }
 
-/* table fits container */
 .admin-Userpage .users-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: #ffffff;
-  border-radius: 0;
+  border-radius: 10px;
   overflow: hidden;
-
-  table-layout: fixed;     /* ✅ force fit, no overflow */
 }
 
-/* header strip */
 .admin-Userpage .users-table thead th {
-  background: var(--table-head);
-  color: #0f0f0f;
+  background: var(--header-bg);
+  color: #000;
 
   font-weight: 900;
-  font-size: 14px;        /* ✅ ok kahit smaller */
-  padding: 16px 14px;
+  font-size: 14px;
+  padding: 14px 12px;
   text-align: left;
   white-space: nowrap;
 
-  border-bottom: 1px solid var(--line);
+  border-bottom: 2px solid var(--line);
   text-transform: uppercase;
-  letter-spacing: 0.35px;
+  letter-spacing: 0.4px;
 
   position: sticky;
   top: 0;
   z-index: 2;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* body cells */
 .admin-Userpage .users-table tbody td {
-  color: #0f0f0f;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 16px 14px;
-
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
   vertical-align: middle;
-
-  overflow: hidden;         /* ✅ keep inside */
-  text-overflow: ellipsis;  /* ✅ ... */
-  white-space: nowrap;      /* ✅ keep row compact */
 }
 
-/* clean rows (no zebra) */
 .admin-Userpage .users-table tbody tr:nth-child(even) td {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.35);
 }
 
-/* remove vertical lines */
 .admin-Userpage .users-table thead th + th,
 .admin-Userpage .users-table tbody td + td {
-  border-left: none;
+  border-left: 1px solid rgba(0, 0, 0, 0.35);
 }
 
-/* name emphasis */
 .admin-Userpage .users-name {
-  font-weight: 900;
-  font-size: 14px;
-  color: #0f0f0f;
+  font-weight: 700;
+  color: #000;
 }
 
-/* empty */
 .admin-Userpage .users-empty {
   text-align: center;
   padding: 18px;
   color: #000;
-  font-weight: 800;
-  white-space: normal;
+  font-weight: 700;
 }
 
-/* ✅ column sizing (adjustable) */
-.admin-Userpage .users-table thead th:nth-child(1),
-.admin-Userpage .users-table tbody td:nth-child(1) { width: 16%; }
-
-.admin-Userpage .users-table thead th:nth-child(2),
-.admin-Userpage .users-table tbody td:nth-child(2) { width: 24%; }
-
-.admin-Userpage .users-table thead th:nth-child(3),
-.admin-Userpage .users-table tbody td:nth-child(3) { width: 13%; }
-
-.admin-Userpage .users-table thead th:nth-child(4),
-.admin-Userpage .users-table tbody td:nth-child(4) { width: 11%; }
-
-.admin-Userpage .users-table thead th:nth-child(5),
-.admin-Userpage .users-table tbody td:nth-child(5) { width: 12%; }
-
-.admin-Userpage .users-table thead th:nth-child(6),
-.admin-Userpage .users-table tbody td:nth-child(6) { width: 12%; }
-
-.admin-Userpage .users-table thead th:nth-child(7),
-.admin-Userpage .users-table tbody td:nth-child(7) { width: 12%; }
-
-/* ================= BUTTON PILLS (match appoint feel) ================= */
+/* ================= BUTTON PILLS ================= */
 .admin-Userpage .users-actions-wrap {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: nowrap;
   align-items: center;
-  justify-content: flex-start;
-
-  overflow: hidden;     /* ✅ keep inside cell */
+  justify-content: center;
 }
 
 .admin-Userpage .pill-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 32px;
-  line-height: 32px;
-  font-weight: 900;
-  font-size: 12px;
+  border: 0;
   cursor: pointer;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-
-  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  line-height: 1;
+  color: #000;
 }
 
-.admin-Userpage .pill-view {
-  background: #5b5b5b;
-  color: #ffffff;
-}
-
-.admin-Userpage .pill-success {
-  background: #2e7d32;
-  color: #ffffff;
-}
-
-.admin-Userpage .pill-danger {
-  background: #c62828;
-  color: #ffffff;
-}
+.admin-Userpage .pill-view { background: #eaf2ff; }
+.admin-Userpage .pill-success { background: #e8fff1; }
+.admin-Userpage .pill-danger { background: #ffecec; }
 
 .admin-Userpage .pill-btn:disabled {
   opacity: 0.55;
@@ -428,22 +330,17 @@ body {
 
 /* ================= STATUS BADGES ================= */
 .admin-Userpage .status-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
-  min-height: 30px;
-  line-height: 30px;
+  display: inline-block;
+  padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
-  color: #ffffff;
+  color: #000;
   text-transform: capitalize;
-  white-space: nowrap;
 }
 
-.admin-Userpage .status-badge.is-active { background: #2e7d32; }
-.admin-Userpage .status-badge.is-disabled { background: #111827; }
+.admin-Userpage .status-badge.is-active { background: #e8fff1; }
+.admin-Userpage .status-badge.is-disabled { background: #ffecec; }  
 
 /* ===================================================================== */
 /* ================= ASIDE (SAME AS DASHBOARD CSS) ====================== */
@@ -562,10 +459,10 @@ body {
 }
 
 .admin-Userpage .activity-text {
-  font-weight: 900;
+  font-weight: 600;
   font-size: 12px;
   color: #0f0f0f;
-  line-height: 1.25;
+  line-height: 1  .25;
 }
 
 .admin-Userpage .activity-time {
@@ -588,6 +485,7 @@ body {
 /* ================= MODAL ================= */
 /* ===================================================================== */
 
+
 .admin-Userpage .modal-head {
   display: flex;
   align-items: center;
@@ -604,10 +502,17 @@ body {
  margin-right:20px;
   border: none;
   background: transparent;
-  font-size: 18px;
+  font-size: 22px;
   cursor: pointer;
-  color: #000000;
-  
+  color: black;
+  width: 34px;
+  height: 34px;
+
+  display: grid;
+  place-items: center;
+  margin-right: 10px;
+  padding: 0;
+  line-height: 1;
 }
 
 .admin-Userpage .modal-body p {
@@ -615,8 +520,8 @@ body {
   color: #000;
 }
 .admin-Userpage .modal-card {
-  width: 950px;
-  max-width: 110%;
+  width: 600px;
+  max-width: 50%;
 }
 
 

@@ -3,7 +3,7 @@ const router = express.Router();
 const mysql = require("mysql2");
 
 const db = mysql.createConnection({
-  host: "127.0.0.1",
+  host: "localhost",
   user: "root",
   password: "root123",
   database: "cuidado_medihelp",

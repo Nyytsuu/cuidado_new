@@ -12,6 +12,9 @@ import {
   CartesianGrid,
 } from "recharts";
 
+import logo from "../img/logo.png";
+import searchIcon from "../img/search.png";
+
 /* ---------- TYPES ---------- */
 type MetricsResponse = {
   totalUsers: number;
@@ -56,6 +59,36 @@ type AppointmentRow = {
   status: string;
 };
 
+type AppointmentStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "scheduled"
+  | "completed"
+  | "cancelled";
+
+type AppointmentDetails = {
+  id: number;
+  user_id: number;
+  clinic_id: number;
+  start_at: string;
+  end_at: string | null;
+  purpose: string | null;
+  symptoms: string | null;
+  patient_note: string | null;
+  clinic_note: string | null;
+  status: AppointmentStatus;
+  cancelled_at: string | null;
+  cancelled_by: "patient" | "clinic" | "admin" | null;
+  cancel_reason: string | null;
+  completed_at: string | null;
+  patient_name_snapshot: string | null;
+  patient_phone_snapshot: string | null;
+  clinic_name_snapshot: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export default function AdminDashboard() {
   const API = "http://localhost:5000/api/admin";
 
@@ -63,6 +96,9 @@ export default function AdminDashboard() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+
+  const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<AppointmentDetails | null>(null);
 
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
@@ -94,14 +130,13 @@ export default function AdminDashboard() {
       }
     };
     loadClinics();
-  }, []);
+  }, [API]);
 
-  /*  ---------- LOAD METRICS ---------- */
   useEffect(() => {
     const load = async () => {
       try {
         setLoadingMetrics(true);
-        const res = await fetch("http://localhost:5000/api/admin/dashboard-metrics");
+        const res = await fetch(`${API}/dashboard-metrics`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: MetricsResponse = await res.json();
         setMetrics(data);
@@ -113,13 +148,12 @@ export default function AdminDashboard() {
       }
     };
     load();
-  }, []);
+  }, [API]);
 
-  /* ---------- LOAD RECENT ACTIVITY ---------- */
   useEffect(() => {
     const loadActivity = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/recent-activity?limit=8");
+        const res = await fetch(`${API}/recent-activity?limit=8`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ActivityItem[] = await res.json();
         setActivities(data);
@@ -129,15 +163,14 @@ export default function AdminDashboard() {
       }
     };
     loadActivity();
-  }, []);
+  }, [API]);
 
-  /* ---------- LOAD DASHBOARD TABLES ---------- */
   useEffect(() => {
     const loadTables = async () => {
       try {
         const [clinicsRes, usersRes] = await Promise.all([
-          fetch("http://localhost:5000/api/admin/clinics?limit=20"),
-          fetch("http://localhost:5000/api/admin/users?limit=8")
+          fetch(`${API}/clinics?limit=20`),
+          fetch(`${API}/users?limit=8`),
         ]);
 
         if (!clinicsRes.ok) throw new Error(`Clinics HTTP ${clinicsRes.status}`);
@@ -156,9 +189,8 @@ export default function AdminDashboard() {
     };
 
     loadTables();
-  }, []);
+  }, [API]);
 
-  /* ---------- HELPERS ---------- */
   const userTrend = useMemo(() => {
     if (!metrics?.userTrend) return [];
     return metrics.userTrend.map((p) => {
@@ -176,11 +208,17 @@ export default function AdminDashboard() {
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString();
 
   const locationText = (c: ClinicRow) =>
-    `${c.address} (P:${c.province_id}, M:${c.municipality_id}, B:${c.barangay_id})`;
+    `${c.address ?? "No address"} (P:${c.province_id}, M:${c.municipality_id}, B:${c.barangay_id})`;
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.href = "/signin";
+  };
 
   const updateClinicStatus = async (id: number, status: "approved" | "rejected") => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}/status`, {
+      const res = await fetch(`${API}/clinics/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -198,7 +236,7 @@ export default function AdminDashboard() {
     try {
       setLoadingAppointments(true);
 
-      const res = await fetch("http://localhost:5000/api/admin/appointments");
+      const res = await fetch(`${API}/appointments`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
@@ -224,11 +262,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadAppointments();
-  }, []);
-
-  const onViewAppointment = (id: number) => {
-    console.log("View appointment:", id);
-  };
+  }, [API]);
 
   const loadLatestUsers = async () => {
     try {
@@ -247,7 +281,20 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadLatestUsers();
-  }, []);
+  }, [API]);
+
+  const viewDetails = async (id: number) => {
+    try {
+      const res = await fetch(`${API}/appointments/${id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: AppointmentDetails = await res.json();
+      setSelected(data);
+      setIsPopupOpen(true);
+    } catch (e) {
+      console.error("View details error:", e);
+      alert("Failed to load appointment details.");
+    }
+  };
 
   return (
     <div className={`ad-wrap ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -259,8 +306,57 @@ export default function AdminDashboard() {
       />
 
       <main className="ad-main">
+        <header className="app-header">
+          <div className="header-left">
+            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+
+            <div className="header-search">
+              <input
+                type="text"
+                placeholder="Search keywords..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+              <button aria-label="Search" type="button" className="search-btn">
+                <img src={searchIcon} alt="Search" />
+              </button>
+            </div>
+          </div>
+
+          <nav className="header-nav">
+            <Link className="nav-link" to="/admin/dashboard">
+              Home
+            </Link>
+            <Link className="nav-link" to="/admin/appointments">
+              Appointments
+            </Link>
+
+            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
+              <button
+                type="button"
+                className="nav-link profile-btn"
+                onClick={() => setHeaderProfileOpen((v) => !v)}
+              >
+                Profile <span className="caret">▾</span>
+              </button>
+
+              <div className="profile-dropdown">
+                <Link to="/admin/profile">My Profile</Link>
+                <Link to="/admin/settings">Settings</Link>
+
+                <button
+                  type="button"
+                  className="dropdown-logout"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </nav>
+        </header>
+
         <section className="dash-layout">
-          {/* LEFT */}
           <div className="dash-maincol">
             <section className="dash-metrics">
               <div className="metric-card">
@@ -288,47 +384,37 @@ export default function AdminDashboard() {
               </div>
             </section>
 
-            {/* ================= USER TREND CHART ================= */}
-<section className="dash-chart">
-  <div className="dash-chart-head">
-    <h3>User Trend (Last 7 Days)</h3>
-  </div>
+            <section className="dash-chart">
+              <div className="dash-chart-head">
+                <h3>User Trend (Last 7 Days)</h3>
+              </div>
 
-  <div className="dash-chart-card">
-    <ResponsiveContainer width="100%" height={260}>
-      <LineChart
-        data={userTrend}
-        margin={{
-          top: 10,
-          right: 20,
-          left: 10,
-          bottom: 35,   // ✅ space for X-axis labels
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" />
-
-        <XAxis
-          dataKey="day"
-          height={30}          // ✅ reserve space
-          tickMargin={10}      // ✅ spacing from axis
-          interval={0}         // ✅ show all labels
-        />
-
-        <YAxis allowDecimals={false} />
-
-        <Tooltip />
-
-        <Line
-          type="monotone"
-          dataKey="total"
-          stroke="#00bfa6"
-          strokeWidth={3}
-          dot={false}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-</section>
+              <div className="dash-chart-card">
+                <ResponsiveContainer width="100%" height={260}>
+                  <LineChart
+                    data={userTrend}
+                    margin={{
+                      top: 10,
+                      right: 20,
+                      left: 10,
+                      bottom: 35,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="day" height={30} tickMargin={10} interval={0} />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="total"
+                      stroke="#00bfa6"
+                      strokeWidth={3}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
 
             <section className="dash-grid dash-grid-2col">
               <div className="dash-left">
@@ -346,11 +432,15 @@ export default function AdminDashboard() {
                     <tbody>
                       {loadingClinics ? (
                         <tr>
-                          <td colSpan={4} className="td-empty">Loading...</td>
+                          <td colSpan={4} className="td-empty">
+                            Loading...
+                          </td>
                         </tr>
                       ) : clinics.filter((c) => c.status === "pending").length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="td-empty">No pending clinics.</td>
+                          <td colSpan={4} className="td-empty">
+                            No pending clinics.
+                          </td>
                         </tr>
                       ) : (
                         clinics
@@ -406,11 +496,15 @@ export default function AdminDashboard() {
                     <tbody>
                       {loadingUsers ? (
                         <tr>
-                          <td colSpan={2} className="td-empty">Loading...</td>
+                          <td colSpan={2} className="td-empty">
+                            Loading...
+                          </td>
                         </tr>
                       ) : latestUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={2} className="td-empty">No users yet.</td>
+                          <td colSpan={2} className="td-empty">
+                            No users yet.
+                          </td>
                         </tr>
                       ) : (
                         latestUsers.map((u) => (
@@ -443,7 +537,9 @@ export default function AdminDashboard() {
                     <tbody>
                       {clinics.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="td-empty">No clinics yet.</td>
+                          <td colSpan={4} className="td-empty">
+                            No clinics yet.
+                          </td>
                         </tr>
                       ) : (
                         clinics.slice(0, 10).map((c) => (
@@ -467,7 +563,6 @@ export default function AdminDashboard() {
             </section>
           </div>
 
-          {/* RIGHT */}
           <aside className="dash-aside">
             <div className="dash-panel dash-right-top">
               <div className="dash-panel-title">Recent activity</div>
@@ -476,7 +571,7 @@ export default function AdminDashboard() {
                   <div className="activity-empty">No recent activity yet.</div>
                 ) : (
                   <ul className="activity-list">
-                    {activities.map((item) => (
+                    {activities.slice(0, 3).map((item) => (
                       <li key={item.id} className={`activity-item ${item.type}`}>
                         <div className="activity-icon">
                           {item.type === "user" && "👤"}
@@ -499,51 +594,55 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-           {/* ✅ Appointment Section PANEL inside aside */}
-                                 <Panel title="Appointment Section" className="appointment-panel">
-                 
-                  <table className="dash-table">
-                    <thead>
-                      <tr>
-                        <th>Patient</th>
-                        <th>Status</th>
-                        <th className="th-action">Action</th>
-                      </tr>
-                    </thead>
+            <Panel title="Appointment Section">
+              <table className="dash-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Status</th>
+                    <th className="th-action">Action</th>
+                  </tr>
+                </thead>
 
-                    <tbody>
-                      {appointments.length === 0 ? (
-                        <tr>
-                          <td colSpan={3} className="td-empty">
-                            Appointments API not connected yet.
-                          </td>
-                        </tr>
-                      ) : (
-                        appointments.map((ap) => (
-                          <tr key={ap.id}>
-                            <td>
-                              <div className="t-main">{ap.patient}</div>
-                              <div className="t-sub">{ap.clinic}</div>
-                            </td>
-                            <td>
-                              <span className={`badge badge-${ap.status.toLowerCase()}`}>
-                                {ap.status}
-                              </span>
-                            </td>
-                            <td className="td-action">
-                              <button
-                                className="btn-sm btn-view"
-                                onClick={() => onViewAppointment(ap.id)}
-                              >
-                                View details
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </Panel>
+                <tbody>
+                  {loadingAppointments ? (
+                    <tr>
+                      <td colSpan={3} className="td-empty">
+                        Loading...
+                      </td>
+                    </tr>
+                  ) : appointments.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="td-empty">
+                        Appointments API not connected yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    appointments.map((ap) => (
+                      <tr key={ap.id}>
+                        <td>
+                          <div className="t-main">{ap.patient}</div>
+                          <div className="t-sub">{ap.clinic}</div>
+                        </td>
+                        <td>
+                          <span className={`badge badge-${ap.status.toLowerCase()}`}>
+                            {ap.status}
+                          </span>
+                        </td>
+                        <td className="td-action">
+                          <button
+                            className="btn-sm btn-view"
+                            onClick={() => viewDetails(ap.id)}
+                          >
+                            View details
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </Panel>
           </aside>
         </section>
       </main>
@@ -551,7 +650,6 @@ export default function AdminDashboard() {
   );
 }
 
-/* ✅ UPDATED Panel: supports className */
 function Panel({
   title,
   children,

@@ -229,3 +229,23 @@
   background: rgba(15, 23, 42, 0.06);
   z-index: 10;
 }
+/*captcha*/
+.captcha-wrap {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 78px;
+  width: 100%;
+  overflow: visible;
+}
+
+.captcha-wrap iframe {
+  display: block;
+}
+
+.captcha-error {
+  color: red;
+  font-size: 14px;
+  text-align: center;
+}

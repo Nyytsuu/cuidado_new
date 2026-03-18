@@ -4,7 +4,6 @@ import "./AdminClinic.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
-import SidebarAdmin from "./SidebarAdmin";
 
 type ClinicStatusUI = "Pending" | "Approved" | "Rejected" | "active" | "disabled";
 
@@ -50,7 +49,8 @@ const [loadingAppointments, setLoadingAppointments] = useState(true)
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-
+  const [selectedClinic, setSelectedClinic] = useState<any | null>(null);
+const [isClinicPopupOpen, setIsClinicPopupOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [profile, setProfile] = useState<ClinicProfile | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -237,7 +237,7 @@ const onViewAppointment = (id: number) => {
   };
   return (
     <div className="admin-UserClinics with-sidebar">
-      <SidebarAdmin
+      <Sidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
@@ -300,9 +300,8 @@ const onViewAppointment = (id: number) => {
 
             <div className="admin-grid">
             <section className="admin-card admin-table-card">
-  <div className="admin-table-header" />
-
- <table className="admin-table clinics-table">
+  <div className="clinics-table-wrap">
+    <table className="admin-table clinics-table">
   <thead>
     <tr>
       <th>Registered Clinics</th>
@@ -365,12 +364,15 @@ const onViewAppointment = (id: number) => {
             <td>
               <div className="users-actions clinics-actions slots">
                 <button
-                  type="button"
-                  className="pill pill-view pill-wide"
-                  onClick={() => viewClinic(c.id)}
-                >
-                  View
-                </button>
+  type="button"
+  className="pill pill-view pill-wide"
+  onClick={() => {
+    setSelectedClinic(c);
+    setIsClinicPopupOpen(true);
+  }}
+>
+  View
+</button>
 
                 {/* Approve / Reject ONLY if pending */}
                 {isPending && (
@@ -427,8 +429,9 @@ const onViewAppointment = (id: number) => {
         );
       })
     )}
-  </tbody>
-</table>
+           </tbody>
+        </table>
+    </div>
 </section>
 
               <aside className="admin-right">
@@ -440,7 +443,7 @@ const onViewAppointment = (id: number) => {
                       <div className="activity-empty">No recent activity yet.</div>
                     ) : (
                       <ul className="activity-list">
-                        {activities.map((item) => (
+                        {activities.slice(0, 3).map((item) => (
                           <li key={item.id} className={`activity-item ${item.type}`}>
                             <div className="activity-icon">
                               {item.type === "user" && "👤"}
@@ -464,8 +467,7 @@ const onViewAppointment = (id: number) => {
                 </div>
 
                 {/* ✅ Appointment Section PANEL inside aside */}
-                <Panel title="Appointment Section">
-                 
+                 <Panel title="Appointment Section">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -478,7 +480,7 @@ const onViewAppointment = (id: number) => {
                     <tbody>
                       {appointments.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="td-empty">
+                          <td colSpan={3} className="td-empty">
                             Appointments API not connected yet.
                           </td>
                         </tr>
@@ -514,28 +516,50 @@ const onViewAppointment = (id: number) => {
         </section>
       </main>
 
-      {/* VIEW MODAL */}
-      {viewOpen && profile && (
-        <div className="modal-backdrop" onClick={() => setViewOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h3>Clinic Profile</h3>
-              <button className="modal-close" onClick={() => setViewOpen(false)}>
-                ✕
-              </button>
-            </div>
+     {isClinicPopupOpen && selectedClinic && (
+  <div
+    className="modal-backdrop"
+    onClick={() => setIsClinicPopupOpen(false)}
+  >
+    <div
+      className="modal-card"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="modal-head">
+        <h3>Clinic Details</h3>
+        <button
+          type="button"
+          className="modal-close"
+          onClick={() => setIsClinicPopupOpen(false)}
+        >
+          ✕
+        </button>
+      </div>
 
-            <div className="modal-body">
-              <p><b>Clinic Name:</b> {profile.clinic_name}</p>
-              <p><b>Email:</b> {profile.email}</p>
-              <p><b>Phone:</b> {profile.phone || "—"}</p>
-              <p><b>Status:</b> {profile.status}</p>
-              <p><b>Registered:</b> {new Date(profile.created_at).toLocaleString()}</p>
-              <p><b>Address:</b> {profile.address || "—"}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="modal-body">
+        <p><b>Clinic Name:</b> {selectedClinic.clinic_name ?? "—"}</p>
+        <p><b>Approval:</b> {selectedClinic.status ?? "—"}</p>
+        <p><b>Account:</b> {selectedClinic.account_status ?? "—"}</p>
+
+        <p><b>Email:</b> {selectedClinic.email ?? "—"}</p>
+        <p><b>Phone:</b> {selectedClinic.phone ?? "—"}</p>
+        <p><b>Address:</b> {selectedClinic.address ?? "—"}</p>
+
+        <p><b>Created At:</b> {selectedClinic.created_at ?? "—"}</p>
+      </div>
+
+      <div className="modal-foot">
+        <button
+          type="button"
+          className="pill pill-gray"
+          onClick={() => setIsClinicPopupOpen(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }

@@ -5,14 +5,12 @@
   --sidebar-width-expanded: 220px;
   --header-height: 55px;
 
-  /* ================================
-     ✅ ACTION CONTROLS (ADJUST HERE)
-     ================================ */
-  --action-slot-w: 92px;          /* width ng bawat action slot */
-  --actions-gap: 16px;            /* spacing between slots */
-  --actions-line-height: 38px;    /* height ng vertical line */
+  /* ACTION CONTROLS */
+  --action-slot-w: 92px;
+  --actions-gap: 16px;
+  --actions-line-height: 38px;
   --actions-line-color: rgba(0, 0, 0, 0.65);
-  --actions-line-x: 0px;          /* move line left/right (+ right, - left) */
+  --actions-line-x: 0px;
 }
 
 body {
@@ -92,37 +90,6 @@ body {
   right: 130px;
 }
 
-/* search */
-.admin-UserClinics .header-search {
-  position: relative;
-  width: 360px;
-  right: 100px;
-}
-
-.admin-UserClinics .header-search input {
-  width: 100%;
-  height: 38px;
-  padding: 0 46px 0 18px;
-  border-radius: 999px;
-  border: none;
-  font-size: 0.9rem;
-  background: #fff;
-}
-
-.admin-UserClinics .search-btn {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-}
 
 .admin-UserClinics .search-btn img {
   width: 18px;
@@ -234,11 +201,6 @@ body {
   align-items: start;
 }
 
-.admin-UserClinics .admin-card {
-  background: #d9d9d9;
-  border-radius: 10px;
-}
-
 .admin-UserClinics .admin-right {
   display: flex;
   flex-direction: column;
@@ -254,65 +216,124 @@ body {
   background: #8f8f8f;
 }
 
-/* ✅ CARD: pantay sa gilid (remove extra inner padding) */
-.admin-UserClinics .admin-table-card {
-  min-height: 520px;
-  padding: 0;                 /* ✅ pantay sa border */
-  overflow: hidden;
-  background: #ffffff;
-  border: 5px solid #00bfa6;
-  border-radius: 14px;
-}
-
-/* ================= TABLE ================= */
-.admin-UserClinics .admin-table {
-  width: 100%;
-  margin: 0;                 /* ✅ remove inset margin */
-  border-collapse: separate;
-  border-spacing: 0;
-  background: #ffffff;
-  border-radius: 0;          /* card handles radius */
-  padding: 0;
-  overflow: hidden;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-}
-
-/* ✅ keep normal table text dark */
+/* general table text */
 .admin-UserClinics .admin-table td,
 .admin-UserClinics .admin-table th {
   color: #0f0f0f;
 }
 
-/* ✅ header bigger */
-.admin-UserClinics .admin-table thead th {
-  padding: 16px 18px;
-  font-size: 20px;           /* ✅ larger */
-  font-weight: 900;
-  background: #eef2f2;
-  text-align: left;
-  white-space: nowrap;
-}
-
-/* ✅ body bigger */
-.admin-UserClinics .admin-table tbody td {
-  padding: 16px 18px;
-  font-size: 15px;           /* ✅ larger */
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-  vertical-align: middle;    /* ✅ align nicely */
-  background: transparent;
-}
-
-/* clinic name bigger */
+/* clinic name */
 .admin-UserClinics .users-name {
   font-size: 18px;
-  font-weight: 999;
+  font-weight: 800;
   color: #000;
 }
 
-/* Optional: center pills under Approval + Account */
-.admin-UserClinics .clinics-table tbody td:nth-child(2),
-.admin-UserClinics .clinics-table tbody td:nth-child(3) {
+/* ================= MAIN CARD ================= */
+.admin-UserClinics .admin-card {
+  background: transparent;
+  border-radius: 14px;
+}
+
+/* ================= CLINICS TABLE ================= */
+.admin-UserClinics .admin-table-card {
+  min-height: 520px;
+  padding: 0;
+  overflow: hidden;
+  border: 5px solid #00bfa6;
+  border-radius: 16px;
+  background: linear-gradient(
+    to bottom,
+    #bfbfbf 0,
+    #bfbfbf 78px,
+    #ffffff 78px,
+    #ffffff 100%
+  );
+}
+
+.admin-UserClinics .clinics-table-wrap {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.admin-UserClinics .clinics-table {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: transparent;
+}
+
+.admin-UserClinics .clinics-table thead tr {
+  background: #bfbfbf !important;
+}
+
+.admin-UserClinics .clinics-table thead th {
+  background: #bfbfbf !important;
+  color: black !important;
+  font-weight: 900;
+  font-size: 14px;
+  padding: 24px 18px;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: none;
+}
+
+.admin-UserClinics .clinics-table thead th + th {
+  border-left: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.admin-UserClinics .clinics-table tbody {
+  background: #ffffff;
+}
+
+.admin-UserClinics .clinics-table tbody td {
+  background: #ffffff;
+  color: #000000;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 22px 16px;
+  vertical-align: middle;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.admin-UserClinics .clinics-table tbody td + td {
+  border-left: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+/* column widths */
+.admin-UserClinics .clinics-table th:nth-child(1),
+.admin-UserClinics .clinics-table td:nth-child(1) {
+  width: 33%;
+}
+
+.admin-UserClinics .clinics-table th:nth-child(2),
+.admin-UserClinics .clinics-table td:nth-child(2) {
+  width: 17%;
   text-align: center;
+}
+
+.admin-UserClinics .clinics-table th:nth-child(3),
+.admin-UserClinics .clinics-table td:nth-child(3) {
+  width: 16%;
+  text-align: center;
+}
+
+.admin-UserClinics .clinics-table th:nth-child(4),
+.admin-UserClinics .clinics-table td:nth-child(4) {
+  width: 34%;
+}
+
+/* empty / loading row */
+.admin-UserClinics .clinics-table td[colspan="4"] {
+  text-align: center;
+  font-weight: 700;
+  padding: 18px;
 }
 
 /* ================= PILL BUTTONS ================= */
@@ -331,7 +352,6 @@ body {
   cursor: pointer;
 }
 
-/* ✅ VERY IMPORTANT: make pills text WHITE */
 .admin-UserClinics .admin-table .pill {
   color: #ffffff !important;
 }
@@ -340,13 +360,29 @@ body {
   width: 100%;
 }
 
-/* colors */
-.admin-UserClinics .pill-view { background: #5b5b5b; }
-.admin-UserClinics .pill-success { background: #2e7d32; }
-.admin-UserClinics .pill-danger { background: #c62828; }
-.admin-UserClinics .pill-warning { background: #b7791f; }
-.admin-UserClinics .pill-gray { background: #6b7280; }
-.admin-UserClinics .pill-dark { background: #111827; }
+.admin-UserClinics .pill-view {
+  background: #414242;
+}
+
+.admin-UserClinics .pill-success {
+  background: #51be1f;
+}
+
+.admin-UserClinics .pill-danger {
+  background: #c62828;
+}
+
+.admin-UserClinics .pill-warning {
+  background: #b7791f;
+}
+
+.admin-UserClinics .pill-gray {
+  background: #4eb4f3;
+}
+
+.admin-UserClinics .pill-dark {
+  background: #c62828;
+}
 
 .admin-UserClinics .pill:focus,
 .admin-UserClinics .pill:active {
@@ -354,22 +390,33 @@ body {
   box-shadow: none;
 }
 
-/* ================= ACTIONS (FIXED 5 SLOTS + LINES) ================= */
-.admin-UserClinics .clinics-actions.slots {
-  display: grid;
-  grid-template-columns: repeat(5, var(--action-slot-w));
-  column-gap: var(--actions-gap);
-  align-items: center;
-  justify-content: start;
+/* ================= CLINIC ACTIONS ================= */
+.admin-UserClinics .clinics-table td:last-child {
+  text-align: left;
+  padding-left: 11px;
+  padding-right: 20px;
 }
 
-/* ✅ hide but KEEP SLOT (so Edit/Deactivate always align) */
+.admin-UserClinics .clinics-actions .pill {
+  min-width: 92px;
+}
+
+.admin-UserClinics .clinics-actions.slots {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(var(--action-slot-w), 1fr));
+  column-gap: var(--actions-gap);
+  align-items: center;
+  justify-content: stretch;
+  width: 100%;
+}
+
+/* keep slot but hide content */
 .admin-UserClinics .is-hidden {
   opacity: 0;
   pointer-events: none;
 }
 
-/* ✅ lines before slot 2..5 */
+/* lines before slot 2..5 */
 .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2) {
   position: relative;
 }
@@ -385,7 +432,7 @@ body {
   background: var(--actions-line-color);
 }
 
-/* ================= DASH TABLE (RIGHT SIDE) ================= */
+/* ================= DASH / RIGHT PANEL ================= */
 .t-main {
   font-weight: 900;
 }
@@ -425,19 +472,280 @@ body {
   width: 100px;
 }
 
-.th-action {
-  text-align: right;
-  white-space: nowrap;
-  width: 150px;
-}
-
-.td-action {
-  text-align: right;
-}
-
-/* Button alignment */
 .td-action .btn-view {
   display: inline-block;
+}
+
+/* ================= APPOINTMENT PANEL ================= */
+.admin-UserClinics .dash-panel {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.admin-UserClinics .dash-panel-head {
+  margin-bottom: 8px;
+}
+
+.admin-UserClinics .dash-panel-title {
+  font-size: 16px;
+  font-weight: 900;
+  color: #000;
+}
+
+.admin-UserClinics .dash-panel-body {
+  background: #ffffff;
+  border: 5px solid #00bfa6;
+  border-radius: 30px;
+  overflow: hidden;
+  padding: 0;
+  max-height: none;
+}
+
+.admin-UserClinics .dash-panel-body.dash-panel-pad {
+  padding: 0;
+  max-height: none;
+  overflow: hidden;
+}
+
+.admin-UserClinics .dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  table-layout: fixed;
+  background: #ffffff;
+}
+
+.admin-UserClinics .dash-table thead th {
+  background: #d9d9d9;
+  color: #000;
+  font-weight: 900;
+  font-size: 13px;
+  text-align: left;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  position: static;
+  text-transform: none;
+}
+
+.admin-UserClinics .dash-table tbody td {
+  padding: 12px 16px;
+  vertical-align: middle;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+}
+
+.admin-UserClinics .dash-table tbody tr:first-child td {
+  border-top: none;
+}
+
+.admin-UserClinics .dash-table th:nth-child(1),
+.admin-UserClinics .dash-table td:nth-child(1) {
+  width: 36%;
+}
+
+.admin-UserClinics .dash-table th:nth-child(2),
+.admin-UserClinics .dash-table td:nth-child(2) {
+  width: 24%;
+  text-align: left !important;
+}
+
+.admin-UserClinics .dash-table th:nth-child(3),
+.admin-UserClinics .dash-table td:nth-child(3) {
+  width: 40%;
+  text-align: left !important;
+}
+
+.admin-UserClinics .dash-table .th-action,
+.admin-UserClinics .dash-table .td-action {
+  text-align: left !important;
+  white-space: nowrap;
+}
+
+.admin-UserClinics .dash-table td:first-child .t-main {
+  max-width: 92px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.admin-UserClinics .t-main {
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.15;
+  color: #000;
+}
+
+.admin-UserClinics .t-sub {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-top: 2px;
+  line-height: 1.1;
+}
+
+.admin-UserClinics .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: lowercase;
+  border: none;
+}
+
+.admin-UserClinics .badge-cancelled,
+.admin-UserClinics .badge-rejected,
+.admin-UserClinics .badge-declined {
+  background: #ea6666;
+  color: #000;
+}
+
+.admin-UserClinics .badge-pending {
+  background: #e2c457;
+  color: #000;
+}
+
+.admin-UserClinics .badge-approved,
+.admin-UserClinics .badge-confirmed,
+.admin-UserClinics .badge-completed {
+  background: #7ed36d;
+  color: #000;
+}
+
+.admin-UserClinics .badge-active {
+  background: #7ed36d;
+  color: #000;
+}
+
+.admin-UserClinics .btn-view,
+.admin-UserClinics .btn-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  min-width: 128px;
+  height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 999px;
+  background: #58b6f3;
+  color: #000;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.admin-UserClinics .btn-view:hover,
+.admin-UserClinics .btn-sm:hover {
+  opacity: 0.95;
+}
+
+.admin-UserClinics .td-empty {
+  text-align: center;
+  font-weight: 600;
+  color: #444;
+  padding: 22px 16px;
+}
+
+
+/* ================= RECENT ACTIVITY ================= */
+.dash-aside .dash-right-top .dash-panel-body {
+  background: #ffffff;
+  border: 3px solid #00bfa6;
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.dash-body-small {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.activity-empty {
+  color: #0f0f0f;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.activity-list {
+  height: 100%;
+  display: flex;
+  background: transparent !important;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.activity-item {
+  background: #ffffff !important;
+  color: #0f0f0f !important;
+  border-radius: 12px;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.activity-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+}
+
+.activity-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.06);
+  flex: 0 0 36px;
+  font-size: 16px;
+}
+
+.activity-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.activity-text {
+  font-weight: 600;
+  font-size: 12px;
+  color: #0f0f0f;
+  line-height: 1.25;
+}
+
+.activity-time {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #0f0f0f;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.activity-item.user .activity-icon,
+.activity-item.clinic .activity-icon,
+.activity-item.clinic-approved .activity-icon,
+.activity-item.clinic-rejected .activity-icon,
+.activity-item.appointment .activity-icon {
+  background: transparent !important;
+}
+
+.admin-UserClinics .admin-table-card {
+  background: linear-gradient(
+    to bottom,
+    #bfbfbf 0,
+    #bfbfbf 78px,
+    #ffffff 78px,
+    #ffffff 100%
+  );
 }
 
 /* ================= RESPONSIVE ================= */
@@ -451,76 +759,12 @@ body {
     max-width: 360px;
   }
 
-  /* actions wrap */
   .admin-UserClinics .clinics-actions.slots {
     grid-template-columns: repeat(2, var(--action-slot-w));
     row-gap: 10px;
   }
 
-  /* hide slot lines in mobile */
   .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
     display: none;
   }
-}
-/* ===========================
-   APPOINTMENT PANEL TABLE FIX
-   =========================== */
-
-/* make table full width + breathing space inside panel */
-.admin-UserClinics .dash-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.profile-dropdown a:hover,
-.profile-dropdown button:hover {
-  background: rgba(0, 0, 0, 0.05);
-} 
-
-.modal-backdrop {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 40%;
-  height: 30%;
-border-radius: 20px;
-  transform: translate(-50%, -50%);
-
-  background-color: #8b9190;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  z-index: 9999;
-}
-
-/* modal container */
-.modal-card {
-  
-  position: relative; /* important */
-  background-color: #8b9190;
-  padding: 20px;
-  border-radius: 10px;
-  width: 90%;
-  height: auto;
-}
-
-/* close button */
-.modal-close {
-  position: absolute;
-  top: 1px;
-  right: -20px;
- color: rgb(2, 2, 2);
- background-color: #8b9190;
- 
-  border: none;
-  width: 30px;
-  font-size: 20px;
-  cursor: pointer;
-}
-
-.modal-body {
-  margin-top: 10px;
 }

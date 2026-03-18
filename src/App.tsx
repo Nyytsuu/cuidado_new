@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
+
 //user  Stashed changes
 import Signup from "./SignupUser/Signup";
 import Signin from "./SigninUser/Signin";
@@ -18,8 +19,13 @@ import AdminAppoint from "./admin/AdminAppoint";
 import AdminClinic from "./admin/AdminClinic";
 import AdminProfile from "./admin/AdminProfile";
 import AdminReport from "./admin/AdminReport";
+import AdminConditionalManagement  from "./admin/AdminConditionManagement";
+import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
+import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
 import ClinicSignup from "./Clinic/ClinicSignup";
+import ClinicDashboard from "./Clinic/ClinicDashboard";
+
 function App() {
   return (
     <BrowserRouter>
@@ -30,6 +36,7 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgetPass />} />
         <Route path="/change-password" element={<Changepass />} />
+        <Route path="/landingpage" element={<LandingPage/>} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/landing" element={<LandingPage />} />
@@ -38,6 +45,8 @@ function App() {
         </Route>
         {/* clinic */}
         <Route path="/Clinicsignup" element={<ClinicSignup />} />
+        <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
+
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />
@@ -48,6 +57,9 @@ function App() {
       <Route path="/admin/clinics" element={<AdminClinic />} />
       <Route path="/admin/settings" element={<AdminProfile/>} />
       <Route path="/admin/reports" element={<AdminReport />} />
+      <Route path="/admin/conditional" element={<AdminConditionalManagement />} />
+      <Route path="/admin/symptoms" element={ <AdminSymptomsManagement />} />
+      <Route path="/admin/condition-symptom-mapping" element={<AdminConditionSymptomMapping />} />
         </Route>
       
       </Routes>

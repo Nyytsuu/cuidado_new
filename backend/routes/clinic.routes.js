@@ -6,7 +6,7 @@ const multer = require("multer");
 
 /* ================= DB CONNECTION ================= */
 const db = mysql.createConnection({
-  host: "127.0.0.1",
+  host: "localhost",
   user: "root",
   password: "root123",
   database: "cuidado_medihelp",
