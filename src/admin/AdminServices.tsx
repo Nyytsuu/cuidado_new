@@ -10,19 +10,12 @@ type Service = {
   is_active: number; // 1 | 0
 };
 
+
 type AppointmentRow = {
   id: number;
   patient: string;
   clinic: string;
   schedule: string;
-  status: string;
-};
-
-type AdminAppointmentApiRow = {
-  id: number;
-  patient_name: string;
-  clinic_name: string;
-  start_at: string;
   status: string;
 };
 
@@ -32,6 +25,7 @@ type ActivityItem = {
   text: string;
   time: string;
 };
+
 
 const API = "http://localhost:5000/api/admin";
 
@@ -51,33 +45,25 @@ export default function AdminServices() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
+
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
+
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
 
+
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
+  // Add/Edit modal
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [serviceInput, setServiceInput] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  // Activate/Deactivate confirm modal
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [q, setQ] = useState("");
-
-  const getStatusClass = (status: string) => {
-    const s = status.trim().toLowerCase();
-
-    if (["approved", "confirmed", "completed"].includes(s)) return "badge-approved";
-    if (["pending"].includes(s)) return "badge-pending";
-    if (["cancelled", "canceled", "rejected", "declined"].includes(s)) {
-      return "badge-cancelled";
-    }
-
-    return "badge-pending";
-  };
 
   const loadServices = async () => {
     try {
@@ -99,15 +85,17 @@ export default function AdminServices() {
   }, []);
 
   const loadAppointments = async () => {
+  const loadAppointments = async () => {
     try {
       setLoadingAppointments(true);
+
 
       const res = await fetch("http://localhost:5000/api/admin/appointments");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data: AdminAppointmentApiRow[] = await res.json();
+      const data = await res.json();
 
-      const mapped: AppointmentRow[] = data.map((a) => ({
+      const mapped: AppointmentRow[] = data.map((a: any) => ({
         id: a.id,
         patient: a.patient_name,
         clinic: a.clinic_name,
@@ -117,6 +105,7 @@ export default function AdminServices() {
         status: a.status,
       }));
 
+
       setAppointments(mapped);
     } catch (e) {
       console.error("Load appointments error:", e);
@@ -125,6 +114,7 @@ export default function AdminServices() {
       setLoadingAppointments(false);
     }
   };
+
 
   const loadActivity = async () => {
     try {
@@ -143,30 +133,9 @@ export default function AdminServices() {
     loadAppointments();
   }, []);
 
-  const query = q.trim().toLowerCase();
-  const filteredServices = services.filter((service) =>
-    matchesSearch(
-      query,
-      service.name,
-      service.is_active === 1 ? "active" : "inactive"
-    )
-  );
-  const filteredActivities = activities.filter((activity) =>
-    matchesSearch(
-      query,
-      activity.text,
-      activity.type,
-      new Date(activity.time).toLocaleString()
-    )
-  );
-  const filteredAppointments = appointments.filter((appointment) =>
-    matchesSearch(
-      query,
-      appointment.patient,
-      appointment.clinic,
-      appointment.schedule,
-      appointment.status
-    )
+  const activeServices = useMemo(
+    () => services.filter((s) => s.is_active === 1),
+    [services]
   );
 
   const openAddModal = () => {
@@ -186,6 +155,16 @@ export default function AdminServices() {
     setServiceModalOpen(false);
     setServiceInput("");
     setEditingId(null);
+  };
+
+  const openToggleModal = (service: Service) => {
+    setSelectedService(service);
+    setConfirmModalOpen(true);
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModalOpen(false);
+    setSelectedService(null);
   };
 
   const openToggleModal = (service: Service) => {
@@ -229,7 +208,13 @@ export default function AdminServices() {
 
   const handleToggle = async () => {
     if (!selectedService) return;
+  const handleToggle = async () => {
+    if (!selectedService) return;
 
+    try {
+      const res = await fetch(`${API}/services/${selectedService.id}/toggle`, {
+        method: "PATCH",
+      });
     try {
       const res = await fetch(`${API}/services/${selectedService.id}/toggle`, {
         method: "PATCH",
@@ -239,7 +224,20 @@ export default function AdminServices() {
         const text = await res.text();
         throw new Error(text);
       }
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
 
+      closeConfirmModal();
+      loadServices();
+    } catch (e) {
+      console.error("Toggle service error:", e);
+      alert("Failed to update service status.");
+    }
+  };
+
+  const onViewAppointment = (id: number) => {
       closeConfirmModal();
       loadServices();
     } catch (e) {
@@ -280,6 +278,12 @@ export default function AdminServices() {
           </div>
 
           <nav className="header-nav">
+            <a className="nav-link" href="../admin/dashboard">
+              Home
+            </a>
+            <a className="nav-link" href="../admin/appointments">
+              Appointments
+            </a>
             <a className="nav-link" href="../admin/dashboard">
               Home
             </a>
@@ -364,6 +368,7 @@ export default function AdminServices() {
                               type="button"
                               className="pill pill-danger"
                               onClick={() => openToggleModal(s)}
+                              onClick={() => openToggleModal(s)}
                             >
                               {s.is_active === 1 ? "Deactivate" : "Activate"}
                             </button>
@@ -407,7 +412,7 @@ export default function AdminServices() {
                   </div>
                 </div>
 
-                <Panel title="Appointment Section" className="appointment-panel">
+                <Panel title="Appointment Section">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -424,7 +429,7 @@ export default function AdminServices() {
                             Loading appointments...
                           </td>
                         </tr>
-                      ) : filteredAppointments.length === 0 ? (
+                      ) : appointments.length === 0 ? (
                         <tr>
                           <td colSpan={3} className="td-empty">
                             Appointments API not connected yet.
@@ -548,20 +553,60 @@ export default function AdminServices() {
             </div>
           </div>
         )}
+
+        {confirmModalOpen && selectedService && (
+          <div
+            className="service-modal-overlay"
+            onClick={closeConfirmModal}
+            role="presentation"
+          >
+            <div
+              className="service-modal"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="confirmModalTitle"
+            >
+              <h3 id="confirmModalTitle">
+                {selectedService.is_active === 1 ? "Deactivate Service" : "Activate Service"}
+              </h3>
+
+              <p className="confirm-text">
+                Are you sure you want to{" "}
+                <strong>
+                  {selectedService.is_active === 1 ? "deactivate" : "activate"}
+                </strong>{" "}
+                <span className="confirm-service-name">"{selectedService.name}"</span>?
+              </p>
+
+              <div className="service-modal-actions">
+                <button
+                  type="button"
+                  className="service-btn cancel"
+                  onClick={closeConfirmModal}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className={`service-btn ${
+                    selectedService.is_active === 1 ? "danger" : "save"
+                  }`}
+                  onClick={handleToggle}
+                >
+                  {selectedService.is_active === 1 ? "Deactivate" : "Activate"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 }
 
-function Panel({
-  title,
-  children,
-  className = "",
-}: {
-  title: string;
-  children: ReactNode;
-  className?: string;
-}) {
+function Panel({ title, children }: any) {
   return (
     <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">
