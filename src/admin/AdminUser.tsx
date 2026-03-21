@@ -42,12 +42,11 @@ type AppointmentRow = {
   status: string;
 };
 
-
 export default function AdminUser() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
-const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
@@ -57,25 +56,30 @@ const [loadingAppointments, setLoadingAppointments] = useState(true);
 
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
+  // ✅ Popup state for activate / disable
+  const [statusPopupOpen, setStatusPopupOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<"active" | "disabled" | null>(null);
+
   // ✅ Load users
-const loadUsers = async () => {
-  try {
-    setLoading(true);
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
 
-    const res = await fetch("http://localhost:5000/api/admin/users");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await fetch("http://localhost:5000/api/admin/users");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const data: UserRow[] = await res.json();
+      const data: UserRow[] = await res.json();
 
-    console.log("USERS API RESPONSE:", data); // ✅ check what's coming back
-    setUsers(data);
-  } catch (e) {
-    console.error("Load users error:", e);
-    setUsers([]);
-  } finally {
-    setLoading(false);
-  }
-};
+      console.log("USERS API RESPONSE:", data);
+      setUsers(data);
+    } catch (e) {
+      console.error("Load users error:", e);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ✅ Load recent activity
   const loadActivity = async () => {
@@ -90,41 +94,37 @@ const loadUsers = async () => {
     }
   };
 
-  // ✅ (Optional) Load appointments later (leave empty if no API yet)
-const loadAppointments = async () => {
-  try {
-    setLoadingAppointments(true);
+  // ✅ Load appointments
+  const loadAppointments = async () => {
+    try {
+      setLoadingAppointments(true);
 
-    const res = await fetch("http://localhost:5000/api/admin/appointments");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const res = await fetch("http://localhost:5000/api/admin/appointments");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const data = await res.json();
+      const data = await res.json();
 
-    // ✅ This is appointments, not clinics
-    console.log("APPOINTMENTS API SAMPLE:", data?.[0]);
+      console.log("APPOINTMENTS API SAMPLE:", data?.[0]);
 
-    const mapped: AppointmentRow[] = data.map((a: any) => ({
-      id: a.id,
-      patient: a.patient_name,
-      clinic: a.clinic_name,
-      schedule: `${new Date(a.start_at).toLocaleDateString()} • ${new Date(
-        a.start_at
-      ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
-      status: a.status,
-    }));
+      const mapped: AppointmentRow[] = data.map((a: any) => ({
+        id: a.id,
+        patient: a.patient_name,
+        clinic: a.clinic_name,
+        schedule: `${new Date(a.start_at).toLocaleDateString()} • ${new Date(
+          a.start_at
+        ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        status: a.status,
+      }));
 
-    setAppointments(mapped);
+      setAppointments(mapped);
+    } catch (e) {
+      console.error("Load appointments error:", e);
+      setAppointments([]);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
 
-    // ❌ REMOVE THIS:
-    // setClinics(data);
-
-  } catch (e) {
-    console.error("Load appointments error:", e);
-    setAppointments([]);
-  } finally {
-    setLoadingAppointments(false);
-  }
-};
   useEffect(() => {
     loadUsers();
     loadActivity();
@@ -161,6 +161,24 @@ const loadAppointments = async () => {
     }
   };
 
+  const openStatusPopup = (user: UserRow, status: "active" | "disabled") => {
+    setSelectedUser(user);
+    setPendingStatus(status);
+    setStatusPopupOpen(true);
+  };
+
+  const closeStatusPopup = () => {
+    setStatusPopupOpen(false);
+    setSelectedUser(null);
+    setPendingStatus(null);
+  };
+
+  const confirmStatusPopup = async () => {
+    if (!selectedUser || !pendingStatus) return;
+    await setStatus(selectedUser.id, pendingStatus);
+    closeStatusPopup();
+  };
+
   const onViewAppointment = (id: number) => {
     console.log("View appointment:", id);
   };
@@ -192,8 +210,12 @@ const loadAppointments = async () => {
           </div>
 
           <nav className="header-nav">
-              <a className="nav-link" href="../admin/dashboard">Home</a>
-            <a className="nav-link" href="../admin/appointments">Appointments</a>
+            <a className="nav-link" href="../admin/dashboard">
+              Home
+            </a>
+            <a className="nav-link" href="../admin/appointments">
+              Appointments
+            </a>
 
             <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
               <button
@@ -282,7 +304,7 @@ const loadAppointments = async () => {
                                   type="button"
                                   className="pill-btn pill-success"
                                   disabled={u.status === "active"}
-                                  onClick={() => setStatus(u.id, "active")}
+                                  onClick={() => openStatusPopup(u, "active")}
                                 >
                                   Activate
                                 </button>
@@ -291,7 +313,7 @@ const loadAppointments = async () => {
                                   type="button"
                                   className="pill-btn pill-danger"
                                   disabled={u.status === "disabled"}
-                                  onClick={() => setStatus(u.id, "disabled")}
+                                  onClick={() => openStatusPopup(u, "disabled")}
                                 >
                                   Disable
                                 </button>
@@ -305,9 +327,8 @@ const loadAppointments = async () => {
                 </div>
               </section>
 
-              {/* RIGHT: ASIDE (dashboard style) */}
+              {/* RIGHT: ASIDE */}
               <aside className="dash-aside">
-                {/* Recent activity */}
                 <div className="dash-panel dash-right-top">
                   <div className="dash-panel-title">Recent activity</div>
 
@@ -350,7 +371,13 @@ const loadAppointments = async () => {
                     </thead>
 
                     <tbody>
-                      {appointments.length === 0 ? (
+                      {loadingAppointments ? (
+                        <tr>
+                          <td colSpan={3} className="td-empty">
+                            Loading appointments...
+                          </td>
+                        </tr>
+                      ) : appointments.length === 0 ? (
                         <tr>
                           <td colSpan={3} className="td-empty">
                             Appointments API not connected yet.
@@ -424,6 +451,51 @@ const loadAppointments = async () => {
               <p>
                 <b>Address:</b> {profile.address || "—"}
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STATUS POPUP */}
+      {statusPopupOpen && selectedUser && pendingStatus && (
+        <div className="user-status-popup-overlay" onClick={closeStatusPopup}>
+          <div
+            className="user-status-popup-card"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="userStatusPopupTitle"
+          >
+            <h3 id="userStatusPopupTitle" className="user-status-popup-title">
+              {pendingStatus === "active" ? "Activate User" : "Disable User"}
+            </h3>
+
+            <p className="user-status-popup-text">
+              Are you sure you want to{" "}
+              <strong>{pendingStatus === "active" ? "activate" : "disable"}</strong>{" "}
+              <span className="user-status-popup-name">"{selectedUser.full_name}"</span>?
+            </p>
+
+            <div className="user-status-popup-actions">
+              <button
+                type="button"
+                className="user-status-popup-btn user-status-popup-cancel"
+                onClick={closeStatusPopup}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className={`user-status-popup-btn ${
+                  pendingStatus === "active"
+                    ? "user-status-popup-success"
+                    : "user-status-popup-danger"
+                }`}
+                onClick={confirmStatusPopup}
+              >
+                {pendingStatus === "active" ? "Activate" : "Disable"}
+              </button>
             </div>
           </div>
         </div>
