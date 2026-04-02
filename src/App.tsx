@@ -9,6 +9,11 @@ import LandingPage from "./SigninUser/Landingpage";
 import Categories from "./Categories/Categories";
 import Changepass from "./SigninUser/Changepass";
 import VerifyOtp from "./SigninUser/VerifyOtp";
+import BrowseHealth from "./SigninUser/BrowseHealth";
+import Cardio from "./SigninUser/Cardio";
+import SympCheck from "./SigninUser/SympCheck";
+import UserAppointment from "./SigninUser/UserAppointment";
+import FindClinic from "./SigninUser/FindClinic";
 
 // admin
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
@@ -40,6 +45,11 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/landing" element={<LandingPage />} />
+        <Route path="/browse-health" element={<BrowseHealth />} />
+        <Route path="/cardio" element={<Cardio />} />
+        <Route path="/symptom-checker" element={<SympCheck />} />
+        <Route path="/appointments" element={<UserAppointment />} />
+        <Route path="/find-clinic" element={<FindClinic />} />
         
         
         </Route>
