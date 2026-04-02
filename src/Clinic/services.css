@@ -223,36 +223,48 @@ body {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
+  border: 5px solid #00bfa6;
+  border-radius: 26px;
+  background: linear-gradient(
+    to bottom,
+    #bfbfbf 0,
+    #bfbfbf 78px,
+    #dcdcdc 78px,
+    #dcdcdc 100%
+  );
 }
-
 /* ================= TABLE ================= */
 .services .users-table {
   width: 100%;
 }
 
-/* ✅ Services columns: Name | Desc | Price | Duration | Status | Actions */
 .services .users-row {
   display: grid;
-  grid-template-columns: 1.7fr 2.4fr 1.1fr 1.1fr 1.1fr 2.6fr;
+  grid-template-columns: 1.65fr 2.25fr 0.7fr 1fr 0.95fr 2.5fr;
   align-items: center;
-  gap: 12px;
+  gap: 0;
   padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background: transparent;
 }
 
 .services .users-header {
-  font-weight: 800;
+  font-weight: 900;
+}
+.services .users-row .users-cell:nth-child(5) {
+  padding-right: 6px;
 }
 
 .services .users-header .users-cell {
   color: black;
-  font-size: 1.3rem;
+  font-size: 1.12rem;
+  font-weight: 900;
+  white-space: nowrap;
 }
-
 .services .users-cell {
   min-width: 0;
   position: relative;
-  padding-left: 18px;
+  padding-left: 12px;
 }
 
 /* first column no line + no padding */
@@ -268,14 +280,13 @@ body {
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
-  height: 28px;
-  background: rgba(0, 0, 0, 0.75);
+  height: 36px;
+  background: rgba(58, 43, 43, 0.75);
 }
 
-/* name column */
 .services .users-name {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 800;
   color: black;
 }
 
@@ -298,14 +309,14 @@ body {
   background: #5b5b5b;
 }
 
-.services .pills {
+.services .pill {
   border: none;
-  color: black;
+  color: white;
   border-radius: 999px;
   padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
-  font-weight: 600;
+  min-height: 36px;
+  font-size: 0.95rem;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -313,6 +324,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  background: #5b5b5b;
 }
 
 /* ✅ description pill (fix wrapping + readability) */
@@ -410,7 +422,95 @@ body {
     max-width: 360px;
   }
 
-  .services .users-row {
-    grid-template-columns: 1.6fr 2.2fr 1fr 1fr 1fr 2.2fr;
-  }
+ .services .users-row {
+  grid-template-columns: 1.65fr 2.2fr 1fr 1fr 1fr 2.25fr;
 }
+}
+.service-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.service-modal {
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.service-modal-header,
+.service-modal-footer {
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.service-modal-footer {
+  border-top: 1px solid #eee;
+  border-bottom: none;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.service-modal-body {
+  padding: 20px;
+}
+
+.service-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.service-modal-close {
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-open {
+  overflow: hidden;
+} 

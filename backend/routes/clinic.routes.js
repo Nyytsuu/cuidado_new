@@ -8,9 +8,9 @@ const multer = require("multer");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "root123",
+  password: "Cuidado_2026-cp1!",
   database: "cuidado_medihelp",
-  port: 3307,
+  port: 3306,
 });
 
 /* ================= MULTER SETUP ================= */
@@ -28,11 +28,12 @@ const upload = multer({
 });
 
 /* =================================================
-   CLINIC SIGNUP (EXISTING — UNCHANGED)
-   POST /api/clinic/signup
+   CLINIC SIGNUP
+   Mounted at: /api/clinic
+   Final route: POST /api/clinic/signup
 ================================================= */
 router.post(
-  "/clinic/signup",
+  "/signup",
   upload.fields([
     { name: "clinic_license_file", maxCount: 1 },
     { name: "rep_valid_id_file", maxCount: 1 },
@@ -133,6 +134,7 @@ router.post(
             console.error("CLINIC SIGNUP ERROR:", err);
             return res.status(500).json({ message: err.message });
           }
+
           res.json({ message: "Clinic signup submitted (Pending approval)" });
         }
       );
@@ -144,164 +146,544 @@ router.post(
 );
 
 /* =================================================
-   ADMIN: GET CLINICS
-   GET /api/admin/clinics
+   CLINICS
+   Mounted at: /api/clinic
 ================================================= */
+
+// GET all clinics
 router.get("/clinics", (req, res) => {
-  db.query(
-    `SELECT 
+  const sql = `
+    SELECT
       id,
-      clinic_name AS name,
+      clinic_name,
+      email,
+      phone,
+      address,
+      created_at,
       status
-     FROM clinics
-     ORDER BY id DESC`,
-    (err, rows) => {
+    FROM clinics
+    ORDER BY created_at DESC
+  `;
+
+  db.query(sql, (err, rows) => {
+    if (err) {
+      console.error("FETCH CLINICS ERROR:", err);
+      return res.status(500).json({ message: "Failed to fetch clinics." });
+    }
+
+    res.json(rows);
+  });
+});
+
+// GET one clinic
+router.get("/clinics/:id", (req, res) => {
+  const { id } = req.params;
+
+  const sql = `
+    SELECT
+      id,
+      clinic_name,
+      email,
+      phone,
+      address,
+      created_at,
+      status
+    FROM clinics
+    WHERE id = ?
+  `;
+
+  db.query(sql, [id], (err, rows) => {
+    if (err) {
+      console.error("VIEW CLINIC ERROR:", err);
+      return res.status(500).json({ message: "Failed to view clinic." });
+    }
+
+    if (!rows.length) {
+      return res.status(404).json({ message: "Clinic not found." });
+    }
+
+    res.json(rows[0]);
+  });
+});
+
+// APPROVE clinic
+router.patch("/clinics/:id/approve", (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    "UPDATE clinics SET status = 'approved' WHERE id = ?",
+    [id],
+    (err, result) => {
       if (err) {
-        console.error("FETCH CLINICS ERROR:", err);
-        return res.status(500).json({ message: "Failed to fetch clinics" });
+        console.error("APPROVE CLINIC ERROR:", err);
+        return res.status(500).json({ message: err.message });
       }
-      res.json(rows);
+
+      if (!result.affectedRows) {
+        return res.status(404).json({ message: "Clinic not found." });
+      }
+
+      res.json({ message: "Clinic approved." });
+    }
+  );
+});
+
+// REJECT clinic
+router.patch("/clinics/:id/reject", (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    "UPDATE clinics SET status = 'rejected' WHERE id = ?",
+    [id],
+    (err, result) => {
+      if (err) {
+        console.error("REJECT CLINIC ERROR:", err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (!result.affectedRows) {
+        return res.status(404).json({ message: "Clinic not found." });
+      }
+
+      res.json({ message: "Clinic rejected." });
+    }
+  );
+});
+
+// UPDATE clinic status
+router.patch("/clinics/:id/status", (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  if (
+    !["approved", "rejected", "pending", "deactivated", "active", "disabled"].includes(
+      status
+    )
+  ) {
+    return res.status(400).json({ message: "Invalid status." });
+  }
+
+  db.query(
+    "UPDATE clinics SET status = ? WHERE id = ?",
+    [status, id],
+    (err, result) => {
+      if (err) {
+        console.error("UPDATE CLINIC STATUS ERROR:", err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (!result.affectedRows) {
+        return res.status(404).json({ message: "Clinic not found." });
+      }
+
+      res.json({ message: "Clinic status updated." });
+    }
+  );
+});
+
+// EDIT clinic
+router.patch("/clinics/:id", (req, res) => {
+  const { id } = req.params;
+  const { clinic_name, email, phone, address } = req.body;
+
+  const sql = `
+    UPDATE clinics
+    SET
+      clinic_name = COALESCE(?, clinic_name),
+      email = COALESCE(?, email),
+      phone = COALESCE(?, phone),
+      address = COALESCE(?, address)
+    WHERE id = ?
+  `;
+
+  db.query(
+    sql,
+    [clinic_name ?? null, email ?? null, phone ?? null, address ?? null, id],
+    (err, result) => {
+      if (err) {
+        console.error("EDIT CLINIC ERROR:", err);
+        return res.status(500).json({ message: "Failed to edit clinic." });
+      }
+
+      if (!result.affectedRows) {
+        return res.status(404).json({ message: "Clinic not found." });
+      }
+
+      res.json({ message: "Clinic updated." });
     }
   );
 });
 
 /* =================================================
-   ADMIN ACTIONS
+   CLINIC SERVICES
+   Final routes:
+   GET    /api/clinic/services
+   POST   /api/clinic/services
+   PATCH  /api/clinic/services/:id
+   DELETE /api/clinic/services/:id
+   PATCH  /api/clinic/services/:id/status
 ================================================= */
-router.patch("/clinics/:id/approve", (req, res) => {
-  db.query(
-    "UPDATE clinics SET status='approved' WHERE id=?",
-    [req.params.id],
-    (err, result) => {
-      if (err) return res.status(500).json({ message: err.message });
-      if (!result.affectedRows) return res.status(404).json({ message: "Clinic not found" });
-      res.json({ message: "Clinic approved" });
-    }
-  );
-});
 
-router.patch("/clinics/:id/reject", (req, res) => {
-  db.query(
-    "UPDATE clinics SET status='rejected' WHERE id=?",
-    [req.params.id],
-    (err, result) => {
-      if (err) return res.status(500).json({ message: err.message });
-      if (!result.affectedRows) return res.status(404).json({ message: "Clinic not found" });
-      res.json({ message: "Clinic rejected" });
-    }
-  );
-});
+// GET clinic services
+router.get("/services", (req, res) => {
+  const { clinic_id } = req.query;
 
-router.patch("/clinics/:id/deactivate", (req, res) => {
-  db.query(
-    "UPDATE clinics SET status='deactivated' WHERE id=?",
-    [req.params.id],
-    (err, result) => {
-      if (err) return res.status(500).json({ message: err.message });
-      if (!result.affectedRows) return res.status(404).json({ message: "Clinic not found" });
-      res.json({ message: "Clinic deactivated" });
+  if (!clinic_id) {
+    return res.status(400).json({ message: "clinic_id is required." });
+  }
+
+  const sql = `
+    SELECT
+      id,
+      clinic_id,
+      name,
+      description,
+      price,
+      duration,
+      duration_minutes,
+      is_active
+    FROM clinic_services
+    WHERE clinic_id = ?
+    ORDER BY id DESC
+  `;
+
+  db.query(sql, [Number(clinic_id)], (err, rows) => {
+    if (err) {
+      console.error("FETCH CLINIC SERVICES ERROR:", err);
+      return res.status(500).json({ message: err.message });
     }
-  );
-});
-router.get("/clinics", async (req, res) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT 
-        id,
-        clinic_name,
-        email,
-        phone,
-        address,
-        created_at,
-        status
-      FROM clinics
-      ORDER BY created_at DESC
-    `);
+
     res.json(rows);
-  } catch (e) {
-    console.error("Load clinics error:", e);
-    res.status(500).json({ message: "Failed to load clinics." });
-  }
+  });
 });
 
-// ✅ GET one clinic (view)
-router.get("/clinics/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [rows] = await pool.query(
-      `SELECT id, clinic_name, email, phone, address, created_at, status FROM clinics WHERE id = ?`,
-      [id]
-    );
-    if (!rows.length) return res.status(404).json({ message: "Clinic not found" });
-    res.json(rows[0]);
-  } catch (e) {
-    console.error("View clinic error:", e);
-    res.status(500).json({ message: "Failed to view clinic." });
+// ADD clinic service
+router.post("/services", (req, res) => {
+  const {
+    clinic_id,
+    name,
+    description,
+    price,
+    duration,
+    duration_minutes,
+    is_active,
+  } = req.body;
+
+  if (!clinic_id || !name) {
+    return res.status(400).json({ message: "clinic_id and name are required." });
   }
+
+  const finalDuration = duration ?? duration_minutes ?? null;
+
+  const sql = `
+    INSERT INTO clinic_services (
+      clinic_id,
+      name,
+      description,
+      price,
+      duration_minutes,
+      is_active
+    )
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    sql,
+    [
+      Number(clinic_id),
+      name,
+      description ?? null,
+      price ?? null,
+      finalDuration,
+      is_active ?? 1,
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("ADD CLINIC SERVICE ERROR:", err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      res.json({
+        message: "Service added successfully.",
+        id: result.insertId,
+      });
+    }
+  );
 });
 
-// ✅ APPROVE
-router.patch("/clinics/:id/approve", async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query(`UPDATE clinics SET status='approved' WHERE id=?`, [id]);
-    res.json({ message: "Clinic approved" });
-  } catch (e) {
-    console.error("Approve clinic error:", e);
-    res.status(500).json({ message: "Failed to approve clinic." });
-  }
+// UPDATE clinic service
+router.patch("/services/:id", (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    description,
+    price,
+    duration,
+    duration_minutes,
+    is_active,
+  } = req.body;
+
+  const finalDuration = duration ?? duration_minutes ?? null;
+
+  const sql = `
+    UPDATE clinic_services
+    SET
+      name = ?,
+      description = ?,
+      price = ?,
+      duration_minutes = ?,
+      is_active = ?
+    WHERE id = ?
+  `;
+
+  db.query(
+    sql,
+    [
+      name,
+      description ?? null,
+      price ?? null,
+      finalDuration,
+      is_active ?? 1,
+      Number(id),
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("UPDATE CLINIC SERVICE ERROR:", err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (!result.affectedRows) {
+        return res.status(404).json({ message: "Service not found." });
+      }
+
+      res.json({ message: "Service updated successfully." });
+    }
+  );
 });
 
-// ✅ REJECT
-router.patch("/clinics/:id/reject", async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query(`UPDATE clinics SET status='rejected' WHERE id=?`, [id]);
-    res.json({ message: "Clinic rejected" });
-  } catch (e) {
-    console.error("Reject clinic error:", e);
-    res.status(500).json({ message: "Failed to reject clinic." });
-  }
+// DELETE clinic service
+router.delete("/services/:id", (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    "DELETE FROM clinic_services WHERE id = ?",
+    [Number(id)],
+    (err, result) => {
+      if (err) {
+        console.error("DELETE CLINIC SERVICE ERROR:", err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (!result.affectedRows) {
+        return res.status(404).json({ message: "Service not found." });
+      }
+
+      res.json({ message: "Service deleted successfully." });
+    }
+  );
 });
 
-// ✅ ACTIVATE / DISABLE (Deactivated)
-router.patch("/clinics/:id/status", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status } = req.body; // "active" | "disabled"
-    if (!["active", "disabled"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+// UPDATE clinic service status only
+router.patch("/services/:id/status", (req, res) => {
+  const { id } = req.params;
+  const { is_active } = req.body;
+
+  if (is_active === undefined || is_active === null) {
+    return res.status(400).json({ message: "is_active is required." });
+  }
+
+  const sql = `
+    UPDATE clinic_services
+    SET is_active = ?
+    WHERE id = ?
+  `;
+
+  db.query(sql, [Number(is_active), Number(id)], (err, result) => {
+    if (err) {
+      console.error("UPDATE SERVICE STATUS ERROR:", err);
+      return res.status(500).json({ message: err.message });
     }
 
-    await pool.query(`UPDATE clinics SET status=? WHERE id=?`, [status, id]);
-    res.json({ message: "Clinic status updated" });
-  } catch (e) {
-    console.error("Update clinic status error:", e);
-    res.status(500).json({ message: "Failed to update clinic status." });
-  }
+    if (!result.affectedRows) {
+      return res.status(404).json({ message: "Service not found." });
+    }
+
+    db.query(
+      "SELECT id, is_active FROM clinic_services WHERE id = ?",
+      [Number(id)],
+      (selectErr, rows) => {
+        if (selectErr) {
+          console.error("VERIFY SERVICE STATUS ERROR:", selectErr);
+          return res.status(500).json({ message: selectErr.message });
+        }
+
+        res.json({
+          message: "Service status updated successfully.",
+          service: rows[0],
+        });
+      }
+    );
+  });
 });
 
-// ✅ EDIT clinic (optional)
-router.patch("/clinics/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { clinic_name, email, phone, address } = req.body;
+/* =================================================
+   CLINIC APPOINTMENTS
+   Final routes:
+   GET   /api/clinic/appointments
+   PATCH /api/clinic/appointments/:id/status
+   PATCH /api/clinic/appointments/:id/reschedule
+================================================= */
 
-    await pool.query(
-      `UPDATE clinics 
-       SET clinic_name = COALESCE(?, clinic_name),
-           email = COALESCE(?, email),
-           phone = COALESCE(?, phone),
-           address = COALESCE(?, address)
-       WHERE id=?`,
-      [clinic_name ?? null, email ?? null, phone ?? null, address ?? null, id]
-    );
+// GET clinic appointments
+router.get("/appointments", (req, res) => {
+  const { clinic_id } = req.query;
 
-    res.json({ message: "Clinic updated" });
-  } catch (e) {
-    console.error("Edit clinic error:", e);
-    res.status(500).json({ message: "Failed to edit clinic." });
+  if (!clinic_id) {
+    return res.status(400).json({ message: "clinic_id is required." });
   }
+
+  const sql = `
+    SELECT
+      id,
+      user_id,
+      clinic_id,
+      start_at,
+      end_at,
+      purpose,
+      symptoms,
+      patient_note,
+      clinic_note,
+      status,
+      cancelled_at,
+      cancelled_by,
+      cancel_reason,
+      completed_at,
+      patient_name_snapshot,
+      patient_phone_snapshot,
+      clinic_name_snapshot,
+      created_at,
+      updated_at
+    FROM appointments
+    WHERE clinic_id = ?
+    ORDER BY start_at DESC
+  `;
+
+  db.query(sql, [Number(clinic_id)], (err, rows) => {
+    if (err) {
+      console.error("FETCH APPOINTMENTS ERROR:", err);
+      return res.status(500).json({ message: err.message });
+    }
+
+    res.json(rows);
+  });
+});
+
+// UPDATE appointment status
+router.patch("/appointments/:id/status", (req, res) => {
+  const { id } = req.params;
+  const { status, cancelled_by } = req.body;
+
+  if (!["confirmed", "cancelled", "completed"].includes(status)) {
+    return res.status(400).json({ message: "Invalid status." });
+  }
+
+  let sql = "";
+  let params = [];
+
+  if (status === "cancelled") {
+    sql = `
+      UPDATE appointments
+      SET
+        status = ?,
+        cancelled_at = NOW(),
+        cancelled_by = ?,
+        updated_at = NOW()
+      WHERE id = ?
+    `;
+    params = [status, cancelled_by || "clinic", Number(id)];
+  } else if (status === "completed") {
+    sql = `
+      UPDATE appointments
+      SET
+        status = ?,
+        completed_at = NOW(),
+        updated_at = NOW()
+      WHERE id = ?
+    `;
+    params = [status, Number(id)];
+  } else {
+    sql = `
+      UPDATE appointments
+      SET
+        status = ?,
+        updated_at = NOW()
+      WHERE id = ?
+    `;
+    params = [status, Number(id)];
+  }
+
+  db.query(sql, params, (err, result) => {
+    if (err) {
+      console.error("UPDATE APPOINTMENT STATUS ERROR:", err);
+      return res.status(500).json({ message: err.message });
+    }
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ message: "Appointment not found." });
+    }
+
+    res.json({ message: "Appointment status updated successfully." });
+  });
+});
+
+// RESCHEDULE appointment
+router.patch("/appointments/:id/reschedule", (req, res) => {
+  const { id } = req.params;
+  const { start_at } = req.body;
+
+  if (!start_at) {
+    return res.status(400).json({ message: "start_at is required." });
+  }
+
+  const startDate = new Date(start_at);
+  if (Number.isNaN(startDate.getTime())) {
+    return res.status(400).json({ message: "Invalid start_at value." });
+  }
+
+  const endDate = new Date(startDate.getTime() + 30 * 60000);
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const toMysqlDatetime = (d) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
+      d.getHours()
+    )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+
+  const sql = `
+    UPDATE appointments
+    SET
+      start_at = ?,
+      end_at = ?,
+      status = 'pending',
+      updated_at = NOW()
+    WHERE id = ?
+  `;
+
+  db.query(
+    sql,
+    [toMysqlDatetime(startDate), toMysqlDatetime(endDate), Number(id)],
+    (err, result) => {
+      if (err) {
+        console.error("RESCHEDULE APPOINTMENT ERROR:", err);
+        return res.status(500).json({ message: err.message });
+      }
+
+      if (!result.affectedRows) {
+        return res.status(404).json({ message: "Appointment not found." });
+      }
+
+      res.json({ message: "Appointment rescheduled successfully." });
+    }
+  );
 });
 
 module.exports = router;

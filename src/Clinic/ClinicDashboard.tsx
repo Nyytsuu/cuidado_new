@@ -52,6 +52,7 @@ function Panel({ title, children, className = "" }: PanelProps) {
 
 export default function ClinicDashboard() {
   const API = "http://localhost:5000/api";
+  const clinicId = 1; // TODO: replace with logged-in clinic id
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -110,6 +111,8 @@ export default function ClinicDashboard() {
 
   const onViewAppointment = (id: number) => {
     console.log("View appointment:", id);
+    // Example:
+    // navigate(`/clinic/appointments/${id}`);
   };
 
   /* ---------- FETCH METRICS ---------- */
@@ -118,7 +121,9 @@ export default function ClinicDashboard() {
       try {
         setLoadingMetrics(true);
 
-        const res = await fetch(`${API}/clinic/dashboard/metrics`);
+        const res = await fetch(
+          `${API}/clinic/dashboard/metrics?clinic_id=${clinicId}`
+        );
         if (!res.ok) throw new Error("Failed to fetch metrics");
 
         const data: MetricsResponse = await res.json();
@@ -139,7 +144,7 @@ export default function ClinicDashboard() {
     };
 
     fetchMetrics();
-  }, []);
+  }, [API, clinicId]);
 
   /* ---------- FETCH APPOINTMENTS ---------- */
   useEffect(() => {
@@ -147,7 +152,9 @@ export default function ClinicDashboard() {
       try {
         setLoadingAppointments(true);
 
-        const res = await fetch(`${API}/clinic/dashboard/appointments`);
+        const res = await fetch(
+          `${API}/clinic/dashboard/appointments?clinic_id=${clinicId}`
+        );
         if (!res.ok) throw new Error("Failed to fetch appointments");
 
         const data = await res.json();
@@ -173,7 +180,7 @@ export default function ClinicDashboard() {
     };
 
     fetchAppointments();
-  }, []);
+  }, [API, clinicId]);
 
   /* ---------- FETCH PATIENTS ---------- */
   useEffect(() => {
@@ -181,7 +188,9 @@ export default function ClinicDashboard() {
       try {
         setLoadingPatients(true);
 
-        const res = await fetch(`${API}/clinic/dashboard/patients`);
+        const res = await fetch(
+          `${API}/clinic/dashboard/patients?clinic_id=${clinicId}`
+        );
         if (!res.ok) throw new Error("Failed to fetch patients");
 
         const data = await res.json();
@@ -206,7 +215,7 @@ export default function ClinicDashboard() {
     };
 
     fetchPatients();
-  }, []);
+  }, [API, clinicId]);
 
   /* ---------- FETCH ACTIVITIES ---------- */
   useEffect(() => {
@@ -214,7 +223,9 @@ export default function ClinicDashboard() {
       try {
         setLoadingActivities(true);
 
-        const res = await fetch(`${API}/clinic/dashboard/activities`);
+        const res = await fetch(
+          `${API}/clinic/dashboard/activities?clinic_id=${clinicId}`
+        );
         if (!res.ok) throw new Error("Failed to fetch activities");
 
         const data = await res.json();
@@ -238,7 +249,7 @@ export default function ClinicDashboard() {
     };
 
     fetchActivities();
-  }, []);
+  }, [API, clinicId]);
 
   return (
     <div className={`ad-wrap ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -282,7 +293,7 @@ export default function ClinicDashboard() {
               </div>
 
               <div className="metric-card">
-                <div className="metric-title">This Week’s Bookings</div>
+                <div className="metric-title">Completed This Week</div>
                 <div className="metric-box">
                   <div className="metric-value">
                     {loadingMetrics ? "..." : completedAppointments}
