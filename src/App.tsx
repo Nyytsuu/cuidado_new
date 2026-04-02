@@ -40,6 +40,10 @@ import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
 import ClinicSignup from "./Clinic/ClinicSignup";
 import ClinicDashboard from "./Clinic/ClinicDashboard";
+import ClinicAppoint from "./Clinic/ClinicAppoint";
+import Patients from "./Clinic/Patient";
+import Services from "./Clinic/services";
+
 function App() {
   return (
     <BrowserRouter>
@@ -72,9 +76,11 @@ function App() {
         <Route path="/help" element={<UserHelp />} />
         
         {/* clinic */}
-        <Route path="/Clinicsignup" element={<ClinicSignup />} />
-        <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
-
+<Route path="/clinic/signup" element={<ClinicSignup />} />
+<Route path="/clinic/dashboard" element={<ClinicDashboard />} />
+<Route path="/clinic/appointments" element={<ClinicAppoint />} />
+<Route path="/clinic/patients" element={<Patients />} />
+<Route path="/clinic/services" element={<Services />} /> 
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />

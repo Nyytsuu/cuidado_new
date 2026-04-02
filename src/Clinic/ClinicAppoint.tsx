@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./ClinicAppoint.css";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
@@ -32,10 +32,34 @@ type ApiAppointmentRow = {
   updated_at: string;
 };
 
+type ApiAppointmentRow = {
+  id: number;
+  user_id: number;
+  clinic_id: number;
+  start_at: string;
+  end_at: string | null;
+  purpose: string | null;
+  symptoms: string | null;
+  patient_note: string | null;
+  clinic_note: string | null;
+  status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+  cancelled_at: string | null;
+  cancelled_by: "patient" | "clinic" | "admin" | null;
+  cancel_reason: string | null;
+  completed_at: string | null;
+  patient_name_snapshot: string | null;
+  patient_phone_snapshot: string | null;
+  clinic_name_snapshot: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 type AppointmentRow = {
   id: string;
   patientName: string;
   serviceType: string;
+  date: string;
+  time: string;
   date: string;
   time: string;
   status: AppointmentStatus;
@@ -60,31 +84,9 @@ const emptyRescheduleForm: RescheduleForm = {
   time: "",
 };
 
-const getStoredClinicId = () => {
-  try {
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (user?.role === "clinic" && user?.id) {
-      return Number(user.id);
-    }
-
-    const role = localStorage.getItem("role");
-    const userId = localStorage.getItem("userId");
-
-    if (role === "clinic" && userId) {
-      return Number(userId);
-    }
-  } catch {
-    return 1;
-  }
-
-  return 1;
-};
-
 export default function ClinicAppoint() {
   const API = "http://localhost:5000/api";
-  const clinicId = useMemo(() => getStoredClinicId(), []);
+  const clinicId = 1; // replace with logged-in clinic id
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -101,10 +103,6 @@ export default function ClinicAppoint() {
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [savingAction, setSavingAction] = useState(false);
-
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false); 
-  const navigate = useNavigate();
 
   const mapDbStatusToUi = (
     status: ApiAppointmentRow["status"]
@@ -154,7 +152,13 @@ export default function ClinicAppoint() {
     return local.toISOString().slice(0, 16);
   };
 
-  const loadAppointments = useCallback(async () => {
+  const fromDateAndTimeToIso = (date: string, time: string) => {
+    const combined = new Date(`${date} ${time}`);
+    if (Number.isNaN(combined.getTime())) return null;
+    return combined.toISOString().slice(0, 19).replace("T", " ");
+  };
+
+  const loadAppointments = async () => {
     try {
       setLoadingAppointments(true);
 
@@ -194,11 +198,11 @@ export default function ClinicAppoint() {
     } finally {
       setLoadingAppointments(false);
     }
-  }, [API, clinicId]);
+  };
 
   useEffect(() => {
     loadAppointments();
-  }, [loadAppointments]);
+  }, [clinicId]);
 
   const statusClass = (status: AppointmentStatus) => {
     switch (status) {
@@ -234,8 +238,74 @@ export default function ClinicAppoint() {
 
     setModalMode("reschedule");
     setIsPopupOpen(true);
+  const openViewModal = (row: AppointmentRow) => {
+    setSelectedAppointment(row);
+    setModalMode("view");
+    setIsPopupOpen(true);
   };
 
+  const openRescheduleModal = (row: AppointmentRow) => {
+    setSelectedAppointment(row);
+
+    const localValue = toDatetimeLocalString(row.startAtRaw);
+    const [datePart, timePart] = localValue.split("T");
+
+    setRescheduleForm({
+      date: datePart || "",
+      time: timePart || "",
+    });
+
+    setModalMode("reschedule");
+    setIsPopupOpen(true);
+  };
+
+  const closeModal = () => {
+    if (savingAction) return;
+    setIsPopupOpen(false);
+    setModalMode(null);
+    setSelectedAppointment(null);
+    setRescheduleForm(emptyRescheduleForm);
+  };
+
+  const updateAppointmentStatus = async (
+    id: string,
+    status: "confirmed" | "cancelled" | "completed"
+  ) => {
+    try {
+      setSavingAction(true);
+
+      const res = await fetch(`${API}/clinic/appointments/${id}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status,
+          cancelled_by: status === "cancelled" ? "clinic" : null,
+        }),
+      });
+
+      const raw = await res.text();
+      console.log("Update appointment status:", res.status, raw);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} - ${raw}`);
+      }
+
+      await loadAppointments();
+
+      if (selectedAppointment?.id === id) {
+        const updated = appointments.find((a) => a.id === id);
+        if (updated) {
+          setSelectedAppointment(updated);
+        }
+      }
+    } catch (error) {
+      console.error("Update appointment status error:", error);
+      alert(`Failed to update appointment: ${String(error)}`);
+    } finally {
+      setSavingAction(false);
+    }
   const closeModal = () => {
     if (savingAction) return;
     setIsPopupOpen(false);
@@ -338,8 +408,75 @@ export default function ClinicAppoint() {
     } finally {
       setSavingAction(false);
     }
+  const handleConfirm = async (id: string) => {
+    await updateAppointmentStatus(id, "confirmed");
   };
 
+  const handleReject = async (id: string) => {
+    await updateAppointmentStatus(id, "cancelled");
+  };
+
+  const handleComplete = async (id: string) => {
+    await updateAppointmentStatus(id, "completed");
+  };
+
+  const handleRescheduleSave = async () => {
+    if (!selectedAppointment) return;
+
+    if (!rescheduleForm.date || !rescheduleForm.time) {
+      alert("Please enter both date and time.");
+      return;
+    }
+
+    const startAt = `${rescheduleForm.date} ${rescheduleForm.time}:00`;
+
+    try {
+      setSavingAction(true);
+
+      const res = await fetch(
+        `${API}/clinic/appointments/${selectedAppointment.id}/reschedule`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            start_at: startAt,
+          }),
+        }
+      );
+
+      const raw = await res.text();
+      console.log("Reschedule appointment:", res.status, raw);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} - ${raw}`);
+      }
+
+      await loadAppointments();
+      closeModal();
+    } catch (error) {
+      console.error("Reschedule error:", error);
+      alert(`Failed to reschedule appointment: ${String(error)}`);
+    } finally {
+      setSavingAction(false);
+    }
+  };
+
+  const filteredAppointments = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+
+    if (!keyword) return appointments;
+
+    return appointments.filter(
+      (row) =>
+        row.patientName.toLowerCase().includes(keyword) ||
+        row.serviceType.toLowerCase().includes(keyword) ||
+        row.date.toLowerCase().includes(keyword) ||
+        row.time.toLowerCase().includes(keyword) ||
+        row.status.toLowerCase().includes(keyword)
+    );
+  }, [appointments, searchTerm]);
   const filteredAppointments = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
@@ -373,6 +510,49 @@ export default function ClinicAppoint() {
               searchPlaceholder="Search dashboard..."
             />
       <main className="preview-canvas">
+        <header className="app-header">
+          <div className="header-left">
+            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+
+            <div className="header-search">
+              <input
+                type="text"
+                placeholder="Search keywords..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button aria-label="Search" type="button" className="search-btn">
+                <img src={searchIcon} alt="Search" />
+              </button>
+            </div>
+          </div>
+
+          <nav className="header-nav">
+            <a className="nav-link" href="#">
+              Home
+            </a>
+            <a className="nav-link" href="#">
+              Appointments
+            </a>
+
+            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
+              <button
+                type="button"
+                className="nav-link profile-btn"
+                onClick={() => setHeaderProfileOpen((v) => !v)}
+              >
+                Profile <span className="caret">▾</span>
+              </button>
+
+              <div className="profile-dropdown">
+                <a href="#">My Profile</a>
+                <a href="#">Settings</a>
+                <a href="#">Logout</a>
+              </div>
+            </div>
+          </nav>
+        </header>
+
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title">
@@ -414,7 +594,34 @@ export default function ClinicAppoint() {
                         <div className="users-cell users-name">
                           {row.patientName}
                         </div>
+                  {loadingAppointments ? (
+                    <div className="users-row">
+                      <div
+                        className="users-cell"
+                        style={{ gridColumn: "1 / -1" }}
+                      >
+                        Loading appointments...
+                      </div>
+                    </div>
+                  ) : filteredAppointments.length === 0 ? (
+                    <div className="users-row">
+                      <div
+                        className="users-cell"
+                        style={{ gridColumn: "1 / -1" }}
+                      >
+                        No appointments found.
+                      </div>
+                    </div>
+                  ) : (
+                    filteredAppointments.map((row) => (
+                      <div className="users-row" key={row.id}>
+                        <div className="users-cell users-name">
+                          {row.patientName}
+                        </div>
 
+                        <div className="users-cell">
+                          <span className="pills">{row.serviceType}</span>
+                        </div>
                         <div className="users-cell">
                           <span className="pills">{row.serviceType}</span>
                         </div>
@@ -422,7 +629,13 @@ export default function ClinicAppoint() {
                         <div className="users-cell">
                           <span className="pills">{row.date}</span>
                         </div>
+                        <div className="users-cell">
+                          <span className="pills">{row.date}</span>
+                        </div>
 
+                        <div className="users-cell">
+                          <span className="pills">{row.time}</span>
+                        </div>
                         <div className="users-cell">
                           <span className="pills">{row.time}</span>
                         </div>
@@ -432,93 +645,80 @@ export default function ClinicAppoint() {
                             {row.status}
                           </span>
                         </div>
+                        <div className="users-cell">
+                          <span className={`pill ${statusClass(row.status)}`}>
+                            {row.status}
+                          </span>
+                        </div>
 
                         <div className="users-cell">
-                          
+                          <div className="users-actions">
+                            <button
+                              type="button"
+                              className="pill pill-view"
+                              onClick={() => openViewModal(row)}
+                            >
+                              View
+                            </button>
 
-<div className="users-actions">
-  {row.status === "Cancelled" || row.status === "Completed" ? (
-    <button
-      type="button"
-      className="pill pill-view"
-      onClick={() => openViewModal(row)}
-    >
-      View
-    </button>
-  ) : (
-    <>
-      <button
-        type="button"
-        className="icon-btn pill-view"
-        title="View"
-        onClick={() => openViewModal(row)}
-      >
-        <FaEye />
-      </button>
+                            {row.status === "Pending" && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="pill pill-success"
+                                  onClick={() => handleConfirm(row.id)}
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  type="button"
+                                  className="pill pill-danger"
+                                  onClick={() => handleReject(row.id)}
+                                >
+                                  Reject
+                                </button>
+                              </>
+                            )}
 
-      {row.status === "Pending" && (
-        <>
-          <button
-            type="button"
-            className="icon-btn pill-success"
-            title="Confirm"
-            onClick={() => handleConfirm(row.id)}
-          >
-            ✓
-          </button>
+                            {(row.status === "Pending" ||
+                              row.status === "Confirmed") && (
+                              <button
+                                type="button"
+                                className="pill pill-resched"
+                                onClick={() => openRescheduleModal(row)}
+                              >
+                                Reschedule
+                              </button>
+                            )}
 
-          <button
-            type="button"
-            className="icon-btn pill-danger"
-            title="Reject"
-            onClick={() => handleReject(row.id)}
-          >
-            ✕
-          </button>
-        </>
-      )}
-
-      {(row.status === "Pending" || row.status === "Confirmed") && (
-        <button
-          type="button"
-          className="icon-btn pill-resched"
-          title="Reschedule"
-          onClick={() => openRescheduleModal(row)}
-        >
-           <FaCalendarAlt />
-        </button>
-      )}
-
-      {row.status === "Confirmed" && (
-        <button
-          type="button"
-          className="icon-btn pill-gray "
-          title="Mark Done"
-          onClick={() => handleComplete(row.id)}
-        >
-          ✓
-        </button>
-      )}
-    </>
-  )}
-</div>
                             {row.status === "Confirmed" && (
                               <button
-  type="button"
-  className="pill pill-gray mark-done-btn"
-  onClick={() => handleComplete(row.id)}
->
-  Mark Done
-</button>
+                                type="button"
+                                className="pill pill-gray"
+                                onClick={() => handleComplete(row.id)}
+                              >
+                                Mark Done
+                              </button>
                             )}
                           </div>
                         </div>
+                      </div>
                     ))
                   )}
                 </div>
               </section>
 
-              <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
+              <aside className="admin-right">
+                <div className="admin-card admin-right-card small-card">
+                  <h3>Appointment Tips</h3>
+                  <p>Use View to check details and Reschedule to update date and time.</p>
+                </div>
+
+                <div className="admin-card admin-right-card big-card">
+                  <h3>Note</h3>
+                  <p>Pending appointments can be confirmed, rejected, or rescheduled.</p>
+                </div>
+              </aside>
             </div>
           </div>
         </section>
@@ -675,7 +875,7 @@ export default function ClinicAppoint() {
                 <>
                   <button
                     type="button"
-                    className="pill pill-gray and-danger"
+                    className="pill pill-gray"
                     onClick={closeModal}
                     disabled={savingAction}
                   >
@@ -695,50 +895,6 @@ export default function ClinicAppoint() {
           </div>
         </div>
       )}
-
-
-      // logout
-{showLogoutConfirm && (
-  <div className="logout-confirm-overlay">
-    <div className="logout-confirm-modal">
-      <h3>Log out?</h3>
-      <p>Are you sure you want to log out of your account?</p>
-
-      <div className="logout-actions">
-        <button
-          className="btn-cancel"
-          onClick={() => setShowLogoutConfirm(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          className="btn-confirm"
-          onClick={() => {
-            setShowLogoutConfirm(false);
-            setShowLogoutSuccess(true);
-
-            setTimeout(() => {
-              navigate("/signin");
-            }, 1500);
-          }}
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-{showLogoutSuccess && (
-  <div className="logout-popup-overlay">
-    <div className="logout-popup">
-      <div className="logout-icon">✓</div>
-      <h3>Logged out successfully</h3>
-    </div>
-  </div>
-)}
     </div>
   );
 }

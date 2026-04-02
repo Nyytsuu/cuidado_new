@@ -1,17 +1,7 @@
-  console.log("✅ RUNNING THIS FILE:", __filename);
-  console.log("✅ LOADED admin.routes.js");
-  require("dotenv").config();
-  const express = require("express");
-  const cors = require("cors");
-  const mysql = require("mysql2/promise");
-  const adminRoutes = require("./routes/admin.routes");
-  const clinicRoutes = require("./routes/clinic.routes");
-  const locationRoutes = require("./routes/location.routes");
-  const authRoutes = require("./routes/auth.routes");
-const adminConditionsRoutes = require("./routes/admin.condition.routes");
-const adminSymptomsRoutes = require("./routes/admin.symptoms.routes");
-const adminConditionSymptomsRoutes = require("./routes/admin.conditionSymptoms.routes");
-  const app = express();
+console.log("✅ RUNNING THIS FILE:", __filename);
+console.log("✅ LOADED admin.routes.js");
+
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -24,27 +14,8 @@ const authRoutes = require("./routes/auth.routes");
 const adminConditionsRoutes = require("./routes/admin.condition.routes");
 const adminSymptomsRoutes = require("./routes/admin.symptoms.routes");
 const adminConditionSymptomsRoutes = require("./routes/admin.conditionSymptoms.routes");
-const appointmentRoutes = require("./routes/appointments");
-const symptomCheckerRoute = require("./routes/symptomChecker");
-const voiceAssistantRoute = require("./routes/voiceAssistant");
-const findClinicRoute = require("./routes/findClinic");
-const usersRouter = require("./routes/users");
-const articlesRouter = require("./routes/articles");
+
 const app = express();
-
-
-  const pool = mysql.createPool({
-    host: process.env.DB_HOST || "localhost",
-    user: process.env.DB_USER || "root",
-    password: process.env.DB_PASS || "root123",
-    database: process.env.DB_NAME || "cuidado_medihelp",
-    port: Number(process.env.DB_PORT || 3307),
-    waitForConnections: true,
-    connectionLimit: 10,
-  });
-
-
-
 
 app.use(cors());
 app.use(express.json());
@@ -54,7 +25,12 @@ app.use((req, res, next) => {
   console.log("➡️", req.method, req.url);
   next();
 });
+app.use((req, res, next) => {
+  console.log("➡️", req.method, req.url);
+  next();
+});
 
+app.use("/uploads", express.static("uploads"));
 app.use("/uploads", express.static("uploads"));
 
 const pool = mysql.createPool({
@@ -66,7 +42,20 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
 });
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASS || "Cuidado_2026-cp1!",
+  database: process.env.DB_NAME || "cuidado_medihelp",
+  port: Number(process.env.DB_PORT || 3306),
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
+/* ✅ TEST ROUTES */
+app.get("/", (req, res) => res.send("Cuidado Medihelp API is running ✅"));
+app.get("/ping", (req, res) => res.send("PONG"));
+app.get("/api/test", (req, res) => res.json({ message: "Backend works!" }));
 /* ✅ TEST ROUTES */
 app.get("/", (req, res) => res.send("Cuidado Medihelp API is running ✅"));
 app.get("/ping", (req, res) => res.send("PONG"));
@@ -84,34 +73,24 @@ app.get("/api/admin/dashboard-metrics", async (req, res) => {
     const [[pendingClinics]] = await pool.query(
       "SELECT COUNT(*) AS pendingClinics FROM clinics WHERE status = 'pending'"
     );
-    const [[scheduledAppointments]] = await pool.query(`
-      SELECT COUNT(*) AS scheduledAppointments
-      FROM appointments
-      WHERE status IN ('pending', 'confirmed', 'scheduled', 'approved')
-    `);
 
     const [trendRows] = await pool.query(`
-      SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS total
+      SELECT DATE(created_at) AS day, COUNT(*) AS total
       FROM users
       WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-      GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
+      GROUP BY DATE(created_at)
       ORDER BY day ASC
     `);
-
-    const toDateKey = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
 
     const filled = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const key = toDateKey(d);
-      const found = trendRows.find((r) => String(r.day) === key);
+      const key = d.toISOString().slice(0, 10);
+      const found = trendRows.find((r) => String(r.day).slice(0, 10) === key);
 
+      filled.push({ day: key, total: found ? Number(found.total) : 0 });
+    }
       filled.push({ day: key, total: found ? Number(found.total) : 0 });
     }
 
@@ -119,7 +98,7 @@ app.get("/api/admin/dashboard-metrics", async (req, res) => {
       totalUsers: Number(usersCount.totalUsers),
       totalClinics: Number(clinicsCount.totalClinics),
       pendingClinics: Number(pendingClinics.pendingClinics),
-      scheduledAppointments: Number(scheduledAppointments.scheduledAppointments),
+      scheduledAppointments: 0,
       userTrend: filled,
     });
   } catch (err) {
@@ -156,9 +135,24 @@ app.get("/api/admin/recent-activity", async (req, res) => {
         CONCAT('New user registered: ', u.full_name) AS text,
         u.created_at AS time
       FROM users u)
+    const baseUnion = `
+      (SELECT 
+        CONCAT('user-', u.id) AS id,
+        'user' AS type,
+        CONCAT('New user registered: ', u.full_name) AS text,
+        u.created_at AS time
+      FROM users u)
 
       UNION ALL
+      UNION ALL
 
+      (SELECT
+        CONCAT('clinic-', c.id) AS id,
+        'clinic' AS type,
+        CONCAT('Clinic registered: ', c.clinic_name) AS text,
+        c.created_at AS time
+      FROM clinics c)
+    `;
       (SELECT
         CONCAT('clinic-', c.id) AS id,
         'clinic' AS type,
@@ -200,15 +194,6 @@ app.get("/api/admin/recent-activity", async (req, res) => {
       const [r] = await pool.query(unionNoStatus, [limit]);
       rows = r;
     }
-  });
-  /* ✅ ROUTES */
-  app.use("/api", authRoutes);
-  app.use("/api", locationRoutes);
-  app.use("/api", clinicRoutes);
-  app.use("/api/admin", adminRoutes);
-  app.use("/api/admin/conditions", adminConditionsRoutes);
-  app.use("/api/admin/symptoms", adminSymptomsRoutes);
-  app.use("/api/admin/condition-symptoms", adminConditionSymptomsRoutes);
 
     res.json(
       rows.map((x) => ({
@@ -680,8 +665,7 @@ app.get("/api/services", async (req, res) => {
 });
 
 /* ✅ APPOINTMENT DETAILS ROUTE */
-app.use("/api/appointments", appointmentRoutes);
-app.get("/api/appointments/details/:id", async (req, res) => {
+app.get("/api/appointments/:id", async (req, res) => {
   try {
     const appointmentId = Number(req.params.id);
 
@@ -783,480 +767,20 @@ app.patch("/api/clinic/appointments/:id/status", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-/* ✅ HEALTH BROWSER ROUTES */
-app.get("/api/health/body-systems", async (req, res) => {
-  try {
-    const [rows] = await pool.query(`
-      SELECT
-        CAST(id AS CHAR) AS id,
-        slug,
-        COALESCE(icon, '🩺') AS icon,
-        name,
-        name AS title,
-        COALESCE(short_description, '') AS subtitle
-      FROM body_systems
-      WHERE is_active = 1
-      ORDER BY sort_order ASC, name ASC
-    `);
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load body systems error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-app.get("/api/health/topics", async (req, res) => {
-  try {
-    const userId = Number(req.query.user_id || 0);
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        CAST(c.condition_id AS CHAR) AS id,
-        c.slug,
-        bs.slug AS body_system_slug,
-        COALESCE(bs.icon, '🩺') AS icon,
-        c.condition_name AS title,
-        COALESCE(NULLIF(c.description, ''), bs.name, 'Health Topic') AS subtitle,
-        CASE
-          WHEN rv.condition_id IS NOT NULL THEN 'Recently viewed'
-          WHEN c.is_common = 1 THEN 'Popular'
-          ELSE NULL
-        END AS tag
-      FROM conditions c
-      LEFT JOIN body_systems bs
-        ON bs.id = c.body_system_id
-      LEFT JOIN (
-        SELECT DISTINCT condition_id
-        FROM recently_viewed_health_topics
-        WHERE user_id = ?
-      ) rv
-        ON rv.condition_id = c.condition_id
-      ORDER BY
-        CASE
-          WHEN rv.condition_id IS NOT NULL THEN 1
-          WHEN c.is_common = 1 THEN 2
-          ELSE 3
-        END,
-        c.sort_order ASC,
-        c.condition_name ASC
-      `,
-      [userId]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load health topics error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/body-systems/:slug", async (req, res) => {
-  try {
-    const { slug } = req.params;
-
-    const [[row]] = await pool.query(
-      `
-      SELECT
-        id,
-        slug,
-        name,
-        icon,
-        short_description,
-        hero_title,
-        hero_description,
-        hero_image,
-        overview_title,
-        overview_content,
-        diagram_image,
-        clinic_cta_label
-      FROM body_systems
-      WHERE slug = ? AND is_active = 1
-      `,
-      [slug]
-    );
-
-    if (!row) {
-      return res.status(404).json({ message: "Body system not found" });
-    }
-
-    res.json(row);
-  } catch (err) {
-    console.error("Load body system details error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/body-systems/:slug/conditions", async (req, res) => {
-  try {
-    const { slug } = req.params;
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        c.condition_id,
-        c.slug,
-        c.condition_name,
-        c.description,
-        c.thumbnail_image,
-        c.hero_image,
-        c.is_common,
-        c.is_featured
-      FROM conditions c
-      INNER JOIN body_systems bs
-        ON bs.id = c.body_system_id
-      WHERE bs.slug = ?
-      ORDER BY c.is_common DESC, c.sort_order ASC, c.condition_name ASC
-      `,
-      [slug]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load body system conditions error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/body-systems/:slug/articles", async (req, res) => {
-  try {
-    const { slug } = req.params;
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        a.id,
-        a.title,
-        a.slug
-      FROM articles a
-      INNER JOIN body_systems bs
-        ON bs.id = a.body_system_id
-      WHERE bs.slug = ?
-        AND a.is_published = 1
-      ORDER BY a.is_featured DESC, a.sort_order ASC, a.title ASC
-      `,
-      [slug]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load body system articles error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/body-systems/:slug/symptoms", async (req, res) => {
-  try {
-    const { slug } = req.params;
-
-    const [rows] = await pool.query(
-      `
-      SELECT DISTINCT
-        s.symptom_id,
-        s.symptom_name
-      FROM body_systems bs
-      INNER JOIN conditions c
-        ON c.body_system_id = bs.id
-      INNER JOIN condition_symptoms cs
-        ON cs.condition_id = c.condition_id
-      INNER JOIN symptoms s
-        ON s.symptom_id = cs.symptom_id
-      WHERE bs.slug = ?
-      ORDER BY s.symptom_name ASC
-      `,
-      [slug]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load body system symptoms error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
-
-app.get("/api/health/body-systems/:slug/prevention-tips", async (req, res) => {
-  try {
-    const { slug } = req.params;
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        pt.id,
-        pt.tip_text
-      FROM prevention_tips pt
-      INNER JOIN body_systems bs
-        ON bs.id = pt.body_system_id
-      WHERE bs.slug = ?
-        AND pt.is_active = 1
-      ORDER BY pt.sort_order ASC, pt.id ASC
-      `,
-      [slug]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load prevention tips error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/body-systems/:slug/facts", async (req, res) => {
-  try {
-    const { slug } = req.params;
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        hf.id,
-        hf.title,
-        hf.fact_text
-      FROM health_facts hf
-      INNER JOIN body_systems bs
-        ON bs.id = hf.body_system_id
-      WHERE bs.slug = ?
-        AND hf.is_active = 1
-      ORDER BY hf.sort_order ASC, hf.id ASC
-      `,
-      [slug]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load health facts error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-const getConditionIdentifierQuery = (slug) => {
-  if (/^\d+$/.test(slug)) {
-    return {
-      where: "c.condition_id = ?",
-      params: [Number(slug)],
-    };
-  }
-
-  return {
-    where: "c.slug = ?",
-    params: [slug],
-  };
-};
-
-const getConditionBySlugOrId = async (slug) => {
-  const { where, params } = getConditionIdentifierQuery(slug);
-
-  const [[condition]] = await pool.query(
-    `
-    SELECT
-      c.condition_id,
-      c.slug,
-      c.condition_name,
-      c.description,
-      c.advice_level,
-      c.when_to_seek_help,
-      c.disclaimer,
-      c.hero_image,
-      c.thumbnail_image,
-      c.body_system_id,
-      bs.name AS body_system_name,
-      bs.slug AS body_system_slug,
-      bs.icon AS body_system_icon,
-      bs.short_description AS body_system_description
-    FROM conditions c
-    LEFT JOIN body_systems bs
-      ON bs.id = c.body_system_id
-    WHERE ${where}
-    LIMIT 1
-    `,
-    params
-  );
-
-  return condition || null;
-};
-
-const loadConditionSymptoms = (conditionId) =>
-  pool.query(
-    `
-    SELECT
-      s.symptom_id,
-      s.symptom_name,
-      s.category,
-      s.is_red_flag
-    FROM condition_symptoms cs
-    INNER JOIN symptoms s
-      ON s.symptom_id = cs.symptom_id
-    WHERE cs.condition_id = ?
-    ORDER BY s.is_red_flag DESC, s.symptom_name ASC
-    `,
-    [conditionId]
-  );
-
-app.get("/api/health/condition/:slug", async (req, res) => {
-  try {
-    const { slug } = req.params;
-    const userId = Number(req.query.user_id || 0);
-
-    const condition = await getConditionBySlugOrId(slug);
-
-    if (!condition) {
-      return res.status(404).json({ message: "Condition not found" });
-    }
-
-    if (userId) {
-      await pool
-        .query(
-          `
-          INSERT INTO recently_viewed_health_topics (user_id, condition_id)
-          VALUES (?, ?)
-          ON DUPLICATE KEY UPDATE viewed_at = CURRENT_TIMESTAMP
-          `,
-          [userId, condition.condition_id]
-        )
-        .catch((viewErr) => {
-          console.error("Save recently viewed health topic error:", viewErr);
-        });
-    }
-
-    const [symptoms] = await loadConditionSymptoms(condition.condition_id);
-
-    res.json({
-      ...condition,
-      symptoms,
-    });
-  } catch (err) {
-    console.error("Load condition details error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/condition/:slug/symptoms", async (req, res) => {
-  try {
-    const condition = await getConditionBySlugOrId(req.params.slug);
-
-    if (!condition) {
-      return res.status(404).json({ message: "Condition not found" });
-    }
-
-    const [rows] = await loadConditionSymptoms(condition.condition_id);
-    res.json(rows);
-  } catch (err) {
-    console.error("Load condition symptoms error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/condition/:slug/articles", async (req, res) => {
-  try {
-    const condition = await getConditionBySlugOrId(req.params.slug);
-
-    if (!condition) {
-      return res.status(404).json({ message: "Condition not found" });
-    }
-
-    if (!condition.body_system_id) {
-      return res.json([]);
-    }
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        id,
-        title,
-        slug
-      FROM articles
-      WHERE body_system_id = ?
-        AND is_published = 1
-      ORDER BY is_featured DESC, sort_order ASC, title ASC
-      LIMIT 6
-      `,
-      [condition.body_system_id]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load condition articles error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/condition/:slug/prevention-tips", async (req, res) => {
-  try {
-    const condition = await getConditionBySlugOrId(req.params.slug);
-
-    if (!condition) {
-      return res.status(404).json({ message: "Condition not found" });
-    }
-
-    if (!condition.body_system_id) {
-      return res.json([]);
-    }
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        id,
-        tip_text
-      FROM prevention_tips
-      WHERE body_system_id = ?
-        AND is_active = 1
-      ORDER BY sort_order ASC, id ASC
-      LIMIT 6
-      `,
-      [condition.body_system_id]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load condition prevention tips error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
-app.get("/api/health/condition/:slug/facts", async (req, res) => {
-  try {
-    const condition = await getConditionBySlugOrId(req.params.slug);
-
-    if (!condition) {
-      return res.status(404).json({ message: "Condition not found" });
-    }
-
-    if (!condition.body_system_id) {
-      return res.json([]);
-    }
-
-    const [rows] = await pool.query(
-      `
-      SELECT
-        id,
-        title,
-        fact_text
-      FROM health_facts
-      WHERE body_system_id = ?
-        AND is_active = 1
-      ORDER BY sort_order ASC, id ASC
-      LIMIT 4
-      `,
-      [condition.body_system_id]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    console.error("Load condition health facts error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-});
 /* ✅ ROUTE MODULES */
 app.use("/api", authRoutes);
 app.use("/api", locationRoutes);
-app.use("/api/clinics", findClinicRoute);
 app.use("/api", clinicRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/conditions", adminConditionsRoutes);
 app.use("/api/admin/symptoms", adminSymptomsRoutes);
 app.use("/api/admin/condition-symptoms", adminConditionSymptomsRoutes);
-app.use("/api/symptom-checker", symptomCheckerRoute);
-app.use("/api/voice-assistant", voiceAssistantRoute);
-app.use("/api/users", usersRouter);
-app.use("/api/articles", articlesRouter);
 
+/* ✅ ERROR HANDLER LAST */
+app.use((err, req, res, next) => {
+  console.error("UNHANDLED ERROR:", err);
+  res.status(500).json({ message: err.message || "Internal Server Error" });
+});
 /* ✅ ERROR HANDLER LAST */
 app.use((err, req, res, next) => {
   console.error("UNHANDLED ERROR:", err);

@@ -1,7 +1,6 @@
 import { useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import "./SidebarClinic.css";
-import { Link, useNavigate } from "react-router-dom";
-
+import { Link } from "react-router-dom";
 import dashboardIcon from "../img/dashboard.png";
 import userIcon from "../img/friends.png";
 import serviceIcon from "../img/doctor-bag.png";
@@ -19,12 +18,8 @@ interface SidebarProps {
   setSidebarExpanded: Dispatch<SetStateAction<boolean>>;
   profileOpen: boolean;
   setProfileOpen: Dispatch<SetStateAction<boolean>>;
-  headerProfileOpen?: boolean;
-  setHeaderProfileOpen?: Dispatch<SetStateAction<boolean>>;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
-  onSearchSubmit?: (value: string) => void;
+  headerProfileOpen: boolean;
+  setHeaderProfileOpen: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function SidebarClinic({
@@ -58,7 +53,6 @@ export default function SidebarClinic({
 
   return (
     <div className="SidebarClinic">
-      {/* SIDEBAR */}
       <aside className={`sidebar ${sidebarExpanded ? "expanded" : ""}`}>
         <div className="sidebar-top">
           <button
@@ -78,55 +72,41 @@ export default function SidebarClinic({
         <div className="sidebar-content">
           <div className="sidebar-item">
             <Link to="/clinic/dashboard">
-              <img src={dashboardIcon} />
+              <img src={dashboardIcon} alt="Dashboard icon" />
               <span>Dashboard</span>
-            </Link>
-          </div>
-
-          <div className="sidebar-item">
-            <Link to="/clinic/patients">
-              <img src={userIcon} />
-              <span>Patient</span>
             </Link>
           </div>
           
           <div className="sidebar-item">
-            <Link to="/clinic/schedule">
-              <img src={calendar1} alt="Schedule" />
-              <span>Schedule</span>
-            </Link>
-          </div>
-
-          <div className="sidebar-item">
-            <Link to="/clinic/appointments">
-              <img src={appointmentIcon} alt="Appointments" />
-              <span>Appointments</span>
+            <Link to="/clinic/patients">
+              <img src={userIcon} alt="User icon" />
+              <span>Patient</span>
             </Link>
           </div>
 
           <div className="sidebar-item">
             <Link to="/clinic/services">
-              <img src={serviceIcon} />
+              <img src={serviceIcon} alt="Services icon" />
               <span>Services</span>
             </Link>
           </div>
 
-          
+          <div className="sidebar-item">
+            <Link to="/clinic/settings">
+              <img src={settingIcon} alt="Settings icon" />
+              <span>Settings</span>
+            </Link>
+          </div>
 
-          {/* LOGOUT SIDEBAR */}
           <div className="sidebar-item logout">
-            <button
-              className="logout-btn"
-              onClick={() => setShowLogoutConfirm(true)}
-            >
-              <img src={logoutIcon} />
+            <Link to="/signin">
+              <img src={logoutIcon} alt="Logout icon" />
               <span>LOGOUT</span>
             </button>
           </div>
         </div>
       </aside>
 
-      {/* HEADER */}
       <header className="app-header">
         <div className="header-left">
           <img src={logo} className="brand-logo" />

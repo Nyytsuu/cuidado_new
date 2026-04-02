@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./Patient.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
-// logout
-import { useNavigate } from "react-router-dom";
-
-
 
 type ApiPatientRow = {
   id: number;
@@ -25,31 +22,9 @@ type PatientRow = {
   lastVisit: string;
 };
 
-const getStoredClinicId = () => {
-  try {
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (user?.role === "clinic" && user?.id) {
-      return Number(user.id);
-    }
-
-    const role = localStorage.getItem("role");
-    const userId = localStorage.getItem("userId");
-
-    if (role === "clinic" && userId) {
-      return Number(userId);
-    }
-  } catch {
-    return 1;
-  }
-
-  return 1;
-};
-
 export default function Patients() {
   const API = "http://localhost:5000/api";
-  const clinicId = useMemo(() => getStoredClinicId(), []);
+  const clinicId = 1; // TODO: replace with logged-in clinic id
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -58,23 +33,6 @@ export default function Patients() {
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [patients, setPatients] = useState<PatientRow[]>([]);
-   const [profilePopup, setProfilePopup] = useState<PatientRow | null>(null);
- 
-   // logout
-   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
-   const navigate = useNavigate();
-
-   const [historyPopup, setHistoryPopup] = useState<{
-  patient: PatientRow;
-  history: {
-    date: string;
-    service: string;
-    status: string;
-  }[];
-} | null>(null);
-
-  const isPopupOpen = Boolean(profilePopup || historyPopup);
 
   const calculateAge = (dateOfBirth: string) => {
     if (!dateOfBirth) return 0;
@@ -155,41 +113,33 @@ export default function Patients() {
         row.lastVisit.toLowerCase().includes(keyword)
     );
   }, [patients, searchTerm]);
+  const rows = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+
+    if (!keyword) return patients;
+
+    return patients.filter(
+      (row) =>
+        row.name.toLowerCase().includes(keyword) ||
+        row.contact.toLowerCase().includes(keyword) ||
+        row.lastVisit.toLowerCase().includes(keyword)
+    );
+  }, [patients, searchTerm]);
 
   const viewProfile = (row: PatientRow) => {
-  setProfilePopup(row);
-};
+    alert(`View patient profile: ${row.name}`);
     // later:
     // navigate(`/clinic/patients/${row.id}`);
-  
+  };
 
- const viewHistory = (row: PatientRow) => {
-  setHistoryPopup({
-    patient: row,
-    history: [
-      {
-        date: "03/10/25",
-        service: "Dental Checkup",
-        status: "Completed",
-      },
-      {
-        date: "02/22/25",
-        service: "Teeth Cleaning",
-        status: "Cancelled",
-      },
-      {
-        date: "01/15/25",
-        service: "Consultation",
-        status: "Completed",
-      },
-    ],
-  });
-};
+  const viewHistory = (row: PatientRow) => {
+    alert(`See appointment history: ${row.name}`);
     // later:
     // navigate(`/clinic/patients/${row.id}/history`);
-  
+  };
 
   return (
+    <div className={`Patient with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
     <div className={`Patient with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
       <SidebarClinic
               sidebarExpanded={sidebarExpanded}
@@ -204,6 +154,49 @@ export default function Patients() {
             />
 
       <main className="preview-canvas">
+        <header className="app-header">
+          <div className="header-left">
+            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+
+            <div className="header-search">
+              <input
+                type="text"
+                placeholder="Search keywords..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button aria-label="Search" type="button" className="search-btn">
+                <img src={searchIcon} alt="Search" />
+              </button>
+            </div>
+          </div>
+
+          <nav className="header-nav">
+            <a className="nav-link" href="#">
+              Home
+            </a>
+            <a className="nav-link" href="#">
+              Patients
+            </a>
+
+            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
+              <button
+                type="button"
+                className="nav-link profile-btn"
+                onClick={() => setHeaderProfileOpen((v) => !v)}
+              >
+                Profile <span className="caret">▾</span>
+              </button>
+
+              <div className="profile-dropdown">
+                <a href="#">My Profile</a>
+                <a href="#">Settings</a>
+                <a href="#">Logout</a>
+              </div>
+            </div>
+          </nav>
+        </header>
+
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title">
@@ -237,7 +230,26 @@ export default function Patients() {
                     rows.map((row) => (
                       <div className="users-row" key={row.id}>
                         <div className="users-cell users-name">{row.name}</div>
+                  {loadingPatients ? (
+                    <div className="users-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        Loading patients...
+                      </div>
+                    </div>
+                  ) : rows.length === 0 ? (
+                    <div className="users-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        No patients found.
+                      </div>
+                    </div>
+                  ) : (
+                    rows.map((row) => (
+                      <div className="users-row" key={row.id}>
+                        <div className="users-cell users-name">{row.name}</div>
 
+                        <div className="users-cell users-center">
+                          <span className="pills">{row.age || "-"}</span>
+                        </div>
                         <div className="users-cell users-center">
                           <span className="pills">{row.age || "-"}</span>
                         </div>
@@ -245,7 +257,13 @@ export default function Patients() {
                         <div className="users-cell users-center">
                           <span className="pills">{row.contact}</span>
                         </div>
+                        <div className="users-cell users-center">
+                          <span className="pills">{row.contact}</span>
+                        </div>
 
+                        <div className="users-cell users-center">
+                          <span className="pills">{row.lastVisit}</span>
+                        </div>
                         <div className="users-cell users-center">
                           <span className="pills">{row.lastVisit}</span>
                         </div>
@@ -259,15 +277,23 @@ export default function Patients() {
                             >
                               View Profile
                             </button>
+                        <div className="users-cell">
+                          <div className="users-actions">
+                            <button
+                              type="button"
+                              className="pill pill-view"
+                              onClick={() => viewProfile(row)}
+                            >
+                              View Profile
+                            </button>
 
                             <button
-  type="button"
-  className="pill pill-history"
-  onClick={() => viewHistory(row)}
->
-  <i className="bx bx-calendar-detail"></i>
-  <span>Appointment History</span>
-</button>
+                              type="button"
+                              className="pill pill-history"
+                              onClick={() => viewHistory(row)}
+                            >
+                              Appointment History
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -276,9 +302,14 @@ export default function Patients() {
                 </div>
               </section>
 
-              <div className="patient-schedule-wrapper">
-  <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
-</div>
+              <aside className="admin-right">
+                <div className="admin-card admin-right-card small-card">
+                  <h3>Schedule</h3>
+                </div>
+                <div className="admin-card admin-right-card big-card">
+                  <h3>Schedule Option:</h3>
+                </div>
+              </aside>
             </div>
           </div>
         </section>
@@ -463,4 +494,4 @@ export default function Patients() {
 )}
     </div>
   );
-}
+} 

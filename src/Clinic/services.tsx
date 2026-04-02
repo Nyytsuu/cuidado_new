@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./services.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
-import { useNavigate } from "react-router-dom";
 
 type ApiServiceRow = {
   id: number;
@@ -30,6 +29,15 @@ type ServiceForm = {
   description: string;
   price: string;
   duration: string;
+  duration?: number;
+  enabled: boolean;
+};
+
+type ServiceForm = {
+  name: string;
+  description: string;
+  price: string;
+  duration: string;
   enabled: boolean;
 };
 
@@ -41,31 +49,9 @@ const emptyForm: ServiceForm = {
   enabled: true,
 };
 
-const getStoredClinicId = () => {
-  try {
-    const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
-
-    if (user?.role === "clinic" && user?.id) {
-      return Number(user.id);
-    }
-
-    const role = localStorage.getItem("role");
-    const userId = localStorage.getItem("userId");
-
-    if (role === "clinic" && userId) {
-      return Number(userId);
-    }
-  } catch {
-    return 1;
-  }
-
-  return 1;
-};
-
 export default function Services() {
   const API = "http://localhost:5000/api";
-  const clinicId = useMemo(() => getStoredClinicId(), []);
+  const clinicId = 1; // TODO: replace with logged-in clinic id
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -80,20 +66,8 @@ export default function Services() {
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [form, setForm] = useState<ServiceForm>(emptyForm);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-   const [showSuccess, setShowSuccess] = useState(false);
 
-   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
-    
-   const [validationPopup, setValidationPopup] = useState<string | null>(null);
-    
-   // logout
-   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
-   const navigate = useNavigate();
-
-  const loadServices = useCallback(async () => {
+  const loadServices = async () => {
     try {
       setLoadingServices(true);
 
@@ -125,11 +99,11 @@ export default function Services() {
     } finally {
       setLoadingServices(false);
     }
-  }, [API, clinicId]);
+  };
 
   useEffect(() => {
     loadServices();
-  }, [loadServices]);
+  }, []);
 
   const rows = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -208,10 +182,10 @@ export default function Services() {
   });
 
   const handleSaveService = async () => {
-   if (!form.name.trim()) {
-  setValidationPopup("Service name is required.");
-  return;
-}
+    if (!form.name.trim()) {
+      alert("Service name is required.");
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -249,16 +223,35 @@ export default function Services() {
 
       await loadServices();
       closeModal();
-      setShowSuccess(true);
-
-setTimeout(() => {
-  setShowSuccess(false);
-}, 2500);
+      alert(`Service ${isAdd ? "added" : "updated"} successfully.`);
     } catch (error) {
       console.error("Save service error:", error);
       alert(`Failed to save service: ${String(error)}`);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const deleteService = async (id: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this service?");
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${API}/clinic/services/${id}`, {
+        method: "DELETE",
+      });
+
+      const raw = await res.text();
+      console.log("Delete service response:", res.status, raw);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} - ${raw}`);
+      }
+
+      setServices((prev) => prev.filter((service) => service.id !== id));
+    } catch (error) {
+      console.error("Delete service error:", error);
+      alert(`Failed to delete service: ${String(error)}`);
     }
   };
 
@@ -298,39 +291,8 @@ setTimeout(() => {
   }
 };
 
-const confirmDeleteService = async () => {
-  if (!deleteTargetId) return;
-
-  try {
-    const res = await fetch(`${API}/clinic/services/${deleteTargetId}`, {
-      method: "DELETE",
-    });
-
-    const raw = await res.text();
-    console.log("Delete service response:", res.status, raw);
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status} - ${raw}`);
-    }
-
-    setServices((prev) =>
-      prev.filter((service) => service.id !== deleteTargetId)
-    );
-
-    setIsDeleteModalOpen(false);
-    setDeleteTargetId(null);
-
-    // OPTIONAL: trigger your delete toast here
-    setShowDeleteSuccess(true);
-    setTimeout(() => setShowDeleteSuccess(false), 2500);
-
-  } catch (error) {
-    console.error("Delete service error:", error);
-    alert(`Failed to delete service: ${String(error)}`);
-  }
-};
-
   return (
+    <div className={`services with-sidebar ${isModalOpen ? "modal-open" : ""}`}>
     <div className={`services with-sidebar ${isModalOpen ? "modal-open" : ""}`}>
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
@@ -342,6 +304,49 @@ const confirmDeleteService = async () => {
         searchPlaceholder="Search services..."
       />
       <main className="preview-canvas">
+        <header className="app-header">
+          <div className="header-left">
+            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+
+            <div className="header-search">
+              <input
+                type="text"
+                placeholder="Search keywords..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button aria-label="Search" type="button" className="search-btn">
+                <img src={searchIcon} alt="Search" />
+              </button>
+            </div>
+          </div>
+
+          <nav className="header-nav">
+            <a className="nav-link" href="#">
+              Home
+            </a>
+            <a className="nav-link" href="#">
+              Services
+            </a>
+
+            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
+              <button
+                type="button"
+                className="nav-link profile-btn"
+                onClick={() => setHeaderProfileOpen((v) => !v)}
+              >
+                Profile <span className="caret">▾</span>
+              </button>
+
+              <div className="profile-dropdown">
+                <a href="#">My Profile</a>
+                <a href="#">Settings</a>
+                <a href="#">Logout</a>
+              </div>
+            </div>
+          </nav>
+        </header>
+
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title services-titlebar">
@@ -349,6 +354,7 @@ const confirmDeleteService = async () => {
               <button
                 type="button"
                 className="pill pill-resched add-btn"
+                onClick={openAddModal}
                 onClick={openAddModal}
               >
                 + Add New Service
@@ -383,11 +389,35 @@ const confirmDeleteService = async () => {
                     rows.map((row) => (
                       <div className="users-row" key={row.id}>
                         <div className="users-cell users-name">{row.name}</div>
+                  {loadingServices ? (
+                    <div className="users-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        Loading services...
+                      </div>
+                    </div>
+                  ) : rows.length === 0 ? (
+                    <div className="users-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        No services found.
+                      </div>
+                    </div>
+                  ) : (
+                    rows.map((row) => (
+                      <div className="users-row" key={row.id}>
+                        <div className="users-cell users-name">{row.name}</div>
 
                         <div className="users-cell">
                           <span className="pills pills-desc">{row.description}</span>
                         </div>
+                        <div className="users-cell">
+                          <span className="pills pills-desc">{row.description}</span>
+                        </div>
 
+                        <div className="users-cell">
+                          <span className="pills">
+                            {row.price != null ? `₱${row.price}` : "—"}
+                          </span>
+                        </div>
                         <div className="users-cell">
                           <span className="pills">
                             {row.price != null ? `₱${row.price}` : "—"}
@@ -399,7 +429,21 @@ const confirmDeleteService = async () => {
                             {row.duration != null ? `${row.duration} min` : "—"}
                           </span>
                         </div>
+                        <div className="users-cell">
+                          <span className="pills">
+                            {row.duration != null ? `${row.duration} min` : "—"}
+                          </span>
+                        </div>
 
+                        <div className="users-cell">
+                          <span
+                            className={`pill ${
+                              row.enabled ? "pill-success" : "pill-gray"
+                            }`}
+                          >
+                            {row.enabled ? "Enabled" : "Disabled"}
+                          </span>
+                        </div>
                         <div className="users-cell">
                           <span
                             className={`pill ${
@@ -419,14 +463,20 @@ const confirmDeleteService = async () => {
                             >
                               Edit
                             </button>
+                        <div className="users-cell">
+                          <div className="users-actions">
+                            <button
+                              type="button"
+                              className="pill pill-view"
+                              onClick={() => openEditModal(row)}
+                            >
+                              Edit
+                            </button>
 
                             <button
                               type="button"
                               className="pill pill-danger"
-                              onClick={() => {
-  setDeleteTargetId(row.id);
-  setIsDeleteModalOpen(true);
-}}
+                              onClick={() => deleteService(row.id)}
                             >
                               Delete
                             </button>
@@ -445,71 +495,38 @@ const confirmDeleteService = async () => {
                       </div>
                     ))
                   )}
+                            <button
+                              type="button"
+                              className={`pill ${
+                                row.enabled ? "pill-gray" : "pill-success"
+                              }`}
+                              onClick={() => toggleService(row.id)}
+                            >
+                              {row.enabled ? "Disable" : "Enable"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </section>
 
-              <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
+              <aside className="admin-right">
+                <div className="admin-card admin-right-card small-card">
+                  <h3>Service Tips</h3>
+                  <p>Manage clinic services here using add, edit, delete, and status actions.</p>
+                </div>
+
+                <div className="admin-card admin-right-card big-card">
+                  <h3>Note</h3>
+                  <p>Services can now be created and updated using the popup form.</p>
+                </div>
+              </aside>
             </div>
           </div>
         </section>
       </main>
-         
-            {isDeleteModalOpen && (
-  <div
-    className="delete-modal-overlay"
-    onClick={() => setIsDeleteModalOpen(false)}
-  >
-    <div
-      className="delete-modal"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="delete-modal-header">
-        <h3>Delete Service</h3>
-      </div>
-
-      <div className="delete-modal-body">
-        <p>Are you sure you want to delete this service?</p>
-      </div>
-
-      <div className="delete-modal-footer">
-        <button
-          className="pill pill-gray"
-          onClick={() => setIsDeleteModalOpen(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          className="pill pill-danger"
-          onClick={confirmDeleteService}
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-           {showSuccess && (
-  <div className="success-toast">
-    <div className="success-toast-content">
-      <span className="success-icon">✔</span>
-      <span>
-        Service {modalMode === "add" ? "added" : "updated"} successfully
-      </span>
-    </div>
-  </div>
-)}
-
-{showDeleteSuccess && (
-  <div className="delete-toast">
-    <div className="delete-toast-content">
-      <span className="delete-icon">🗑</span>
-      <span>Service deleted successfully</span>
-    </div>
-  </div>
-)}
 
       {isModalOpen && (
         <div className="service-modal-overlay" onClick={closeModal}>
@@ -612,92 +629,7 @@ const confirmDeleteService = async () => {
             </div>
           </div>
         </div>
-      )}  
-
-
-        {validationPopup && (
-  <div
-    className="service-modal-overlay"
-    onClick={() => setValidationPopup(null)}
-  >
-    <div
-      className="service-modal"
-      style={{ maxWidth: "380px", textAlign: "center" }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="service-modal-body">
-        <h3 style={{ color: "#0f4242", marginBottom: "10px" }}>
-          Missing Information
-        </h3>
-
-        <p style={{ color: "#4b5563", marginBottom: "20px" }}>
-          {validationPopup}
-        </p>
-
-        <button
-          className="pill"
-          style={{
-            background: "#399a91",
-            color: "#fff",
-            padding: "8px 20px",
-          }}
-          onClick={() => setValidationPopup(null)}
-        >
-          OK
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-
-   {showLogoutConfirm && (
-  <div className="logout-confirm-overlay">
-    <div className="logout-confirm-modal">
-      <h3>Log out?</h3>
-      <p>Are you sure you want to log out of your account?</p>
-
-      <div className="logout-actions">
-        <button
-          className="btn-cancel"
-          onClick={() => setShowLogoutConfirm(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          className="btn-confirm"
-          onClick={() => {
-            setShowLogoutConfirm(false);
-            setShowLogoutSuccess(true);
-
-            setTimeout(() => {
-              navigate("/signin");
-            }, 1500);
-          }}
-        >
-          Logout
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-{showLogoutSuccess && (
-  <div className="logout-popup-overlay">
-    <div className="logout-popup">
-      <div className="logout-icon">✓</div>
-      <h3>Logged out successfully</h3>
-    </div>
-  </div>
-)}     
-
-
-
-
+      )}
     </div>
   );
 }
