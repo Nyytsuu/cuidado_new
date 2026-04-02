@@ -1,0 +1,218 @@
+import { useState } from "react";
+import UserSidebar from "../Categories/UserSidebar";
+import "./SympCheck.css";
+
+const symptomCards = [
+  { id: "cold", title: "Cold & Flu", icon: "👤" },
+  { id: "cough", title: "Cough", icon: "😷" },
+  { id: "fever", title: "Fever", icon: "🪐" },
+  { id: "headache", title: "Headache", icon: "💊" },
+  { id: "fatigue", title: "Fatigue", icon: "😵" },
+];
+
+const leftTools = [
+  {
+    id: "bmi",
+    title: "BMI Calculator",
+    desc: "Discover your ideal weight",
+    icon: "⚖️",
+    button: "Check BMI",
+  },
+  {
+    id: "medication",
+    title: "Medication",
+    desc: "Manage health state",
+    icon: "💊",
+    button: "Manage",
+  },
+];
+
+const rightTools = [
+  {
+    id: "bmi2",
+    title: "BMI Calculator",
+    desc: "Find a location",
+    icon: "⚖️",
+    button: "",
+  },
+  {
+    id: "clinic",
+    title: "Find Clinic",
+    desc: "Find a location",
+    icon: "📍",
+    button: "Find Clinic",
+  },
+  {
+    id: "medication2",
+    title: "Medication",
+    desc: "Manage useful tips",
+    icon: "💊",
+    button: "",
+  },
+  {
+    id: "tips",
+    title: "Health Tips",
+    desc: "Read useful tips",
+    icon: "🍎",
+    button: "Manage",
+  },
+];
+
+export default function SympCheck() {
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+
+  const [symptomInput, setSymptomInput] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("Male");
+
+  return (
+    <div className={`sympcheck-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+      <UserSidebar
+        sidebarExpanded={sidebarExpanded}
+        setSidebarExpanded={setSidebarExpanded}
+        profileOpen={profileOpen}
+        setProfileOpen={setProfileOpen}
+        headerProfileOpen={headerProfileOpen}
+        setHeaderProfileOpen={setHeaderProfileOpen}
+      />
+
+      <div className="sympcheck-content">
+        <main className="sympcheck-main">
+          <section className="sympcheck-hero">
+            <div className="sympcheck-title-wrap">
+              <h1>Symptom Checker</h1>
+              <p>Assess your symptoms online.</p>
+            </div>
+
+            <div className="sympcheck-form-card">
+              <div className="sympcheck-form-left">
+                <div className="sympcheck-form-title">
+                  <span className="sympcheck-form-icon">📝</span>
+                  <h2>Tell us about your symptoms</h2>
+                </div>
+
+                <div className="sympcheck-input-row full">
+                  <input
+                    type="text"
+                    placeholder="e.g.. headache, fatigue, nausea..."
+                    value={symptomInput}
+                    onChange={(e) => setSymptomInput(e.target.value)}
+                  />
+                  <span className="dropdown-arrow">▼</span>
+                </div>
+
+                <div className="sympcheck-bottom-row">
+                  <div className="sympcheck-select">
+                    <span className="select-icon">👤</span>
+                    <select value={age} onChange={(e) => setAge(e.target.value)}>
+                      <option value="">Age</option>
+                      <option value="1-12">1-12</option>
+                      <option value="13-18">13-18</option>
+                      <option value="19-35">19-35</option>
+                      <option value="36-60">36-60</option>
+                      <option value="60+">60+</option>
+                    </select>
+                    <span className="dropdown-arrow">▼</span>
+                  </div>
+
+                  <div className="sympcheck-select">
+                    <span className="select-icon">👤</span>
+                    <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                    <span className="dropdown-arrow">▼</span>
+                  </div>
+
+                  <button type="button" className="sympcheck-btn-primary">
+                    Check Symptoms
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="common-symptoms-section">
+            <h2>Common Symptoms</h2>
+
+            <div className="common-symptoms-row">
+              <div className="symptom-card-list">
+                {symptomCards.map((item) => (
+                  <button key={item.id} className="symptom-card" type="button">
+                    <div className="symptom-card-icon">{item.icon}</div>
+                    <span>{item.title}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="consult-card">
+                <div className="consult-icon">💡</div>
+                <p>Always consult with a healthcare professional for a proper diagnosis.</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="health-tools-grid">
+            <div className="tools-column">
+              <h2>Health Tools</h2>
+
+              <div className="tool-stack">
+                {leftTools.map((tool) => (
+                  <div className="tool-card large" key={tool.id}>
+                    <div className="tool-left">
+                      <div className="tool-icon">{tool.icon}</div>
+                      <div>
+                        <h3>{tool.title}</h3>
+                        <p>{tool.desc}</p>
+                      </div>
+                    </div>
+
+                    <button type="button" className="tool-btn">
+                      {tool.button}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="tools-column">
+              <h2>Health Tools</h2>
+
+              <div className="tool-grid">
+                {rightTools.map((tool) => (
+                  <div className="tool-card small" key={tool.id}>
+                    <div className="tool-left">
+                      <div className="tool-icon">{tool.icon}</div>
+                      <div>
+                        <h3>{tool.title}</h3>
+                        <p>{tool.desc}</p>
+                      </div>
+                    </div>
+
+                    {tool.button && (
+                      <button type="button" className="tool-btn">
+                        {tool.button}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <footer className="sympcheck-footer">
+            <span>About Us</span>
+            <span>|</span>
+            <span>Contact</span>
+            <span>|</span>
+            <span>Privacy Policy</span>
+            <span>|</span>
+            <span>Terms of Service</span>
+          </footer>
+        </main>
+      </div>
+    </div>
+  );
+}
