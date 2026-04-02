@@ -194,7 +194,7 @@ body {
 
 .Patient .admin-grid {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   gap: 26px;
   align-items: start;
 }
@@ -218,49 +218,54 @@ body {
   height: 430px;
   background: #8f8f8f;
 }
-
 .Patient .admin-table-card {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
+  border: 5px solid #00bfa6;
+  border-radius: 26px;
+  background: linear-gradient(
+    to bottom,
+    #bfbfbf 0,
+    #bfbfbf 78px,
+    #dcdcdc 78px,
+    #dcdcdc 100%
+  );
 }
 
-/* ================= TABLE ================= */
 .Patient .users-table {
   width: 100%;
 }
-
-/* ✅ UPDATED columns for: Name | Age | Contact | Last Visit | Actions */
 .Patient .users-row {
   display: grid;
-  grid-template-columns: 2.2fr 0.8fr 1.6fr 1.4fr 2.3fr;
+  grid-template-columns: 1.1fr 0.5fr 1.2fr 1fr 1.8fr;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background: transparent;
 }
 
 .Patient .users-header {
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .Patient .users-header .users-cell {
   color: black;
-  font-size: 1.3rem;
+  font-size: 1.15rem;
+  font-weight: 900;
 }
 
 .Patient .users-cell {
   min-width: 0;
   position: relative;
-  padding-left: 18px;
+  padding-left: 16px;
 }
 
-/* first column no line + no padding */
 .Patient .users-row .users-cell:first-child {
   padding-left: 0;
 }
 
-/* ✅ VERTICAL LINES */
 .Patient .users-row .users-cell:not(:first-child)::before {
   content: "";
   position: absolute;
@@ -268,34 +273,95 @@ body {
   top: 50%;
   transform: translateY(-50%);
   width: 1px;
-  height: 28px;
+  height: 42px;
   background: rgba(0, 0, 0, 0.75);
 }
 
-/* text style */
 .Patient .users-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 500;
   color: black;
 }
 
-/* ================= PILL STYLES ================= */
-.Patient .pill {
+.Patient .users-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.Patient .pills {
   border: none;
-  color: white;
+  color: black;
   border-radius: 999px;
   padding: 0 12px;
   min-height: 28px;
   font-size: 0.99rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.Patient .users-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.Patient .pill {
+  border: none;
+  color: white;
+  border-radius: 999px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 0.92rem;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  cursor: pointer;
+  flex-shrink: 1;
   max-width: 100%;
+}
+
+.Patient .pill-view {
   background: #5b5b5b;
+  min-width: 120px;
+}
+
+.Patient .pill-history {
+  background: #2563eb;
+  min-width: 150px;
+}
+
+.Patient .pill:focus,
+.Patient .pill:active {
+  outline: none;
+  box-shadow: none;
+}
+/* ================= PILL STYLES ================= */
+.Patient .pill {
+  border: none;
+  color: white;
+  border-radius: 999px;
+  padding: 0 16px;
+  min-height: 36px;
+  font-size: 0.97rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  background: #5b5b5b;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .Patient .pills {
@@ -310,38 +376,43 @@ body {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
+  text-align: center;
 }
 
 /* Actions */
 .Patient .users-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
   align-items: center;
   flex-wrap: nowrap;
+  width: 100%;
 }
 
-/* Buttons */
 .Patient .pill-view {
   background: #5b5b5b;
+  width: auto;
   color: #fff;
-  cursor: pointer;
+  min-width: unset;
 }
 
 .Patient .pill-history {
   background: #2563eb;
+  padding: 0 12px;
   color: #fff;
-  cursor: pointer;
+  min-width: unset;
+   max-width: 160px;  /* optional limit */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 
 .Patient .pill:focus,
 .Patient .pill:active {
   outline: none;
   box-shadow: none;
 }
+
 .Patient .admin-right-card {
   padding: 18px;
   display: flex;
@@ -356,6 +427,30 @@ body {
   font-weight: 700;
   color: #0f4242;
 }
+.Patient .users-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start; /* 👈 prevents overflow push */
+  align-items: center;
+  width: 100%;
+}
+
+.Patient .pill {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* make buttons smaller so they fit */
+.Patient .pill-view {
+  min-width: 110px;
+}
+
+.Patient .pill-history {
+  min-width: 140px;
+}
+
 /* RESPONSIVE */
 @media screen and (max-width: 900px) {
   .Patient .admin-grid {
@@ -367,7 +462,11 @@ body {
     max-width: 360px;
   }
 
+  .Patient .users-table {
+    min-width: 950px;
+  }
+
   .Patient .users-row {
-    grid-template-columns: 2fr 0.8fr 1.5fr 1.3fr 2.2fr;
+    grid-template-columns: 2.1fr 0.9fr 1.6fr 1.4fr 2.7fr;
   }
 }
