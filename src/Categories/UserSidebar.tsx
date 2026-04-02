@@ -1,28 +1,22 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type Dispatch,
-  type FormEvent,
-  type SetStateAction,
-} from "react";
+import type { Dispatch, SetStateAction } from "react";
 import "./UserSidebar.css";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   House,
   CalendarDays,
   Stethoscope,
+  ChartColumn,
   Brain,
   MapPin,
   Scale,
   Smile,
   Mic,
   User,
+  Settings,
   Bell,
   TriangleAlert,
   CircleHelp,
   LogOut,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -30,24 +24,6 @@ import {
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
-import VoiceAssistantPopup from "../SigninUser/VoiceAssistantPopup";
-
-type HeaderUser = {
-  id?: number;
-  full_name?: string | null;
-  name?: string | null;
-  email?: string | null;
-  profile_picture?: string | null;
-};
-
-const API_BASE = "http://localhost:5000";
-
-const toUploadUrl = (value?: string | null) => {
-  const path = String(value || "").trim();
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
-};
 
 interface SidebarProps {
   sidebarExpanded: boolean;
@@ -56,143 +32,40 @@ interface SidebarProps {
   setProfileOpen: Dispatch<SetStateAction<boolean>>;
   headerProfileOpen: boolean;
   setHeaderProfileOpen: Dispatch<SetStateAction<boolean>>;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  searchPlaceholder?: string;
-  onSearchSubmit?: (value: string) => void;
 }
 
 export default function UserSidebar({
   sidebarExpanded,
   setSidebarExpanded,
+  profileOpen,
   setProfileOpen,
   headerProfileOpen,
   setHeaderProfileOpen,
-  searchValue,
-  onSearchChange,
-  searchPlaceholder = "Search...",
-  onSearchSubmit,
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [internalSearch, setInternalSearch] = useState("");
-  const currentSearch = searchValue ?? internalSearch;
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
-  const [headerUser, setHeaderUser] = useState<HeaderUser | null>(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
   const isPathActive = (path: string) => location.pathname === path;
-  const headerDisplayName =
-    headerUser?.full_name || headerUser?.name || "My Profile";
-  const headerDisplayEmail = headerUser?.email || "View account";
-  const headerProfileImage = toUploadUrl(headerUser?.profile_picture) || userIcon;
-
-  const storedHeaderUser = useMemo(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? (JSON.parse(storedUser) as HeaderUser) : null;
-    } catch (err) {
-      console.error("Header user parse error:", err);
-      return null;
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const readStoredHeaderUser = () => {
-      try {
-        const storedUser = localStorage.getItem("user");
-        return storedUser ? (JSON.parse(storedUser) as HeaderUser) : null;
-      } catch (err) {
-        console.error("Header user parse error:", err);
-        return storedHeaderUser;
-      }
-    };
-
-    const loadHeaderUser = async () => {
-      const latestStoredHeaderUser = readStoredHeaderUser();
-
-      setHeaderUser(latestStoredHeaderUser);
-
-      if (!latestStoredHeaderUser?.id) return;
-
-      try {
-        const res = await fetch(
-          `${API_BASE}/api/users/${latestStoredHeaderUser.id}/profile`,
-          {
-            cache: "no-store",
-          }
-        );
-        const data = await res.json().catch(() => ({}));
-
-        if (!cancelled && res.ok) {
-          setHeaderUser({
-            ...latestStoredHeaderUser,
-            ...data,
-          });
-        }
-      } catch (err) {
-        console.error("Header profile load error:", err);
-      }
-    };
-
-    void loadHeaderUser();
-
-    const handleProfileUpdated = () => {
-      void loadHeaderUser();
-    };
-
-    window.addEventListener("user-profile-updated", handleProfileUpdated);
-    window.addEventListener("storage", handleProfileUpdated);
-
-    return () => {
-      cancelled = true;
-      window.removeEventListener("user-profile-updated", handleProfileUpdated);
-      window.removeEventListener("storage", handleProfileUpdated);
-    };
-  }, [storedHeaderUser]);
-
-  const handleSearchChange = (value: string) => {
-    if (searchValue === undefined) {
-      setInternalSearch(value);
-    }
-
-    onSearchChange?.(value);
-  };
-
-  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const keyword = currentSearch.trim();
-
-    if (onSearchSubmit) {
-      onSearchSubmit(keyword);
-      return;
-    }
-
-    if (keyword) {
-      navigate(`/browse-health?search=${encodeURIComponent(keyword)}`);
-    }
-  };
-
-
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
-      <aside
-        className={`sidebar ${sidebarExpanded ? "expanded" : "collapsed"}`}
-        onClick={() => {
-          if (!sidebarExpanded) setSidebarExpanded(true);
-        }}
-      >
+      {/* ===== SIDEBAR ===== */}
+      <aside className={`sidebar ${sidebarExpanded ? "expanded" : "collapsed"}`}
+  onClick={() => {
+    if (!sidebarExpanded) setSidebarExpanded(true);
+  }}>
         <div className="sidebar-top">
           <button
             className="sidebar-toggle"
             aria-label="Toggle sidebar"
             type="button"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={() => {
               setSidebarExpanded((prev) => {
                 const next = !prev;
                 if (!next) setProfileOpen(false);
@@ -208,55 +81,61 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">MAIN</p>
 
-            <div className={`sidebar-item ${isPathActive("/homepage") ? "active" : ""}`}>
-              <Link to="/homepage" className="sidebar-btn">
-                <House size={24} />
-                <span>Dashboard</span>
-              </Link>
-            </div>
+            <div className={`sidebar-item ${isPathActive("/admin/dashboard") ? "active" : ""}`}>
+  <Link to="#" className="sidebar-btn">
+    <House size={24} />
+    <span>Dashboard</span>
+  </Link>
+</div>
 
-            <div className={`sidebar-item ${isPathActive("/appointments") ? "active" : ""}`}>
-              <Link to="/appointments" className="sidebar-btn">
-                <CalendarDays size={24} />
-                <span>Appointments</span>
-              </Link>
-            </div>
+           <div className="sidebar-item active">
+  <Link to="#" className="sidebar-btn">
+    <CalendarDays size={24} />
+    <span>Appointments</span>
+  </Link>
+</div>
 
-            <div className={`sidebar-item ${isPathActive("/browse-health") ? "active" : ""}`}>
-              <Link to="/browse-health" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/health-topics") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
                 <Stethoscope size={24} />
                 <span>Health Topics</span>
               </Link>
             </div>
 
+            <div className={`sidebar-item ${isPathActive("/admin/records") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
+                <ChartColumn size={24} />
+                <span>Records</span>
+              </Link>
+            </div>
           </div>
 
           <div className="sidebar-section">
             <p className="sidebar-section-title">TOOLS</p>
 
-            <div className={`sidebar-item ${isPathActive("/symptom-checker") ? "active" : ""}`}>
-              <Link to="/symptom-checker" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/symptom-checker") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
                 <Brain size={24} />
                 <span>Symptom Checker</span>
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/find-clinic") ? "active" : ""}`}>
-              <Link to="/find-clinic" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/find-clinics") ? "active" : ""}`}>
+              <Link to="/admin/find-clinics" className="sidebar-btn">
                 <MapPin size={24} />
                 <span>Find Clinics</span>
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/bmi-calculator") ? "active" : ""}`}>
-              <Link to="/bmi-calculator" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/bmi") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
                 <Scale size={24} />
                 <span>BMI</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/stress-index") ? "active" : ""}`}>
-              <Link to="/stress-index" className="sidebar-btn">
+              <Link to="#" className="sidebar-btn">
                 <Smile size={24} />
                 <span>Stress Index</span>
               </Link>
@@ -266,8 +145,8 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">SMART</p>
 
-            <div className={`sidebar-item ${isPathActive("/voice-assistant") ? "active" : ""}`}>
-                <Link to="/voice-assistant" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/voice-assistant") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
                 <Mic size={24} />
                 <span>Voice Assistant</span>
               </Link>
@@ -277,15 +156,22 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">PERSONAL</p>
 
-            <div className={`sidebar-item ${isPathActive("/profile") ? "active" : ""}`}>
-              <Link to="/profile" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/profile") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
                 <User size={24} />
                 <span>Profile</span>
               </Link>
             </div>
 
+            <div className={`sidebar-item ${isPathActive("/admin/settings") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
+                <Settings size={24} />
+                <span>Settings</span>
+              </Link>
+            </div>
+
             <div className={`sidebar-item ${isPathActive("/admin/notifications") ? "active" : ""}`}>
-              <Link to="/notifications" className="sidebar-btn">
+              <Link to="#" className="sidebar-btn">
                 <Bell size={24} />
                 <span>Notifications</span>
               </Link>
@@ -295,15 +181,15 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">SUPPORT</p>
 
-            <div className={`sidebar-item ${isPathActive("/emergency") || isPathActive("/emergency-guide") ? "active" : ""}`}>
-              <Link to="/emergency" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/emergency") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
                 <TriangleAlert size={24} />
                 <span>Emergency</span>
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/help") ? "active" : ""}`}>
-              <Link to="/help" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/admin/help") ? "active" : ""}`}>
+              <Link to="#" className="sidebar-btn">
                 <CircleHelp size={24} />
                 <span>Help</span>
               </Link>
@@ -311,7 +197,7 @@ export default function UserSidebar({
           </div>
 
           <div className="sidebar-item logout">
-            <button type="button" className="sidebar-btn" onClick={() => setShowLogoutConfirm(true)}>
+            <button type="button" className="sidebar-btn" onClick={handleLogout}>
               <LogOut size={24} />
               <span>Logout</span>
             </button>
@@ -319,35 +205,30 @@ export default function UserSidebar({
         </div>
       </aside>
 
+      {/* ===== HEADER ===== */}
       <header className="app-header">
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-          <form className="header-search" onSubmit={handleSearchSubmit}>
-            <input
-              type="text"
-              placeholder={searchPlaceholder}
-              value={currentSearch}
-              onChange={(event) => handleSearchChange(event.target.value)}
-            />
-            <button aria-label="Search" type="submit" className="search-btn">
+          <div className="header-search">
+            <input type="text" placeholder="Search..." />
+            <button aria-label="Search" type="button" className="search-btn">
               <img src={searchIcon} alt="Search" />
             </button>
-          </form>
+          </div>
         </div>
 
         <nav className="header-nav">
           <Link
-            to="/homepage"
-            className={`nav-link ${location.pathname === "/homepage" ? "active" : ""}`}
+            to="#"
+            className={`nav-link ${
+              location.pathname === "/admin/dashboard" ? "active" : ""
+            }`}
           >
             Home
           </Link>
 
-          <Link
-            to="/appointments"
-            className={`nav-link ${location.pathname === "/appointments" ? "active" : ""}`}
-          >
+          <Link to="#" className="nav-link active">
             Appointments
           </Link>
 
@@ -355,107 +236,34 @@ export default function UserSidebar({
             <button
               type="button"
               className={`nav-link profile-btn ${
-                location.pathname === "/profile" ||
-                location.pathname === "/notification"
+                location.pathname === "/admin/profile" ||
+                location.pathname === "/admin/settings"
                   ? "active"
                   : ""
               }`}
               onClick={() => setHeaderProfileOpen((v) => !v)}
             >
-              Profile <ChevronDown size={14} strokeWidth={2.2} aria-hidden="true" />
+              Profile <span className="caret">▼</span>
             </button>
 
             <div className="profile-dropdown">
-              <Link
-                className="profile-dropdown-summary"
-                to="/profile"
-                onClick={() => setHeaderProfileOpen(false)}
-              >
-                <img src={headerProfileImage} alt="Profile" />
-                <span>
-                  <strong>{headerDisplayName}</strong>
-                  <small>{headerDisplayEmail}</small>
-                </span>
-              </Link>
-              <Link to="/profile" onClick={() => setHeaderProfileOpen(false)}>
-                My Profile
-              </Link>
-              <Link to="/notifications" onClick={() => setHeaderProfileOpen(false)}>
-                Notifications
-              </Link>
+              <Link to="#" >My Profile</Link>
+              <Link to="#" >Settings</Link>
               <button
                 type="button"
                 className="dropdown-logout"
-                onClick={() => {
-  setHeaderProfileOpen(false);
-  setShowLogoutConfirm(true);
-}}
+                onClick={handleLogout}
               >
                 Logout
               </button>
             </div>
           </div>
 
-          <Link
-            to="/profile"
-            className={`header-avatar ${location.pathname === "/profile" ? "active" : ""}`}
-            aria-label="Open profile"
-            onClick={() => setHeaderProfileOpen(false)}
-          >
-            <img src={headerProfileImage} alt="Profile" />
-          </Link>
+          <div className="header-avatar">
+            <img src={userIcon} alt="Profile" />
+          </div>
         </nav>
       </header>
-
-      {/* CONFIRM LOGOUT */}
-{showLogoutConfirm && (
-  <div className="logout-confirm-overlay">
-    <div className="logout-confirm-modal">
-      <h3>Log out?</h3>
-      <p>Are you sure you want to log out of your account?</p>
-
-      <div className="logout-actions">
-        <button
-          className="btn-cancel"
-          onClick={() => setShowLogoutConfirm(false)}
-        >
-          No
-        </button>
-
-        <button
-          className="btn-confirm"
-          onClick={() => {
-            setShowLogoutConfirm(false);
-
-            // clear session
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-
-            // show success popup
-            setShowLogoutSuccess(true);
-
-            // redirect after delay
-            setTimeout(() => {
-              navigate("/Signin");
-            }, 1500);
-          }}
-        >
-          Yes
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-{/* SUCCESS POPUP */}
-{showLogoutSuccess && (
-  <div className="logout-popup-overlay">
-    <div className="logout-popup">
-      <div className="logout-icon">✓</div>
-      <p>Logged out successfully</p>
-    </div>
-  </div>
-)}
     </div>
   );
 }

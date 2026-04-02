@@ -4,6 +4,9 @@ import "./AdminProfile.css";
 import SidebarAdmin from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
+import SidebarAdmin from "./SidebarAdmin";
+import searchIcon from "../img/search.png";
+import logo from "../img/logo.png";
 
 function AdminProfile() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -13,6 +16,8 @@ function AdminProfile() {
 
   const [isEditing, setIsEditing] = useState(false);
 
+  const [username, setUsername] = useState("Hello World");
+  const [email, setEmail] = useState("helloworld@gmail.com");
   const [username, setUsername] = useState("Hello World");
   const [email, setEmail] = useState("helloworld@gmail.com");
 
@@ -61,17 +66,12 @@ function AdminProfile() {
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-          <form className="header-search" onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Search profile..."
-              value={q}
-              onChange={(event) => setQ(event.target.value)}
-            />
-            <button aria-label="Search" type="submit" className="search-btn">
+          <div className="header-search">
+            <input type="text" placeholder="Search keywords..." />
+            <button aria-label="Search" type="button" className="search-btn">
               <img src={searchIcon} alt="Search" />
             </button>
-          </form>
+          </div>
         </div>
 
         <nav className="header-nav">
@@ -104,6 +104,7 @@ function AdminProfile() {
         <h1 className="profileTitle">Profile</h1>
 
         <div className="divider">
+          ----------------------------------------------------------------------------------------
           ----------------------------------------------------------------------------------------
         </div>
 
@@ -167,7 +168,57 @@ function AdminProfile() {
                     <div className="detailValue">september 14 , 1990</div>
                   </div>
                 </div>
+            <div className="detailsCard">
+              <h2 className="detailsTitle">Bio and other details</h2>
 
+              <div className="detailsGrid">
+                <div className="detailsColumn">
+                  <div className="detailField">
+                    <label>Email</label>
+                    {isEditing ? (
+                      <input
+                        className="detailInput"
+                        value={tempEmail}
+                        onChange={(e) => setTempEmail(e.target.value)}
+                      />
+                    ) : (
+                      <div className="detailValue">{email}</div>
+                    )}
+                  </div>
+
+                  <div className="detailField">
+                    <label>Password</label>
+                    <div className="passwordRow">
+                      <div className="detailValue">********************</div>
+                      <button className="miniEditBtn">Edit</button>
+                    </div>
+                  </div>
+
+                  <div className="detailField">
+                    <label>Username</label>
+                    {isEditing ? (
+                      <input
+                        className="detailInput"
+                        value={tempUsername}
+                        onChange={(e) => setTempUsername(e.target.value)}
+                      />
+                    ) : (
+                      <div className="detailValue">{username}</div>
+                    )}
+                  </div>
+
+                  <div className="detailField">
+                    <label>Date of birth</label>
+                    <div className="detailValue">september 14 , 1990</div>
+                  </div>
+                </div>
+
+                <div className="detailsColumn">
+                  <div className="detailField">
+                    <label>Gender</label>
+                    <div className="detailValue">prefer not to say</div>
+                  </div>
+                </div>
                 <div className="detailsColumn">
                   <div className="detailField">
                     <label>Gender</label>
@@ -176,6 +227,53 @@ function AdminProfile() {
                 </div>
               </div>
 
+              <div className="detailsFooter">
+                {!isEditing ? (
+                  <button className="editDetailsBtn" onClick={handleEdit}>
+                    Edit details
+                  </button>
+                ) : (
+                  <div className="editButtons">
+                    <button className="cancelBtn" onClick={handleCancel}>
+                      Cancel
+                    </button>
+                    <button className="saveBtn" onClick={handleSave}>
+                      Save Changes
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="archiveSection">
+            <h2 className="archiveTitle"></h2>
+
+            <div className="archiveCard">
+              <div className="archiveHeader">
+                <span>Archive 📖</span>
+                <button className="seeMoreBtn">see more</button>
+              </div>
+
+              <div className="archiveTags">
+                <span>Heart Attack</span>
+                <span>Migraine</span>
+                <span>Sunburn</span>
+              </div>
+            </div>
+
+            <div className="archiveCard">
+              <div className="archiveHeader">
+                <span>Recently viewed ⏱</span>
+                <button className="seeMoreBtn">see more</button>
+              </div>
+
+              <div className="archiveTags">
+                <span>Sore Throat</span>
+                <span>Diarrhea</span>
+                <span>Ache</span>
+              </div>
+            </div>
               <div className="detailsFooter">
                 {!isEditing ? (
                   <button className="editDetailsBtn" onClick={handleEdit}>
