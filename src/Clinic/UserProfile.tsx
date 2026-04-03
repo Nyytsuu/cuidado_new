@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./UserProfile.css";
 import micIcon from "../img/mic.png";
 import profileImg from "../img/profile1.jpg";
@@ -43,9 +43,104 @@ const activityLog = [
   },
 ];
 
+type VoiceStep = "idle" | "listening" | "result" | "processing" | "retry";
+
 export default function UserProfile() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+
+  const [voicePopupOpen, setVoicePopupOpen] = useState(false);
+  const [voiceStep, setVoiceStep] = useState<VoiceStep>("idle");
+
+  const timersRef = useRef<number[]>([]);
+
+  const clearVoiceTimers = () => {
+    timersRef.current.forEach((timer) => window.clearTimeout(timer));
+    timersRef.current = [];
+  };
+
+  const startVoiceSequence = () => {
+    clearVoiceTimers();
+    setVoicePopupOpen(true);
+    setVoiceStep("idle");
+
+    timersRef.current.push(
+      window.setTimeout(() => {
+        setVoiceStep("listening");
+      }, 1000)
+    );
+
+    timersRef.current.push(
+      window.setTimeout(() => {
+        setVoiceStep("result");
+      }, 2400)
+    );
+
+    timersRef.current.push(
+      window.setTimeout(() => {
+        setVoiceStep("processing");
+      }, 3900)
+    );
+
+    timersRef.current.push(
+      window.setTimeout(() => {
+        setVoiceStep("retry");
+      }, 5200)
+    );
+  };
+
+  const closeVoicePopup = () => {
+    clearVoiceTimers();
+    setVoicePopupOpen(false);
+    setVoiceStep("idle");
+  };
+
+  useEffect(() => {
+    return () => clearVoiceTimers();
+  }, []);
+
+  const getVoiceContent = () => {
+    switch (voiceStep) {
+      case "idle":
+        return {
+          title: "Try saying something.",
+          subtitle: "Ex. Cough, Symptoms, Remedy",
+          micClass: "",
+        };
+      case "listening":
+        return {
+          title: "Listening...",
+          subtitle: "Ex. Cough, Symptoms, Remedy",
+          micClass: "listening",
+        };
+      case "result":
+        return {
+          title: "my voice is hoarsed",
+          subtitle: "Ex. Cough, Symptoms, Remedy",
+          micClass: "listening",
+        };
+      case "processing":
+        return {
+          title: "...",
+          subtitle: "Ex. Cough, Symptoms, Remedy",
+          micClass: "listening",
+        };
+      case "retry":
+        return {
+          title: "Sorry, we didn’t catch that.\nPlease try speaking again.",
+          subtitle: "Ex. Cough, Symptoms, Remedy",
+          micClass: "error",
+        };
+      default:
+        return {
+          title: "Try saying something.",
+          subtitle: "Ex. Cough, Symptoms, Remedy",
+          micClass: "",
+        };
+    }
+  };
+
+  const voiceContent = getVoiceContent();
 
   return (
     <div className="profile-page">
@@ -376,9 +471,65 @@ export default function UserProfile() {
             </aside>
           </div>
 
-          <button className="floating-mic" type="button">
+          <button
+            className="floating-mic"
+            type="button"
+            onClick={startVoiceSequence}
+            aria-label="Open voice popup"
+          >
             <img src={micIcon} alt="Microphone" className="floating-mic-icon" />
           </button>
+
+          {voicePopupOpen && (
+            <div className="voice-popup-overlay" onClick={closeVoicePopup}>
+              <div
+                className="voice-popup-card"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  className="voice-popup-close"
+                  onClick={closeVoicePopup}
+                  aria-label="Close popup"
+                >
+                  ×
+                </button>
+
+                <img src={logo} alt="CUIDADO logo" className="voice-popup-logo" />
+
+                <div className={`voice-popup-mic ${voiceContent.micClass}`}>
+                  <img src={micIcon} alt="Microphone" />
+                </div>
+
+                <div className="voice-popup-text">
+                  <h3>
+                    {voiceContent.title.split("\n").map((line, index) => (
+                      <React.Fragment key={index}>
+                        {line}
+                        {index !== voiceContent.title.split("\n").length - 1 && (
+                          <br />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </h3>
+
+                  <p>{voiceContent.subtitle}</p>
+                </div>
+
+                {voiceStep === "retry" && (
+                  <button
+                    type="button"
+                    className="voice-popup-retry"
+                    onClick={startVoiceSequence}
+                  >
+                    Try again
+                  </button>
+                )}
+
+                <div className="voice-popup-language">English (Philippines)</div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
