@@ -10,19 +10,10 @@ import Categories from "./Categories/Categories";
 import Changepass from "./SigninUser/Changepass";
 import VerifyOtp from "./SigninUser/VerifyOtp";
 import BrowseHealth from "./SigninUser/BrowseHealth";
-import BodySystemDetails from "./SigninUser/BodySystemDetails";
+import Cardio from "./SigninUser/Cardio";
 import SympCheck from "./SigninUser/SympCheck";
 import UserAppointment from "./SigninUser/UserAppointment";
 import FindClinic from "./SigninUser/FindClinic";
-import Homepage from "./SigninUser/Homepage";
-import Notifications from "./SigninUser/Notification";
-import Profile from "./SigninUser/UserProfile";
-import UserSettings from "./SigninUser/UserSettings";
-import BMICalculator from "./SigninUser/BMICalculator";
-import StressIndex from "./SigninUser/StressIndex"  ;
-import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
-import UserEmergency from "./SigninUser/UserEmergency";
-import UserHelp from "./SigninUser/UserHelp";
 
 // admin
 import SidebarAdmin from "./admin/SidebarAdmin";
@@ -58,23 +49,13 @@ function App() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/browse-health" element={<BrowseHealth />} />
-        <Route path="/health/body-system/:slug" element={<BodySystemDetails />} />
-        <Route path="/health/condition/:slug" element={<ConditionDetails />} />
+        <Route path="/cardio" element={<Cardio />} />
         <Route path="/symptom-checker" element={<SympCheck />} />
         <Route path="/appointments" element={<UserAppointment />} />
         <Route path="/find-clinic" element={<FindClinic />} />
-        <Route path="/homepage" element={<Homepage />} />
-        <Route path="/notifications" element={<Notifications />} />
         
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<UserSettings />} />
-        <Route path="/bmi-calculator" element={<BMICalculator />} />
-        <Route path="/stress-index" element={<StressIndex />} />
-        <Route path="/voice-assistant" element={<UserVoiceAssistant />} />
-        <Route path="/emergency" element={<UserEmergency />} />
-        <Route path="/emergency-guide" element={<UserEmergency />} />
-        <Route path="/help" element={<UserHelp />} />
         
+        </Route>
         {/* clinic */}
 <Route path="/clinic/signup" element={<ClinicSignup />} />
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
