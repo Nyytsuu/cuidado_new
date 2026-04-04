@@ -14,6 +14,7 @@ import Cardio from "./SigninUser/Cardio";
 import SympCheck from "./SigninUser/SympCheck";
 import UserAppointment from "./SigninUser/UserAppointment";
 import FindClinic from "./SigninUser/FindClinic";
+import Homepage from "./SigninUser/Homepage";
 
 // admin
 import SidebarAdmin from "./admin/SidebarAdmin";
@@ -53,6 +54,7 @@ function App() {
         <Route path="/symptom-checker" element={<SympCheck />} />
         <Route path="/appointments" element={<UserAppointment />} />
         <Route path="/find-clinic" element={<FindClinic />} />
+        <Route path="/homepage" element={<Homepage />} />
         
         
         </Route>
