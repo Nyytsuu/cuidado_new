@@ -1066,3 +1066,40 @@ select {
     width: auto;
   }
 }
+.voice-transcript-preview {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #374151;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.voice-result-card {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f7f9fc;
+  text-align: left;
+}
+
+.voice-result-section {
+  margin-bottom: 12px;
+}
+
+.voice-result-section ul,
+.voice-result-section ol {
+  margin: 8px 0 0 20px;
+  padding: 0;
+}
+
+.voice-emergency-text {
+  color: #c62828;
+  font-weight: 700;
+}
+
+.voice-error-text {
+  margin-top: 10px;
+  color: #c62828;
+  font-weight: 600;
+}
