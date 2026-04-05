@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
-import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./Cardio.css";
 import searchIcon from "../img/search.png";
 
@@ -17,17 +16,12 @@ type ConditionDetailsType = {
   slug: string | null;
   condition_name: string;
   description: string | null;
-  advice_level: string | null;
-  when_to_seek_help: string | null;
-  disclaimer: string | null;
   hero_image: string | null;
   thumbnail_image: string | null;
   body_system_id?: number | null;
   body_system_name?: string | null;
   body_system_slug?: string | null;
   body_system_icon?: string | null;
-  body_system_description?: string | null;
-  symptoms?: SymptomItem[];
 };
 
 type ArticleItem = {
@@ -50,8 +44,6 @@ type HealthFact = {
 type SymptomItem = {
   symptom_id: number;
   symptom_name: string;
-  category?: string | null;
-  is_red_flag?: number | boolean | null;
 };
 
 const quickActions = [
@@ -59,25 +51,6 @@ const quickActions = [
   { id: "clinics", icon: "📍", label: "Find Clinics" },
   { id: "emergency", icon: "🧰", label: "Emergency Guide" },
 ];
-
-const API_BASE = "http://localhost:5000";
-
-const toTitle = (value?: string | null) => {
-  const text = String(value || "").trim();
-  if (!text) return "";
-
-  return text
-    .split(/[\s_-]+/)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(" ");
-};
-
-const toAssetUrl = (value?: string | null) => {
-  const path = String(value || "").trim();
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
-};
 
 export default function ConditionDetails() {
   const navigate = useNavigate();
@@ -98,16 +71,6 @@ export default function ConditionDetails() {
   const [error, setError] = useState("");
 
   const selectedSlug = slug || "";
-  const currentUser = useMemo(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
-    } catch (err) {
-      console.error("User parse error:", err);
-      return null;
-    }
-  }, []);
-  const userId = currentUser?.id ? Number(currentUser.id) : 0;
 
   useEffect(() => {
     const loadBodySystems = async () => {
@@ -131,7 +94,7 @@ export default function ConditionDetails() {
         setError("");
 
         const urls = {
-          details: `http://localhost:5000/api/health/condition/${selectedSlug}?user_id=${userId}`,
+          details: `http://localhost:5000/api/health/condition/${selectedSlug}`,
           symptoms: `http://localhost:5000/api/health/condition/${selectedSlug}/symptoms`,
           articles: `http://localhost:5000/api/health/condition/${selectedSlug}/articles`,
           prevention: `http://localhost:5000/api/health/condition/${selectedSlug}/prevention-tips`,
@@ -150,19 +113,13 @@ export default function ConditionDetails() {
         if (!detailsRes.ok) throw new Error(`Condition failed: ${detailsRes.status}`);
 
         const detailsData = await detailsRes.json();
-        const symptomsData = symptomsRes.ok ? await symptomsRes.json() : null;
+        const symptomsData = symptomsRes.ok ? await symptomsRes.json() : [];
         const articlesData = articlesRes.ok ? await articlesRes.json() : [];
         const preventionData = preventionRes.ok ? await preventionRes.json() : [];
         const factsData = factsRes.ok ? await factsRes.json() : [];
 
         setCondition(detailsData || null);
-        setSymptoms(
-          Array.isArray(symptomsData)
-            ? symptomsData
-            : Array.isArray(detailsData?.symptoms)
-              ? detailsData.symptoms
-              : []
-        );
+        setSymptoms(Array.isArray(symptomsData) ? symptomsData : []);
         setArticles(Array.isArray(articlesData) ? articlesData : []);
         setPreventionTips(Array.isArray(preventionData) ? preventionData : []);
         setHealthFacts(Array.isArray(factsData) ? factsData : []);
@@ -177,7 +134,7 @@ export default function ConditionDetails() {
     if (selectedSlug) {
       loadConditionData();
     }
-  }, [selectedSlug, userId]);
+  }, [selectedSlug]);
 
   const filteredBodySystems = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -211,37 +168,9 @@ export default function ConditionDetails() {
     }
   };
 
-  const handleArticleClick = (articleQuery: string) => {
-    navigate(`/browse-health?search=${encodeURIComponent(articleQuery)}`);
+  const handleArticleClick = (articleSlug: string) => {
+    navigate(`/health/article/${articleSlug}`);
   };
-
-  const conditionImageUrl = toAssetUrl(condition?.hero_image || condition?.thumbnail_image);
-  const bodySystemName = condition?.body_system_name || "General Health";
-  const adviceLabel = toTitle(condition?.advice_level) || "General Guidance";
-  const redFlagSymptoms = symptoms.filter((item) => Number(item.is_red_flag) === 1);
-  const hasSymptomSearch = search.trim().length > 0;
-  const symptomsToShow = hasSymptomSearch ? filteredSymptoms : symptoms;
-  const supportCards = [
-    {
-      title: "Care Guidance",
-      value:
-        condition?.advice_level && condition.advice_level !== "general"
-          ? `Advice level: ${adviceLabel}`
-          : "Monitor symptoms and use the symptom checker when details are unclear.",
-    },
-    {
-      title: "When To Seek Help",
-      value:
-        condition?.when_to_seek_help ||
-        "Contact a clinic if symptoms worsen, last longer than expected, or affect breathing, hydration, or daily activity.",
-    },
-    {
-      title: "Related Body System",
-      value:
-        condition?.body_system_description ||
-        `This topic is grouped under ${bodySystemName}.`,
-    },
-  ];
 
   return (
     <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -252,9 +181,6 @@ export default function ConditionDetails() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search health topics..."
       />
 
       <div className="browse-page-content">
@@ -298,7 +224,7 @@ export default function ConditionDetails() {
               </div>
 
               <div className="left-card">
-                <h3 className="left-section-title">What are you looking for?</h3>
+                <h3 className="left-section-title">What are you looking?</h3>
                 <div className="menu-list">
                   {quickActions.map((item) => (
                     <button
@@ -321,7 +247,7 @@ export default function ConditionDetails() {
                 <h3>💡 {healthFacts[0]?.title || "Did You Know?"}</h3>
                 <p>
                   {healthFacts[0]?.fact_text ||
-                    "Use this page as a quick guide, then check symptoms or book a clinic when you need care."}
+                    "Health facts will appear here once loaded from the database."}
                 </p>
               </div>
             </aside>
@@ -343,26 +269,15 @@ export default function ConditionDetails() {
                 <>
                   <section className="hero-card">
                     <div className="hero-left">
-                      <div className="condition-hero-visual">
-                        {conditionImageUrl && (
-                          <img src={conditionImageUrl} alt={condition.condition_name} />
-                        )}
+                      <div className="hero-heart">
                         {condition.body_system_icon || "🩺"}
                       </div>
-                      <div className="hero-copy">
-                        <div className="condition-kicker">{bodySystemName}</div>
+                      <div>
                         <h1>{condition.condition_name}</h1>
                         <p>
                           {condition.description ||
                             "Learn more about this condition, its symptoms, and prevention."}
                         </p>
-                        <div className="condition-meta-pills">
-                          <span>{adviceLabel}</span>
-                          <span>{symptoms.length} mapped symptoms</span>
-                          {redFlagSymptoms.length > 0 ? (
-                            <span>{redFlagSymptoms.length} red flag</span>
-                          ) : null}
-                        </div>
                       </div>
                     </div>
 
@@ -382,9 +297,6 @@ export default function ConditionDetails() {
                         {condition.description ||
                           "Condition overview will appear here once loaded from the database."}
                       </p>
-                      {condition.disclaimer ? (
-                        <p className="condition-disclaimer">{condition.disclaimer}</p>
-                      ) : null}
                       <button
                         type="button"
                         className="diagram-link"
@@ -397,22 +309,7 @@ export default function ConditionDetails() {
                       </button>
                     </div>
 
-                    <div className="condition-guide-card">
-                      <h3>At a glance</h3>
-                      <div className="condition-guide-list">
-                        <div>
-                          <span>Body system</span>
-                          <strong>{bodySystemName}</strong>
-                        </div>
-                        <div>
-                          <span>Guidance</span>
-                          <strong>{adviceLabel}</strong>
-                        </div>
-                        <div>
-                          <span>Symptoms mapped</span>
-                          <strong>{symptoms.length}</strong>
-                        </div>
-                      </div>
+                    <div className="heart-visual-card">
                       <div className="heart-visual">{condition.body_system_icon || "🫀"}</div>
                       <div className="heartbeat-line"></div>
                     </div>
@@ -426,17 +323,14 @@ export default function ConditionDetails() {
                               key={item.id}
                               type="button"
                               className="related-item"
-                              onClick={() => handleArticleClick(item.title)}
+                              onClick={() => handleArticleClick(item.slug)}
                             >
                               <span>{item.title}</span>
                               <span>›</span>
                             </button>
                           ))
                         ) : (
-                          <div className="empty-state compact">
-                            Related reading will appear here when articles are connected to this
-                            body system.
-                          </div>
+                          <p>No related articles found.</p>
                         )}
                       </div>
                     </div>
@@ -447,58 +341,37 @@ export default function ConditionDetails() {
                       <h2>Symptoms of {condition.condition_name}</h2>
 
                       <div className="disease-list">
-                        {symptomsToShow.length > 0 ? (
-                          symptomsToShow.map((item) => (
+                        {filteredSymptoms.length > 0 ? (
+                          filteredSymptoms.map((item) => (
                             <div
                               key={item.symptom_id}
-                              className={`disease-item ${
-                                Number(item.is_red_flag) === 1 ? "red-flag" : ""
-                              }`}
+                              className="disease-item"
                               style={{ cursor: "default" }}
                             >
                               <div className="disease-left">
                                 <div className="disease-icon">🩺</div>
                                 <div className="disease-content">
                                   <h4>{item.symptom_name}</h4>
-                                  <p>
-                                    {Number(item.is_red_flag) === 1
-                                      ? "Red flag symptom. Consider prompt medical attention."
-                                      : item.category
-                                        ? `${toTitle(item.category)} symptom associated with this condition.`
-                                        : "Common symptom associated with this condition."}
-                                  </p>
+                                  <p>Common symptom associated with this condition.</p>
                                 </div>
                               </div>
                             </div>
                           ))
                         ) : (
-                          <div className="empty-state">
-                            {hasSymptomSearch
-                              ? "No mapped symptoms match your search."
-                              : "No symptoms are mapped to this condition yet."}
-                          </div>
+                          <p>No symptoms found.</p>
                         )}
                       </div>
-                    </div>
-
-                    <div className="condition-support-grid">
-                      {supportCards.map((card) => (
-                        <div className="condition-support-card" key={card.title}>
-                          <span>{card.title}</span>
-                          <p>{card.value}</p>
-                        </div>
-                      ))}
                     </div>
 
                     <div className="symptoms-card">
                       <h3>Quick Symptoms List</h3>
                       <ul>
-                        {symptomsToShow.length > 0 ? (
-                          symptomsToShow.map((item) => (
+                        {filteredSymptoms.length > 0 ? (
+                          filteredSymptoms.map((item) => (
                             <li key={item.symptom_id}>{item.symptom_name}</li>
                           ))
                         ) : (
-                          <li>{hasSymptomSearch ? "No matching symptoms." : "No symptoms mapped yet."}</li>
+                          <li>No symptoms found.</li>
                         )}
                       </ul>
 
@@ -517,7 +390,7 @@ export default function ConditionDetails() {
                         {preventionTips.length > 0 ? (
                           preventionTips.map((item) => <li key={item.id}>{item.tip_text}</li>)
                         ) : (
-                          <li>Prevention tips will appear here when they are added for this body system.</li>
+                          <li>No prevention tips found.</li>
                         )}
                       </ul>
                     </div>
@@ -539,7 +412,12 @@ export default function ConditionDetails() {
                         </p>
                       </footer>
 
-                      <VoiceAssistantPopup className="voice-fab" ariaLabel="Voice Search">
+                      <button
+                        type="button"
+                        className="voice-fab"
+                        aria-label="Voice Search"
+                        onClick={() => navigate("/symptom-checker")}
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="24"
@@ -551,7 +429,7 @@ export default function ConditionDetails() {
                           <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2"></path>
                           <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
                         </svg>
-                      </VoiceAssistantPopup>
+                      </button>
                     </div>
                   </section>
                 </>

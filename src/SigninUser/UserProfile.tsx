@@ -1,11 +1,9 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./UserProfile.css";
-import UserSidebar from "../Categories/UserSidebar";
-import { FiEye, FiEyeOff } from "react-icons/fi";
 import micIcon from "../img/mic.png";
 import profileImg from "../img/profile1.jpg";
-import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
-import VoiceAssistantResult from "./VoiceAssistantResult";
+import logo from "../img/logo.png";
+import searchIcon from "../img/search.png";
 
 const menuItems = [
   { label: "Home", icon: "⌂" },
@@ -27,11 +25,25 @@ type VoiceStep =
   | "retry"
   | "unsupported";
 
+type PossibleCondition = {
+  name: string;
+  score: number;
+  matchedSymptoms: string[];
+};
+
+type SymptomResult = {
+  transcript: string;
+  symptoms: string[];
+  possible_conditions: PossibleCondition[];
+  urgency: "low" | "medium" | "high";
+  advice: string;
+  emergency: boolean;
+};
+
 type ProfileData = {
   id: number;
   full_name: string | null;
   email: string | null;
-  profile_picture: string | null;
   phone: string | null;
   gender: string | null;
   date_of_birth: string | null;
@@ -44,10 +56,6 @@ type ProfileData = {
   province_name?: string | null;
   municipality_name?: string | null;
   barangay_name?: string | null;
-};
-
-type ProfileResponse = ProfileData & {
-  message?: string;
 };
 
 type Province = {
@@ -65,16 +73,6 @@ type Barangay = {
   id: number;
   municipality_id: number;
   name: string;
-};
-
-const API_BASE = "http://localhost:5000";
-const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
-
-const toUploadUrl = (value?: string | null) => {
-  const path = String(value || "").trim();
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
 };
 
 type SpeechRecognitionEventLike = Event & {
@@ -108,20 +106,16 @@ interface SpeechRecognition extends EventTarget {
   start: () => void;
   stop: () => void;
   abort: () => void;
-  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEventLike) => void) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEventLike) => void) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEventLike) => any) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEventLike) => any) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
 }
 
 export default function UserProfile() {
-  const storedUser = localStorage.getItem("user");
-  const currentUser = storedUser ? JSON.parse(storedUser) : null;
-  const userId = currentUser?.id;
+  const userId = 1; // replace with logged-in user id
 
-  const [sidebarExpanded, setSidebarExpanded] = useState(false); // FIXED
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
 
   const [voicePopupOpen, setVoicePopupOpen] = useState(false);
   const [voiceStep, setVoiceStep] = useState<VoiceStep>("idle");
@@ -129,6 +123,8 @@ export default function UserProfile() {
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+
+  const [profile, setProfile] = useState<ProfileData | null>(null);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -141,9 +137,6 @@ export default function UserProfile() {
   const [address, setAddress] = useState("");
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"active" | "disabled">("active");
-  const [profilePicture, setProfilePicture] = useState("");
-  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
-  const [profilePicturePreview, setProfilePicturePreview] = useState("");
 
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
@@ -153,18 +146,11 @@ export default function UserProfile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [loading, setLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
-  const [profilePictureSaving, setProfilePictureSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const displayProfilePicture =
-    profilePicturePreview || toUploadUrl(profilePicture) || profileImg;
 
   useEffect(() => {
     return () => {
@@ -172,27 +158,177 @@ export default function UserProfile() {
     };
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (profilePicturePreview) {
-        URL.revokeObjectURL(profilePicturePreview);
-      }
+  const CONDITION_DB = [
+    {
+      name: "Common Cold",
+      symptoms: [
+        "cough",
+        "sore throat",
+        "runny nose",
+        "sneezing",
+        "mild fever",
+        "congestion",
+      ],
+      urgency: "low" as const,
+      advice: "Rest, drink fluids, and monitor symptoms.",
+    },
+    {
+      name: "Flu",
+      symptoms: [
+        "fever",
+        "cough",
+        "body ache",
+        "fatigue",
+        "headache",
+        "chills",
+        "sore throat",
+      ],
+      urgency: "medium" as const,
+      advice: "Rest, hydrate, and consult a doctor if symptoms worsen.",
+    },
+    {
+      name: "COVID-19",
+      symptoms: [
+        "fever",
+        "cough",
+        "fatigue",
+        "headache",
+        "sore throat",
+        "loss of taste",
+        "loss of smell",
+        "shortness of breath",
+      ],
+      urgency: "medium" as const,
+      advice: "Isolate if needed and seek medical advice, especially for breathing issues.",
+    },
+    {
+      name: "Dengue",
+      symptoms: ["high fever", "headache", "body ache", "joint pain", "rash", "nausea"],
+      urgency: "high" as const,
+      advice: "Seek medical attention promptly, especially if fever is persistent.",
+    },
+    {
+      name: "Asthma Attack",
+      symptoms: ["shortness of breath", "wheezing", "chest tightness", "cough"],
+      urgency: "high" as const,
+      advice: "Use prescribed medication and seek urgent care if breathing is difficult.",
+    },
+    {
+      name: "Migraine",
+      symptoms: ["headache", "nausea", "light sensitivity", "vomiting"],
+      urgency: "low" as const,
+      advice: "Rest in a quiet room and consult a doctor for recurring severe headaches.",
+    },
+    {
+      name: "Food Poisoning",
+      symptoms: ["vomiting", "diarrhea", "nausea", "stomach pain", "fever"],
+      urgency: "medium" as const,
+      advice: "Drink fluids to avoid dehydration and seek care if symptoms are severe.",
+    },
+  ];
+
+  const KNOWN_SYMPTOMS = [
+    "high fever",
+    "mild fever",
+    "fever",
+    "cough",
+    "sore throat",
+    "runny nose",
+    "sneezing",
+    "congestion",
+    "body ache",
+    "fatigue",
+    "headache",
+    "chills",
+    "loss of taste",
+    "loss of smell",
+    "shortness of breath",
+    "wheezing",
+    "chest tightness",
+    "joint pain",
+    "rash",
+    "nausea",
+    "vomiting",
+    "diarrhea",
+    "stomach pain",
+    "light sensitivity",
+  ];
+
+  const extractSymptoms = (transcript: string) => {
+    const lower = transcript.toLowerCase();
+
+    return KNOWN_SYMPTOMS.filter((symptom) => lower.includes(symptom));
+  };
+
+  const analyzeSymptomsLocally = (transcript: string): SymptomResult => {
+    const detectedSymptoms = extractSymptoms(transcript);
+
+    const ranked = CONDITION_DB.map((condition) => {
+      const matchedSymptoms = condition.symptoms.filter((symptom) =>
+        detectedSymptoms.includes(symptom)
+      );
+
+      const score =
+        condition.symptoms.length > 0
+          ? matchedSymptoms.length / condition.symptoms.length
+          : 0;
+
+      return {
+        name: condition.name,
+        score,
+        matchedSymptoms,
+        urgency: condition.urgency,
+        advice: condition.advice,
+      };
+    })
+      .filter((condition) => condition.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    const top = ranked[0];
+
+    const emergency =
+      detectedSymptoms.includes("shortness of breath") ||
+      detectedSymptoms.includes("chest tightness") ||
+      detectedSymptoms.includes("high fever");
+
+    const urgency: "low" | "medium" | "high" = emergency
+      ? "high"
+      : top?.urgency || "low";
+
+    const advice = emergency
+      ? "Seek urgent medical attention immediately."
+      : top?.advice || "Please consult a healthcare professional.";
+
+    return {
+      transcript,
+      symptoms: detectedSymptoms,
+      possible_conditions: ranked.map((item) => ({
+        name: item.name,
+        score: item.score,
+        matchedSymptoms: item.matchedSymptoms,
+      })),
+      urgency,
+      advice,
+      emergency,
     };
-  }, [profilePicturePreview]);
+  };
 
   const analyzeVoiceSymptoms = async (transcript: string) => {
     try {
       setVoiceStep("processing");
       setVoiceError("");
       setSymptomResult(null);
-      setVoiceTranscript(transcript);
 
-      const result = await analyzeVoiceTranscript(transcript, userId || null);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const result = analyzeSymptomsLocally(transcript);
 
       setSymptomResult(result);
       setVoiceStep("result");
     } catch (err) {
-      setVoiceError(err instanceof Error ? err.message : "Failed to analyze symptoms.");
+      setVoiceError(
+        err instanceof Error ? err.message : "Failed to analyze symptoms."
+      );
       setVoiceStep("retry");
     }
   };
@@ -246,7 +382,6 @@ export default function UserProfile() {
 
   const closeVoicePopup = () => {
     recognitionRef.current?.abort();
-    recognitionRef.current = null;
     setVoicePopupOpen(false);
     setVoiceStep("idle");
     setVoiceTranscript("");
@@ -255,7 +390,8 @@ export default function UserProfile() {
   };
 
   const startVoiceAssistant = () => {
-    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     setVoicePopupOpen(true);
     setVoiceTranscript("");
@@ -266,8 +402,6 @@ export default function UserProfile() {
       setVoiceStep("unsupported");
       return;
     }
-
-    recognitionRef.current?.abort();
 
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
@@ -296,13 +430,14 @@ export default function UserProfile() {
     };
 
     recognition.onerror = (event) => {
-      const errorMessage =
-        event.error === "network"
-          ? "Speech recognition could not connect. Please try again, or use the full Voice Assistant page."
-          : event.error || "Speech recognition failed.";
-
-      setVoiceError(errorMessage);
+      setVoiceError(event.error || "Speech recognition failed.");
       setVoiceStep("retry");
+    };
+
+    recognition.onend = () => {
+      if (!voiceTranscript && voiceStep === "listening") {
+        setVoiceStep("retry");
+      }
     };
 
     recognition.start();
@@ -310,14 +445,14 @@ export default function UserProfile() {
 
   const voiceContent = getVoiceContent();
 
-  const loadProvinces = useCallback(async () => {
+  const loadProvinces = async () => {
     const res = await fetch("http://localhost:5000/api/users/meta/provinces");
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to load provinces.");
     setProvinces(Array.isArray(data) ? data : []);
-  }, []);
+  };
 
-  const loadMunicipalities = useCallback(async (selectedProvinceId: string | number) => {
+  const loadMunicipalities = async (selectedProvinceId: string | number) => {
     if (!selectedProvinceId) {
       setMunicipalities([]);
       return;
@@ -329,9 +464,9 @@ export default function UserProfile() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to load municipalities.");
     setMunicipalities(Array.isArray(data) ? data : []);
-  }, []);
+  };
 
-  const loadBarangays = useCallback(async (selectedMunicipalityId: string | number) => {
+  const loadBarangays = async (selectedMunicipalityId: string | number) => {
     if (!selectedMunicipalityId) {
       setBarangays([]);
       return;
@@ -343,16 +478,10 @@ export default function UserProfile() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to load barangays.");
     setBarangays(Array.isArray(data) ? data : []);
-  }, []);
+  };
 
-  const loadProfile = useCallback(async () => {
+  const loadProfile = async () => {
     try {
-      if (!userId) {
-        setError("No logged-in user found.");
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setError("");
       setMessage("");
@@ -360,15 +489,15 @@ export default function UserProfile() {
       await loadProvinces();
 
       const res = await fetch(`http://localhost:5000/api/users/${userId}/profile`);
-      const data: ProfileResponse = await res.json();
+      const data: ProfileData = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to load profile.");
+        throw new Error((data as any).message || "Failed to load profile.");
       }
 
+      setProfile(data);
       setFullName(data.full_name || "");
       setEmail(data.email || "");
-      setProfilePicture(data.profile_picture || "");
       setPhone(data.phone || "");
       setGender(data.gender || "");
       setDateOfBirth(data.date_of_birth ? data.date_of_birth.slice(0, 10) : "");
@@ -390,11 +519,11 @@ export default function UserProfile() {
     } finally {
       setLoading(false);
     }
-  }, [loadBarangays, loadMunicipalities, loadProvinces, userId]);
+  };
 
   useEffect(() => {
     loadProfile();
-  }, [loadProfile]);
+  }, []);
 
   const handleProvinceChange = async (value: string) => {
     setProvinceId(value);
@@ -428,10 +557,6 @@ export default function UserProfile() {
 
   const handleSaveProfile = async () => {
     try {
-      if (!userId) {
-        throw new Error("No logged-in user found.");
-      }
-
       setProfileSaving(true);
       setError("");
       setMessage("");
@@ -471,92 +596,8 @@ export default function UserProfile() {
     }
   };
 
-  const handleProfilePictureChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setMessage("");
-    setError("");
-
-    if (!ACCEPTED_PROFILE_IMAGE_TYPES.has(file.type)) {
-      setProfilePictureFile(null);
-      setProfilePicturePreview("");
-      setError("Profile picture must be a JPG, PNG, or WEBP image.");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setProfilePictureFile(null);
-      setProfilePicturePreview("");
-      setError("Profile picture must be 5MB or smaller.");
-      return;
-    }
-
-    setProfilePictureFile(file);
-    setProfilePicturePreview(URL.createObjectURL(file));
-  };
-
-  const handleSaveProfilePicture = async () => {
-    try {
-      if (!userId) {
-        throw new Error("No logged-in user found.");
-      }
-
-      if (!profilePictureFile) {
-        throw new Error("Please choose a profile picture first.");
-      }
-
-      setProfilePictureSaving(true);
-      setError("");
-      setMessage("");
-
-      const formData = new FormData();
-      formData.append("profile_picture", profilePictureFile);
-
-      const res = await fetch(`${API_BASE}/api/users/${userId}/profile-picture`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data?.message || "Failed to update profile picture.");
-      }
-
-      setProfilePicture(data.profile_picture || "");
-      setProfilePictureFile(null);
-      setProfilePicturePreview("");
-
-      try {
-        if (currentUser) {
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              ...currentUser,
-              profile_picture: data.profile_picture || "",
-            })
-          );
-          window.dispatchEvent(new Event("user-profile-updated"));
-        }
-      } catch (storageError) {
-        console.error("Profile picture storage update error:", storageError);
-      }
-
-      setMessage("Profile picture updated successfully.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update profile picture.");
-    } finally {
-      setProfilePictureSaving(false);
-    }
-  };
-
   const handleUpdatePassword = async () => {
     try {
-      if (!userId) {
-        throw new Error("No logged-in user found.");
-      }
-
       setPasswordSaving(true);
       setError("");
       setMessage("");
@@ -598,23 +639,61 @@ export default function UserProfile() {
   };
 
   return (
-    <div className={`profile-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
-      <UserSidebar
-        sidebarExpanded={sidebarExpanded}
-        setSidebarExpanded={setSidebarExpanded}
-        profileOpen={profileOpen}
-        setProfileOpen={setProfileOpen}
-        headerProfileOpen={headerProfileOpen}
-        setHeaderProfileOpen={setHeaderProfileOpen}
-      />
-
+    <div className="profile-page">
       <div className="health-app">
-        <main className="main-content">
-          <aside className="profilenav">
-            <div className="profile-mini">
-              <div className="avatar profile-mini-avatar">
-                <img src={displayProfilePicture} alt="Profile" className="profile-mini-img" />
+        <header className="app-header">
+          <div className="header-left">
+            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+          </div>
+
+          <div className="header-center">
+            <div className="header-search">
+              <input type="text" placeholder="Search..." />
+              <button aria-label="Search" type="button" className="search-btn">
+                <img src={searchIcon} alt="Search" />
+              </button>
+            </div>
+          </div>
+
+          <div className="header-right">
+            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
+              <button
+                type="button"
+                className="profile-avatar-btn"
+                onClick={() => setHeaderProfileOpen((v) => !v)}
+              >
+                <img src={profileImg} alt="Profile" className="header-avatar-img" />
+                <span className="caret">⌄</span>
+              </button>
+
+              <div className="profile-dropdown">
+                <a href="#">My Profile</a>
+                <a href="#">Settings</a>
+                <a href="#">Logout</a>
               </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="main-content">
+          <aside className="icon-rail">
+            <div className="icon-rail-top">
+              <button className="rail-icon rail-avatar" aria-label="Profile" type="button">
+                <img src={profileImg} alt="Profile" className="rail-avatar-img" />
+              </button>
+            </div>
+
+            <div className="icon-rail-menu">
+              <button className="rail-icon" aria-label="Home" type="button">⌂</button>
+              <button className="rail-icon" aria-label="Favorites" type="button">💗</button>
+              <button className="rail-icon" aria-label="Health" type="button">🫁</button>
+              <button className="rail-icon" aria-label="Brain" type="button">🧠</button>
+            </div>
+          </aside>
+
+          <aside className="sidebar">
+            <div className="profile-mini">
+              <div className="avatar">👨‍⚕️</div>
               <div>
                 <h3>{fullName || "Loading..."}</h3>
                 <p>{email || "Loading..."}</p>
@@ -685,36 +764,11 @@ export default function UserProfile() {
               <div className="account-card">
                 <div className="account-top">
                   <div className="account-user">
-                    <div className="avatar large profile-mini-avatar">
-                      <img src={displayProfilePicture} alt="Profile" className="profile-mini-img" />
-                    </div>
+                    <div className="avatar large">👨‍⚕️</div>
                     <div>
                       <h3>{fullName || "No name"}</h3>
                       <p>{email || "No email"}</p>
                     </div>
-                  </div>
-                  <div className="profile-picture-actions">
-                    <input
-                      id="user-profile-picture"
-                      className="profile-picture-input"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={handleProfilePictureChange}
-                    />
-                    <label className="profile-picture-upload" htmlFor="user-profile-picture">
-                      Choose Photo
-                    </label>
-                    <button
-                      className="profile-picture-save"
-                      type="button"
-                      onClick={handleSaveProfilePicture}
-                      disabled={!profilePictureFile || profilePictureSaving}
-                    >
-                      {profilePictureSaving ? "Saving..." : "Save Photo"}
-                    </button>
-                    <span className="profile-picture-hint">
-                      {profilePictureFile?.name || "JPG, PNG, or WEBP"}
-                    </span>
                   </div>
                 </div>
 
@@ -861,60 +915,39 @@ export default function UserProfile() {
               <h2>Security</h2>
 
               <div className="security-card">
-                <div className="security-row1">
+                <div className="security-row">
                   <span>Current Password</span>
                   <div className="password-box">
                     <input
-                      type={showCurrentPassword ? "text" : "password"}
+                      type="password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Enter current password"
                     />
-                    <button
-                      type="button"
-                      className="current-btn"
-                      onClick={() => setShowCurrentPassword((prev) => !prev)}
-                    >
-                      {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
+                    <span className="eye">◉</span>
                   </div>
                 </div>
 
-                <div className="security-row2">
+                <div className="security-row">
                   <span>New Password</span>
                   <div className="password-box">
                     <input
-                      type={showNewPassword ? "text" : "password"}
+                      type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
                     />
-                    <button
-                      type="button"
-                      className="new-btn"
-                      onClick={() => setShowNewPassword((prev) => !prev)}
-                    >
-                      {showNewPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
+                    <span className="eye">◉</span>
                   </div>
                 </div>
 
-                <div className="security-row3">
+                <div className="security-row">
                   <span>Confirm New Password</span>
                   <div className="password-box">
                     <input
-                      type={showConfirmPassword ? "text" : "password"}
+                      type="password"
                       value={confirmNewPassword}
                       onChange={(e) => setConfirmNewPassword(e.target.value)}
-                      placeholder="Confirm new password"
                     />
-                    <button
-                      type="button"
-                      className="confirm-btn"
-                      onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    >
-                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                    </button>
+                    <span className="eye">◉</span>
                   </div>
                 </div>
 
@@ -944,128 +977,133 @@ export default function UserProfile() {
                 <p><strong>Name:</strong> {fullName || "--"}</p>
                 <p><strong>Email:</strong> {email || "--"}</p>
                 <p><strong>Phone:</strong> {phone || "--"}</p>
+                <p><strong>Province:</strong> {profile?.province_name || "--"}</p>
+                <p><strong>Municipality:</strong> {profile?.municipality_name || "--"}</p>
+                <p><strong>Barangay:</strong> {profile?.barangay_name || "--"}</p>
                 <p><strong>Status:</strong> {status}</p>
               </div>
 
-              <div className="side-widget did-you-know-card">
-                <div className="did-you-know-title">💡 Did You Know?</div>
+              <div className="side-widget info-widget">
+                <h3>💡 Did You Know?</h3>
                 <p>
-                  Keep your account details updated so clinics can reach you correctly for
-                  appointment confirmations and reminders.
+                  Keep your account details updated so clinics can reach you
+                  correctly for appointment confirmations and reminders.
                 </p>
               </div>
             </aside>
           </div>
-        </main>
 
-        <button className="floating-mic" type="button" onClick={startVoiceAssistant}>
-          <img src={micIcon} alt="Voice Assistant" className="floating-mic-icon" />
-        </button>
+          <button
+            className="floating-mic"
+            type="button"
+            onClick={startVoiceAssistant}
+            aria-label="Open voice assistant"
+          >
+            <img src={micIcon} alt="Microphone" className="floating-mic-icon" />
+          </button>
 
-        {voicePopupOpen && (
-          <div className="voice-popup-overlay" onClick={closeVoicePopup}>
-            <div
-              className={`voice-popup-card ${voiceStep === "result" ? "has-result" : ""}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button className="voice-popup-close" type="button" onClick={closeVoicePopup}>
-                ×
-              </button>
+          {voicePopupOpen && (
+            <div className="voice-popup-overlay" onClick={closeVoicePopup}>
+              <div className="voice-popup-card" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
+                  className="voice-popup-close"
+                  onClick={closeVoicePopup}
+                  aria-label="Close popup"
+                >
+                  ×
+                </button>
 
-              <div className={`voice-popup-mic ${voiceContent.micClass}`}>
-                <img src={micIcon} alt="Mic" />
-              </div>
+                <img src={logo} alt="CUIDADO logo" className="voice-popup-logo" />
 
-              <div className="voice-popup-text">
-                <h3>{voiceContent.title}</h3>
-                <p>{voiceContent.subtitle}</p>
-              </div>
-
-              {voiceTranscript && (
-                <div className="voice-transcript-preview">
-                  <strong>Heard:</strong> {voiceTranscript}
+                <div className={`voice-popup-mic ${voiceContent.micClass}`}>
+                  <img src={micIcon} alt="Microphone" />
                 </div>
-              )}
 
-              {voiceError && voiceStep === "retry" && (
-                <div className="voice-error-text">{voiceError}</div>
-              )}
+                <div className="voice-popup-text">
+                  <h3>
+                    {voiceContent.title.split("\n").map((line, index) => (
+                      <React.Fragment key={index}>
+                        {line}
+                        {index !== voiceContent.title.split("\n").length - 1 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </h3>
 
-              {voiceStep === "result" && symptomResult && (
-                <VoiceAssistantResult result={symptomResult} compact />
-              )}
+                  <p>{voiceContent.subtitle}</p>
 
-              {voiceStep === "result" && symptomResult && (
-                <div className="voice-result-card">
-                  <div className="voice-result-section">
-                    <strong>Detected symptoms:</strong>
-                    {symptomResult.symptoms.length > 0 ? (
-                      <ul>
-                        {symptomResult.symptoms.map((symptom, index) => (
-                          <li key={`${symptom}-${index}`}>{symptom}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>No symptoms detected.</p>
-                    )}
-                  </div>
-
-                  {symptomResult.recognized_conditions.length > 0 && (
-                    <div className="voice-result-section">
-                      <strong>Recognized condition:</strong>
-                      <ul>
-                        {symptomResult.recognized_conditions.map((condition) => (
-                          <li key={condition}>{condition}</li>
-                        ))}
-                      </ul>
+                  {voiceTranscript && (
+                    <div className="voice-transcript-preview">
+                      <strong>Heard:</strong> {voiceTranscript}
                     </div>
                   )}
 
-                  <div className="voice-result-section">
-                    <strong>Possible conditions (ranked):</strong>
-                    {symptomResult.possible_conditions.length > 0 ? (
-                      <ol>
-                        {symptomResult.possible_conditions.map((condition, index) => (
-                          <li className="voice-condition-match" key={`${condition.name}-${index}`}>
-                            {condition.name} — {(condition.score * 100).toFixed(0)}% match
-                          </li>
-                        ))}
-                      </ol>
-                    ) : (
-                      <p>No likely conditions found.</p>
-                    )}
-                  </div>
+                  {voiceError && voiceStep === "retry" && (
+                    <div className="voice-error-text">{voiceError}</div>
+                  )}
 
-                  <div className="voice-result-section">
-                    <p>
-                      <strong>Urgency:</strong> {symptomResult.urgency}
-                    </p>
-                    <p>
-                      <strong>Advice:</strong> {symptomResult.advice}
-                    </p>
-                    {symptomResult.emergency && (
-                      <p className="voice-emergency-text">
-                        This may require urgent medical attention.
-                      </p>
-                    )}
-                  </div>
+                  {voiceStep === "result" && symptomResult && (
+                    <div className="voice-result-card">
+                      <div className="voice-result-section">
+                        <strong>Detected symptoms:</strong>
+                        {symptomResult.symptoms.length > 0 ? (
+                          <ul>
+                            {symptomResult.symptoms.map((symptom, index) => (
+                              <li key={`${symptom}-${index}`}>{symptom}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>No symptoms detected.</p>
+                        )}
+                      </div>
+
+                      <div className="voice-result-section">
+                        <strong>Possible conditions (ranked):</strong>
+                        {symptomResult.possible_conditions.length > 0 ? (
+                          <ol>
+                            {symptomResult.possible_conditions.map((condition, index) => (
+                              <li key={`${condition.name}-${index}`}>
+                                {condition.name} — {(condition.score * 100).toFixed(0)}% match
+                              </li>
+                            ))}
+                          </ol>
+                        ) : (
+                          <p>No likely conditions found.</p>
+                        )}
+                      </div>
+
+                      <div className="voice-result-section">
+                        <p>
+                          <strong>Urgency:</strong> {symptomResult.urgency}
+                        </p>
+                        <p>
+                          <strong>Advice:</strong> {symptomResult.advice}
+                        </p>
+                        {symptomResult.emergency && (
+                          <p className="voice-emergency-text">
+                            This may require urgent medical attention.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {voiceStep === "retry" && (
-                <button
-                  type="button"
-                  className="voice-popup-retry"
-                  onClick={startVoiceAssistant}
-                >
-                  Try again
-                </button>
-              )}
+                {voiceStep === "retry" && (
+                  <button
+                    type="button"
+                    className="voice-popup-retry"
+                    onClick={startVoiceAssistant}
+                  >
+                    Try again
+                  </button>
+                )}
 
-              <div className="voice-popup-language">English (Philippines)</div>
+                <div className="voice-popup-language">English (Philippines)</div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </main>
       </div>
     </div>
   );

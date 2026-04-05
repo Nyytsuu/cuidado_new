@@ -8,148 +8,6 @@ router.get("/test", (req, res) => {
   res.json({ message: "appointments route works" });
 });
 
-const DAYS_BY_INDEX = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-const ensureScheduleTables = async () => {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS clinic_weekly_schedules (
-      id INT NOT NULL AUTO_INCREMENT,
-      clinic_id INT NOT NULL,
-      day_of_week ENUM('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
-      is_working TINYINT(1) NOT NULL DEFAULT 1,
-      opening_time TIME DEFAULT NULL,
-      closing_time TIME DEFAULT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_day (clinic_id, day_of_week),
-      CONSTRAINT fk_clinic_weekly_schedules_clinic
-        FOREIGN KEY (clinic_id) REFERENCES clinics(id)
-        ON DELETE CASCADE
-    )
-  `);
-
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS clinic_blocked_dates (
-      id INT NOT NULL AUTO_INCREMENT,
-      clinic_id INT NOT NULL,
-      blocked_date DATE NOT NULL,
-      reason VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_blocked_date (clinic_id, blocked_date),
-      CONSTRAINT fk_clinic_blocked_dates_clinic
-        FOREIGN KEY (clinic_id) REFERENCES clinics(id)
-        ON DELETE CASCADE
-    )
-  `);
-};
-
-const toClockTime = (value) => {
-  const match = String(value || "").match(/^(\d{2}):(\d{2})/);
-  return match ? `${match[1]}:${match[2]}` : null;
-};
-
-const timeToMinutes = (value) => {
-  const [hours, minutes] = String(value).split(":").map(Number);
-  return hours * 60 + minutes;
-};
-
-const parseLocalDateTime = (value) => {
-  const parsed = new Date(String(value || "").replace(" ", "T"));
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-
-const getScheduleConflict = async (
-  connection,
-  clinicId,
-  startAt,
-  endAt,
-  clinic
-) => {
-  const normalizedStart = String(startAt || "").replace(" ", "T");
-  const startDate = parseLocalDateTime(normalizedStart);
-  const appointmentDate = String(startAt || "").slice(0, 10);
-  const startTime = String(startAt || "").slice(11, 16);
-  const endTime = String(endAt || "").slice(11, 16);
-
-  if (
-    !startDate ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate) ||
-    !/^\d{2}:\d{2}$/.test(startTime) ||
-    !/^\d{2}:\d{2}$/.test(endTime)
-  ) {
-    return "Invalid appointment date or time.";
-  }
-
-  if (timeToMinutes(startTime) >= timeToMinutes(endTime)) {
-    return "Appointment end time must be after start time.";
-  }
-
-  if (startDate.getTime() <= Date.now()) {
-    return "Please choose a future date and time for the appointment.";
-  }
-
-  await ensureScheduleTables();
-
-  const [[blockedDate]] = await connection.query(
-    `
-    SELECT id
-    FROM clinic_blocked_dates
-    WHERE clinic_id = ? AND blocked_date = ?
-    LIMIT 1
-    `,
-    [clinicId, appointmentDate]
-  );
-
-  if (blockedDate) {
-    return "Clinic is unavailable on the selected date.";
-  }
-
-  const dayName = DAYS_BY_INDEX[startDate.getDay()];
-
-  const [[daySchedule]] = await connection.query(
-    `
-    SELECT is_working, opening_time, closing_time
-    FROM clinic_weekly_schedules
-    WHERE clinic_id = ? AND day_of_week = ?
-    LIMIT 1
-    `,
-    [clinicId, dayName]
-  );
-
-  const isWorking = daySchedule
-    ? Number(daySchedule.is_working) === 1
-    : true;
-  const openingTime =
-    toClockTime(daySchedule?.opening_time) || toClockTime(clinic?.opening_time);
-  const closingTime =
-    toClockTime(daySchedule?.closing_time) || toClockTime(clinic?.closing_time);
-
-  if (!isWorking) {
-    return `Clinic is closed on ${dayName}.`;
-  }
-
-  if (
-    openingTime &&
-    closingTime &&
-    (timeToMinutes(startTime) < timeToMinutes(openingTime) ||
-      timeToMinutes(endTime) > timeToMinutes(closingTime))
-  ) {
-    return `Selected time is outside clinic hours for ${dayName} (${openingTime} - ${closingTime}).`;
-  }
-
-  return null;
-};
-
 router.get("/by-user/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -249,7 +107,7 @@ router.post("/book", async (req, res) => {
 
     const [[clinic]] = await connection.query(
       `
-      SELECT id, clinic_name, status, account_status, opening_time, closing_time
+      SELECT id, clinic_name, status, account_status
       FROM clinics
       WHERE id = ?
       `,
@@ -264,18 +122,6 @@ router.post("/book", async (req, res) => {
       return res.status(400).json({
         message: "This clinic is not available for booking",
       });
-    }
-
-    const scheduleConflict = await getScheduleConflict(
-      connection,
-      clinic_id,
-      start_at,
-      end_at,
-      clinic
-    );
-
-    if (scheduleConflict) {
-      return res.status(400).json({ message: scheduleConflict });
     }
 
     await connection.beginTransaction();
@@ -366,25 +212,19 @@ router.post("/book", async (req, res) => {
       appointment_id: appointmentId,
     });
   } catch (err) {
-  await connection.rollback();
-  console.error("Book appointment error:", err);
+    await connection.rollback();
+    console.error("Book appointment error:", err);
 
-  if (err.code === "ER_DUP_ENTRY") {
-    return res.status(409).json({
-      message: "That clinic already has an appointment at that time",
-      error_code: err.code,
-      error_detail: err.sqlMessage || err.message,
-    });
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        message: "That clinic already has an appointment at that time",
+      });
+    }
+
+    res.status(500).json({ message: "Failed to book appointment" });
+  } finally {
+    connection.release();
   }
-
-  res.status(500).json({
-    message: "Failed to book appointment",
-    error_code: err.code || null,
-    error_detail: err.sqlMessage || err.message || "Unknown database error",
-  });
-} finally {
-  connection.release();
-}
 });
 router.patch("/:id/cancel", async (req, res) => {
   const connection = await pool.getConnection();
@@ -394,7 +234,7 @@ router.patch("/:id/cancel", async (req, res) => {
     const { user_id, reason } = req.body;
 
     const [[appointment]] = await connection.query(
-      `SELECT id, status, user_id, clinic_id FROM appointments WHERE id = ?`,
+      `SELECT id, status, user_id FROM appointments WHERE id = ?`,
       [id]
     );
 
@@ -463,7 +303,7 @@ router.patch("/:id/reschedule", async (req, res) => {
     const { user_id, start_at, end_at } = req.body;
 
     const [[appointment]] = await connection.query(
-      `SELECT id, status, user_id, clinic_id FROM appointments WHERE id = ?`,
+      `SELECT id, status, user_id FROM appointments WHERE id = ?`,
       [id]
     );
 
@@ -479,27 +319,6 @@ router.patch("/:id/reschedule", async (req, res) => {
       return res.status(400).json({
         message: "Only pending or confirmed appointments can be rescheduled",
       });
-    }
-
-    const [[clinic]] = await connection.query(
-      `
-      SELECT id, opening_time, closing_time
-      FROM clinics
-      WHERE id = ?
-      `,
-      [appointment.clinic_id]
-    );
-
-    const scheduleConflict = await getScheduleConflict(
-      connection,
-      appointment.clinic_id,
-      start_at,
-      end_at,
-      clinic
-    );
-
-    if (scheduleConflict) {
-      return res.status(400).json({ message: scheduleConflict });
     }
 
     await connection.beginTransaction();

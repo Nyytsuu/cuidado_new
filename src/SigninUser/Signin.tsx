@@ -98,7 +98,7 @@ console.log("CAPTCHA KEY:", siteKey);
 
       if (data.user.role === "admin") navigate("/admin/dashboard", { replace: true });
       else if (data.user.role === "clinic") navigate("/clinic/dashboard", { replace: true });
-      else navigate("/user/dashboard", { replace: true });
+      else navigate("/homepage", { replace: true });
     } catch (err: any) {
       const newAttempts = failedAttempts + 1;
       setFailedAttempts(newAttempts);

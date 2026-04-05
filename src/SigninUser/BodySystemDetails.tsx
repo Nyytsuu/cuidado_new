@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
-import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./Cardio.css";
 import searchIcon from "../img/search.png";
 
@@ -229,9 +228,6 @@ export default function BodySystemDetails() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search health topics..."
       />
 
       <div className="browse-page-content">
@@ -464,7 +460,12 @@ export default function BodySystemDetails() {
                         </p>
                       </footer>
 
-                      <VoiceAssistantPopup className="voice-fab" ariaLabel="Voice Search">
+                      <button
+                        type="button"
+                        className="voice-fab"
+                        aria-label="Voice Search"
+                        onClick={() => navigate("/symptom-checker")}
+                      >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="24"
@@ -476,7 +477,7 @@ export default function BodySystemDetails() {
                           <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2"></path>
                           <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
                         </svg>
-                      </VoiceAssistantPopup>
+                      </button>
                     </div>
                   </section>
                 </>
