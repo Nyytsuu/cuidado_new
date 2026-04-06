@@ -162,12 +162,6 @@ export default function Homepage() {
                     onClick={() => handleNavigate(item.path)}
                   >
                     <div className={`service-icon-circle ${item.iconType}-service-icon`}>
-                      {item.iconType === "doctors" && (
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M12 12c2.76 0 5-2.24 5-5S14.76 2 12 2 7 4.24 7 7s2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z" />
-                        </svg>
-                      )}
-
                       {item.iconType === "clinics" && (
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zM13 19h-2v-4H7v-2h4V9h2v4h4v2h-4v4z" />
@@ -177,18 +171,6 @@ export default function Homepage() {
                       {item.iconType === "diagnostics" && (
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d="M9 2v2H5v16h14V4h-4V2h6v20H3V2zm2 7h2v6h-2zm-4 2h2v4H7zm8-3h2v7h-2z" />
-                        </svg>
-                      )}
-
-                      {item.iconType === "pharmacy" && (
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M18 6h-1V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2M9 4h6v2H9zm4 14h-2v-3H8v-2h3v-3h2v3h3v2h-3z" />
-                        </svg>
-                      )}
-
-                      {item.iconType === "therapy" && (
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M19 8h-1V6c0-1.1-.9-2-2-2H8C6.9 4 6 4.9 6 6v2H5c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h1v2c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-2h1c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2zm-3 12H8V6h8zm3-4h-3v-2h-2v2h-4v-2H8v2H5v-6h14z" />
                         </svg>
                       )}
                     </div>
@@ -292,6 +274,67 @@ export default function Homepage() {
                         ))}
                       </div>
                     </div>
+
+                    <div className="mini-services-panel">
+                      <div className="mini-services-title-row">
+                        <div className="mini-services-title-icon"></div>
+                        <h3>Mini Services</h3>
+                      </div>
+
+                      <div className="mini-services-grid">
+                        <button
+                          type="button"
+                          className="mini-service-item"
+                          onClick={() => handleNavigate("/emergency")}
+                        >
+                          <div className="mini-service-icon emergency-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M12 2 1 21h22L12 2zm1 14h-2v2h2zm0-6h-2v5h2z"></path>
+                            </svg>
+                          </div>
+                          <span>Emergency</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="mini-service-item"
+                          onClick={() => handleNavigate("/help")}
+                        >
+                          <div className="mini-service-icon help-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 17h-2v-2h2zm1.07-7.75-.9.92c-.72.73-1.17 1.33-1.17 2.83h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26a2 2 0 1 0-3.41-1.41H6a4 4 0 1 1 8 0c0 .88-.36 1.68-.93 2.25z"></path>
+                            </svg>
+                          </div>
+                          <span>Help</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="mini-service-item"
+                          onClick={() => handleNavigate("/logout")}
+                        >
+                          <div className="mini-service-icon logout-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M13 3h-2v10h2zm-1 19C6.48 22 2 17.52 2 12c0-3.53 1.84-6.63 4.61-8.4l1.01 1.73A7.96 7.96 0 0 0 4 12c0 4.41 3.59 8 8 8s8-3.59 8-8c0-2.8-1.45-5.27-3.64-6.69l1.01-1.73A9.96 9.96 0 0 1 22 12c0 5.52-4.48 10-10 10z"></path>
+                            </svg>
+                          </div>
+                          <span>Logout</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="mini-service-item"
+                          onClick={() => handleNavigate("/logout")}
+                        >
+                          <div className="mini-service-icon logout-lock-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M17 8h-1V6a4 4 0 1 0-8 0v2H7c-1.1 0-2 .9-2 2v10h14V10c0-1.1-.9-2-2-2zm-7-2a2 2 0 1 1 4 0v2h-4z"></path>
+                            </svg>
+                          </div>
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="map-card">
@@ -303,7 +346,7 @@ export default function Homepage() {
                         className="leaflet-map"
                       >
                         <TileLayer
-                          attribution='&copy; OpenStreetMap contributors'
+                          attribution="&copy; OpenStreetMap contributors"
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
 
@@ -338,88 +381,25 @@ export default function Homepage() {
                 </div>
               </div>
 
-              <div className="bottom-tools-layout">
-                <div className="mini-services-panel">
-                  <div className="mini-services-title-row">
-                    <div className="mini-services-title-icon"></div>
-                    <h3>Other Services</h3>
-                  </div>
-
-                  <div className="mini-services-grid">
-                    <button
-                      type="button"
-                      className="mini-service-item"
-                      onClick={() => handleNavigate("/emergency")}
-                    >
-                      <div className="mini-service-icon emergency-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M12 2 1 21h22L12 2zm1 14h-2v2h2zm0-6h-2v5h2z"></path>
-                        </svg>
-                      </div>
-                      <span>Emergency</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="mini-service-item"
-                      onClick={() => handleNavigate("/help")}
-                    >
-                      <div className="mini-service-icon help-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 17h-2v-2h2zm1.07-7.75-.9.92c-.72.73-1.17 1.33-1.17 2.83h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26a2 2 0 1 0-3.41-1.41H6a4 4 0 1 1 8 0c0 .88-.36 1.68-.93 2.25z"></path>
-                        </svg>
-                      </div>
-                      <span>Help</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="mini-service-item"
-                      onClick={() => handleNavigate("/logout")}
-                    >
-                      <div className="mini-service-icon logout-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M13 3h-2v10h2zm-1 19C6.48 22 2 17.52 2 12c0-3.53 1.84-6.63 4.61-8.4l1.01 1.73A7.96 7.96 0 0 0 4 12c0 4.41 3.59 8 8 8s8-3.59 8-8c0-2.8-1.45-5.27-3.64-6.69l1.01-1.73A9.96 9.96 0 0 1 22 12c0 5.52-4.48 10-10 10z"></path>
-                        </svg>
-                      </div>
-                      <span>Logout</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="mini-service-item"
-                      onClick={() => handleNavigate("/logout")}
-                    >
-                      <div className="mini-service-icon logout-lock-icon">
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M17 8h-1V6a4 4 0 1 0-8 0v2H7c-1.1 0-2 .9-2 2v10h14V10c0-1.1-.9-2-2-2zm-7-2a2 2 0 1 1 4 0v2h-4z"></path>
-                        </svg>
-                      </div>
-                      <span>Logout</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="voice-box">
-                  <div className="voice-left">
-                    <div className="voice-search-icon">
-                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M10 2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm-.5 3h2v3.59l2.7 2.7-1.4 1.41L9.5 11.4z"></path>
-                      </svg>
-                    </div>
-                    <span>Your health, just a voice away</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="voice-btn"
-                    onClick={() => handleNavigate("/voice-assistant")}
-                  >
+              <div className="homepage-voice-box">
+                <div className="voice-left">
+                  <div className="voice-search-icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
+                      <path d="M10 2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm-.5 3h2v3.59l2.7 2.7-1.4 1.41L9.5 11.4z"></path>
                     </svg>
-                  </button>
+                  </div>
+                  <span>Your health, just a voice away</span>
                 </div>
+
+                <button
+                  type="button"
+                  className="voice-btn"
+                  onClick={() => handleNavigate("/voice-assistant")}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
+                  </svg>
+                </button>
               </div>
 
               <div className="footer-links">
