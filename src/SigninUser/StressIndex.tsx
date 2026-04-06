@@ -1,26 +1,33 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import UserSidebar from "../Categories/UserSidebar";
 import "./StressIndex.css";
 
 const stressQuestions = [
-  { id: 1, question: "I found it hard to wind down." },
-  { id: 2, question: "I tended to over-react to situations." },
-  { id: 3, question: "I felt that I was using a lot of nervous energy." },
-  { id: 4, question: "I found myself getting agitated." },
-  { id: 5, question: "I found it difficult to relax." },
   {
-    id: 6,
-    question:
-      "I was intolerant of anything that kept me from getting on with what I was doing.",
+    id: 1,
+    question: "How often do you feel overwhelmed by your daily responsibilities?",
+    options: ["Rarely", "Sometimes", "Often", "Very Often"],
   },
-  { id: 7, question: "I felt that I was rather touchy." },
-];
-
-const dassOptions = [
-  "Did not apply to me at all",
-  "Applied to me to some degree",
-  "Applied to me a considerable degree",
-  "Applied to me very much",
+  {
+    id: 2,
+    question: "Have your sleep patterns changed recently?",
+    options: ["No change", "Occasionally disrupted", "Disrupted", "Severely disrupted"],
+  },
+  {
+    id: 3,
+    question: "Do you find it difficult to relax and unwind?",
+    options: ["Not at all", "Sometimes", "Often", "Very much"],
+  },
+  {
+    id: 4,
+    question: "How often do you feel irritable or lose your temper?",
+    options: ["Rarely", "Sometimes", "Often", "Very Often"],
+  },
+  {
+    id: 5,
+    question: "Have you experienced physical symptoms such as headaches, fatigue, or muscle tension?",
+    options: ["Rarely", "Sometimes", "Often", "Very Often"],
+  },
 ];
 
 const quickCards = [
@@ -41,29 +48,18 @@ const quickCards = [
   },
 ];
 
-const scoreMap: Record<string, number> = {
-  "Did not apply to me at all": 0,
-  "Applied to me to some degree": 1,
-  "Applied to me a considerable degree": 2,
-  "Applied to me very much": 3,
-};
-
 export default function StressIndex() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [answers, setAnswers] = useState<Record<number, string>>({
-    1: "Did not apply to me at all",
-    2: "Did not apply to me at all",
-    3: "Did not apply to me at all",
-    4: "Did not apply to me at all",
-    5: "Did not apply to me at all",
-    6: "Did not apply to me at all",
-    7: "Did not apply to me at all",
+    1: "Sometimes",
+    2: "No change",
+    3: "Sometimes",
+    4: "Rarely",
+    5: "Rarely",
   });
-
-  const [showResultPopup, setShowResultPopup] = useState(false);
 
   const handleAnswerChange = (questionId: number, option: string) => {
     setAnswers((prev) => ({
@@ -71,59 +67,6 @@ export default function StressIndex() {
       [questionId]: option,
     }));
   };
-
-  const stressResult = useMemo(() => {
-    const total = stressQuestions.reduce((sum, q) => {
-      return sum + (scoreMap[answers[q.id]] ?? 0);
-    }, 0);
-
-    const finalScore = total * 2; // DASS-21 scoring rule
-
-    let level = "";
-    let description = "";
-    let advice = "";
-    let colorClass = "";
-
-    if (finalScore <= 14) {
-      level = "Normal";
-      description = "Your stress level is within the normal range.";
-      advice =
-        "Keep maintaining healthy habits such as proper rest, regular movement, and relaxation time.";
-      colorClass = "low";
-    } else if (finalScore <= 18) {
-      level = "Mild";
-      description = "You may be experiencing mild stress symptoms.";
-      advice =
-        "Try simple stress-management steps like better sleep, short breaks, breathing exercises, and reducing overload.";
-      colorClass = "moderate";
-    } else if (finalScore <= 25) {
-      level = "Moderate";
-      description = "Your answers suggest a moderate level of stress.";
-      advice =
-        "Consider making lifestyle adjustments and seeking support if stress is affecting your mood, sleep, or daily functioning.";
-      colorClass = "moderate";
-    } else if (finalScore <= 33) {
-      level = "Severe";
-      description = "Your stress level appears to be high.";
-      advice =
-        "It is strongly recommended to consult a healthcare professional or counselor for proper support.";
-      colorClass = "high";
-    } else {
-      level = "Extremely Severe";
-      description = "Your stress level appears to be very high.";
-      advice =
-        "Please seek professional help as soon as possible, especially if stress is disrupting your daily life or wellbeing.";
-      colorClass = "high";
-    }
-
-    return {
-      score: finalScore,
-      level,
-      description,
-      advice,
-      colorClass,
-    };
-  }, [answers]);
 
   return (
     <div className={`stress-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -140,15 +83,14 @@ export default function StressIndex() {
         <main className="stress-main">
           <section className="stress-title-wrap">
             <h1>Stress Index</h1>
-            <p>Assess your stress level using the DASS-21 Stress Scale</p>
+            <p>Assess your stress level</p>
           </section>
 
           <section className="stress-layout">
             <div className="stress-left">
               <div className="stress-form-card">
                 <p className="stress-form-intro">
-                  Please read each statement and select how much it applied to you
-                  recently.
+                  Answer the following questions to assess your current stress level:
                 </p>
 
                 <div className="stress-question-list">
@@ -160,7 +102,7 @@ export default function StressIndex() {
                       </div>
 
                       <div className="stress-options-row">
-                        {dassOptions.map((option) => (
+                        {item.options.map((option) => (
                           <label key={option} className="stress-option">
                             <input
                               type="radio"
@@ -178,14 +120,8 @@ export default function StressIndex() {
                 </div>
 
                 <div className="stress-action-row">
-                  <p>
-                    Answer all seven items to get your DASS-21 stress result.
-                  </p>
-                  <button
-                    type="button"
-                    className="stress-btn-primary"
-                    onClick={() => setShowResultPopup(true)}
-                  >
+                  <p>Answer a few questions to assess your current stress level.</p>
+                  <button type="button" className="stress-btn-primary">
                     View Result
                   </button>
                 </div>
@@ -195,8 +131,7 @@ export default function StressIndex() {
             <div className="stress-right">
               <div className="stress-side-card">
                 <p>
-                  This self-check helps estimate your current stress level using a
-                  standard questionnaire.
+                  Answer a few questions to assess your current stress level.
                 </p>
 
                 <div className="stress-quick-grid">
@@ -222,58 +157,6 @@ export default function StressIndex() {
           </footer>
         </main>
       </div>
-
-      {showResultPopup && (
-        <div
-          className="stress-popup-overlay"
-          onClick={() => setShowResultPopup(false)}
-        >
-          <div
-            className="stress-popup-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              className="stress-popup-close"
-              onClick={() => setShowResultPopup(false)}
-            >
-              ×
-            </button>
-
-            <h2>DASS-21 Stress Result</h2>
-
-            <div className={`stress-result-badge ${stressResult.colorClass}`}>
-              {stressResult.level}
-            </div>
-
-            <p className="stress-result-score">
-              <strong>Score:</strong> {stressResult.score}
-            </p>
-
-            <p className="stress-result-description">
-              {stressResult.description}
-            </p>
-
-            <div className="stress-result-advice-box">
-              <strong>Advice:</strong>
-              <p>{stressResult.advice}</p>
-            </div>
-
-            <p className="stress-result-note">
-              This is a screening tool, not a medical diagnosis. If your stress is
-              severe or persistent, consult a licensed healthcare professional.
-            </p>
-
-            <button
-              type="button"
-              className="stress-popup-btn"
-              onClick={() => setShowResultPopup(false)}
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

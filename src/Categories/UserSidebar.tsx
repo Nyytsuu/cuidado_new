@@ -55,17 +55,19 @@ export default function UserSidebar({
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
-      {/* ===== SIDEBAR ===== */}
-      <aside className={`sidebar ${sidebarExpanded ? "expanded" : "collapsed"}`}
-  onClick={() => {
-    if (!sidebarExpanded) setSidebarExpanded(true);
-  }}>
+      <aside
+        className={`sidebar ${sidebarExpanded ? "expanded" : "collapsed"}`}
+        onClick={() => {
+          if (!sidebarExpanded) setSidebarExpanded(true);
+        }}
+      >
         <div className="sidebar-top">
           <button
             className="sidebar-toggle"
             aria-label="Toggle sidebar"
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setSidebarExpanded((prev) => {
                 const next = !prev;
                 if (!next) setProfileOpen(false);
@@ -81,29 +83,29 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">MAIN</p>
 
-            <div className={`sidebar-item ${isPathActive("/admin/dashboard") ? "active" : ""}`}>
-  <Link to="#" className="sidebar-btn">
-    <House size={24} />
-    <span>Dashboard</span>
-  </Link>
-</div>
+            <div className={`sidebar-item ${isPathActive("/homepage") ? "active" : ""}`}>
+              <Link to="/homepage" className="sidebar-btn">
+                <House size={24} />
+                <span>Dashboard</span>
+              </Link>
+            </div>
 
-           <div className="sidebar-item active">
-  <Link to="#" className="sidebar-btn">
-    <CalendarDays size={24} />
-    <span>Appointments</span>
-  </Link>
-</div>
+            <div className={`sidebar-item ${isPathActive("/appointments") ? "active" : ""}`}>
+              <Link to="/appointments" className="sidebar-btn">
+                <CalendarDays size={24} />
+                <span>Appointments</span>
+              </Link>
+            </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/health-topics") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/browse-health") ? "active" : ""}`}>
+              <Link to="/browse-health" className="sidebar-btn">
                 <Stethoscope size={24} />
                 <span>Health Topics</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/records") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/records" className="sidebar-btn">
                 <ChartColumn size={24} />
                 <span>Records</span>
               </Link>
@@ -113,29 +115,29 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">TOOLS</p>
 
-            <div className={`sidebar-item ${isPathActive("/admin/symptom-checker") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/symptom-checker") ? "active" : ""}`}>
+              <Link to="/symptom-checker" className="sidebar-btn">
                 <Brain size={24} />
                 <span>Symptom Checker</span>
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/find-clinics") ? "active" : ""}`}>
-              <Link to="/admin/find-clinics" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/find-clinic") ? "active" : ""}`}>
+              <Link to="/find-clinic" className="sidebar-btn">
                 <MapPin size={24} />
                 <span>Find Clinics</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/bmi") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/bmi" className="sidebar-btn">
                 <Scale size={24} />
                 <span>BMI</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/stress-index") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/stress-index" className="sidebar-btn">
                 <Smile size={24} />
                 <span>Stress Index</span>
               </Link>
@@ -146,7 +148,7 @@ export default function UserSidebar({
             <p className="sidebar-section-title">SMART</p>
 
             <div className={`sidebar-item ${isPathActive("/admin/voice-assistant") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/voice-assistant" className="sidebar-btn">
                 <Mic size={24} />
                 <span>Voice Assistant</span>
               </Link>
@@ -156,22 +158,22 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">PERSONAL</p>
 
-            <div className={`sidebar-item ${isPathActive("/admin/profile") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/profile") ? "active" : ""}`}>
+              <Link to="/profile" className="sidebar-btn">
                 <User size={24} />
                 <span>Profile</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/settings") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/settings" className="sidebar-btn">
                 <Settings size={24} />
                 <span>Settings</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/notifications") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/notifications" className="sidebar-btn">
                 <Bell size={24} />
                 <span>Notifications</span>
               </Link>
@@ -182,14 +184,14 @@ export default function UserSidebar({
             <p className="sidebar-section-title">SUPPORT</p>
 
             <div className={`sidebar-item ${isPathActive("/admin/emergency") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/emergency" className="sidebar-btn">
                 <TriangleAlert size={24} />
                 <span>Emergency</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/help") ? "active" : ""}`}>
-              <Link to="#" className="sidebar-btn">
+              <Link to="/admin/help" className="sidebar-btn">
                 <CircleHelp size={24} />
                 <span>Help</span>
               </Link>
@@ -205,7 +207,6 @@ export default function UserSidebar({
         </div>
       </aside>
 
-      {/* ===== HEADER ===== */}
       <header className="app-header">
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
@@ -220,15 +221,16 @@ export default function UserSidebar({
 
         <nav className="header-nav">
           <Link
-            to="#"
-            className={`nav-link ${
-              location.pathname === "/admin/dashboard" ? "active" : ""
-            }`}
+            to="/homepage"
+            className={`nav-link ${location.pathname === "/homepage" ? "active" : ""}`}
           >
             Home
           </Link>
 
-          <Link to="#" className="nav-link active">
+          <Link
+            to="/appointments"
+            className={`nav-link ${location.pathname === "/appointments" ? "active" : ""}`}
+          >
             Appointments
           </Link>
 
@@ -236,7 +238,7 @@ export default function UserSidebar({
             <button
               type="button"
               className={`nav-link profile-btn ${
-                location.pathname === "/admin/profile" ||
+                location.pathname === "/profile" ||
                 location.pathname === "/admin/settings"
                   ? "active"
                   : ""
@@ -247,8 +249,8 @@ export default function UserSidebar({
             </button>
 
             <div className="profile-dropdown">
-              <Link to="#" >My Profile</Link>
-              <Link to="#" >Settings</Link>
+              <Link to="/profile">My Profile</Link>
+              <Link to="/admin/settings">Settings</Link>
               <button
                 type="button"
                 className="dropdown-logout"

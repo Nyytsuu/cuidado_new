@@ -9,6 +9,9 @@ import {
   Video,
   Lightbulb,
   X,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
 } from "lucide-react";
 
 type AppointmentService = {
@@ -153,6 +156,47 @@ function isWithinClinicHours(
   const closeMinutes = toMinutes(close);
 
   return startMinutes >= openMinutes && endMinutes <= closeMinutes;
+}
+
+function getMonthMatrix(year: number, month: number) {
+  const firstDay = new Date(year, month, 1);
+  const startDay = firstDay.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthDays = new Date(year, month, 0).getDate();
+
+  const cells: { date: Date; currentMonth: boolean }[] = [];
+
+  for (let i = startDay - 1; i >= 0; i--) {
+    cells.push({
+      date: new Date(year, month - 1, prevMonthDays - i),
+      currentMonth: false,
+    });
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({
+      date: new Date(year, month, d),
+      currentMonth: true,
+    });
+  }
+
+  while (cells.length < 42) {
+    const nextDay = cells.length - (startDay + daysInMonth) + 1;
+    cells.push({
+      date: new Date(year, month + 1, nextDay),
+      currentMonth: false,
+    });
+  }
+
+  return cells;
+}
+
+function sameDate(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
@@ -510,7 +554,7 @@ function UserAppointmentsContent() {
 
   const [actionMessage, setActionMessage] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "all">("upcoming");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "calendar">("upcoming");
   const [showAllAppointments, setShowAllAppointments] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -521,16 +565,19 @@ function UserAppointmentsContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const userId = 1; // replace with logged-in user ID
+  const [calendarDate, setCalendarDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+
+  const userId = 1;
 
   const loadAppointments = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const res = await fetch(
-        `http://localhost:5000/api/appointments/by-user/${userId}`
-      );
+      const res = await fetch(`http://localhost:5000/api/appointments/by-user/${userId}`);
 
       if (!res.ok) {
         throw new Error(`Request failed: ${res.status}`);
@@ -560,25 +607,18 @@ function UserAppointmentsContent() {
   const upcomingAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
       .filter((a) => new Date(a.start_at).getTime() >= now)
-      .sort(
-        (a, b) =>
-          new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
-      );
+      .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
   }, [validAppointments, now]);
 
   const pastAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
       .filter((a) => new Date(a.start_at).getTime() < now)
-      .sort(
-        (a, b) =>
-          new Date(b.start_at).getTime() - new Date(a.start_at).getTime()
-      );
+      .sort((a, b) => new Date(b.start_at).getTime() - new Date(a.start_at).getTime());
   }, [validAppointments, now]);
 
   const allAppointments = useMemo<Appointment[]>(() => {
     return [...validAppointments].sort(
-      (a, b) =>
-        new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+      (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
     );
   }, [validAppointments]);
 
@@ -592,7 +632,7 @@ function UserAppointmentsContent() {
 
   const baseAppointments = useMemo(() => {
     if (activeTab === "past") return pastAppointments;
-    if (activeTab === "all") return allAppointments;
+    if (activeTab === "calendar") return allAppointments;
     return upcomingAppointments;
   }, [activeTab, pastAppointments, allAppointments, upcomingAppointments]);
 
@@ -635,22 +675,14 @@ function UserAppointmentsContent() {
       return sortOrder === "asc" ? aTime - bTime : bTime - aTime;
     });
 
-    return showAllAppointments ? list : list.slice(0, 5);
-  }, [
-    baseAppointments,
-    statusFilter,
-    clinicFilter,
-    searchTerm,
-    sortOrder,
-    showAllAppointments,
-  ]);
+    return showAllAppointments ? list : list.slice(0, 4);
+  }, [baseAppointments, statusFilter, clinicFilter, searchTerm, sortOrder, showAllAppointments]);
 
   const confirmedCount = appointments.filter((a) => a.status === "confirmed").length;
   const pendingCount = appointments.filter((a) => a.status === "pending").length;
   const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
 
-  const nextAppointment =
-    upcomingAppointments.length > 0 ? upcomingAppointments[0] : null;
+  const nextAppointment = upcomingAppointments.length > 0 ? upcomingAppointments[0] : null;
 
   const canEditAppointment = (appointment: Appointment) =>
     appointment.status === "pending" || appointment.status === "confirmed";
@@ -800,11 +832,24 @@ function UserAppointmentsContent() {
     }
   };
 
+  const monthCells = useMemo(() => {
+    return getMonthMatrix(calendarDate.getFullYear(), calendarDate.getMonth());
+  }, [calendarDate]);
+
+  const appointmentDates = useMemo(() => {
+    return validAppointments.map((a) => new Date(a.start_at));
+  }, [validAppointments]);
+
+  const todayReference = nextAppointment ? new Date(nextAppointment.start_at) : new Date();
+  const dayAppointments = validAppointments
+    .filter((a) => sameDate(new Date(a.start_at), todayReference))
+    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+
   return (
     <>
       <div className="appointments-page">
         <div className="appointments-topbar">
-          <div>
+          <div className="appointments-heading">
             <h1 className="page-title">Appointments</h1>
             <p className="page-subtitle">
               Manage your upcoming and past medical appointments.
@@ -854,14 +899,14 @@ function UserAppointmentsContent() {
             Past
           </button>
           <button
-            className={`tab ${activeTab === "all" ? "active" : ""}`}
+            className={`tab ${activeTab === "calendar" ? "active" : ""}`}
             type="button"
             onClick={() => {
-              setActiveTab("all");
+              setActiveTab("calendar");
               setShowAllAppointments(true);
             }}
           >
-            All
+            Calendar
           </button>
         </div>
 
@@ -950,46 +995,109 @@ function UserAppointmentsContent() {
         <div className="appointments-grid">
           <div className="left-column">
             <div className="card calendar-card">
-              <div className="today-box">
-                {loading ? (
-                  <p>Loading next appointment...</p>
-                ) : error ? (
-                  <p>{error}</p>
-                ) : nextAppointment ? (
-                  <>
-                    <p className="today-label">
-                      Next Appointment • {formatDate(nextAppointment.start_at)}
-                    </p>
+              <div className="calendar-header">
+                <button
+                  type="button"
+                  className="calendar-nav-btn"
+                  onClick={() =>
+                    setCalendarDate(
+                      new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1)
+                    )
+                  }
+                >
+                  <ChevronLeft size={18} />
+                </button>
 
-                    <div className="today-appointment">
-                      <div className="today-time">
-                        {formatTime(nextAppointment.start_at)}
-                      </div>
+                <h3>
+                  {calendarDate.toLocaleDateString([], {
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </h3>
 
-                      <div className="today-info">
+                <button
+                  type="button"
+                  className="calendar-nav-btn"
+                  onClick={() =>
+                    setCalendarDate(
+                      new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1)
+                    )
+                  }
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+
+              <div className="calendar-weekdays">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                  <span key={day}>{day}</span>
+                ))}
+              </div>
+
+              <div className="calendar-grid">
+                {monthCells.map((cell, index) => {
+                  const isToday = sameDate(cell.date, new Date());
+                  const hasAppointment = appointmentDates.some((d) => sameDate(d, cell.date));
+                  const isSelected = sameDate(cell.date, todayReference);
+
+                  return (
+                    <button
+                      type="button"
+                      key={`${cell.date.toISOString()}-${index}`}
+                      className={[
+                        "calendar-day",
+                        cell.currentMonth ? "" : "muted",
+                        isToday ? "today" : "",
+                        isSelected ? "selected" : "",
+                        hasAppointment ? "has-dot" : "",
+                      ]
+                        .join(" ")
+                        .trim()}
+                    >
+                      <span>{cell.date.getDate()}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="today-section">
+                <p className="today-section-title">
+                  Today • {formatDate(todayReference)}
+                </p>
+
+                {dayAppointments.length > 0 ? (
+                  <div className="today-mini-card">
+                    <div className="today-mini-time">
+                      {formatTime(dayAppointments[0].start_at)}
+                    </div>
+
+                    <div className="today-mini-body">
+                      <div className="today-mini-avatar">👩‍⚕️</div>
+
+                      <div className="today-mini-info">
                         <h4>
-                          {nextAppointment.clinic_name_snapshot ||
-                            nextAppointment.clinic_name ||
+                          {dayAppointments[0].clinic_name_snapshot ||
+                            dayAppointments[0].clinic_name ||
                             "Clinic"}
                         </h4>
-
-                        <p>{nextAppointment.purpose || "Consultation"}</p>
-
-                        <span className={`status ${nextAppointment.status || ""}`}>
-                          {nextAppointment.status || "unknown"}
+                        <p>
+                          {dayAppointments[0].purpose ||
+                            dayAppointments[0].specialization ||
+                            "Consultation"}
+                        </p>
+                        <span className={`status ${dayAppointments[0].status || ""}`}>
+                          {dayAppointments[0].status || "unknown"}
                         </span>
 
                         <div className="today-location-row">
-                          <span>
-                            {nextAppointment.address || "Clinic address unavailable"}
-                          </span>
-                          <a href={`/appointments/${nextAppointment.id}`}>View</a>
+                          <span>{dayAppointments[0].address || "Clinic address unavailable"}</span>
+                          <a href={`/appointments/${dayAppointments[0].id}`}>View</a>
                         </div>
                       </div>
                     </div>
-                  </>
+                  </div>
                 ) : (
-                  <p>No upcoming appointment.</p>
+                  <p className="empty-state-text">No appointment for this day.</p>
                 )}
               </div>
             </div>
@@ -997,19 +1105,17 @@ function UserAppointmentsContent() {
 
           <div className="center-column">
             <div className="card appointments-card">
-              <h2>
-                {activeTab === "past"
-                  ? "Past Appointments"
-                  : activeTab === "all"
-                  ? "All Appointments"
-                  : "Upcoming Appointments"}
-              </h2>
-
-              <small>
-                Showing {filteredAppointments.length}{" "}
-                {filteredAppointments.length === 1 ? "appointment" : "appointments"}
-                {showAllAppointments ? "" : " (max 5 preview)"}
-              </small>
+              <div className="appointments-card-head">
+                <div>
+                  <h2>
+                    {activeTab === "past"
+                      ? "Past Appointments"
+                      : activeTab === "calendar"
+                      ? "Calendar Appointments"
+                      : "Upcoming Appointments"}
+                  </h2>
+                </div>
+              </div>
 
               {loading ? (
                 <p>Loading appointments...</p>
@@ -1022,32 +1128,33 @@ function UserAppointmentsContent() {
                   {filteredAppointments.map((item) => (
                     <div className="appointment-item" key={item.id}>
                       <div className="appointment-time">
-                        {formatTime(item.start_at)}
+                        <span className="time-main">{formatTime(item.start_at)}</span>
                       </div>
 
-                      <div className="appointment-info">
-                        <h3>
-                          {item.clinic_name_snapshot ||
-                            item.clinic_name ||
-                            "Clinic"}
-                        </h3>
+                      <div className="appointment-info-wrap">
+                        <div className="appointment-avatar">👨‍⚕️</div>
 
-                        <p>{item.purpose || item.specialization || "Consultation"}</p>
+                        <div className="appointment-info">
+                          <h3>
+                            {item.clinic_name_snapshot || item.clinic_name || "Clinic"}
+                          </h3>
 
-                        <div className="clinic-row">
-                          <MapPin size={14} />
-                          <span>{item.address || "Address unavailable"}</span>
+                          <p>{item.purpose || item.specialization || "Consultation"}</p>
+
+                          <div className="clinic-row">
+                            <MapPin size={14} />
+                            <span>{item.address || "Address unavailable"}</span>
+                          </div>
+
+                          {Array.isArray(item.services) && item.services.length > 0 && (
+                            <small>
+                              {item.services
+                                .map((s) => s.service_name_snapshot)
+                                .filter(Boolean)
+                                .join(", ")}
+                            </small>
+                          )}
                         </div>
-
-                        {Array.isArray(item.services) && item.services.length > 0 && (
-                          <small>
-                            Services:{" "}
-                            {item.services
-                              .map((s) => s.service_name_snapshot)
-                              .filter(Boolean)
-                              .join(", ")}
-                          </small>
-                        )}
                       </div>
 
                       <div className="appointment-date">
@@ -1060,6 +1167,12 @@ function UserAppointmentsContent() {
 
                       <div className={`status ${item.status || ""}`}>
                         {item.status || "unknown"}
+                      </div>
+
+                      <div className="appointment-more">
+                        <button type="button" className="more-btn">
+                          <MoreVertical size={18} />
+                        </button>
                       </div>
 
                       <div className="appointment-actions">
@@ -1086,43 +1199,48 @@ function UserAppointmentsContent() {
                 </div>
               )}
 
-              <button
+             {activeTab !== "calendar" && (
+             <button
                 className="view-all-btn"
                 type="button"
                 onClick={() => {
-                  setActiveTab("all");
-                  setShowAllAppointments(true);
-                }}
-              >
-                {showAllAppointments ? "Showing All Appointments" : "View All Appointments →"}
+                setActiveTab("calendar");
+                setShowAllAppointments(true);
+              }}
+                >
+               View All Appointments →
               </button>
+             )}
             </div>
 
-            <div className="card action-card">
-              <div>
-                <h3>Need to make a change?</h3>
-                <p>Reschedule or cancel your appointment easily.</p>
-              </div>
+            {activeTab !== "calendar" && (
+              <div className="card action-card">
+                <div>
+                  <h3>Need to make a change?</h3>
+                  <p>Reschedule or cancel your appointment easily.</p>
+                </div>
 
-              <div className="change-actions">
-                <button
-                  className="reschedule-btn"
-                  type="button"
-                  disabled={!nextAppointment || !canEditAppointment(nextAppointment)}
-                  onClick={() => nextAppointment && openRescheduleModal(nextAppointment)}
-                >
-                  Reschedule
-                </button>
-                <button
-                  className="cancel-btn"
-                  type="button"
-                  disabled={!nextAppointment || !canEditAppointment(nextAppointment)}
-                  onClick={() => nextAppointment && openCancelModal(nextAppointment)}
-                >
-                  Cancel Appointment
-                </button>
+                <div className="change-actions">
+                  <button
+                    className="reschedule-btn"
+                    type="button"
+                    disabled={!nextAppointment || !canEditAppointment(nextAppointment)}
+                    onClick={() => nextAppointment && openRescheduleModal(nextAppointment)}
+                  >
+                    Reschedule
+                  </button>
+
+                  <button
+                    className="cancel-btn"
+                    type="button"
+                    disabled={!nextAppointment || !canEditAppointment(nextAppointment)}
+                    onClick={() => nextAppointment && openCancelModal(nextAppointment)}
+                  >
+                    Cancel Appointment
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {actionMessage && <div className="booking-success">{actionMessage}</div>}
           </div>
@@ -1136,7 +1254,7 @@ function UserAppointmentsContent() {
                 <div>
                   <h3>Appointment Summary</h3>
                   <h1>{appointments.length}</h1>
-                  <p>Total Appointments</p>
+                  <p>Upcoming Appointments</p>
                 </div>
               </div>
 
@@ -1151,7 +1269,7 @@ function UserAppointmentsContent() {
                 </div>
                 <div className="stat-box red">
                   <h4>{cancelledCount}</h4>
-                  <p>Cancelled</p>
+                  <p>Canceled</p>
                 </div>
               </div>
             </div>
@@ -1199,6 +1317,7 @@ function UserAppointmentsContent() {
                 Regular check-ups help detect health issues early and keep you on
                 track for a healthier life.
               </p>
+              <div className="health-watermark">♡</div>
             </div>
           </div>
         </div>
