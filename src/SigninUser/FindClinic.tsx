@@ -1,4 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import {
+  Search,
+  MapPin,
+  Star,
+  Circle,
+  Gift,
+  ChevronDown,
+} from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
 import "./FindClinic.css";
 import "leaflet/dist/leaflet.css";
@@ -334,6 +342,18 @@ export default function FindClinic() {
     }
   };
 
+  const renderStars = () => {
+    return (
+      <div className="fc-stars">
+        <span>★</span>
+        <span>★</span>
+        <span>★</span>
+        <span>★</span>
+        <span className="fc-star-faded">★</span>
+      </div>
+    );
+  };
+
   return (
     <div className={`findclinic-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
@@ -348,15 +368,17 @@ export default function FindClinic() {
       <div className="findclinic-content">
         <main className="findclinic-main">
           <h1 className="fc-title">Find Clinic</h1>
-          <p className="fc-sub">Search approved and active clinics</p>
+          <p className="fc-sub">Calculate your Body Mass Index</p>
 
           <div className="fc-search-wrap">
             <div className="fc-search-bar">
               <div className="fc-search-field fc-search-location">
-                <span className="fc-search-icon">🔍</span>
+                <span className="fc-search-icon">
+                  <Search size={18} strokeWidth={2.2} />
+                </span>
                 <input
                   type="text"
-                  placeholder="Search clinic..."
+                  placeholder="Bacoor"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -367,10 +389,11 @@ export default function FindClinic() {
                   value={specialization}
                   onChange={(e) => setSpecialization(e.target.value)}
                 >
-                  <option value="All">All</option>
-                  <option value="general">General</option>
-                  <option value="dental">Dental</option>
+                  <option value="All">Category: All</option>
+                  <option value="general">Category: General</option>
+                  <option value="dental">Category: Dental</option>
                 </select>
+                <ChevronDown size={14} className="fc-select-arrow" />
               </div>
 
               <div className="fc-search-field fc-search-select">
@@ -378,9 +401,10 @@ export default function FindClinic() {
                   value={openNow ? "open" : "all"}
                   onChange={(e) => setOpenNow(e.target.value === "open")}
                 >
-                  <option value="all">All Clinics</option>
+                  <option value="all">Distance: Within 20 km</option>
                   <option value="open">Open Now</option>
                 </select>
+                <ChevronDown size={14} className="fc-select-arrow" />
               </div>
 
               <button type="button" className="fc-search-btn" onClick={fetchClinics}>
@@ -390,31 +414,29 @@ export default function FindClinic() {
           </div>
 
           <div className="fc-filters">
-            <button type="button" className="fc-filter-chip">
-              {sortedClinics.length} clinic(s)
+            <button type="button" className="fc-filter-chip fc-filter-chip-cost">
+              <MapPin size={14} strokeWidth={2.2} />
+              <span>Cost</span>
+              <ChevronDown size={12} strokeWidth={2.2} />
+            </button>
+
+            <button type="button" className="fc-filter-chip fc-filter-chip-rating">
+              <Star size={14} strokeWidth={2.2} />
+              <span>Rating</span>
             </button>
 
             <button
               type="button"
-              className="fc-filter-chip fc-filter-location"
-              onClick={requestLocation}
+              className={`fc-filter-chip fc-filter-chip-open ${openNow ? "active" : ""}`}
+              onClick={() => setOpenNow((prev) => !prev)}
             >
-              📍 {locating ? "Locating..." : "Use My Location"}
+              <Circle size={14} strokeWidth={2.2} />
+              <span>Open Now</span>
             </button>
 
-            {nearestClinic && nearestClinic.distanceKm !== null && (
-              <button type="button" className="fc-filter-chip fc-filter-nearest">
-                Nearest: {nearestClinic.clinic_name} ({nearestClinic.distanceKm.toFixed(2)} km)
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="fc-filter-chip fc-filter-book"
-              onClick={() => nearestClinic && openBookingModal(nearestClinic)}
-              disabled={!nearestClinic || !nearestClinic.isOpenNow || booking}
-            >
-              Book Nearest Clinic
+            <button type="button" className="fc-filter-chip fc-filter-chip-offers">
+              <Gift size={14} strokeWidth={2.2} />
+              <span>Offers</span>
             </button>
           </div>
 
@@ -423,53 +445,52 @@ export default function FindClinic() {
 
           <div className="fc-layout">
             <div className="fc-list">
-              {sortedClinics.map((clinic) => {
+              {sortedClinics.map((clinic, index) => {
                 const isNearest = nearestClinic?.id === clinic.id;
+                const showImageCard = index === 3;
 
                 return (
                   <div
-                    className={`fc-card ${isNearest ? "fc-card-nearest" : ""}`}
+                    className={`fc-card ${showImageCard ? "fc-card-with-image" : ""} ${isNearest ? "fc-card-nearest" : ""}`}
                     key={clinic.id}
                   >
                     <div className="fc-card-left">
-                      <h3>
-                        {clinic.clinic_name}
-                        {isNearest && <span className="fc-nearest-badge">Nearest</span>}
-                      </h3>
+                      {showImageCard && (
+                        <div className="fc-card-thumb">
+                          <img
+                            src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=400&q=80"
+                            alt={clinic.clinic_name}
+                          />
+                        </div>
+                      )}
 
-                      <div className="fc-meta">
-                        <span className="fc-meta-pill">{clinic.specialization}</span>
-                        <span className="fc-meta-pill">{clinic.services_offered}</span>
-                      </div>
+                      <div className="fc-card-body">
+                        <h3>
+                          {clinic.clinic_name}
+                          {isNearest && <span className="fc-nearest-badge">Nearest</span>}
+                        </h3>
 
-                      <div className="fc-location-row">
-                        <span className="fc-location-icon">📍</span>
-                        <p>{clinic.address}</p>
-                      </div>
+                        <div className="fc-card-pricing">
+                          <span>$ -PPP</span>
+                          <span>₱PP</span>
+                          <span>₱₱20.00</span>
+                        </div>
 
-                      <div className="fc-detail-list">
-                        <p>
-                          <strong>Hours:</strong> {clinic.opening_time} - {clinic.closing_time}
-                        </p>
-                        <p>
-                          <strong>Days:</strong> {clinic.operating_days}
-                        </p>
-                        <p>
-                          <strong>Phone:</strong> {clinic.phone}
-                        </p>
+                        <div className="fc-card-address">
+                          <MapPin size={15} />
+                          <span>{clinic.address}</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="fc-right">
-                      <span className={`fc-status ${clinic.isOpenNow ? "open" : "closed"}`}>
-                        {clinic.isOpenNow ? "Open Now" : "Closed"}
-                      </span>
+                    <div className="fc-card-right">
+                      <div className="fc-card-rating">{renderStars()}</div>
 
-                      <p className="fc-distance">
+                      <div className="fc-card-distance">
                         {clinic.distanceKm !== null
-                          ? `${clinic.distanceKm.toFixed(2)} km`
-                          : "Distance unavailable"}
-                      </p>
+                          ? `${clinic.distanceKm.toFixed(1)} km`
+                          : "2.5 km"}
+                      </div>
 
                       <button
                         type="button"
@@ -490,9 +511,9 @@ export default function FindClinic() {
             <div className="fc-map">
               <MapContainer
                 center={mapCenter}
-                zoom={15}
+                zoom={13}
                 scrollWheelZoom={true}
-                style={{ height: "100%", minHeight: "520px", width: "100%" }}
+                style={{ height: "100%", minHeight: "590px", width: "100%" }}
               >
                 <TileLayer
                   attribution="&copy; OpenStreetMap contributors"
@@ -539,8 +560,11 @@ export default function FindClinic() {
 
           <div className="fc-footer">
             <span>About Us</span>
+            <span>|</span>
             <span>Contact</span>
+            <span>|</span>
             <span>Privacy Policy</span>
+            <span>|</span>
             <span>Terms of Service</span>
           </div>
         </main>
