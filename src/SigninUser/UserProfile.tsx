@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./UserProfile.css";
+import UserSidebar from "../Categories/UserSidebar";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import micIcon from "../img/mic.png";
 import profileImg from "../img/profile1.jpg";
-import logo from "../img/logo.png";
-import searchIcon from "../img/search.png";
 
 const menuItems = [
   { label: "Home", icon: "⌂" },
@@ -115,6 +115,8 @@ interface SpeechRecognition extends EventTarget {
 export default function UserProfile() {
   const userId = 1; // replace with logged-in user id
 
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [voicePopupOpen, setVoicePopupOpen] = useState(false);
@@ -146,6 +148,10 @@ export default function UserProfile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+const [showNewPassword, setShowNewPassword] = useState(false);
+const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   const [loading, setLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -161,28 +167,13 @@ export default function UserProfile() {
   const CONDITION_DB = [
     {
       name: "Common Cold",
-      symptoms: [
-        "cough",
-        "sore throat",
-        "runny nose",
-        "sneezing",
-        "mild fever",
-        "congestion",
-      ],
+      symptoms: ["cough", "sore throat", "runny nose", "sneezing", "mild fever", "congestion"],
       urgency: "low" as const,
       advice: "Rest, drink fluids, and monitor symptoms.",
     },
     {
       name: "Flu",
-      symptoms: [
-        "fever",
-        "cough",
-        "body ache",
-        "fatigue",
-        "headache",
-        "chills",
-        "sore throat",
-      ],
+      symptoms: ["fever", "cough", "body ache", "fatigue", "headache", "chills", "sore throat"],
       urgency: "medium" as const,
       advice: "Rest, hydrate, and consult a doctor if symptoms worsen.",
     },
@@ -256,7 +247,6 @@ export default function UserProfile() {
 
   const extractSymptoms = (transcript: string) => {
     const lower = transcript.toLowerCase();
-
     return KNOWN_SYMPTOMS.filter((symptom) => lower.includes(symptom));
   };
 
@@ -291,9 +281,7 @@ export default function UserProfile() {
       detectedSymptoms.includes("chest tightness") ||
       detectedSymptoms.includes("high fever");
 
-    const urgency: "low" | "medium" | "high" = emergency
-      ? "high"
-      : top?.urgency || "low";
+    const urgency: "low" | "medium" | "high" = emergency ? "high" : top?.urgency || "low";
 
     const advice = emergency
       ? "Seek urgent medical attention immediately."
@@ -326,9 +314,7 @@ export default function UserProfile() {
       setSymptomResult(result);
       setVoiceStep("result");
     } catch (err) {
-      setVoiceError(
-        err instanceof Error ? err.message : "Failed to analyze symptoms."
-      );
+      setVoiceError(err instanceof Error ? err.message : "Failed to analyze symptoms.");
       setVoiceStep("retry");
     }
   };
@@ -390,8 +376,7 @@ export default function UserProfile() {
   };
 
   const startVoiceAssistant = () => {
-    const SpeechRecognitionAPI =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
     setVoicePopupOpen(true);
     setVoiceTranscript("");
@@ -508,12 +493,8 @@ export default function UserProfile() {
       setConsent(Boolean(data.consent));
       setStatus(data.status || "active");
 
-      if (data.province_id) {
-        await loadMunicipalities(data.province_id);
-      }
-      if (data.municipality_id) {
-        await loadBarangays(data.municipality_id);
-      }
+      if (data.province_id) await loadMunicipalities(data.province_id);
+      if (data.municipality_id) await loadBarangays(data.municipality_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile.");
     } finally {
@@ -639,66 +620,29 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="profile-page">
+    <div className={`profile-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+      <UserSidebar
+        sidebarExpanded={sidebarExpanded}
+        setSidebarExpanded={setSidebarExpanded}
+        profileOpen={profileOpen}
+        setProfileOpen={setProfileOpen}
+        headerProfileOpen={headerProfileOpen}
+        setHeaderProfileOpen={setHeaderProfileOpen}
+      />
+
       <div className="health-app">
-        <header className="app-header">
-          <div className="header-left">
-            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-          </div>
-
-          <div className="header-center">
-            <div className="header-search">
-              <input type="text" placeholder="Search..." />
-              <button aria-label="Search" type="button" className="search-btn">
-                <img src={searchIcon} alt="Search" />
-              </button>
-            </div>
-          </div>
-
-          <div className="header-right">
-            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="profile-avatar-btn"
-                onClick={() => setHeaderProfileOpen((v) => !v)}
-              >
-                <img src={profileImg} alt="Profile" className="header-avatar-img" />
-                <span className="caret">⌄</span>
-              </button>
-
-              <div className="profile-dropdown">
-                <a href="#">My Profile</a>
-                <a href="#">Settings</a>
-                <a href="#">Logout</a>
-              </div>
-            </div>
-          </div>
-        </header>
-
         <main className="main-content">
-          <aside className="icon-rail">
-            <div className="icon-rail-top">
-              <button className="rail-icon rail-avatar" aria-label="Profile" type="button">
-                <img src={profileImg} alt="Profile" className="rail-avatar-img" />
-              </button>
-            </div>
 
-            <div className="icon-rail-menu">
-              <button className="rail-icon" aria-label="Home" type="button">⌂</button>
-              <button className="rail-icon" aria-label="Favorites" type="button">💗</button>
-              <button className="rail-icon" aria-label="Health" type="button">🫁</button>
-              <button className="rail-icon" aria-label="Brain" type="button">🧠</button>
-            </div>
-          </aside>
-
-          <aside className="sidebar">
+          <aside className="profilenav">
             <div className="profile-mini">
-              <div className="avatar">👨‍⚕️</div>
-              <div>
-                <h3>{fullName || "Loading..."}</h3>
-                <p>{email || "Loading..."}</p>
-              </div>
-            </div>
+  <div className="avatar profile-mini-avatar">
+    <img src={profileImg} alt="Profile" className="profile-mini-img" />
+  </div>
+  <div>
+    <h3>{fullName || "Loading..."}</h3>
+    <p>{email || "Loading..."}</p>
+  </div>
+</div>
 
             <nav className="nav-section">
               {menuItems.map((item) => (
@@ -764,7 +708,9 @@ export default function UserProfile() {
               <div className="account-card">
                 <div className="account-top">
                   <div className="account-user">
-                    <div className="avatar large">👨‍⚕️</div>
+                   <div className="avatar large profile-mini-avatar">
+  <img src={profileImg} alt="Profile" className="profile-mini-img" />
+</div>
                     <div>
                       <h3>{fullName || "No name"}</h3>
                       <p>{email || "No email"}</p>
@@ -915,53 +861,74 @@ export default function UserProfile() {
               <h2>Security</h2>
 
               <div className="security-card">
-                <div className="security-row">
-                  <span>Current Password</span>
-                  <div className="password-box">
-                    <input
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                    />
-                    <span className="eye">◉</span>
-                  </div>
-                </div>
+  <div className="security-row1">
+    <span>Current Password</span>
+    <div className="password-box">
+      <input
+        type={showCurrentPassword ? "text" : "password"}
+        value={currentPassword}
+        onChange={(e) => setCurrentPassword(e.target.value)}
+        placeholder="Enter current password"
+      />
+      <button
+        type="button"
+        className="current-btn"
+        onClick={() => setShowCurrentPassword((prev) => !prev)}
+      >
+        {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
+      </button>
+    </div>
+  </div>
 
-                <div className="security-row">
-                  <span>New Password</span>
-                  <div className="password-box">
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                    <span className="eye">◉</span>
-                  </div>
-                </div>
+  <div className="security-row2">
+    <span>New Password</span>
+    <div className="password-box">
+      <input
+        type={showNewPassword ? "text" : "password"}
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        placeholder="Enter new password"
+      />
+      <button
+        type="button"
+        className="new-btn"
+        onClick={() => setShowNewPassword((prev) => !prev)}
+      >
+        {showNewPassword ? <FiEyeOff /> : <FiEye />}
+      </button>
+    </div>
+  </div>
 
-                <div className="security-row">
-                  <span>Confirm New Password</span>
-                  <div className="password-box">
-                    <input
-                      type="password"
-                      value={confirmNewPassword}
-                      onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    />
-                    <span className="eye">◉</span>
-                  </div>
-                </div>
+  <div className="security-row3">
+    <span>Confirm New Password</span>
+    <div className="password-box">
+      <input
+        type={showConfirmPassword ? "text" : "password"}
+        value={confirmNewPassword}
+        onChange={(e) => setConfirmNewPassword(e.target.value)}
+        placeholder="Confirm new password"
+      />
+      <button
+        type="button"
+        className="confirm-btn"
+        onClick={() => setShowConfirmPassword((prev) => !prev)}
+      >
+        {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+      </button>
+    </div>
+  </div>
 
-                <div className="security-actions">
-                  <button
-                    className="update-btn"
-                    type="button"
-                    onClick={handleUpdatePassword}
-                    disabled={passwordSaving}
-                  >
-                    {passwordSaving ? "Updating..." : "Update Password"}
-                  </button>
-                </div>
-              </div>
+  <div className="security-actions">
+    <button
+      className="update-btn"
+      type="button"
+      onClick={handleUpdatePassword}
+      disabled={passwordSaving}
+    >
+      {passwordSaving ? "Updating..." : "Update Password"}
+    </button>
+  </div>
+</div>
 
               <footer className="footer-links">
                 <a href="/">About Us</a>
@@ -972,138 +939,95 @@ export default function UserProfile() {
             </section>
 
             <aside className="right-panel">
-              <div className="side-widget info-widget">
-                <h3>Profile Summary</h3>
-                <p><strong>Name:</strong> {fullName || "--"}</p>
-                <p><strong>Email:</strong> {email || "--"}</p>
-                <p><strong>Phone:</strong> {phone || "--"}</p>
-                <p><strong>Province:</strong> {profile?.province_name || "--"}</p>
-                <p><strong>Municipality:</strong> {profile?.municipality_name || "--"}</p>
-                <p><strong>Barangay:</strong> {profile?.barangay_name || "--"}</p>
-                <p><strong>Status:</strong> {status}</p>
-              </div>
+  <div className="side-widget info-widget">
+    <h3>Profile Summary</h3>
+    <p><strong>Name:</strong> {fullName || "--"}</p>
+    <p><strong>Email:</strong> {email || "--"}</p>
+    <p><strong>Phone:</strong> {phone || "--"}</p>
+    <p><strong>Status:</strong> {status}</p>
+  </div>
 
-              <div className="side-widget info-widget">
-                <h3>💡 Did You Know?</h3>
-                <p>
-                  Keep your account details updated so clinics can reach you
-                  correctly for appointment confirmations and reminders.
-                </p>
-              </div>
-            </aside>
+  <div className="side-widget did-you-know-card">
+    <div className="did-you-know-title">💡 Did You Know?</div>
+    <p>
+      Keep your account details updated so clinics can reach you correctly for
+      appointment confirmations and reminders.
+    </p>
+  </div>
+</aside>
           </div>
-
-          <button
-            className="floating-mic"
-            type="button"
-            onClick={startVoiceAssistant}
-            aria-label="Open voice assistant"
-          >
-            <img src={micIcon} alt="Microphone" className="floating-mic-icon" />
-          </button>
-
-          {voicePopupOpen && (
-            <div className="voice-popup-overlay" onClick={closeVoicePopup}>
-              <div className="voice-popup-card" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  className="voice-popup-close"
-                  onClick={closeVoicePopup}
-                  aria-label="Close popup"
-                >
-                  ×
-                </button>
-
-                <img src={logo} alt="CUIDADO logo" className="voice-popup-logo" />
-
-                <div className={`voice-popup-mic ${voiceContent.micClass}`}>
-                  <img src={micIcon} alt="Microphone" />
-                </div>
-
-                <div className="voice-popup-text">
-                  <h3>
-                    {voiceContent.title.split("\n").map((line, index) => (
-                      <React.Fragment key={index}>
-                        {line}
-                        {index !== voiceContent.title.split("\n").length - 1 && <br />}
-                      </React.Fragment>
-                    ))}
-                  </h3>
-
-                  <p>{voiceContent.subtitle}</p>
-
-                  {voiceTranscript && (
-                    <div className="voice-transcript-preview">
-                      <strong>Heard:</strong> {voiceTranscript}
-                    </div>
-                  )}
-
-                  {voiceError && voiceStep === "retry" && (
-                    <div className="voice-error-text">{voiceError}</div>
-                  )}
-
-                  {voiceStep === "result" && symptomResult && (
-                    <div className="voice-result-card">
-                      <div className="voice-result-section">
-                        <strong>Detected symptoms:</strong>
-                        {symptomResult.symptoms.length > 0 ? (
-                          <ul>
-                            {symptomResult.symptoms.map((symptom, index) => (
-                              <li key={`${symptom}-${index}`}>{symptom}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p>No symptoms detected.</p>
-                        )}
-                      </div>
-
-                      <div className="voice-result-section">
-                        <strong>Possible conditions (ranked):</strong>
-                        {symptomResult.possible_conditions.length > 0 ? (
-                          <ol>
-                            {symptomResult.possible_conditions.map((condition, index) => (
-                              <li key={`${condition.name}-${index}`}>
-                                {condition.name} — {(condition.score * 100).toFixed(0)}% match
-                              </li>
-                            ))}
-                          </ol>
-                        ) : (
-                          <p>No likely conditions found.</p>
-                        )}
-                      </div>
-
-                      <div className="voice-result-section">
-                        <p>
-                          <strong>Urgency:</strong> {symptomResult.urgency}
-                        </p>
-                        <p>
-                          <strong>Advice:</strong> {symptomResult.advice}
-                        </p>
-                        {symptomResult.emergency && (
-                          <p className="voice-emergency-text">
-                            This may require urgent medical attention.
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {voiceStep === "retry" && (
-                  <button
-                    type="button"
-                    className="voice-popup-retry"
-                    onClick={startVoiceAssistant}
-                  >
-                    Try again
-                  </button>
-                )}
-
-                <div className="voice-popup-language">English (Philippines)</div>
-              </div>
-            </div>
-          )}
         </main>
+
+        <button className="floating-mic" type="button" onClick={startVoiceAssistant}>
+          <img src={micIcon} alt="Voice Assistant" className="floating-mic-icon" />
+        </button>
+
+        {voicePopupOpen && (
+          <div className="voice-popup-overlay" onClick={closeVoicePopup}>
+            <div className="voice-popup-card" onClick={(e) => e.stopPropagation()}>
+              <button className="voice-popup-close" type="button" onClick={closeVoicePopup}>
+                ×
+              </button>
+
+              <div className={`voice-popup-mic ${voiceContent.micClass}`}>
+                <img src={micIcon} alt="Mic" />
+              </div>
+
+              <div className="voice-popup-text">
+                <h3>{voiceContent.title}</h3>
+                <p>{voiceContent.subtitle}</p>
+              </div>
+
+              {voiceTranscript && (
+                <div className="voice-transcript-preview">
+                  <strong>You said:</strong> {voiceTranscript}
+                </div>
+              )}
+
+              {symptomResult && (
+                <div className="voice-result-card">
+                  <div className="voice-result-section">
+                    <strong>Detected symptoms:</strong>
+                    <ul>
+                      {symptomResult.symptoms.map((symptom) => (
+                        <li key={symptom}>{symptom}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="voice-result-section">
+                    <strong>Possible conditions:</strong>
+                    <ol>
+                      {symptomResult.possible_conditions.map((condition) => (
+                        <li key={condition.name}>
+                          {condition.name}
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+
+                  <div className="voice-result-section">
+                    <strong>Advice:</strong> {symptomResult.advice}
+                  </div>
+
+                  {symptomResult.emergency && (
+                    <div className="voice-emergency-text">
+                      Emergency signs detected. Please seek urgent care.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(voiceStep === "retry" || voiceStep === "unsupported") && (
+                <button className="voice-popup-retry" type="button" onClick={startVoiceAssistant}>
+                  Try Again
+                </button>
+              )}
+
+              <div className="voice-popup-language">Language: English (PH)</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

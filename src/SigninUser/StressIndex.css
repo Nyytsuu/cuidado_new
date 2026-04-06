@@ -1,0 +1,325 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #eef3f6;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+.stress-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #a9c4cd 0%, #dfe8ef 100%);
+  overflow: hidden;
+}
+
+.stress-content {
+  min-width: 0;
+  margin-left: 74px;
+  margin-top: 58px;
+  width: calc(100% - 74px);
+  min-height: calc(100vh - 58px);
+  transition: margin-left 0.25s ease, width 0.25s ease;
+}
+
+.stress-page.sidebar-expanded .stress-content {
+  margin-left: 270px;
+  width: calc(100% - 270px);
+}
+
+.stress-main {
+  min-height: calc(100vh - 58px);
+  padding: 24px 16px 0;
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  flex-direction: column;
+}
+
+.stress-title-wrap h1 {
+  margin: 0;
+  font-size: 31px;
+  color: #2a3b45;
+  font-weight: 800;
+}
+
+.stress-title-wrap p {
+  margin: 6px 0 18px;
+  font-size: 17px;
+  color: #566873;
+  font-weight: 700;
+}
+
+.stress-layout {
+  display: grid;
+  grid-template-columns: 1.8fr 0.95fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.stress-form-card,
+.stress-side-card {
+  border: 1px solid #d9e2e8;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.stress-form-card {
+  padding: 16px;
+  min-height: 650px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.stress-form-intro {
+  margin: 0 0 14px;
+  font-size: 15px;
+  color: #617480;
+  font-weight: 600;
+}
+
+.stress-question-list {
+  border: 1px solid #d9e2e8;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+}
+
+.stress-question-item {
+  padding: 14px 18px;
+  border-bottom: 1px solid #dfe6ea;
+}
+
+.stress-question-item:last-child {
+  border-bottom: none;
+}
+
+.stress-question-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stress-question-number {
+  font-size: 15px;
+  font-weight: 700;
+  color: #68808b;
+  line-height: 1.4;
+}
+
+.stress-question-line h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: #465a65;
+  font-weight: 700;
+}
+
+.stress-options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 28px;
+  padding-left: 28px;
+}
+
+.stress-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+}
+
+.stress-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.stress-custom-radio {
+  width: 15px;
+  height: 15px;
+  border: 1.8px solid #9db1bb;
+  border-radius: 50%;
+  background: #fff;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.stress-option input:checked + .stress-custom-radio::after {
+  content: "";
+  position: absolute;
+  top: 2.5px;
+  left: 2.5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #5bb9c4;
+}
+
+.stress-option-text {
+  font-size: 15px;
+  color: #526671;
+  font-weight: 600;
+}
+
+.stress-action-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.stress-action-row p {
+  margin: 0;
+  font-size: 15px;
+  color: #667985;
+  font-weight: 600;
+}
+
+.stress-btn-primary {
+  min-width: 148px;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #46a8bb 0%, #348aa0 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 20px;
+  align-items: center;
+}
+
+.stress-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.stress-side-card {
+  padding: 26px 20px;
+  min-height: 248px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.stress-side-card p {
+  margin: 0 0 18px;
+  text-align: center;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #516672;
+  font-weight: 700;
+}
+
+.stress-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.stress-quick-card {
+  border: 1px solid #d9e2e8;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  min-height: 150px;   /* dati 110px */
+  min-width: 160px;    /* dagdag lapad */
+  padding: 20px 14px;  /* mas malaking loob */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.stress-quick-icon {
+  width: 60px;   /* dati 48px */
+  height: 60px;  /* dati 48px */
+  border-radius: 16px;
+  background: #d9f0f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px; /* mas malaking icon */
+}
+
+.stress-quick-card span {
+  text-align: center;
+  font-size: 16px;
+  line-height: 1.35;
+  color: #536772;
+  font-weight: 700;
+}
+
+.stress-footer {
+  margin-top: auto;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #677983;
+  font-size: 14px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.22);
+  border-top: 1px solid rgba(214, 224, 229, 0.85);
+}
+
+@media (max-width: 1280px) {
+  .stress-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow-y: auto;
+  }
+
+  .stress-content {
+    margin-left: 74px;
+    width: calc(100% - 74px);
+    min-height: auto;
+  }
+
+  .stress-page.sidebar-expanded .stress-content {
+    margin-left: 74px;
+    width: calc(100% - 74px);
+  }
+
+  .stress-main {
+    min-height: auto;
+  }
+
+  .stress-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stress-btn-primary {
+    width: 100%;
+  }
+
+  .stress-quick-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stress-options-row {
+    padding-left: 0;
+  }
+}

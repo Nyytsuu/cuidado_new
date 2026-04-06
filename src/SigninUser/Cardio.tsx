@@ -153,7 +153,7 @@ export default function Cardio() {
               <section className="hero-card">
                 <div className="hero-left">
                   <div className="hero-heart">🫀</div>
-                  <div>
+                  <div className="hero-copy">
                     <h1>Heart</h1>
                     <p>
                       Learn about heart health, the cardiovascular system, common heart
@@ -180,20 +180,22 @@ export default function Cardio() {
                   </button>
                 </div>
 
-                <div className="heart-visual-card">
-                  <div className="heart-visual">🫀</div>
-                  <div className="heartbeat-line"></div>
-                </div>
+                <div className="visual-article-row">
+                  <div className="heart-visual-card">
+                    <div className="heartbeat-line"></div>
+                    <div className="heart-visual">🫀</div>
+                  </div>
 
-                <div className="related-card">
-                  <h3>Related Articles</h3>
-                  <div className="related-list">
-                    {relatedArticles.map((item) => (
-                      <button key={item} type="button" className="related-item">
-                        <span>{item}</span>
-                        <span>›</span>
-                      </button>
-                    ))}
+                  <div className="related-card">
+                    <h3>Related Articles</h3>
+                    <div className="related-list">
+                      {relatedArticles.map((item) => (
+                        <button key={item} type="button" className="related-item">
+                          <span>{item}</span>
+                          <span>›</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -226,58 +228,60 @@ export default function Cardio() {
                   </div>
                 </div>
 
-                <div className="symptoms-card">
-                  <h3>Symptoms of Heart Problems</h3>
-                  <ul>
-                    {symptoms.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
+                <div className="side-cards-column">
+                  <div className="symptoms-card">
+                    <h3>Symptoms of Heart Problems</h3>
+                    <ul>
+                      {symptoms.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
 
-                  <button type="button" className="tips-btn">
-                    Read heart health tips ›
-                  </button>
-                </div>
+                    <button type="button" className="tips-btn">
+                      Read heart health tips ›
+                    </button>
+                  </div>
 
-                <div className="prevention-card">
-                  <h3>Prevention Tips</h3>
-                  <ul>
-                    {preventionTips.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                </div>
+                  <div className="prevention-card">
+                    <h3>Prevention Tips</h3>
+                    <ul>
+                      {preventionTips.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
 
-                <div className="footer-voice-row">
-                  <footer className="heart-footer">
-                    <div className="footer-links">
-                      <span>About Us</span>
-                      <span>|</span>
-                      <span>Contact</span>
-                      <span>|</span>
-                      <span>Privacy Policy</span>
-                      <span>|</span>
-                      <span>Terms of Service</span>
-                    </div>
-                    <p>
-                      This is a general health information page. For serious symptoms,
-                      consult a doctor immediately.
-                    </p>
-                  </footer>
+                  <div className="footer-voice-row">
+                    <footer className="heart-footer">
+                      <div className="footer-links">
+                        <span>About Us</span>
+                        <span>|</span>
+                        <span>Contact</span>
+                        <span>|</span>
+                        <span>Privacy Policy</span>
+                        <span>|</span>
+                        <span>Terms of Service</span>
+                      </div>
+                      <p>
+                        This is a general health information page. For serious symptoms,
+                        consult a doctor immediately.
+                      </p>
+                    </footer>
 
-                  <button type="button" className="voice-fab" aria-label="Voice Search">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                      className="voice-fab-svg"
-                    >
-                      <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2"></path>
-                      <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
-                    </svg>
-                  </button>
+                    <button type="button" className="voice-fab" aria-label="Voice Search">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                        className="voice-fab-svg"
+                      >
+                        <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 1.9-2 2s-2-.9-2-2"></path>
+                        <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </section>
             </section>
