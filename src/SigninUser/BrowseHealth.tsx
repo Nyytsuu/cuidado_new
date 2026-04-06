@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import "./BrowseHealth.css";
 import searchIcon from "../img/search.png";
@@ -8,38 +9,189 @@ type TopicCard = {
   icon: string;
   title: string;
   subtitle: string;
-  tag?: string;
+  tag?: string | null;
+  slug?: string | null;
+  body_system_slug?: string | null;
 };
 
-const bodySystems: TopicCard[] = [
-  { id: "cardio", icon: "❤️", title: "Cardiovascular", subtitle: "Heart & blood vessels" },
-  { id: "resp", icon: "🫁", title: "Respiratory", subtitle: "Lungs & breathing" },
-  { id: "digest", icon: "🫀", title: "Digestive", subtitle: "Stomach & intestines" },
-  { id: "derma", icon: "🧴", title: "Dermatology", subtitle: "Skin health" },
-  { id: "mental", icon: "🧠", title: "Mental Health", subtitle: "Brain & mood" },
-];
+type BodySystem = {
+  id: string;
+  icon: string;
+  title: string;
+  subtitle: string;
+  slug?: string | null;
+  name?: string;
+};
 
-const topicCards: TopicCard[] = [
-  { id: "heart", icon: "❤️", title: "Heart", subtitle: "Cardiovascular health", tag: "Popular" },
-  { id: "skin", icon: "🧴", title: "Skin", subtitle: "Dermatology" },
-  { id: "resp2", icon: "🫁", title: "Respiratory", subtitle: "Lungs & breathing" },
-  { id: "mental2", icon: "🧠", title: "Mental Health", subtitle: "Brain & mood" },
-  { id: "digest2", icon: "🫀", title: "Digestive", subtitle: "Stomach & intestines" },
-  { id: "general", icon: "🩺", title: "General", subtitle: "Common symptoms" },
-];
+type QuickAction = {
+  id: string;
+  icon: string;
+  label: string;
+  tone: string;
+};
 
-const quickActions = [
+const quickActions: QuickAction[] = [
   { id: "symptoms", icon: "🧾", label: "Check Symptoms", tone: "mint" },
   { id: "clinics", icon: "📍", label: "Find Clinics", tone: "blue" },
   { id: "emergency", icon: "🚨", label: "Emergency Guide", tone: "rose" },
 ];
 
 export default function BrowseHealth() {
+  const navigate = useNavigate();
+
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+
   const [search, setSearch] = useState("");
   const [selectedTab, setSelectedTab] = useState("Most common");
+
+  const [bodySystems, setBodySystems] = useState<BodySystem[]>([]);
+  const [topicCards, setTopicCards] = useState<TopicCard[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const userId = 1; // replace with logged-in user id
+
+  useEffect(() => {
+    const loadHealthData = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const [systemsRes, topicsRes] = await Promise.all([
+          fetch("http://localhost:5000/api/health/body-systems"),
+          fetch(`http://localhost:5000/api/health/topics?user_id=${userId}`),
+        ]);
+
+        if (!systemsRes.ok) {
+          throw new Error("Failed to load body systems");
+        }
+
+        if (!topicsRes.ok) {
+          throw new Error("Failed to load health topics");
+        }
+
+        const systemsData = await systemsRes.json();
+        const topicsData = await topicsRes.json();
+
+        const normalizedSystems: BodySystem[] = Array.isArray(systemsData)
+          ? systemsData.map((item: any) => ({
+              id: String(item.id),
+              slug: item.slug ?? null,
+              icon: item.icon ?? "🩺",
+              title: item.title ?? item.name ?? "Health Topic",
+              subtitle: item.subtitle ?? item.short_description ?? "",
+              name: item.name ?? item.title ?? "Health Topic",
+            }))
+          : [];
+
+        const normalizedTopics: TopicCard[] = Array.isArray(topicsData)
+          ? topicsData.map((item: any) => ({
+              id: String(item.id),
+              slug: item.slug ?? null,
+              body_system_slug: item.body_system_slug ?? null,
+              icon: item.icon ?? "🩺",
+              title: item.title ?? item.condition_name ?? "Condition",
+              subtitle: item.subtitle ?? item.body_system_name ?? "Health Topic",
+              tag: item.tag ?? null,
+            }))
+          : [];
+
+        setBodySystems(normalizedSystems);
+        setTopicCards(normalizedTopics);
+      } catch (err) {
+        console.error("Failed to load health data:", err);
+        setError("Failed to load health topics.");
+        setBodySystems([]);
+        setTopicCards([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHealthData();
+  }, [userId]);
+
+  const filteredBodySystems = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) return bodySystems;
+
+    return bodySystems.filter(
+      (item) =>
+        item.title.toLowerCase().includes(query) ||
+        item.subtitle.toLowerCase().includes(query) ||
+        (item.slug || "").toLowerCase().includes(query)
+    );
+  }, [bodySystems, search]);
+
+  const filteredTopicCards = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    let base = topicCards;
+
+    if (selectedTab === "Recently viewed") {
+      base = topicCards.filter((card) => card.tag === "Recently viewed");
+    } else if (selectedTab === "Most common") {
+      base = topicCards.filter(
+        (card) => card.tag === "Popular" || !card.tag || card.tag === "Most common"
+      );
+    }
+
+    if (!query) return base;
+
+    return base.filter(
+      (card) =>
+        card.title.toLowerCase().includes(query) ||
+        card.subtitle.toLowerCase().includes(query) ||
+        (card.tag || "").toLowerCase().includes(query) ||
+        (card.slug || "").toLowerCase().includes(query)
+    );
+  }, [topicCards, search, selectedTab]);
+
+  const handleBodySystemClick = (item: BodySystem) => {
+    if (item.slug) {
+      navigate(`/health/body-system/${item.slug}`);
+      return;
+    }
+
+    const fallbackSlug = (item.title || item.name || "health-topic")
+      .toLowerCase()
+      .replace(/\s+/g, "-");
+
+    navigate(`/health/body-system/${fallbackSlug}`);
+  };
+
+  const handleTopicClick = (card: TopicCard) => {
+    if (card.slug) {
+      navigate(`/health/condition/${card.slug}`);
+      return;
+    }
+
+    if (card.body_system_slug) {
+      navigate(`/health/body-system/${card.body_system_slug}`);
+      return;
+    }
+
+    navigate(`/health/condition/${card.id}`);
+  };
+
+  const handleQuickActionClick = (actionId: string) => {
+    if (actionId === "symptoms") {
+      navigate("/symptom-checker");
+      return;
+    }
+
+    if (actionId === "clinics") {
+      navigate("/clinics");
+      return;
+    }
+
+    if (actionId === "emergency") {
+      navigate("/emergency-guide");
+    }
+  };
 
   return (
     <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -74,17 +226,29 @@ export default function BrowseHealth() {
 
               <div className="sidebar-box">
                 <h3 className="group-title">Body System</h3>
-                <div className="system-list">
-                  {bodySystems.map((item) => (
-                    <button key={item.id} className="system-item" type="button">
-                      <div className="system-item-left">
-                        <span className="system-icon">{item.icon}</span>
-                        <span className="system-name">{item.title}</span>
-                      </div>
-                      <span className="system-arrow">›</span>
-                    </button>
-                  ))}
-                </div>
+
+                {loading ? (
+                  <p>Loading body systems...</p>
+                ) : error ? (
+                  <p>{error}</p>
+                ) : (
+                  <div className="system-list">
+                    {filteredBodySystems.map((item) => (
+                      <button
+                        key={item.id}
+                        className="system-item"
+                        type="button"
+                        onClick={() => handleBodySystemClick(item)}
+                      >
+                        <div className="system-item-left">
+                          <span className="system-icon">{item.icon}</span>
+                          <span className="system-name">{item.title}</span>
+                        </div>
+                        <span className="system-arrow">›</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="sidebar-box">
@@ -95,6 +259,7 @@ export default function BrowseHealth() {
                       key={action.id}
                       className={`quick-action-btn ${action.tone}`}
                       type="button"
+                      onClick={() => handleQuickActionClick(action.id)}
                     >
                       <div className="quick-action-left">
                         <span className="quick-action-icon">{action.icon}</span>
@@ -126,50 +291,56 @@ export default function BrowseHealth() {
                     </button>
                   ))}
                 </div>
-
-                <div className="category-toolbar">
-                  <button type="button" className="toolbar-chip dropdown-chip toolbar-box">
-                    🕘 Recently viewed <span>▾</span>
-                  </button>
-
-                  <div className="toolbar-chip-list toolbar-box">
-                    <button type="button" className="toolbar-chip active">
-                      ❤️ Heart
-                    </button>
-                    <button type="button" className="toolbar-chip">
-                      🧴 Skin
-                    </button>
-                  </div>
-                </div>
               </div>
 
               <div className="content-box category-section-box">
-                <h3 className="recent-title">Recently viewed</h3>
+                <h3 className="recent-title">{selectedTab}</h3>
 
-                <div className="topic-grid">
-                  {topicCards.map((card) => (
-                    <button key={card.id} className="topic-card" type="button">
-                      <div className="topic-left">
-                        <div className="topic-icon-wrap">{card.icon}</div>
-                        <div>
-                          <div className="topic-title-row">
-                            <span className="topic-title">{card.title}</span>
-                            {card.tag ? <span className="topic-tag">{card.tag}</span> : null}
+                {loading ? (
+                  <p>Loading health categories...</p>
+                ) : error ? (
+                  <p>{error}</p>
+                ) : filteredTopicCards.length === 0 ? (
+                  <p>No topics found.</p>
+                ) : (
+                  <div className="topic-grid">
+                    {filteredTopicCards.map((card) => (
+                      <button
+                        key={card.id}
+                        className="topic-card"
+                        type="button"
+                        onClick={() => handleTopicClick(card)}
+                      >
+                        <div className="topic-left">
+                          <div className="topic-icon-wrap">{card.icon}</div>
+                          <div>
+                            <div className="topic-title-row">
+                              <span className="topic-title">{card.title}</span>
+                              {card.tag ? <span className="topic-tag">{card.tag}</span> : null}
+                            </div>
+                            <div className="topic-subtitle">{card.subtitle}</div>
                           </div>
-                          <div className="topic-subtitle">{card.subtitle}</div>
                         </div>
-                      </div>
-                      <span className="system-arrow">›</span>
-                    </button>
-                  ))}
-                </div>
+                        <span className="system-arrow">›</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="voice-search-card">
-                <button type="button" className="voice-info-btn">
+                <button
+                  type="button"
+                  className="voice-info-btn"
+                  onClick={() => navigate("/symptom-checker")}
+                >
                   Describe your symptoms <span className="system-arrow">›</span>
                 </button>
-                <button type="button" className="voice-start-btn">
+                <button
+                  type="button"
+                  className="voice-start-btn"
+                  onClick={() => navigate("/symptom-checker")}
+                >
                   Start Voice Search
                 </button>
               </div>

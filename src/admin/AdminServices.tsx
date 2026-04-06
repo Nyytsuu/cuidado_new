@@ -9,6 +9,7 @@ type Service = {
   name: string;
   is_active: number; // 1 | 0
 };
+
 type AppointmentRow = {
   id: number;
   patient: string;
@@ -16,29 +17,38 @@ type AppointmentRow = {
   schedule: string;
   status: string;
 };
+
 type ActivityItem = {
   id: string;
   type: "user" | "clinic" | "clinic-approved" | "clinic-rejected" | "appointment";
   text: string;
   time: string;
 };
+
 const API = "http://localhost:5000/api/admin";
 
 export default function AdminServices() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
+
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [activities, setActivities] = useState<ActivityItem[]>([]);
-  // ✅ Modal state
+
+  // Add/Edit modal
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [serviceInput, setServiceInput] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // ✅ Load from DB
+  // Activate/Deactivate confirm modal
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+
   const loadServices = async () => {
     try {
       setLoading(true);
@@ -58,16 +68,15 @@ export default function AdminServices() {
     loadServices();
   }, []);
 
-  // ✅ (Optional) Load appointments later (leave empty if no API yet)
-    const loadAppointments = async () => {
+  const loadAppointments = async () => {
     try {
       setLoadingAppointments(true);
-  
+
       const res = await fetch("http://localhost:5000/api/admin/appointments");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  
+
       const data = await res.json();
-  
+
       const mapped: AppointmentRow[] = data.map((a: any) => ({
         id: a.id,
         patient: a.patient_name,
@@ -77,7 +86,7 @@ export default function AdminServices() {
         ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
         status: a.status,
       }));
-  
+
       setAppointments(mapped);
     } catch (e) {
       console.error("Load appointments error:", e);
@@ -86,7 +95,7 @@ export default function AdminServices() {
       setLoadingAppointments(false);
     }
   };
-  // ✅ Load recent activity
+
   const loadActivity = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/admin/recent-activity?limit=8");
@@ -98,11 +107,12 @@ export default function AdminServices() {
       setActivities([]);
     }
   };
-    useEffect(() => {
-      loadActivity();
-      loadAppointments();
-    }, []);
-  // (optional) show only active in list:
+
+  useEffect(() => {
+    loadActivity();
+    loadAppointments();
+  }, []);
+
   const activeServices = useMemo(
     () => services.filter((s) => s.is_active === 1),
     [services]
@@ -127,14 +137,22 @@ export default function AdminServices() {
     setEditingId(null);
   };
 
-  // ✅ Create or Update in DB
+  const openToggleModal = (service: Service) => {
+    setSelectedService(service);
+    setConfirmModalOpen(true);
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmModalOpen(false);
+    setSelectedService(null);
+  };
+
   const saveService = async () => {
     const name = serviceInput.trim();
     if (!name) return;
 
     try {
       if (editingId === null) {
-        // CREATE
         const res = await fetch(`${API}/services`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -142,7 +160,6 @@ export default function AdminServices() {
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       } else {
-        // UPDATE
         const res = await fetch(`${API}/services/${editingId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -159,27 +176,28 @@ export default function AdminServices() {
     }
   };
 
-const handleToggle = async (id: number) => {
-  const ok = confirm("Deactivate/Activate this service?");
-  if (!ok) return;
+  const handleToggle = async () => {
+    if (!selectedService) return;
 
-  try {
-    const res = await fetch(`${API}/services/${id}/toggle`, {
-      method: "PATCH",
-    });
+    try {
+      const res = await fetch(`${API}/services/${selectedService.id}/toggle`, {
+        method: "PATCH",
+      });
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      closeConfirmModal();
+      loadServices();
+    } catch (e) {
+      console.error("Toggle service error:", e);
+      alert("Failed to update service status.");
     }
+  };
 
-    loadServices();
-  } catch (e) {
-    console.error("Toggle service error:", e);
-    alert("Failed to update service status.");
-  }
-};
-const onViewAppointment = (id: number) => {
+  const onViewAppointment = (id: number) => {
     console.log("View appointment:", id);
   };
 
@@ -206,8 +224,12 @@ const onViewAppointment = (id: number) => {
           </div>
 
           <nav className="header-nav">
-            <a className="nav-link" href="../admin/dashboard">Home</a>
-            <a className="nav-link" href="../admin/appointments">Appointments</a>
+            <a className="nav-link" href="../admin/dashboard">
+              Home
+            </a>
+            <a className="nav-link" href="../admin/appointments">
+              Appointments
+            </a>
 
             <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
               <button
@@ -284,7 +306,7 @@ const onViewAppointment = (id: number) => {
                             <button
                               type="button"
                               className="pill pill-danger"
-                              onClick={() => handleToggle(s.id)}
+                              onClick={() => openToggleModal(s)}
                             >
                               {s.is_active === 1 ? "Deactivate" : "Activate"}
                             </button>
@@ -296,9 +318,7 @@ const onViewAppointment = (id: number) => {
                 </div>
               </section>
 
-              {/* RIGHT: ASIDE (dashboard style) */}
               <aside className="dash-aside">
-                {/* Recent activity */}
                 <div className="dash-panel dash-right-top">
                   <div className="dash-panel-title">Recent activity</div>
 
@@ -330,9 +350,7 @@ const onViewAppointment = (id: number) => {
                   </div>
                 </div>
 
-                  {/* ✅ Appointment Section PANEL inside aside */}
-                                  <Panel title="Appointment Section">
-                 
+                <Panel title="Appointment Section">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -343,7 +361,13 @@ const onViewAppointment = (id: number) => {
                     </thead>
 
                     <tbody>
-                      {appointments.length === 0 ? (
+                      {loadingAppointments ? (
+                        <tr>
+                          <td colSpan={3} className="td-empty">
+                            Loading appointments...
+                          </td>
+                        </tr>
+                      ) : appointments.length === 0 ? (
                         <tr>
                           <td colSpan={3} className="td-empty">
                             Appointments API not connected yet.
@@ -380,7 +404,6 @@ const onViewAppointment = (id: number) => {
           </div>
         </section>
 
-        {/* ✅ Modal Popup */}
         {serviceModalOpen && (
           <div className="service-modal-overlay" onClick={closeModal} role="presentation">
             <div
@@ -418,11 +441,59 @@ const onViewAppointment = (id: number) => {
             </div>
           </div>
         )}
+
+        {confirmModalOpen && selectedService && (
+          <div
+            className="service-modal-overlay"
+            onClick={closeConfirmModal}
+            role="presentation"
+          >
+            <div
+              className="service-modal"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="confirmModalTitle"
+            >
+              <h3 id="confirmModalTitle">
+                {selectedService.is_active === 1 ? "Deactivate Service" : "Activate Service"}
+              </h3>
+
+              <p className="confirm-text">
+                Are you sure you want to{" "}
+                <strong>
+                  {selectedService.is_active === 1 ? "deactivate" : "activate"}
+                </strong>{" "}
+                <span className="confirm-service-name">"{selectedService.name}"</span>?
+              </p>
+
+              <div className="service-modal-actions">
+                <button
+                  type="button"
+                  className="service-btn cancel"
+                  onClick={closeConfirmModal}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="button"
+                  className={`service-btn ${
+                    selectedService.is_active === 1 ? "danger" : "save"
+                  }`}
+                  onClick={handleToggle}
+                >
+                  {selectedService.is_active === 1 ? "Deactivate" : "Activate"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 }
-/* ✅ same Panel helper style used in dashboard */
+
 function Panel({ title, children }: any) {
   return (
     <div className="dash-panel">

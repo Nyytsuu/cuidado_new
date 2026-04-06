@@ -1,82 +1,288 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./services.css";
 import SidebarClinic from "./SidebarClinic";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
+
+type ApiServiceRow = {
+  id: number;
+  name: string;
+  description?: string | null;
+  price?: number | null;
+  duration?: number | null;
+  duration_minutes?: number | null;
+  is_active: number;
+};
 
 type ServiceRow = {
   id: string;
   name: string;
   description: string;
   price?: number;
-  duration?: number; // minutes
+  duration?: number;
   enabled: boolean;
 };
 
+type ServiceForm = {
+  name: string;
+  description: string;
+  price: string;
+  duration: string;
+  enabled: boolean;
+};
+
+const emptyForm: ServiceForm = {
+  name: "",
+  description: "",
+  price: "",
+  duration: "",
+  enabled: true,
+};
+
 export default function Services() {
+  const API = "http://localhost:5000/api";
+  const clinicId = 1; // TODO: replace with logged-in clinic id
+
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
-  const [services, setServices] = useState<ServiceRow[]>([
-    {
-      id: "s1",
-      name: "General Consultation",
-      description: "Basic health assessment and consultation.",
-      price: 500,
-      duration: 30,
-      enabled: true,
-    },
-    {
-      id: "s2",
-      name: "Dental Checkup",
-      description: "Routine dental examination and cleaning.",
-      price: 800,
-      duration: 45,
-      enabled: true,
-    },
-    {
-      id: "s3",
-      name: "Pediatric Visit",
-      description: "Child wellness check and consultation.",
-      price: 600,
-      duration: 30,
-      enabled: false,
-    },
-    {
-      id: "s4",
-      name: "Vaccination",
-      description: "Vaccination service with basic screening.",
-      enabled: true,
-    },
-  ]);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [services, setServices] = useState<ServiceRow[]>([]);
 
-  const rows = useMemo(() => services, [services]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [modalMode, setModalMode] = useState<"add" | "edit">("add");
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const [form, setForm] = useState<ServiceForm>(emptyForm);
 
-  const addService = () => {
-    alert("Add new service (connect modal/form later)");
+  const loadServices = async () => {
+    try {
+      setLoadingServices(true);
+
+      const res = await fetch(`${API}/clinic/services?clinic_id=${clinicId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const data = await res.json();
+
+      const normalized: ServiceRow[] = Array.isArray(data)
+        ? data.map((item: ApiServiceRow) => ({
+            id: String(item.id),
+            name: item.name || "Unnamed Service",
+            description: item.description || "No description available.",
+            price: item.price != null ? Number(item.price) : undefined,
+            duration:
+              item.duration != null
+                ? Number(item.duration)
+                : item.duration_minutes != null
+                ? Number(item.duration_minutes)
+                : undefined,
+            enabled: Number(item.is_active) === 1,
+          }))
+        : [];
+
+      setServices(normalized);
+    } catch (error) {
+      console.error("Load clinic services error:", error);
+      setServices([]);
+    } finally {
+      setLoadingServices(false);
+    }
   };
 
-  const editService = (row: ServiceRow) => {
-    alert(`Edit service: ${row.name}`);
-  };
+  useEffect(() => {
+    loadServices();
+  }, []);
 
-  const deleteService = (id: string) => {
-    const ok = confirm("Delete this service?");
-    if (!ok) return;
-    setServices((prev) => prev.filter((s) => s.id !== id));
-  };
+  const rows = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
 
-  const toggleService = (id: string) => {
-    setServices((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s))
+    if (!keyword) return services;
+
+    return services.filter(
+      (row) =>
+        row.name.toLowerCase().includes(keyword) ||
+        row.description.toLowerCase().includes(keyword)
     );
+  }, [services, searchTerm]);
+
+  const openAddModal = () => {
+    setModalMode("add");
+    setSelectedServiceId(null);
+    setForm(emptyForm);
+    setIsModalOpen(true);
   };
+
+  const openEditModal = (row: ServiceRow) => {
+    setModalMode("edit");
+    setSelectedServiceId(row.id);
+    setForm({
+      name: row.name,
+      description: row.description,
+      price: row.price != null ? String(row.price) : "",
+      duration: row.duration != null ? String(row.duration) : "",
+      enabled: row.enabled,
+    });
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    if (isSaving) return;
+    setIsModalOpen(false);
+    setSelectedServiceId(null);
+    setForm(emptyForm);
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const target = e.target;
+
+    if (target instanceof HTMLInputElement && target.type === "checkbox") {
+      setForm((prev) => ({
+        ...prev,
+        [target.name]: target.checked,
+      }));
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      [target.name]: target.value,
+    }));
+  };
+
+  const buildServicePayload = (data: {
+    id?: string | null;
+    name: string;
+    description: string;
+    price?: number | null;
+    duration?: number | null;
+    enabled: boolean;
+  }) => ({
+    clinic_id: clinicId,
+    id: data.id ? Number(data.id) : undefined,
+    name: data.name.trim(),
+    description: data.description.trim() || null,
+    price: data.price ?? null,
+    duration: data.duration ?? null,
+    duration_minutes: data.duration ?? null,
+    is_active: data.enabled ? 1 : 0,
+  });
+
+  const handleSaveService = async () => {
+    if (!form.name.trim()) {
+      alert("Service name is required.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      const payload = buildServicePayload({
+        id: selectedServiceId,
+        name: form.name,
+        description: form.description,
+        price: form.price !== "" ? Number(form.price) : null,
+        duration: form.duration !== "" ? Number(form.duration) : null,
+        enabled: form.enabled,
+      });
+
+      const isAdd = modalMode === "add";
+      const url = isAdd
+        ? `${API}/clinic/services`
+        : `${API}/clinic/services/${selectedServiceId}`;
+
+      const method = isAdd ? "POST" : "PATCH";
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const raw = await res.text();
+      console.log("Save service response:", res.status, raw);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} - ${raw}`);
+      }
+
+      await loadServices();
+      closeModal();
+      alert(`Service ${isAdd ? "added" : "updated"} successfully.`);
+    } catch (error) {
+      console.error("Save service error:", error);
+      alert(`Failed to save service: ${String(error)}`);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const deleteService = async (id: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this service?");
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${API}/clinic/services/${id}`, {
+        method: "DELETE",
+      });
+
+      const raw = await res.text();
+      console.log("Delete service response:", res.status, raw);
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status} - ${raw}`);
+      }
+
+      setServices((prev) => prev.filter((service) => service.id !== id));
+    } catch (error) {
+      console.error("Delete service error:", error);
+      alert(`Failed to delete service: ${String(error)}`);
+    }
+  };
+
+  const toggleService = async (id: string) => {
+  const target = services.find((service) => service.id === id);
+  if (!target) return;
+
+  const nextEnabled = !target.enabled;
+  const nextIsActive = nextEnabled ? 1 : 0;
+
+  try {
+    const res = await fetch(`${API}/clinic/services/${id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        is_active: nextIsActive,
+      }),
+    });
+
+    const raw = await res.text();
+    console.log("Toggle status response:", res.status, raw);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} - ${raw}`);
+    }
+
+    setServices((prev) =>
+      prev.map((service) =>
+        service.id === id ? { ...service, enabled: nextEnabled } : service
+      )
+    );
+  } catch (error) {
+    console.error("Toggle service error:", error);
+    alert(`Failed to update service status: ${String(error)}`);
+  }
+};
 
   return (
-    // ✅ IMPORTANT: this MUST match your CSS selector ".services"
-    <div className={`services with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
+    <div className={`services with-sidebar ${isModalOpen ? "modal-open" : ""}`}>
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -90,7 +296,12 @@ export default function Services() {
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
             <div className="header-search">
-              <input type="text" placeholder="Search keywords..." />
+              <input
+                type="text"
+                placeholder="Search keywords..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
               <button aria-label="Search" type="button" className="search-btn">
                 <img src={searchIcon} alt="Search" />
               </button>
@@ -123,7 +334,6 @@ export default function Services() {
           </nav>
         </header>
 
-        {/* ✅ SERVICES ADMIN CONTENT */}
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title services-titlebar">
@@ -132,7 +342,7 @@ export default function Services() {
               <button
                 type="button"
                 className="pill pill-resched add-btn"
-                onClick={addService}
+                onClick={openAddModal}
               >
                 + Add New Service
               </button>
@@ -141,7 +351,6 @@ export default function Services() {
             <div className="admin-grid">
               <section className="admin-card admin-table-card">
                 <div className="users-table">
-                  {/* header row */}
                   <div className="users-row users-header">
                     <div className="users-cell">Service Name</div>
                     <div className="users-cell">Description</div>
@@ -151,89 +360,202 @@ export default function Services() {
                     <div className="users-cell">Actions</div>
                   </div>
 
-                  {/* rows */}
-                  {rows.map((row) => (
-                    <div className="users-row" key={row.id}>
-                      <div className="users-cell users-name">{row.name}</div>
-
-                      <div className="users-cell">
-                        <span className="pills pills-desc">{row.description}</span>
-                      </div>
-
-                      <div className="users-cell">
-                        <span className="pills">
-                          {row.price != null ? `₱${row.price}` : "—"}
-                        </span>
-                      </div>
-
-                      <div className="users-cell">
-                        <span className="pills">
-                          {row.duration != null ? `${row.duration} min` : "—"}
-                        </span>
-                      </div>
-
-                      <div className="users-cell">
-                        <span
-                          className={`pill ${
-                            row.enabled ? "pill-success" : "pill-gray"
-                          }`}
-                        >
-                          {row.enabled ? "Enabled" : "Disabled"}
-                        </span>
-                      </div>
-
-                      <div className="users-cell">
-                        <div className="users-actions">
-                          <button
-                            type="button"
-                            className="pill pill-view"
-                            onClick={() => editService(row)}
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            type="button"
-                            className="pill pill-danger"
-                            onClick={() => deleteService(row.id)}
-                          >
-                            Delete
-                          </button>
-
-                          <button
-                            type="button"
-                            className={`pill ${
-                              row.enabled ? "pill-gray" : "pill-success"
-                            }`}
-                            onClick={() => toggleService(row.id)}
-                          >
-                            {row.enabled ? "Disable" : "Enable"}
-                          </button>
-                        </div>
+                  {loadingServices ? (
+                    <div className="users-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        Loading services...
                       </div>
                     </div>
-                  ))}
+                  ) : rows.length === 0 ? (
+                    <div className="users-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        No services found.
+                      </div>
+                    </div>
+                  ) : (
+                    rows.map((row) => (
+                      <div className="users-row" key={row.id}>
+                        <div className="users-cell users-name">{row.name}</div>
+
+                        <div className="users-cell">
+                          <span className="pills pills-desc">{row.description}</span>
+                        </div>
+
+                        <div className="users-cell">
+                          <span className="pills">
+                            {row.price != null ? `₱${row.price}` : "—"}
+                          </span>
+                        </div>
+
+                        <div className="users-cell">
+                          <span className="pills">
+                            {row.duration != null ? `${row.duration} min` : "—"}
+                          </span>
+                        </div>
+
+                        <div className="users-cell">
+                          <span
+                            className={`pill ${
+                              row.enabled ? "pill-success" : "pill-gray"
+                            }`}
+                          >
+                            {row.enabled ? "Enabled" : "Disabled"}
+                          </span>
+                        </div>
+
+                        <div className="users-cell">
+                          <div className="users-actions">
+                            <button
+                              type="button"
+                              className="pill pill-view"
+                              onClick={() => openEditModal(row)}
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              className="pill pill-danger"
+                              onClick={() => deleteService(row.id)}
+                            >
+                              Delete
+                            </button>
+
+                            <button
+                              type="button"
+                              className={`pill ${
+                                row.enabled ? "pill-gray" : "pill-success"
+                              }`}
+                              onClick={() => toggleService(row.id)}
+                            >
+                              {row.enabled ? "Disable" : "Enable"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </section>
 
               <aside className="admin-right">
                 <div className="admin-card admin-right-card small-card">
                   <h3>Service Tips</h3>
-                  <p>Add services your clinic offers and manage availability.</p>
+                  <p>Manage clinic services here using add, edit, delete, and status actions.</p>
                 </div>
 
                 <div className="admin-card admin-right-card big-card">
-                  <h3>Examples</h3>
-                  <p>• General Consultation</p>
-                  <p>• Dental Checkup</p>
-                  <p>• Pediatric Visit</p>
-                  <p>• Vaccination</p>
+                  <h3>Note</h3>
+                  <p>Services can now be created and updated using the popup form.</p>
                 </div>
               </aside>
             </div>
           </div>
         </section>
       </main>
+
+      {isModalOpen && (
+        <div className="service-modal-overlay" onClick={closeModal}>
+          <div className="service-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="service-modal-header">
+              <h3>{modalMode === "add" ? "Add Service" : "Edit Service"}</h3>
+              <button
+                type="button"
+                className="service-modal-close"
+                onClick={closeModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="service-modal-body">
+              <div className="form-group">
+                <label>Service Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={form.name}
+                  onChange={handleChange}
+                  placeholder="Enter service name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Enter description"
+                  rows={4}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Price</label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={form.price}
+                    onChange={handleChange}
+                    placeholder="Enter price"
+                    min="0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Duration (minutes)</label>
+                  <input
+                    type="number"
+                    name="duration"
+                    value={form.duration}
+                    onChange={handleChange}
+                    placeholder="Enter duration"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group checkbox-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    name="enabled"
+                    checked={form.enabled}
+                    onChange={handleChange}
+                  />
+                  Enabled
+                </label>
+              </div>
+            </div>
+
+            <div className="service-modal-footer">
+              <button
+                type="button"
+                className="pill pill-gray"
+                onClick={closeModal}
+                disabled={isSaving}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="pill pill-success"
+                onClick={handleSaveService}
+                disabled={isSaving}
+              >
+                {isSaving
+                  ? "Saving..."
+                  : modalMode === "add"
+                  ? "Add Service"
+                  : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

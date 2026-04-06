@@ -58,6 +58,18 @@ const rightTools = [
   },
 ];
 
+type SymptomCheckerResponse = {
+  success: boolean;
+  message: string;
+  data?: {
+    logId: number;
+    selectedSymptoms: string[];
+    matchedSymptoms: string[];
+    possibleConditions: string[];
+    adviceLevel: "self-care" | "consult" | "urgent";
+  };
+};
+
 export default function SympCheck() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -66,6 +78,87 @@ export default function SympCheck() {
   const [symptomInput, setSymptomInput] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [possibleConditions, setPossibleConditions] = useState<string[]>([]);
+  const [matchedSymptoms, setMatchedSymptoms] = useState<string[]>([]);
+  const [adviceLevel, setAdviceLevel] = useState("");
+
+  const handleSymptomCardClick = (title: string) => {
+    let mappedTitle = title;
+
+    if (title === "Cold & Flu") mappedTitle = "Fever";
+    if (title === "Headache") mappedTitle = "Fever";
+    if (title === "Fatigue") mappedTitle = "Fever";
+
+    const currentSymptoms = symptomInput
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (
+      currentSymptoms.some(
+        (item) => item.toLowerCase() === mappedTitle.toLowerCase()
+      )
+    ) {
+      return;
+    }
+
+    const updatedSymptoms = [...currentSymptoms, mappedTitle];
+    setSymptomInput(updatedSymptoms.join(", "));
+  };
+
+  const handleCheckSymptoms = async () => {
+    setError("");
+    setSuccessMessage("");
+    setPossibleConditions([]);
+    setMatchedSymptoms([]);
+    setAdviceLevel("");
+
+    const selectedSymptoms = symptomInput
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (selectedSymptoms.length === 0) {
+      setError("Please enter at least one symptom.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch("http://localhost:5000/api/symptom-checker", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: 1, // replace with real logged in user id later
+          selectedSymptoms,
+          age,
+          gender,
+        }),
+      });
+
+      const result: SymptomCheckerResponse = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to check symptoms");
+      }
+
+      setSuccessMessage(result.message || "Symptom check completed.");
+      setPossibleConditions(result.data?.possibleConditions || []);
+      setMatchedSymptoms(result.data?.matchedSymptoms || []);
+      setAdviceLevel(result.data?.adviceLevel || "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={`sympcheck-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -96,7 +189,7 @@ export default function SympCheck() {
                 <div className="sympcheck-input-row full">
                   <input
                     type="text"
-                    placeholder="e.g.. headache, fatigue, nausea..."
+                    placeholder="e.g. Fever, Cough, Shortness of Breath"
                     value={symptomInput}
                     onChange={(e) => setSymptomInput(e.target.value)}
                   />
@@ -119,17 +212,54 @@ export default function SympCheck() {
 
                   <div className="sympcheck-select">
                     <span className="select-icon">👤</span>
-                    <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                    >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                     </select>
                     <span className="dropdown-arrow">▼</span>
                   </div>
 
-                  <button type="button" className="sympcheck-btn-primary">
-                    Check Symptoms
+                  <button
+                    type="button"
+                    className="sympcheck-btn-primary"
+                    onClick={handleCheckSymptoms}
+                    disabled={loading}
+                  >
+                    {loading ? "Checking..." : "Check Symptoms"}
                   </button>
                 </div>
+
+                {error && (
+                  <p style={{ color: "red", marginTop: "12px" }}>{error}</p>
+                )}
+
+                {successMessage && (
+                  <p style={{ color: "green", marginTop: "12px" }}>
+                    {successMessage}
+                  </p>
+                )}
+
+                {matchedSymptoms.length > 0 && (
+                  <div style={{ marginTop: "14px" }}>
+                    <strong>Matched Symptoms:</strong> {matchedSymptoms.join(", ")}
+                  </div>
+                )}
+
+                {possibleConditions.length > 0 && (
+                  <div style={{ marginTop: "10px" }}>
+                    <strong>Possible Conditions:</strong>{" "}
+                    {possibleConditions.join(", ")}
+                  </div>
+                )}
+
+                {adviceLevel && (
+                  <div style={{ marginTop: "10px" }}>
+                    <strong>Advice Level:</strong> {adviceLevel}
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -140,7 +270,12 @@ export default function SympCheck() {
             <div className="common-symptoms-row">
               <div className="symptom-card-list">
                 {symptomCards.map((item) => (
-                  <button key={item.id} className="symptom-card" type="button">
+                  <button
+                    key={item.id}
+                    className="symptom-card"
+                    type="button"
+                    onClick={() => handleSymptomCardClick(item.title)}
+                  >
                     <div className="symptom-card-icon">{item.icon}</div>
                     <span>{item.title}</span>
                   </button>
@@ -149,7 +284,10 @@ export default function SympCheck() {
 
               <div className="consult-card">
                 <div className="consult-icon">💡</div>
-                <p>Always consult with a healthcare professional for a proper diagnosis.</p>
+                <p>
+                  Always consult with a healthcare professional for a proper
+                  diagnosis.
+                </p>
               </div>
             </div>
           </section>

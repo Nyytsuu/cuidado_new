@@ -5,9 +5,9 @@ const mysql = require("mysql2");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "root123",
+  password: "Cuidado_2026-cp1!",
   database: "cuidado_medihelp",
-  port: 3307,
+  port: 3306,
 });
 
 router.get("/provinces", (req, res) => {

@@ -1,13 +1,27 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import UserSidebar from "../Categories/UserSidebar";
 import "./Homepage.css";
 
 const topServices = [
-  { title: "Doctors", subtitle: "Search physicians", iconType: "doctors" },
-  { title: "Clinics", subtitle: "Find health-care centers", iconType: "clinics" },
-  { title: "Diagnostics", subtitle: "Book visits & screenings", iconType: "diagnostics" },
-  { title: "Pharmacy", subtitle: "Order prescriptions", iconType: "pharmacy" },
-  { title: "Therapy", subtitle: "Care and support services", iconType: "therapy" },
+  {
+    title: "Clinics",
+    subtitle: "Find health-care centers",
+    iconType: "clinics",
+    path: "/clinics",
+  },
+  {
+    title: "Diagnostics",
+    subtitle: "Book visits & screenings",
+    iconType: "diagnostics",
+    path: "/appointments",
+  },
 ];
 
 const quickActions = [
@@ -15,31 +29,19 @@ const quickActions = [
     title: "Book Appointment",
     subtitle: "Schedule a visit with a doctor",
     iconType: "calendar",
-  },
-  {
-    title: "Order Medicine",
-    subtitle: "Get your prescriptions delivered",
-    iconType: "medicine",
+    path: "/appointments",
   },
   {
     title: "Symptom Checker",
     subtitle: "Assess your symptoms online",
     iconType: "symptom",
+    path: "/symptom-checker",
   },
   {
     title: "Health Tips",
     subtitle: "Read health & wellness advice",
     iconType: "healthtips",
-  },
-  {
-    title: "Insurance Services",
-    subtitle: "Manage your health insurance",
-    iconType: "insurance",
-  },
-  {
-    title: "Medical Records",
-    subtitle: "Access your medical history",
-    iconType: "records",
+    path: "/health-tips",
   },
 ];
 
@@ -48,16 +50,19 @@ const otherServices = [
     title: "Hospital Locator",
     subtitle: "Find a nearby health center",
     iconType: "hospital",
+    path: "/clinics",
   },
   {
     title: "BMI Calculator",
     subtitle: "Check your body mass index",
     iconType: "bmi",
+    path: "/bmi-calculator",
   },
   {
     title: "Stress Index",
     subtitle: "Check your stress and burnout",
     iconType: "stress",
+    path: "/stress-index",
   },
 ];
 
@@ -84,10 +89,49 @@ const articles = [
   },
 ];
 
+const clinicMarkers = [
+  {
+    id: 1,
+    name: "Bacoor Health Center",
+    position: [14.4591, 120.9398] as [number, number],
+    address: "Bacoor, Cavite",
+  },
+  {
+    id: 2,
+    name: "City Clinic",
+    position: [14.4625, 120.9475] as [number, number],
+    address: "Bacoor Blvd, Cavite",
+  },
+  {
+    id: 3,
+    name: "Family Care Clinic",
+    position: [14.4548, 120.9342] as [number, number],
+    address: "Molino, Bacoor",
+  },
+];
+
+const DefaultIcon = L.icon({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
 export default function Homepage() {
+  const navigate = useNavigate();
+
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+
+  const handleNavigate = (path: string) => {
+    navigate(path);
+  };
 
   return (
     <div className={`homepage ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -111,7 +155,12 @@ export default function Homepage() {
 
               <div className="services-grid">
                 {topServices.map((item) => (
-                  <div key={item.title} className="service-card">
+                  <button
+                    key={item.title}
+                    type="button"
+                    className="service-card clickable-card"
+                    onClick={() => handleNavigate(item.path)}
+                  >
                     <div className={`service-icon-circle ${item.iconType}-service-icon`}>
                       {item.iconType === "doctors" && (
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -148,14 +197,18 @@ export default function Homepage() {
                       <h3>{item.title}</h3>
                       <p>{item.subtitle}</p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
 
               <div className="section quick-other-section">
                 <div className="section-header">
                   <h2>Quick Actions</h2>
-                  <button type="button" className="see-all-btn">
+                  <button
+                    type="button"
+                    className="see-all-btn"
+                    onClick={() => handleNavigate("/appointments")}
+                  >
                     See All
                   </button>
                 </div>
@@ -164,19 +217,17 @@ export default function Homepage() {
                   <div className="quick-other-left">
                     <div className="quick-grid">
                       {quickActions.map((item) => (
-                        <div key={item.title} className="quick-card">
+                        <button
+                          key={item.title}
+                          type="button"
+                          className="quick-card clickable-card"
+                          onClick={() => handleNavigate(item.path)}
+                        >
                           <div className={`quick-icon ${item.iconType}-icon`}>
                             {item.iconType === "calendar" && (
                               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M5 20V8h14V6v14z"></path>
                                 <path d="M7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm-8 4h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"></path>
-                              </svg>
-                            )}
-
-                            {item.iconType === "medicine" && (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M18 6h-1V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v2H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2M9 4h6v2H9zM6 20V8h12v12z"></path>
-                                <path d="M13 10h-2v3H8v2h3v3h2v-3h3v-2h-3z"></path>
                               </svg>
                             )}
 
@@ -192,25 +243,13 @@ export default function Homepage() {
                                 <path d="M9 21h6v-1H9zM12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.89 11.32-.89.63V16h-4v-2.05l-.89-.63A4.98 4.98 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.17-2.11 4.32z"></path>
                               </svg>
                             )}
-
-                            {item.iconType === "insurance" && (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M12 2 4 5v6c0 5.25 3.4 10.17 8 11 4.6-.83 8-5.75 8-11V5l-8-3zm-1 13-3-3 1.41-1.41L11 12.17l3.59-3.58L16 10l-5 5z"></path>
-                              </svg>
-                            )}
-
-                            {item.iconType === "records" && (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8zm0 2.5L18.5 9H14zM8 13h8v2H8zm0 4h5v2H8zm0-8h3v2H8z"></path>
-                              </svg>
-                            )}
                           </div>
 
                           <div className="quick-text">
                             <h3>{item.title}</h3>
                             <p>{item.subtitle}</p>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
 
@@ -219,7 +258,12 @@ export default function Homepage() {
 
                       <div className="other-grid">
                         {otherServices.map((item) => (
-                          <div key={item.title} className="other-card">
+                          <button
+                            key={item.title}
+                            type="button"
+                            className="other-card clickable-card"
+                            onClick={() => handleNavigate(item.path)}
+                          >
                             <div className={`other-icon ${item.iconType}-other-icon`}>
                               {item.iconType === "hospital" && (
                                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -244,21 +288,50 @@ export default function Homepage() {
                               <h3>{item.title}</h3>
                               <p>{item.subtitle}</p>
                             </div>
-                          </div>
+                          </button>
                         ))}
                       </div>
                     </div>
                   </div>
 
                   <div className="map-card">
-                    <div className="map-surface">
-                      <div className="map-label">Bacoor</div>
-                      <div className="map-pin pin-1"></div>
-                      <div className="map-pin pin-2"></div>
-                      <div className="map-pin pin-3"></div>
-                      <div className="map-pin pin-4"></div>
+                    <div className="leaflet-map-wrap">
+                      <MapContainer
+                        center={[14.4591, 120.9398]}
+                        zoom={13}
+                        scrollWheelZoom={false}
+                        className="leaflet-map"
+                      >
+                        <TileLayer
+                          attribution='&copy; OpenStreetMap contributors'
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+
+                        {clinicMarkers.map((clinic) => (
+                          <Marker key={clinic.id} position={clinic.position}>
+                            <Popup>
+                              <strong>{clinic.name}</strong>
+                              <br />
+                              {clinic.address}
+                              <br />
+                              <button
+                                type="button"
+                                className="popup-route-btn"
+                                onClick={() => handleNavigate("/clinics")}
+                              >
+                                View clinics
+                              </button>
+                            </Popup>
+                          </Marker>
+                        ))}
+                      </MapContainer>
                     </div>
-                    <button type="button" className="find-clinic-btn">
+
+                    <button
+                      type="button"
+                      className="find-clinic-btn"
+                      onClick={() => handleNavigate("/clinics")}
+                    >
                       Find Clinics Nearby
                     </button>
                   </div>
@@ -273,41 +346,57 @@ export default function Homepage() {
                   </div>
 
                   <div className="mini-services-grid">
-                    <div className="mini-service-item">
+                    <button
+                      type="button"
+                      className="mini-service-item"
+                      onClick={() => handleNavigate("/emergency")}
+                    >
                       <div className="mini-service-icon emergency-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d="M12 2 1 21h22L12 2zm1 14h-2v2h2zm0-6h-2v5h2z"></path>
                         </svg>
                       </div>
                       <span>Emergency</span>
-                    </div>
+                    </button>
 
-                    <div className="mini-service-item">
+                    <button
+                      type="button"
+                      className="mini-service-item"
+                      onClick={() => handleNavigate("/help")}
+                    >
                       <div className="mini-service-icon help-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 17h-2v-2h2zm1.07-7.75-.9.92c-.72.73-1.17 1.33-1.17 2.83h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26a2 2 0 1 0-3.41-1.41H6a4 4 0 1 1 8 0c0 .88-.36 1.68-.93 2.25z"></path>
                         </svg>
                       </div>
                       <span>Help</span>
-                    </div>
+                    </button>
 
-                    <div className="mini-service-item">
+                    <button
+                      type="button"
+                      className="mini-service-item"
+                      onClick={() => handleNavigate("/logout")}
+                    >
                       <div className="mini-service-icon logout-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d="M13 3h-2v10h2zm-1 19C6.48 22 2 17.52 2 12c0-3.53 1.84-6.63 4.61-8.4l1.01 1.73A7.96 7.96 0 0 0 4 12c0 4.41 3.59 8 8 8s8-3.59 8-8c0-2.8-1.45-5.27-3.64-6.69l1.01-1.73A9.96 9.96 0 0 1 22 12c0 5.52-4.48 10-10 10z"></path>
                         </svg>
                       </div>
                       <span>Logout</span>
-                    </div>
+                    </button>
 
-                    <div className="mini-service-item">
+                    <button
+                      type="button"
+                      className="mini-service-item"
+                      onClick={() => handleNavigate("/logout")}
+                    >
                       <div className="mini-service-icon logout-lock-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d="M17 8h-1V6a4 4 0 1 0-8 0v2H7c-1.1 0-2 .9-2 2v10h14V10c0-1.1-.9-2-2-2zm-7-2a2 2 0 1 1 4 0v2h-4z"></path>
                         </svg>
                       </div>
                       <span>Logout</span>
-                    </div>
+                    </button>
                   </div>
                 </div>
 
@@ -321,7 +410,11 @@ export default function Homepage() {
                     <span>Your health, just a voice away</span>
                   </div>
 
-                  <button type="button" className="voice-btn">
+                  <button
+                    type="button"
+                    className="voice-btn"
+                    onClick={() => handleNavigate("/voice-assistant")}
+                  >
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
                     </svg>
@@ -330,13 +423,15 @@ export default function Homepage() {
               </div>
 
               <div className="footer-links">
-                <span>About Us</span>
+                <span onClick={() => handleNavigate("/about")}>About Us</span>
                 <span>|</span>
-                <span>Contact</span>
+                <span onClick={() => handleNavigate("/contact")}>Contact</span>
                 <span>|</span>
-                <span>Privacy Policy</span>
+                <span onClick={() => handleNavigate("/privacy-policy")}>Privacy Policy</span>
                 <span>|</span>
-                <span>Terms of Service</span>
+                <span onClick={() => handleNavigate("/terms-of-service")}>
+                  Terms of Service
+                </span>
               </div>
             </section>
 
@@ -345,7 +440,18 @@ export default function Homepage() {
 
               <div className="articles-list">
                 {articles.map((article, index) => (
-                  <div key={`${article.title}-${index}`} className="article-item">
+                  <div
+                    key={`${article.title}-${index}`}
+                    className="article-item"
+                    onClick={() => handleNavigate("/health-tips")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleNavigate("/health-tips");
+                      }
+                    }}
+                  >
                     <div className="article-img"></div>
                     <div className="article-text">
                       <h4>{article.title}</h4>

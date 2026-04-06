@@ -10,13 +10,13 @@ import Categories from "./Categories/Categories";
 import Changepass from "./SigninUser/Changepass";
 import VerifyOtp from "./SigninUser/VerifyOtp";
 import BrowseHealth from "./SigninUser/BrowseHealth";
-import Cardio from "./SigninUser/Cardio";
+import BodySystemDetails from "./SigninUser/BodySystemDetails";
 import SympCheck from "./SigninUser/SympCheck";
 import UserAppointment from "./SigninUser/UserAppointment";
 import FindClinic from "./SigninUser/FindClinic";
 import Homepage from "./SigninUser/Homepage";
-import BMICalculator from "./SigninUser/BMICalculator";
-import StressIndex from "./SigninUser/StressIndex";
+import ConditionDetails from "./SigninUser/ConditionDetails";
+import UserProfile from "./SigninUser/UserProfile";
 
 // admin
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
@@ -33,7 +33,10 @@ import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
 import ClinicSignup from "./Clinic/ClinicSignup";
 import ClinicDashboard from "./Clinic/ClinicDashboard";
-
+import ClinicAppoint from "./Clinic/ClinicAppoint";
+import Patients from "./Clinic/Patient";
+import Services from "./Clinic/services";
+import ClinicProfile from "./Clinic/ClinicProfile";
 function App() {
   return (
     <BrowserRouter>
@@ -49,19 +52,22 @@ function App() {
         <Route path="/categories" element={<Categories />} />
         <Route path="/landing" element={<LandingPage />} />
         <Route path="/browse-health" element={<BrowseHealth />} />
-        <Route path="/cardio" element={<Cardio />} />
+        <Route path="/health/body-system/:slug" element={<BodySystemDetails />} />
+        <Route path="/health/condition/:slug" element={<ConditionDetails />} />
         <Route path="/symptom-checker" element={<SympCheck />} />
         <Route path="/appointments" element={<UserAppointment />} />
         <Route path="/find-clinic" element={<FindClinic />} />
         <Route path="/homepage" element={<Homepage />} />
-        <Route path="/bmi-calculator" element={<BMICalculator />} />
-        <Route path="/stress-index" element={<StressIndex />} />
+        <Route path="/profile" element={<UserProfile />} />
         
         </Route>
         {/* clinic */}
-        <Route path="/Clinicsignup" element={<ClinicSignup />} />
-        <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
-
+<Route path="/clinic/signup" element={<ClinicSignup />} />
+<Route path="/clinic/dashboard" element={<ClinicDashboard />} />
+<Route path="/clinic/appointments" element={<ClinicAppoint />} />
+<Route path="/clinic/patients" element={<Patients />} />
+<Route path="/clinic/services" element={<Services />} /> 
+<Route path="/clinic/profile" element={<ClinicProfile />} />
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />
