@@ -774,6 +774,7 @@
   color: #dc2626;
 }
 
+/* QUICK ACTIONS - copied from second picture */
 .user-layout .quick-card {
   margin-top: 16px;
   padding: 18px;
@@ -927,6 +928,7 @@
   border-radius: 20px;
   padding: 24px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+ 
 }
 
 .booking-modal-header {
@@ -1150,6 +1152,7 @@
   }
 
   .user-layout .appointment-actions {
+    display: flex;
     width: 100%;
     flex-direction: row;
     justify-content: flex-start;
