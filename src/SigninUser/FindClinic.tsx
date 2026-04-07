@@ -6,12 +6,13 @@ import {
   Circle,
   Gift,
   ChevronDown,
+  LocateFixed,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
 import "./FindClinic.css";
 import "leaflet/dist/leaflet.css";
 
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -19,6 +20,18 @@ L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+const highlightedUserIcon = new L.DivIcon({
+  className: "fc-user-location-icon",
+  html: `
+    <div class="fc-user-location-pin">
+      <div class="fc-user-location-dot"></div>
+      <div class="fc-user-location-pulse"></div>
+    </div>
+  `,
+  iconSize: [26, 26],
+  iconAnchor: [13, 13],
 });
 
 type Clinic = {
@@ -44,6 +57,24 @@ type ClinicWithDistance = Clinic & {
   isOpenNow: boolean;
 };
 
+function MapFlyTo({
+  center,
+  zoom,
+}: {
+  center: [number, number] | null;
+  zoom: number;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, zoom, { duration: 1.2 });
+    }
+  }, [center, zoom, map]);
+
+  return null;
+}
+
 export default function FindClinic() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -59,6 +90,9 @@ export default function FindClinic() {
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
+  const [highlightLocation, setHighlightLocation] = useState(false);
+  const [mapTarget, setMapTarget] = useState<[number, number] | null>(null);
+
   const [booking, setBooking] = useState(false);
   const [bookingMessage, setBookingMessage] = useState("");
 
@@ -109,20 +143,43 @@ export default function FindClinic() {
     }
 
     setLocating(true);
+    setError("");
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setUserLocation({
+        const coords = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        });
+        };
+
+        setUserLocation(coords);
+        setHighlightLocation(true);
+        setMapTarget([coords.lat, coords.lng]);
         setLocating(false);
+
+        setTimeout(() => {
+          setHighlightLocation(false);
+        }, 3000);
       },
       () => {
         setError("Unable to get your location.");
         setLocating(false);
       }
     );
+  };
+
+  const handleHighlightMyLocation = () => {
+    if (!userLocation) {
+      requestLocation();
+      return;
+    }
+
+    setHighlightLocation(true);
+    setMapTarget([userLocation.lat, userLocation.lng]);
+
+    setTimeout(() => {
+      setHighlightLocation(false);
+    }, 3000);
   };
 
   const haversineDistance = (
@@ -438,6 +495,18 @@ export default function FindClinic() {
               <Gift size={14} strokeWidth={2.2} />
               <span>Offers</span>
             </button>
+
+            <button
+              type="button"
+              className={`fc-filter-chip fc-highlight-location-btn ${
+                highlightLocation ? "active" : ""
+              }`}
+              onClick={handleHighlightMyLocation}
+              disabled={locating}
+            >
+              <LocateFixed size={14} strokeWidth={2.2} />
+              <span>{locating ? "Locating..." : "My Location"}</span>
+            </button>
           </div>
 
           {error && <p className="fc-message fc-message-error">{error}</p>}
@@ -515,13 +584,18 @@ export default function FindClinic() {
                 scrollWheelZoom={true}
                 style={{ height: "100%", minHeight: "590px", width: "100%" }}
               >
+                <MapFlyTo center={mapTarget} zoom={16} />
+
                 <TileLayer
                   attribution="&copy; OpenStreetMap contributors"
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
 
                 {userLocation && (
-                  <Marker position={[userLocation.lat, userLocation.lng]}>
+                  <Marker
+                    position={[userLocation.lat, userLocation.lng]}
+                    icon={highlightLocation ? highlightedUserIcon : undefined}
+                  >
                     <Popup>You are here</Popup>
                   </Marker>
                 )}
