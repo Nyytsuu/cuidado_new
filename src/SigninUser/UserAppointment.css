@@ -122,7 +122,7 @@
 }
 
 .user-layout .tab.active::after {
- content: "";
+  content: "";
   position: absolute;
   left: 0;
   bottom: 0;
@@ -400,7 +400,7 @@
   grid-template-columns: 78px minmax(0, 1fr) 130px 92px 28px;
   gap: 12px;
   align-items: center;
-  padding: 10px 12px;
+  padding: 12px;
   border: 1px solid #e7edf2;
   border-radius: 14px;
   background: #fff;
@@ -559,7 +559,13 @@
 }
 
 .user-layout .appointment-actions {
-  display: none;
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 2;
 }
 
 .user-layout .mini-action-btn {
@@ -572,6 +578,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  pointer-events: auto;
 }
 
 .user-layout .mini-action-btn:hover:not(:disabled) {
@@ -767,7 +774,6 @@
   color: #dc2626;
 }
 
-/* QUICK ACTIONS - copied from second picture */
 .user-layout .quick-card {
   margin-top: 16px;
   padding: 18px;
@@ -921,7 +927,6 @@
   border-radius: 20px;
   padding: 24px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
- 
 }
 
 .booking-modal-header {
@@ -977,8 +982,8 @@
   padding: 12px 14px;
   font-size: 14px;
   outline: none;
-  background: #ffffff;   /* ADD THIS */
-  color: #111827;        /* ADD THIS */
+  background: #ffffff;
+  color: #111827;
 }
 
 .booking-field textarea {
@@ -1013,6 +1018,7 @@
   gap: 10px;
   margin-top: 20px;
 }
+
 .booking-modal-actions .book-btn {
   order: 1;
   width: auto;
@@ -1111,10 +1117,6 @@
     grid-template-columns: 220px minmax(0, 1fr) 280px;
   }
 
-  .user-layout .appointment-item {
-    grid-template-columns: 70px minmax(0, 1fr) 118px 84px 24px;
-  }
-
   .user-layout .change-actions {
     width: 190px;
   }
@@ -1143,26 +1145,14 @@
     align-items: flex-start;
   }
 
+  .user-layout .appointment-more {
+    justify-self: start;
+  }
+
   .user-layout .appointment-actions {
-    display: flex;
     width: 100%;
     flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .user-layout .mini-action-btn {
-    flex: 1 1 140px;
-  }
-
-  .user-layout .action-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .user-layout .change-actions,
-  .user-layout .top-actions {
-    width: 100%;
+    justify-content: flex-start;
   }
 
   .appointments-filter-card .booking-form-grid {
@@ -1170,39 +1160,41 @@
   }
 }
 
-@media (max-width: 768px) {
-  .booking-form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .user-layout .appointments-page {
-    padding: 18px 14px 24px;
-  }
-
+@media (max-width: 700px) {
   .user-layout .appointments-topbar {
     flex-direction: column;
     align-items: stretch;
   }
 
+  .user-layout .top-actions {
+    justify-content: stretch;
+    flex-wrap: wrap;
+  }
+
+  .user-layout .filter-btn,
+  .user-layout .book-btn {
+    flex: 1 1 160px;
+  }
+
+  .booking-form-grid,
   .appointments-filter-card .booking-form-grid {
     grid-template-columns: 1fr;
   }
 
-  .user-layout .summary-stats {
-    grid-template-columns: 1fr;
+  .user-layout .action-card {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .user-layout .tab {
-    flex: 1 1 0;
+  .user-layout .change-actions {
+    width: 100%;
   }
 
-  .user-layout .right-column {
-    min-width: 0;
+  .user-layout .appointment-actions {
+    flex-direction: column;
   }
 
-  .user-layout .summary-card,
-  .user-layout .quick-card,
-  .user-layout .health-card {
-    min-width: 0;
+  .user-layout .mini-action-btn {
+    width: 100%;
   }
 }
