@@ -596,7 +596,7 @@ function UserAppointmentsContent() {
 
   useEffect(() => {
     loadAppointments();
-  }, [userId]);
+  }, []);
 
   const now = Date.now();
 
@@ -687,16 +687,44 @@ function UserAppointmentsContent() {
   const canEditAppointment = (appointment: Appointment) =>
     appointment.status === "pending" || appointment.status === "confirmed";
 
+  const closeCancelModal = () => {
+    setCancelOpen(false);
+    setCancelConfirmOpen(false);
+    setCancelReason("");
+    setCancelSubmitting(false);
+  };
+
+  const closeRescheduleModal = () => {
+    setRescheduleOpen(false);
+    setRescheduleDate("");
+    setRescheduleTime("");
+    setRescheduleSubmitting(false);
+  };
+
   const openCancelModal = (appointment: Appointment) => {
+    if (!canEditAppointment(appointment)) {
+      setActionMessage("Only pending or confirmed appointments can be cancelled.");
+      return;
+    }
+
+    setActionMessage("");
     setSelectedAppointment(appointment);
+    setRescheduleOpen(false);
     setCancelReason("");
     setCancelConfirmOpen(false);
     setCancelOpen(true);
-    setActionMessage("");
   };
 
   const openRescheduleModal = (appointment: Appointment) => {
+    if (!canEditAppointment(appointment)) {
+      setActionMessage("Only pending or confirmed appointments can be rescheduled.");
+      return;
+    }
+
+    setActionMessage("");
     setSelectedAppointment(appointment);
+    setCancelOpen(false);
+    setCancelConfirmOpen(false);
 
     if (isValidDate(appointment.start_at)) {
       const start = new Date(appointment.start_at);
@@ -714,7 +742,6 @@ function UserAppointmentsContent() {
     }
 
     setRescheduleOpen(true);
-    setActionMessage("");
   };
 
   const handleCancelAppointment = async () => {
@@ -744,11 +771,10 @@ function UserAppointmentsContent() {
         throw new Error(data.message || "Failed to cancel appointment");
       }
 
-      setCancelConfirmOpen(false);
-      setCancelOpen(false);
+      closeCancelModal();
       setSelectedAppointment(null);
       setActionMessage("Appointment cancelled successfully.");
-      loadAppointments();
+      await loadAppointments();
     } catch (err) {
       setActionMessage(
         err instanceof Error ? err.message : "Failed to cancel appointment."
@@ -819,10 +845,10 @@ function UserAppointmentsContent() {
         throw new Error(data.message || "Failed to reschedule appointment");
       }
 
-      setRescheduleOpen(false);
+      closeRescheduleModal();
       setSelectedAppointment(null);
       setActionMessage("Appointment rescheduled successfully.");
-      loadAppointments();
+      await loadAppointments();
     } catch (err) {
       setActionMessage(
         err instanceof Error ? err.message : "Failed to reschedule appointment."
@@ -866,11 +892,7 @@ function UserAppointmentsContent() {
               Filter
             </button>
 
-            <button
-              className="book-btn"
-              type="button"
-              onClick={() => setBookingOpen(true)}
-            >
+            <button className="book-btn" type="button" onClick={() => setBookingOpen(true)}>
               <Plus size={18} />
               Book Appointment
             </button>
@@ -950,10 +972,7 @@ function UserAppointmentsContent() {
 
               <div className="booking-field">
                 <label>Clinic</label>
-                <select
-                  value={clinicFilter}
-                  onChange={(e) => setClinicFilter(e.target.value)}
-                >
+                <select value={clinicFilter} onChange={(e) => setClinicFilter(e.target.value)}>
                   <option value="all">All clinics</option>
                   {clinicOptions.map((clinic) => (
                     <option key={clinic} value={clinic}>
@@ -1061,9 +1080,7 @@ function UserAppointmentsContent() {
               </div>
 
               <div className="today-section">
-                <p className="today-section-title">
-                  Today • {formatDate(todayReference)}
-                </p>
+                <p className="today-section-title">Today • {formatDate(todayReference)}</p>
 
                 {dayAppointments.length > 0 ? (
                   <div className="today-mini-card">
@@ -1135,9 +1152,7 @@ function UserAppointmentsContent() {
                         <div className="appointment-avatar">👨‍⚕️</div>
 
                         <div className="appointment-info">
-                          <h3>
-                            {item.clinic_name_snapshot || item.clinic_name || "Clinic"}
-                          </h3>
+                          <h3>{item.clinic_name_snapshot || item.clinic_name || "Clinic"}</h3>
 
                           <p>{item.purpose || item.specialization || "Consultation"}</p>
 
@@ -1174,43 +1189,23 @@ function UserAppointmentsContent() {
                           <MoreVertical size={18} />
                         </button>
                       </div>
-
-                      <div className="appointment-actions">
-                        <button
-                          className="mini-action-btn"
-                          type="button"
-                          disabled={!canEditAppointment(item)}
-                          onClick={() => openRescheduleModal(item)}
-                        >
-                          Reschedule
-                        </button>
-
-                        <button
-                          className="mini-action-btn danger"
-                          type="button"
-                          disabled={!canEditAppointment(item)}
-                          onClick={() => openCancelModal(item)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
                     </div>
                   ))}
                 </div>
               )}
 
-             {activeTab !== "calendar" && (
-             <button
-                className="view-all-btn"
-                type="button"
-                onClick={() => {
-                setActiveTab("calendar");
-                setShowAllAppointments(true);
-              }}
+              {activeTab !== "calendar" && (
+                <button
+                  className="view-all-btn"
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("calendar");
+                    setShowAllAppointments(true);
+                  }}
                 >
-               View All Appointments →
-              </button>
-             )}
+                  View All Appointments →
+                </button>
+              )}
             </div>
 
             {activeTab !== "calendar" && (
@@ -1314,8 +1309,8 @@ function UserAppointmentsContent() {
                 <h3>Health Tip</h3>
               </div>
               <p>
-                Regular check-ups help detect health issues early and keep you on
-                track for a healthier life.
+                Regular check-ups help detect health issues early and keep you on track for a
+                healthier life.
               </p>
               <div className="health-watermark">♡</div>
             </div>
@@ -1342,14 +1337,7 @@ function UserAppointmentsContent() {
                     "Clinic"}
                 </p>
               </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => {
-                  setCancelOpen(false);
-                  setCancelConfirmOpen(false);
-                }}
-              >
+              <button type="button" className="modal-close-btn" onClick={closeCancelModal}>
                 <X size={18} />
               </button>
             </div>
@@ -1365,14 +1353,7 @@ function UserAppointmentsContent() {
             </div>
 
             <div className="booking-modal-actions">
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={() => {
-                  setCancelOpen(false);
-                  setCancelConfirmOpen(false);
-                }}
-              >
+              <button type="button" className="cancel-btn" onClick={closeCancelModal}>
                 Back
               </button>
               <button
@@ -1451,11 +1432,7 @@ function UserAppointmentsContent() {
                     "Clinic"}
                 </p>
               </div>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setRescheduleOpen(false)}
-              >
+              <button type="button" className="modal-close-btn" onClick={closeRescheduleModal}>
                 <X size={18} />
               </button>
             </div>
@@ -1491,11 +1468,7 @@ function UserAppointmentsContent() {
             )}
 
             <div className="booking-modal-actions">
-              <button
-                type="button"
-                className="cancel-btn"
-                onClick={() => setRescheduleOpen(false)}
-              >
+              <button type="button" className="cancel-btn" onClick={closeRescheduleModal}>
                 Back
               </button>
               <button
