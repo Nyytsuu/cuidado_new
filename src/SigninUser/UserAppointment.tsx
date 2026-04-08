@@ -515,8 +515,7 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
             <h4>Selected Service</h4>
             <p>{selectedService.name}</p>
             <small>
-              ₱{Number(selectedService.price).toFixed(2)} •{" "}
-              {selectedService.duration_minutes} mins
+              ₱{Number(selectedService.price).toFixed(2)} • {selectedService.duration_minutes} mins
             </small>
           </div>
         )}
@@ -1189,6 +1188,24 @@ function UserAppointmentsContent() {
                           <MoreVertical size={18} />
                         </button>
                       </div>
+
+                      <div className="appointment-actions">
+                        <button
+                          className="mini-action-btn"
+                          type="button"
+                          onClick={() => openRescheduleModal(item)}
+                        >
+                          Reschedule
+                        </button>
+
+                        <button
+                          className="mini-action-btn danger"
+                          type="button"
+                          onClick={() => openCancelModal(item)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1207,35 +1224,6 @@ function UserAppointmentsContent() {
                 </button>
               )}
             </div>
-
-            {activeTab !== "calendar" && (
-              <div className="card action-card">
-                <div>
-                  <h3>Need to make a change?</h3>
-                  <p>Reschedule or cancel your appointment easily.</p>
-                </div>
-
-                <div className="change-actions">
-                  <button
-                    className="reschedule-btn"
-                    type="button"
-                    disabled={!nextAppointment || !canEditAppointment(nextAppointment)}
-                    onClick={() => nextAppointment && openRescheduleModal(nextAppointment)}
-                  >
-                    Reschedule
-                  </button>
-
-                  <button
-                    className="cancel-btn"
-                    type="button"
-                    disabled={!nextAppointment || !canEditAppointment(nextAppointment)}
-                    onClick={() => nextAppointment && openCancelModal(nextAppointment)}
-                  >
-                    Cancel Appointment
-                  </button>
-                </div>
-              </div>
-            )}
 
             {actionMessage && <div className="booking-success">{actionMessage}</div>}
           </div>

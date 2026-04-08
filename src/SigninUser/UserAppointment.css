@@ -47,7 +47,6 @@
 
 .user-layout .filter-btn,
 .user-layout .book-btn,
-.user-layout .reschedule-btn,
 .user-layout .cancel-btn,
 .user-layout .view-all-btn {
   cursor: pointer;
@@ -60,8 +59,8 @@
 }
 
 .user-layout .filter-btn {
-  height: 38px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 16px;
   border-radius: 12px;
   background: #fff;
   border: 1px solid #dce3ea;
@@ -74,8 +73,8 @@
 }
 
 .user-layout .book-btn {
-  height: 38px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 16px;
   border-radius: 12px;
   border: none;
   background: #0b8a84;
@@ -134,7 +133,7 @@
 
 .user-layout .appointments-grid {
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 320px;
+  grid-template-columns: 230px minmax(0, 1fr) 300px;
   gap: 20px;
   align-items: start;
   width: 100%;
@@ -159,8 +158,7 @@
 .user-layout .summary-card,
 .user-layout .quick-card,
 .user-layout .health-card,
-.user-layout .calendar-card,
-.user-layout .action-card {
+.user-layout .calendar-card {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -297,14 +295,14 @@
 }
 
 .user-layout .today-mini-card {
-  padding: 10px;
+  padding: 12px;
   border-radius: 14px;
   border: 1px solid #e7edf2;
   background: #fbfdff;
 }
 
 .user-layout .today-mini-time {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   color: #172033;
   margin-bottom: 12px;
@@ -317,8 +315,8 @@
 }
 
 .user-layout .today-mini-avatar {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 999px;
   background: #dbeafe;
   display: flex;
@@ -370,7 +368,7 @@
 
 /* CENTER */
 .user-layout .appointments-card {
-  padding: 14px;
+  padding: 20px;
   min-width: 0;
 }
 
@@ -378,11 +376,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 
 .user-layout .appointments-card h2 {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
   color: #172033;
   margin: 0;
@@ -391,18 +389,18 @@
 .user-layout .appointment-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
   width: 100%;
 }
 
 .user-layout .appointment-item {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr) 130px 92px 28px;
-  gap: 12px;
+  grid-template-columns: 110px minmax(0, 1.6fr) 170px 120px 32px;
+  gap: 18px;
   align-items: center;
-  padding: 12px;
+  padding: 22px 20px;
   border: 1px solid #e7edf2;
-  border-radius: 14px;
+  border-radius: 18px;
   background: #fff;
   width: 100%;
   min-width: 0;
@@ -414,7 +412,7 @@
 }
 
 .user-layout .time-main {
-  font-size: 14px;
+  font-size: 20px;
   font-weight: 800;
   color: #0b8a84;
   line-height: 1.2;
@@ -424,19 +422,19 @@
 .user-layout .appointment-info-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   min-width: 0;
 }
 
 .user-layout .appointment-avatar {
-  width: 46px;
-  height: 46px;
+  width: 58px;
+  height: 58px;
   border-radius: 999px;
   background: #e0f2fe;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 26px;
   flex-shrink: 0;
 }
 
@@ -445,37 +443,37 @@
 }
 
 .user-layout .appointment-info h3 {
-  font-size: 14px;
+  font-size: 18px;
   color: #172033;
-  margin: 0 0 2px;
+  margin: 0 0 6px;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.25;
   word-break: break-word;
 }
 
 .user-layout .appointment-info p {
-  font-size: 12px;
+  font-size: 14px;
   color: #6b7280;
-  margin: 0 0 6px;
-  line-height: 1.3;
+  margin: 0 0 8px;
+  line-height: 1.45;
   word-break: break-word;
 }
 
 .user-layout .appointment-info small {
   display: block;
-  margin-top: 6px;
+  margin-top: 8px;
   color: #64748b;
-  font-size: 11px;
-  line-height: 1.3;
+  font-size: 13px;
+  line-height: 1.45;
   word-break: break-word;
 }
 
 .user-layout .clinic-row {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   color: #6b7280;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .user-layout .appointment-date {
@@ -487,23 +485,23 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 2px;
-  font-weight: 600;
-  font-size: 13px;
+  margin-bottom: 4px;
+  font-weight: 700;
+  font-size: 15px;
 }
 
 .user-layout .appointment-date small {
   color: #9ca3af;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .user-layout .status {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
-  border-radius: 9px;
-  font-size: 11px;
+  padding: 8px 14px;
+  border-radius: 11px;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
   text-align: center;
@@ -546,8 +544,8 @@
 }
 
 .user-layout .more-btn {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   border: none;
   background: transparent;
   color: #94a3b8;
@@ -561,8 +559,8 @@
 .user-layout .appointment-actions {
   grid-column: 1 / -1;
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 10px;
   flex-wrap: wrap;
   position: relative;
   z-index: 2;
@@ -572,10 +570,10 @@
   border: 1px solid #dbe3ef;
   background: #fff;
   color: #1e293b;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   pointer-events: auto;
@@ -600,79 +598,19 @@
 
 .user-layout .view-all-btn {
   width: 100%;
-  margin-top: 10px;
-  min-height: 40px;
+  margin-top: 14px;
+  min-height: 44px;
   border: none;
   background: transparent;
   color: #0b6f69;
   border-radius: 14px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 800;
   transition: all 0.2s ease;
 }
 
 .user-layout .view-all-btn:hover {
   color: #095f5a;
-}
-
-.user-layout .action-card {
-  margin-top: 14px;
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-}
-
-.user-layout .action-card h3 {
-  font-size: 15px;
-  color: #172033;
-  margin: 0 0 4px;
-}
-
-.user-layout .action-card p {
-  color: #6b7280;
-  font-size: 12px;
-  margin: 0;
-}
-
-.user-layout .change-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 210px;
-  flex-shrink: 0;
-}
-
-.user-layout .reschedule-btn {
-  width: 100%;
-  min-width: 0;
-  height: 38px;
-  padding: 0 14px;
-  padding-top: 10px;
-  border-radius: 12px;
-  background: #fff;
-  color: #0b8a84;
-  border: 2px solid #72bcb8;
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.user-layout .cancel-btn {
-  width: 100%;
-  min-width: 0;
-  height: 38px;
-  padding: 0 14px;
-  border-radius: 12px;
-  background: #fff;
-  color: #dc2626;
-  border: 2px solid #f1a5a5;
-  font-weight: 700;
-  font-size: 13px;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* RIGHT COLUMN */
@@ -1116,11 +1054,21 @@
 
 @media (max-width: 1280px) {
   .user-layout .appointments-grid {
-    grid-template-columns: 220px minmax(0, 1fr) 280px;
+    grid-template-columns: 210px minmax(0, 1fr) 280px;
   }
 
-  .user-layout .change-actions {
-    width: 190px;
+  .user-layout .appointment-item {
+    grid-template-columns: 90px minmax(0, 1.4fr) 150px 110px 28px;
+    padding: 18px 16px;
+    gap: 14px;
+  }
+
+  .user-layout .time-main {
+    font-size: 18px;
+  }
+
+  .user-layout .appointment-info h3 {
+    font-size: 16px;
   }
 }
 
@@ -1182,15 +1130,6 @@
   .booking-form-grid,
   .appointments-filter-card .booking-form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .user-layout .action-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .user-layout .change-actions {
-    width: 100%;
   }
 
   .user-layout .appointment-actions {
