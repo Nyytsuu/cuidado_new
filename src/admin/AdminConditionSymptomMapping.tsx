@@ -39,6 +39,12 @@ export default function AdminConditionSymptomMapping() {
   const [selectedSymptoms, setSelectedSymptoms] = useState<SelectedSymptom[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState<{
+  type: "success" | "error" | "warning";
+  message: string;
+} | null>(null);
+
+
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -139,8 +145,13 @@ export default function AdminConditionSymptomMapping() {
 
   const handleSave = async () => {
     if (!selectedConditionId) {
-      alert("Please select a condition first.");
-      return;
+     setToast({
+  type: "warning",
+  message: "Please select a condition first.",
+});
+
+setTimeout(() => setToast(null), 2500);
+return;
     }
 
     try {
@@ -159,7 +170,12 @@ export default function AdminConditionSymptomMapping() {
         return;
       }
 
-      alert("Condition-symptom mapping saved successfully.");
+     setToast({
+  type: "success",
+  message: "Condition-symptom mapping saved successfully.",
+});
+
+setTimeout(() => setToast(null), 2500);
     } catch (err) {
       console.error("Save mapping error:", err);
       alert("Something went wrong while saving mapping.");
@@ -385,6 +401,24 @@ export default function AdminConditionSymptomMapping() {
           </div>
         </section>
       </main>
+      
+
+      {toast && (
+  <div className={`mapping-toast ${toast.type}`}>
+    <div className="mapping-toast-content">
+      <span className="toast-icon">
+        {toast.type === "success"
+          ? "✔"
+          : toast.type === "error"
+          ? "✖"
+          : "⚠"}
+      </span>
+      <span>{toast.message}</span>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }

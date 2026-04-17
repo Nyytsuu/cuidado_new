@@ -58,11 +58,19 @@ export default function AdminClinics() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+   
+  const [editResultPopup, setEditResultPopup] = useState<{
+  type: "success" | "error";
+  message: string;
+} | null>(null);
 
+    
+  // NEW: edit popup
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<ClinicRow | null>(null);
   const [editClinicNameInput, setEditClinicNameInput] = useState("");
 
+  // NEW: activate / deactivate popup
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
   const [statusClinic, setStatusClinic] = useState<ClinicRow | null>(null);
   const [pendingAccountStatus, setPendingAccountStatus] = useState<"active" | "disabled" | null>(
@@ -207,21 +215,75 @@ export default function AdminClinics() {
   };
 
   const editClinicName = async (id: number, newName: string) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clinic_name: newName }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  try {
+    const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinic_name: newName }),
+    });
 
-      setClinics((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, clinic_name: newName } : c))
-      );
-    } catch (e) {
-      console.error("Edit clinic error:", e);
-      alert("Failed to edit clinic.");
-    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    setClinics((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, clinic_name: newName } : c))
+    );
+
+    // ✅ SUCCESS POPUP
+    setEditResultPopup({
+      type: "success",
+      message: "Clinic updated successfully.",
+    });
+
+  } catch (e) {
+    console.error("Edit clinic error:", e);
+
+    // ❌ ERROR POPUP
+    setEditResultPopup({
+      type: "error",
+      message: "Failed to edit clinic.",
+    });
+  }
+};
+
+  // NEW
+  const openEditPopup = (clinic: ClinicRow) => {
+    setEditingClinic(clinic);
+    setEditClinicNameInput(clinic.clinic_name);
+    setEditPopupOpen(true);
+  };
+
+  const closeEditPopup = () => {
+    setEditPopupOpen(false);
+    setEditingClinic(null);
+    setEditClinicNameInput("");
+  };
+
+  const saveEditedClinic = async () => {
+    if (!editingClinic) return;
+    const newName = editClinicNameInput.trim();
+    if (!newName) return;
+
+    await editClinicName(editingClinic.id, newName);
+    closeEditPopup();
+  };
+
+  // NEW
+  const openStatusPopup = (clinic: ClinicRow, status: "active" | "disabled") => {
+    setStatusClinic(clinic);
+    setPendingAccountStatus(status);
+    setStatusPopupOpen(true);
+  };
+
+  const closeStatusPopup = () => {
+    setStatusPopupOpen(false);
+    setStatusClinic(null);
+    setPendingAccountStatus(null);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!statusClinic || !pendingAccountStatus) return;
+    await setClinicStatus(statusClinic.id, pendingAccountStatus);
+    closeStatusPopup();
   };
 
   const openEditPopup = (clinic: ClinicRow) => {
@@ -342,6 +404,166 @@ export default function AdminClinics() {
               <section className="admin-card admin-table-card">
                 <div className="clinics-table-wrap">
                   <table className="admin-table clinics-table">
+                    <thead>
+                      <tr>
+                        <th>Registered Clinics</th>
+                        <th>Approval</th>
+                        <th>Account</th>
+                        <th>Actions:</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: "center" }}>Loading...</td>
+                        </tr>
+                      ) : filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: "center" }}>No clinics found.</td>
+                        </tr>
+                      ) : (
+                        filtered.map((c) => {
+                          const isPending = c.status === "pending";
+                          const isApproved = c.status === "approved";
+                          const isRejected = c.status === "rejected";
+
+                          const isActive = c.account_status === "active";
+                          const isDisabled = c.account_status === "disabled";
+
+                          return (
+                            <tr key={c.id}>
+                              <td className="users-name">{c.clinic_name}</td>
+
+                              <td>
+                                <span
+                                  className={[
+                                    "pill",
+                                    isPending ? "pill-warning" : "",
+                                    isApproved ? "pill-success" : "",
+                                    isRejected ? "pill-danger" : "",
+                                  ].join(" ")}
+                                >
+                                  {c.status}
+                                </span>
+                              </td>
+
+                              <td>
+                                <span
+                                  className={[
+                                    "pill",
+                                    isActive ? "pill-success" : "",
+                                    isDisabled ? "pill-dark" : "",
+                                  ].join(" ")}
+                                >
+                                  {c.account_status}
+                                </span>
+                              </td>
+
+                              <td>
+                                <div className="users-actions clinics-actions slots">
+                                  <button
+                                    type="button"
+                                    className="pill pill-view pill-wide"
+                                    onClick={() => {
+                                      setSelectedClinic(c);
+                                      setIsClinicPopupOpen(true);
+                                    }}
+                                  >
+                                    View
+                                  </button>
+
+                                  {isPending && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="pill pill-success pill-wide"
+                                        onClick={() => approveClinic(c.id)}
+                                      >
+                                        Approve
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        className="pill pill-danger pill-wide"
+                                        onClick={() => rejectClinic(c.id)}
+                                      >
+                                        Reject
+                                      </button>
+                                    </>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    className="pill pill-gray pill-wide"
+                                    onClick={() => openEditPopup(c)}
+                                  >
+                                    Edit
+                                  </button>
+
+                                  {isApproved &&
+                                    (isDisabled ? (
+                                      <button
+                                        type="button"
+                                        className="pill pill-success pill-wide"
+                                        onClick={() => openStatusPopup(c, "active")}
+                                      >
+                                        Activate
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className="pill pill-dark pill-wide"
+                                        onClick={() => openStatusPopup(c, "disabled")}
+                                      >
+                                        Deactivate
+                                      </button>
+                                    ))}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <aside className="admin-right">
+                <div className="dash-panel dash-right-top">
+                  <div className="dash-panel-title">Recent activity</div>
+
+                  <div className="dash-panel-body dash-body-small">
+                    {activities.length === 0 ? (
+                      <div className="activity-empty">No recent activity yet.</div>
+                    ) : (
+                      <ul className="activity-list">
+                        {activities.slice(0, 3).map((item) => (
+                          <li key={item.id} className={`activity-item ${item.type}`}>
+                            <div className="activity-icon">
+                              {item.type === "user" && "👤"}
+                              {item.type === "clinic" && "🏥"}
+                              {item.type === "clinic-approved" && "✅"}
+                              {item.type === "clinic-rejected" && "❌"}
+                              {item.type === "appointment" && "📅"}
+                            </div>
+
+                            <div className="activity-content">
+                              <div className="activity-text">{item.text}</div>
+                              <div className="activity-time">
+                                {new Date(item.time).toLocaleString()}
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
+                <Panel title="Appointment Section">
+                  <table className="dash-table">
                     <thead>
                       <tr>
                         <th>Registered Clinics</th>
@@ -636,6 +858,46 @@ export default function AdminClinics() {
         </div>
       )}
 
+
+      {editResultPopup && (
+  <div
+    className="clinic-status-popup-overlay"
+    onClick={() => setEditResultPopup(null)}
+  >
+    <div
+      className={`clinic-status-popup-card ${
+        editResultPopup.type === "success"
+          ? "result-popup-success"
+          : "result-popup-error"
+      }`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* TITLE */}
+      <div className="result-popup-title">
+        {editResultPopup.type === "success"
+          ? "Clinic Updated"
+          : "Update Failed"}
+      </div>
+
+      {/* MESSAGE */}
+      <div className="result-popup-message">
+        {editResultPopup.message}
+      </div>
+
+      {/* BUTTON */}
+      <div className="clinic-status-popup-actions">
+        <button
+          type="button"
+          className="clinic-status-popup-btn result-popup-btn"
+          onClick={() => setEditResultPopup(null)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
       {statusPopupOpen && statusClinic && pendingAccountStatus && (
         <div
           className="clinic-status-popup-overlay"
@@ -684,7 +946,7 @@ export default function AdminClinics() {
   );
 }
 
-function Panel({ title, children, className = "" }: any) {
+function Panel({ title, children }: any) {
   return (
     <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">

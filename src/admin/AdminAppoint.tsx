@@ -58,6 +58,9 @@ export default function AdminAppoint() {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selected, setSelected] = useState<AppointmentDetails | null>(null);
   const navigate = useNavigate();
+   
+   const [cancelPopupOpen, setCancelPopupOpen] = useState(false);
+const [cancelId, setCancelId] = useState<number | null>(null);
 
 const handleLogout = () => {
   // remove auth data
@@ -129,9 +132,8 @@ const handleLogout = () => {
   };
 
   const cancelAppointment = (id: number) => {
-  const ok = window.confirm("Cancel this appointment?");
-  if (!ok) return;
-  setStatus(id, "cancelled", "Admin cancelled");
+  setCancelId(id);
+  setCancelPopupOpen(true);
 };
 
 const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: string) => {
@@ -171,6 +173,15 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
   if (status === "confirmed") return "pill pill-view";
   if (status === "no_show") return "pill pill-gray";
   return "pill pill-warning"; // pending
+};  
+
+
+   const confirmCancel = () => {
+  if (!cancelId) return;
+
+  setStatus(cancelId, "cancelled", "Admin cancelled");
+  setCancelPopupOpen(false);
+  setCancelId(null);
 };
 
   return (
@@ -392,6 +403,55 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
     </div>
   </div>
 )}
+
+
+      {cancelPopupOpen && (
+  <div className="modal-backdrop" onClick={() => setCancelPopupOpen(false)}>
+    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+      
+      <div className="modal-head">
+        <h3>Cancel Appointment</h3>
+        <button
+          className="modal-close"
+          onClick={() => setCancelPopupOpen(false)}
+          type="button"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="modal-body">
+        <p>Are you sure you want to cancel this appointment?</p>
+        <p style={{ color: "#6b7280", fontSize: "14px" }}>
+          This action cannot be undone.
+        </p>
+      </div>
+
+      <div className="modal-foot">
+        <button
+          className="pill pill-gray"
+          onClick={() => setCancelPopupOpen(false)}
+          type="button"
+        >
+          No, Keep It
+        </button>
+
+        <button
+          className="pill pill-danger"
+          onClick={confirmCancel}
+          type="button"
+        >
+          Yes, Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
+
+
     </div>
   );
 }
+  

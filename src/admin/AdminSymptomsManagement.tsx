@@ -29,6 +29,14 @@ export default function AdminSymptomsManagement() {
   const [symptomName, setSymptomName] = useState("");
   const [category, setCategory] = useState("");
   const [isRedFlag, setIsRedFlag] = useState(false);
+   
+
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const [toast, setToast] = useState<{
+  type: "success" | "error" | "warning";
+  message: string;
+} | null>(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -73,8 +81,13 @@ export default function AdminSymptomsManagement() {
   const handleSaveSymptom = async () => {
     try {
       if (!symptomName.trim()) {
-        alert("Please enter symptom name.");
-        return;
+        setToast({
+  type: "warning",
+  message: "Please enter symptom name.",
+});
+
+setTimeout(() => setToast(null), 2500);
+return;
       }
 
       const payload = {
@@ -102,15 +115,83 @@ export default function AdminSymptomsManagement() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Failed to save symptom.");
+        setToast({
+  type: "error",
+  message: data.message || "Failed to save symptom",
+});
+
+setTimeout(() => setToast(null), 2500);
         return;
       }
+   resetForm();
+fetchSymptoms();
 
-      resetForm();
-      fetchSymptoms();
+setToast({
+  type: "success",
+  message:
+    editingId !== null
+      ? "Symptom updated successfully"
+      : "Symptom added successfully",
+});
+
+setTimeout(() => setToast(null), 2500);
+
+setToast({
+  type: "success",
+  message:
+    editingId !== null
+      ? "Symptom updated successfully"
+      : "Symptom added successfully",
+});
+
+setTimeout(() => setToast(null), 2500);
+
+setToast({
+  type: "success",
+  message:
+    editingId !== null
+      ? "Symptom updated successfully"
+      : "Symptom added successfully",
+});
+
+setTimeout(() => setToast(null), 2500);
+
+setToast({
+  type: "success",
+  message:
+    editingId !== null
+      ? "Symptom updated successfully"
+      : "Symptom added successfully",
+});
+
+setTimeout(() => setToast(null), 2500);
+setToast({
+  type: "success",
+  message:
+    editingId !== null
+      ? "Symptom updated successfully"
+      : "Symptom added successfully",
+});
+
+setTimeout(() => setToast(null), 2500);
+
+setToast({
+  type: "success",
+  message:
+    editingId !== null
+      ? "Symptom updated successfully"
+      : "Symptom added successfully",
+});
+
+setTimeout(() => setToast(null), 2500);
     } catch (err) {
       console.error("Save symptom error:", err);
-      alert("Something went wrong while saving.");
+      setToast({
+  type: "error",
+  message: "Something went wrong while saving",
+});
+
+setTimeout(() => setToast(null), 2500);
     }
   };
 
@@ -143,6 +224,47 @@ export default function AdminSymptomsManagement() {
       alert("Something went wrong while deleting.");
     }
   };
+
+
+  const confirmDelete = async () => {
+  if (!deleteId) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/${deleteId}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setToast({
+        type: "error",
+        message: data.message || "Failed to delete symptom",
+      });
+      setTimeout(() => setToast(null), 2500);
+      return;
+    }
+
+    setDeleteId(null);
+    fetchSymptoms();
+
+    setToast({
+      type: "success",
+      message: "Symptom deleted successfully",
+    });
+
+    setTimeout(() => setToast(null), 2500);
+  } catch (err) {
+    console.error(err);
+
+    setToast({
+      type: "error",
+      message: "Something went wrong while deleting",
+    });
+
+    setTimeout(() => setToast(null), 2500);
+  }
+};
 
   return (
     <div className="admin-UserClinics with-sidebar">
@@ -349,7 +471,7 @@ export default function AdminSymptomsManagement() {
                               <button
                                 type="button"
                                 className="action-link delete"
-                                onClick={() => handleDelete(item.symptom_id)}
+                               onClick={() => setDeleteId(item.symptom_id)}
                               >
                                 Delete
                               </button>
@@ -365,6 +487,68 @@ export default function AdminSymptomsManagement() {
           </div>
         </section>
       </main>
+       
+
+
+
+
+
+        {deleteId && (
+  <div
+    className="delete-modal-overlay"
+    onClick={() => setDeleteId(null)}
+  >
+    <div
+      className="delete-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="delete-modal-content">
+        <h3>Delete Symptom</h3>
+
+        <p>Are you sure you want to delete this symptom?</p>
+
+        <div className="delete-modal-actions">
+          <button
+            className="btn-cancel"
+            onClick={() => setDeleteId(null)}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="btn-delete"
+            onClick={confirmDelete}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+    
+
+
+
+
+
+
+              {toast && (
+  <div className={`symptom-toast ${toast.type}`}>
+    <div className="symptom-toast-content">
+     <span className="toast-icon">
+  {toast.type === "success"
+    ? "✔"
+    : toast.type === "error"
+    ? "✖"
+    : "⚠"}
+</span>
+      <span>{toast.message}</span>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }

@@ -218,6 +218,8 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
   const [loadingServices, setLoadingServices] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  
+ const [rescheduleConfirmOpen, setRescheduleConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -379,7 +381,7 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
   if (!open) return null;
 
   return (
-    <div className="booking-modal-overlay">
+   <div className="booking-modal-overlay front">
       <div className="booking-modal">
         <div className="booking-modal-header">
           <div>
@@ -845,6 +847,7 @@ function UserAppointmentsContent() {
       }
 
       closeRescheduleModal();
+      setRescheduleConfirmOpen(false);
       setSelectedAppointment(null);
       setActionMessage("Appointment rescheduled successfully.");
       await loadAppointments();
@@ -1121,16 +1124,30 @@ function UserAppointmentsContent() {
 
           <div className="center-column">
             <div className="card appointments-card">
-              <div className="appointments-card-head">
-                <div>
-                  <h2>
-                    {activeTab === "past"
-                      ? "Past Appointments"
-                      : activeTab === "calendar"
-                      ? "Calendar Appointments"
-                      : "Upcoming Appointments"}
-                  </h2>
-                </div>
+                <div className="appointments-card-head">
+  <div>
+    <h2>
+      {activeTab === "past"
+        ? "Past Appointments"
+        : activeTab === "calendar"
+        ? "Calendar Appointments"
+        : "Upcoming Appointments"}
+    </h2>
+  </div>
+
+  {activeTab !== "calendar" && (
+    <button
+      className="view-all-btn"
+      type="button"
+      onClick={() => {
+        setActiveTab("calendar");
+        setShowAllAppointments(true);
+      }}
+    >
+      View All Appointments →
+    </button>
+  )}
+</div>
               </div>
 
               {loading ? (
@@ -1211,19 +1228,7 @@ function UserAppointmentsContent() {
                 </div>
               )}
 
-              {activeTab !== "calendar" && (
-                <button
-                  className="view-all-btn"
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("calendar");
-                    setShowAllAppointments(true);
-                  }}
-                >
-                  View All Appointments →
-                </button>
-              )}
-            </div>
+             
 
             {actionMessage && <div className="booking-success">{actionMessage}</div>}
           </div>
@@ -1459,18 +1464,19 @@ function UserAppointmentsContent() {
               <button type="button" className="cancel-btn" onClick={closeRescheduleModal}>
                 Back
               </button>
-              <button
-                type="button"
-                className="book-btn"
-                onClick={handleRescheduleAppointment}
-                disabled={rescheduleSubmitting}
-              >
+             <button
+  type="button"
+  className="book-btn"
+  onClick={() => setRescheduleConfirmOpen(true)}
+>
                 {rescheduleSubmitting ? "Saving..." : "Confirm Reschedule"}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      
     </>
   );
 }

@@ -129,6 +129,11 @@ export default function Homepage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
+   const [selectedArticle, setSelectedArticle] = useState<{
+  title: string;
+  subtitle: string;
+} | null>(null);
+
   const handleNavigate = (path: string) => {
     navigate(path);
   };
@@ -423,7 +428,7 @@ export default function Homepage() {
                   <div
                     key={`${article.title}-${index}`}
                     className="article-item"
-                    onClick={() => handleNavigate("/health-tips")}
+                    onClick={() => setSelectedArticle(article)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
@@ -444,6 +449,66 @@ export default function Homepage() {
           </div>
         </main>
       </div>
+{selectedArticle && (
+  <div
+    className="article-modal-overlay"
+    onClick={() => setSelectedArticle(null)}
+  >
+    <div
+      className="article-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* HERO */}
+      <div className="article-modal-hero">
+        <div className="article-hero-content">
+          <h2>{selectedArticle.title}</h2>
+          <p>{selectedArticle.subtitle}</p>
+        </div>
+
+        {/* CLOSE BUTTON */}
+        <button
+          className="article-close-btn"
+          onClick={() => setSelectedArticle(null)}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* BODY */}
+      <div className="article-modal-body">
+        <div className="article-section">
+          <h4>Overview</h4>
+          <p>
+            Maintaining your health doesn’t have to be complicated. Simple daily
+            habits like eating balanced meals, staying active, and getting enough
+            rest can significantly improve your well-being.
+          </p>
+        </div>
+
+        <div className="article-section">
+          <h4>Why it matters</h4>
+          <p>
+            Consistency is key. Small actions done daily can lead to long-term
+            improvements in your physical and mental health.
+          </p>
+        </div>
+
+        <div className="article-tip-box">
+          💡 Tip: Start small. Even 10 minutes of activity daily can make a big difference.
+        </div>
+
+        <div className="article-section">
+          <h4>Conclusion</h4>
+          <p>
+            Always consult healthcare professionals when needed. Prevention and
+            awareness are your best tools for a healthier life.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
