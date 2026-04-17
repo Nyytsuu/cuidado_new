@@ -147,6 +147,10 @@ body {
   font-size: 0.92rem;
 }
 
+/* make cancel popup appear above everything */
+.admin-UserAppoint .cancel-popup {
+  z-index: 10000;
+}
 .admin-UserAppoint .profile-dropdown a:hover {
   background: rgba(15, 66, 66, 0.08);
 }
@@ -514,10 +518,4 @@ body {
   .admin-UserAppoint .users-actions {
     flex-wrap: wrap;
   }
-}
-
-.admin-UserAppoint .dash-right-top .dash-panel-title {
-  font-size: 16px;
-  position: relative;
-  left: 8px;
 }

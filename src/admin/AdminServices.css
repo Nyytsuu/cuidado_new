@@ -350,7 +350,7 @@ body {
   background: #c9edab;
   color: #ffffff;
 
-  width: min(620px, calc(100% - 10px));
+  width: min(450px, calc(100% - 10px));  /* smaller */
   display: block;
   margin: 0 auto;
   text-align: center;
@@ -493,6 +493,9 @@ body {
   flex-wrap: wrap;
 }
 
+.admin-UserClinics .clinics-actions .pill-success:last-child {
+  background: #4eb4f3;
+}
 .admin-UserServices .service-btn {
   min-width: 120px;
   height: 42px;
@@ -540,4 +543,20 @@ body {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+.admin-UserServices .admin-table-header .btn-add{
+  width: 300px !important;
+  max-width: none !important;
+  background-color: #0d8a7e !important;
+}
+
+.admin-UserServices .pill-deactivate {
+  background: #c62828;
+  color: #fff;
+}
+
+.admin-UserServices .pill-activate {
+  background: #178683;
+  color: #fff;
 }

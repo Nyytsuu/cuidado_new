@@ -783,3 +783,125 @@ body,
     margin-right: 0;
   }
 }
+
+/* ===== ARTICLE MODAL (FINAL) ===== */
+.article-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+/* CARD */
+.article-modal {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 20px;
+  overflow: hidden;
+  animation: fadeInScale 0.25s ease;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  background: #ffffff;
+  position: relative;
+}
+
+/* HERO */
+.article-modal-hero {
+  position: relative;
+  padding: 28px 24px 24px;
+  background: linear-gradient(135deg, #0b8a84, #46b5b0);
+  color: #ffffff;
+}
+
+/* GLOW (FIXED) */
+.article-modal-hero::after {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  top: -80px;
+  right: -60px;
+  pointer-events: none; /* 🔥 FIX: prevents blocking clicks */
+}
+
+/* TEXT */
+.article-hero-content h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.article-hero-content p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* CLOSE BUTTON (FIXED) */
+.article-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5; /* 🔥 FIX: ensures clickable */
+  border: none;
+  background: rgba(255, 255, 255, 0.25);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.2s ease;
+}
+
+.article-close-btn:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* BODY */
+.article-modal-body {
+  padding: 22px 24px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.7;
+}
+
+/* SECTIONS */
+.article-section {
+  margin-bottom: 16px;
+}
+
+.article-section h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0b8a84;
+}
+
+/* TIP BOX */
+.article-tip-box {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #e6f7f6;
+  color: #0b6f69;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* ANIMATION */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

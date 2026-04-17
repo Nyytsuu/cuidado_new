@@ -365,13 +365,14 @@ export default function AdminServices() {
                             </button>
 
                             <button
-                              type="button"
-                              className="pill pill-danger"
-                              onClick={() => openToggleModal(s)}
-                              onClick={() => openToggleModal(s)}
-                            >
-                              {s.is_active === 1 ? "Deactivate" : "Activate"}
-                            </button>
+  type="button"
+  className={`pill ${
+    s.is_active === 1 ? "pill-deactivate" : "pill-activate"
+  }`}
+  onClick={() => openToggleModal(s)}
+>
+  {s.is_active === 1 ? "Deactivate" : "Activate"}
+</button>
                           </div>
                         </div>
                       </div>

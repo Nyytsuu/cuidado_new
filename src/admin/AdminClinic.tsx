@@ -65,7 +65,13 @@ export default function AdminClinics() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [q, setQ] = useState("");
   const navigate = useNavigate();
+   
+  const [editResultPopup, setEditResultPopup] = useState<{
+  type: "success" | "error";
+  message: string;
+} | null>(null);
 
+    
   // NEW: edit popup
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<ClinicRow | null>(null);
@@ -269,22 +275,35 @@ export default function AdminClinics() {
 
   const editClinicName = async (id: number, newName: string) => {
   const editClinicName = async (id: number, newName: string) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clinic_name: newName }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  try {
+    const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clinic_name: newName }),
+    });
 
-      setClinics((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, clinic_name: newName } : c))
-      );
-    } catch (e) {
-      console.error("Edit clinic error:", e);
-      alert("Failed to edit clinic.");
-    }
-  };
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    setClinics((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, clinic_name: newName } : c))
+    );
+
+    // ✅ SUCCESS POPUP
+    setEditResultPopup({
+      type: "success",
+      message: "Clinic updated successfully.",
+    });
+
+  } catch (e) {
+    console.error("Edit clinic error:", e);
+
+    // ❌ ERROR POPUP
+    setEditResultPopup({
+      type: "error",
+      message: "Failed to edit clinic.",
+    });
+  }
+};
 
   // NEW
   const openEditPopup = (clinic: ClinicRow) => {
@@ -712,6 +731,46 @@ export default function AdminClinics() {
           </div>
         </div>
       )}
+
+
+      {editResultPopup && (
+  <div
+    className="clinic-status-popup-overlay"
+    onClick={() => setEditResultPopup(null)}
+  >
+    <div
+      className={`clinic-status-popup-card ${
+        editResultPopup.type === "success"
+          ? "result-popup-success"
+          : "result-popup-error"
+      }`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* TITLE */}
+      <div className="result-popup-title">
+        {editResultPopup.type === "success"
+          ? "Clinic Updated"
+          : "Update Failed"}
+      </div>
+
+      {/* MESSAGE */}
+      <div className="result-popup-message">
+        {editResultPopup.message}
+      </div>
+
+      {/* BUTTON */}
+      <div className="clinic-status-popup-actions">
+        <button
+          type="button"
+          className="clinic-status-popup-btn result-popup-btn"
+          onClick={() => setEditResultPopup(null)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       {statusPopupOpen && statusClinic && pendingAccountStatus && (
         <div
