@@ -226,10 +226,10 @@ body {
   border-radius: 26px;
   background: linear-gradient(
     to bottom,
-    #bfbfbf 0,
-    #bfbfbf 78px,
-    #dcdcdc 78px,
-    #dcdcdc 100%
+    #d9d9d9 0,
+    #bfbfbf 73px,
+    white 78px,
+    white 100%
   );
 }
 

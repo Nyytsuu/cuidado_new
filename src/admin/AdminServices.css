@@ -578,7 +578,13 @@ body {
   width: 35% !important;
 }
 
-.admin-UserServices .appointment-panel .dash-table th:nth-child(2),
+.admin-UserServices .appointment-panel .dash-table th:nth-child(2)  {
+  width: 30% !important;
+  text-align: center !important;
+  padding-left: 25px !important;
+}
+
+
 .admin-UserServices .appointment-panel .dash-table td:nth-child(2) {
   width: 30% !important;
   text-align: center !important;
@@ -619,6 +625,7 @@ body {
   white-space: nowrap !important;
   margin: 0 auto !important;
   text-transform: lowercase !important;
+  margin-left: 22px !important;
 }
 
 .admin-UserServices .appointment-panel .appt-action-cell {

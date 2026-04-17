@@ -849,12 +849,12 @@ body {
 /* MOVE STATUS HEADER (TOP) TO LEFT */
 .admin-Userpage .appointment-panel .dash-table thead th:nth-child(2) {
   text-align: left !important;
-  padding-left: 0 !important;
+  padding-left: 40px !important;
 }
 
 .admin-Userpage .appointment-panel .dash-table tbody td:nth-child(2) {
   text-align: left !important;
-  padding-left: 0px !important; /* adjust mo: 0px / 4px / 8px */
+  padding-left: 6px !important; /* adjust mo: 0px / 4px / 8px */
 }
 
 .admin-Userpage .appointment-panel .dash-table tbody td:nth-child(2) .badge {
@@ -905,7 +905,13 @@ body {
   text-align: center !important;
 }
 
-.admin-Userpage .appointment-panel .dash-table th:nth-child(3),
+.admin-Userpage .appointment-panel .dash-table th:nth-child(3)  {
+  width: 35% !important;
+  text-align: left !important;
+  padding-left: 12px !important;
+}
+
+
 .admin-Userpage .appointment-panel .dash-table td:nth-child(3) {
   width: 35% !important;
   text-align: left !important;
@@ -940,6 +946,8 @@ body {
   border: none !important;
   white-space: nowrap !important;
   margin: 0 auto !important;
+  position: relative;
+  right: 2px;
 }
 
 /* action badge */
@@ -964,6 +972,7 @@ body {
   margin: 0 !important;
   appearance: none !important;
   -webkit-appearance: none !important;
+  margin-left: 25px !important;
 }
 
 /* colors */
