@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
-
-//user  Stashed changes
+import ConditionDetails from "./SigninUser/ConditionDetails";
 import Signup from "./SignupUser/Signup";
 import Signin from "./SigninUser/Signin";
 import ForgetPass from "./SigninUser/Forgetpass";
@@ -39,7 +38,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route>
         <Route path="/" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
@@ -58,7 +56,6 @@ function App() {
         <Route path="/homepage" element={<Homepage />} />
         
         
-        </Route>
         {/* clinic */}
 <Route path="/clinic/signup" element={<ClinicSignup />} />
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
@@ -66,11 +63,11 @@ function App() {
 <Route path="/clinic/patients" element={<Patients />} />
 <Route path="/clinic/services" element={<Services />} /> 
 <Route path="/clinic/profile" element={<ClinicProfile />} />
+
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/admin/services" element={<AdminServices />} />
       <Route path="/admin/appointments" element={<AdminAppoint />} />
       <Route path="/admin/clinics" element={<AdminClinic />} />

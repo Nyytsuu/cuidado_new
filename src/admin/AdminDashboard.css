@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap");
+
 /* ================= GLOBAL ================= */
 * {
   height: auto;
@@ -12,182 +13,70 @@ body,
   margin: 0;
   font-family: "Poppins", sans-serif;
   background: #ffffff;
-  -ms-overflow-style: none;
 }
+
 ::-webkit-scrollbar {
-    display: none;
+  display: none;
 }
+
 /* ================= WRAPPER ================= */
 .ad-wrap {
   min-height: 100vh;
   width: 100vw;
-
   display: flex;
-  flex-direction: row; /* sidebar + main */
-  align-items: stretch;
-
-  overflow-x: hidden;
-  background: #fff;
   padding: 25px 50px 25px 25px;
-  margin-bottom: 20px;
-
-  overflow: visible;
 }
 
 /* ================= MAIN ================= */
 .ad-main {
   flex: 1;
-  min-width: 0;
-
   margin: 16px;
   margin-top: 80px;
-
-  padding: 14px 15px;
-  padding-top: calc(var(--topbar-h) + 4px);
-  padding-bottom: 24px;
-  padding-left: 70px;
-
+  padding: 14px 15px 24px 70px;
   border-radius: 16px;
   background: #ffffff;
-
   display: flex;
   flex-direction: column;
-
-  min-height: calc(100vh - 60px); /* 🔥 important */
 }
 
-/* ================= MAIN LAYOUT (80% + 20%) ================= */
+/* ================= LAYOUT ================= */
 .dash-layout {
-  flex: 1;
-  min-height: 0;
   display: grid;
-  grid-template-columns: 75% 25%;
+  grid-template-columns: 1fr 380px;
   gap: 25px;
-  align-items: start;
-  width: 100%;
 }
-.dash-layout,
-.dash-grid {
-  align-items: start;
-}
-/* left column */
+
+/* ================= LEFT SIDE ================= */
 .dash-maincol {
-  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* right column */
-.dash-aside {
-  min-width: 0;
-  overflow: hidden;       /* key: stops appt-xaxis from bleeding out */
-  position: relative;
-}
-.dash-aside .dash-panel {
-  position: relative;
-  isolation: isolate;
-}
-/* ================= TOP 4 METRICS ================= */
-.dash-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 15px;
-  margin: 0 0 10px;
-  width: 100%;
-}
-
-.metric-title {
-  font-weight: 900;
-  color: #0f0f0f;
-  margin: 0 0 6px;
-  font-size: 13px;
-}
-
-.metric-box {
-  height: 90px;
-  border-radius:14px;
-  background: #00bfa6;
-  display: flex;
-  align-items: center;
-  padding: 10px;
-}
-
-.metric-box-inner {
-  width: 90%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-
-.metric-num {
-  font-size: 34px;
-  font-weight: 900;
-  color: #ffffff;
-  line-height: 1;
-}
-
-.metric-sub {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.95);
-}
-
-/* ================= CHART ================= */
-.dash-chart {
-  width: 100%;
-  margin-left: 0;
-  margin-bottom: 30px; /* ✅ less gap under chart */
-}
-
-.dash-chart-card {
-  border: 2px dashed rgba(0, 0, 0, 0.25);
-  border-radius: 12px;
-  padding: 10px;
-}
-
-/* ================= GRID (PENDING + USERS + CLINIC) ================= */
-/* ✅ CONTROL HERE: increase to pull more up */
-:root {
-  --grid-pull-up: 40px; /* try 10px / 18px / 24px */
-}
-
-/* container for the bottom sections */
-.dash-grid {
-  flex: 1;
-  min-height: 0;
-  overflow: visible;
-  margin-top: 20px;
-}
-.dash-grid.dash-grid-2col {
-  max-width: 1000px; /* 👈 adjust this */
-  width: 100%;
-}
-/* 2 columns (left stack + clinic) */
+/* ================= GRID FIX ================= */
 .dash-grid-2col {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "pending clinic"
+    "users clinic";
   gap: 16px;
-  align-items: start;
 }
 
-/* left stack */
-.dash-left {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* clinic column */
+.dash-left,
 .dash-center {
-  min-height: 430px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  display: contents;
+}
 
-  /* ✅ keep clinic on the RIGHT column */
-  grid-column: 2;
+/* assign panels */
+.dash-left > :nth-child(1) {
+  grid-area: pending;
+}
+.dash-left > :nth-child(2) {
+  grid-area: users;
+}
+.dash-center {
+  grid-area: clinic;
 }
 
 /* ================= PANELS ================= */
@@ -196,611 +85,578 @@ body,
   flex-direction: column;
 }
 
-.dash-panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin: 0 0 8px;
-}
-
 .dash-panel-title {
   font-weight: 900;
-  color: #0f0f0f;
-  margin: 0;
-  line-height: 1.15;
-  font-size: 14px;
+  font-size: 16px;
 }
 
-/* teal container */
-/* ================= PANELS (MAKE ALL LOOK LIKE SCREENSHOT) ================= */
+/* original design */
 .dash-panel-body {
-  background: #ffffff;           /* ✅ white inside */
-  border: 5px solid #00bfa6;     /* ✅ thick teal border */
+  background: #ffffff;
+  border: 5px solid #00bfa6;
   border-radius: 22px;
-  padding: 0;                    /* table will handle spacing */
-  overflow: hidden;              /* keep rounded corners clean */
-  display: flex;
-  flex-direction: column;
-}
-.dash-panel .dash-table {
-  width: 100%;
-  margin: 0;
-  border-radius: 0;
-}
-/* pad wrapper */
-.dash-panel-pad {
-  width: 100%;
-  height: 100%;
-  padding: 0;
+  padding: 12px !important;
+  overflow: hidden !important;
   display: flex;
   flex-direction: column;
 }
 
-/* ================= TABLES ================= */
+/* ================= TABLE ================= */
 .dash-table {
   width: calc(100% - 1px);
-  flex: 1;
-  min-height: 0;
   margin: 5px;
   border-collapse: separate;
-  border-spacing: 0;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 0;
-  overflow: hidden;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
-}
-::-webkit-scrollbar {
-  display: none;
-}
-/* readable text always */
-.dash-table,
-.dash-table * {
-  color: #0f0f0f !important;
 }
 
-.dash-table thead th {
+.dash-table th {
   padding: 10px;
   font-size: 11px;
   font-weight: 900;
   background: #eef2f2;
   text-align: left;
-  white-space: nowrap;
 }
 
-.dash-table tbody td {
+.dash-table td {
   padding: 10px;
   font-size: 12px;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
-  vertical-align: top;
-  background: transparent;
-}
-
-.t-main {
-  font-weight: 900;
-}
-.t-sub {
-  font-size: 11px;
-  opacity: 0.72;
-  margin-top: 1px;
-}
-
-.t-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 6px;
-}
-
-.th-action-pending,
-.th-action,
-.td-action {
-  text-align: right;
-  white-space: nowrap;
-  width: 170px;
-}
-
-.th-joined {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.btn-view-users {
-  padding: 4px 10px;
-  font-size: 11px;
-  border-radius: 10px;
-  white-space: nowrap;
-  width: 100px;
-}
-
-.th-action {
-  text-align: right;
-  white-space: nowrap;
-  width: 150px;
-}
-
-.td-action {
-  text-align: right;
-}
-
-/* Button alignment */
-.td-action .btn-view {
-  display: inline-block;
 }
 
 /* ================= BUTTONS ================= */
-.btn-outline {
-  border: 2px solid rgba(0, 0, 0, 0.18);
-  background: rgba(255, 255, 255, 0.55);
-  color: #0f0f0f;
-  padding: 6px 10px;
-  border-radius: 12px;
-  font-weight: 900;
-  cursor: pointer;
-  font-size: 12px;
-}
-
 .btn-sm {
-  border: none;
   padding: 6px 8px;
   border-radius: 10px;
   font-weight: 900;
+  border: none;
   cursor: pointer;
-  font-size: 11px;
 }
 
 .btn-approve {
   background: #57e994;
-  color: #0b6b3c;
 }
+
 .btn-reject {
   background: #f14c4c;
-  color: #8d1d1d;
 }
+
 .btn-view {
   background: #4eb4f3;
   color: #0a4f7a;
+  border-radius: 999px;
 }
 
 /* ================= BADGES ================= */
-.dash-table .badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 80px !important;
-  min-width: 80px !important;
-  height: 24px !important;
-  padding: 0 8px !important;
-  font-size: 11px !important;
-  font-weight: 800 !important;
-  line-height: 1 !important;
-  border-radius: 999px !important;
-  white-space: nowrap !important;
-}
-.badge-pending {
-  background: #ebcc68;
-  color: #8b6a00;
-}
-.badge-approved {
-  background: #68e99e;
-  color: #0b6b3c;
-}
-.badge-rejected {
-  background: #e95c5c;
-  color: #8d1d1d;
-}
-
-.badge-scheduled {
-  background: #5db5ec;
-  color: #0a4f7a;
-}
-.badge-completed {
-  background: #e7fff1;
-  color: #65e6a7;
-}
-.badge-cancelled {
-  background: #eb6767;
-  color: #8d1d1d;
-}
-
-/* ================= RECENT ACTIVITY ================= */
-/* NOTE: your aside uses .dash-aside, not .dash-right */
-.dash-aside .dash-right-top .dash-panel-body {
-  background: #ffffff;
-  border: 3px solid #00bfa6;
-  border-radius: 16px;
-  padding: 12px;
-}
-.dash-layout {
-  align-items: start;
-  min-height: max-content;
-}
-.activity-list {
-  height: 100%;
-  display: flex;
-  background: transparent !important;
-  flex-direction: column;
-  gap: 10px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-
-.activity-item {
-  background: #ffffff !important;
-  color: #0f0f0f !important;
-  border-radius: 12px;
-  width: 100%;
-  padding: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-}
-
-.activity-item:hover {
-  transform: translateY(-1px);
-}
-
-.activity-title {
-  font-weight: 900;
-  font-size: 12px;
-}
-.activity-time {
-  font-size: 11px;
-  opacity: 0.65;
-  white-space: nowrap;
-}
-.activity-meta {
-  font-size: 11px;
-  opacity: 0.75;
-  margin-top: 2px;
-}
-
-/* ================= FOOTER ================= */
-.ad-footer {
-  text-align: center;
-  opacity: 0.65;
-  font-size: 12px;
-  color: #0f0f0f;
-  margin-top: 780px;
-}
-
-/* === PULL UP TABLE SECTIONS BY FIXING CHART === */
-.dash-chart h3 {
-  color: black;
-  margin-bottom: 10px;
-}
-.dash-chart {
-  margin-bottom: 0 !important;
-  padding-bottom: 0 !important;
-}
-
-.dash-chart-card {
-  margin-bottom: 0 !important;
-}
-
-/* optional: kung may extra height pa */
-.dash-chart-card {
-  min-height: 260px;
-}
-
-.profile-dropdown a,
-.profile-dropdown button {
-  display: block;
-  width: 100%;
-  padding: 10px 14px;
-  background: none;
-  border: none;
-  text-align: left;
-  font: inherit;
-  color: #0f0f0f;
-  cursor: pointer;
-}
-
-.profile-dropdown a:hover,
-.profile-dropdown button:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-/* ================= APPOINTMENT SCROLL (ONLY THIS PANEL) ================= */
-.appointment-panel .dash-panel-body {
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* optional scrollbar style */
-.appointment-panel .dash-panel-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.appointment-panel .dash-panel-body::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 10px;
-}
-
-.appointment-panel .dash-panel-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-/* ================= APPOINTMENT PANEL (MATCH SCREENSHOT) ================= */
-.dash-panel.appointment-panel .dash-panel-body {
-  background: #ffffff;           /* white inside */
-  border: 5px solid #00bfa6;     /* thick teal border */
-  border-radius: 22px;
-  padding: 0;                   /* let table fill */
-  overflow: hidden;             /* keep rounded corners clean */          /* keep scroll (adjust if you want) */
-  overflow-y: auto;
-  overflow-x: hidden;
-    height: auto !important; /* adjust */
-  max-height: 300vh !important;    /* removes 360 cap */
-  overflow-y: auto !important;}
-
-/* remove table margin so it fits perfectly */
-.dash-panel.appointment-panel .dash-table {
-  width: 100%;
-  margin: 0;
-  border-radius: 0;
-}
-
-/* header */
-.dash-panel.appointment-panel .dash-table thead th {
-  background: #eef2f2;
-  font-size: 12px;
-  font-weight: 900;
-  padding: 12px 14px;
-}
-
-/* body */
-.dash-panel.appointment-panel .dash-table tbody td {
-  padding: 14px 14px;
-  border-top: 1px solid rgba(0,0,0,0.07);
-}
-
-/* status pill like screenshot */
-.dash-panel.appointment-panel .badge {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-/* button alignment */
-.dash-panel.appointment-panel .td-action,
-.dash-panel.appointment-panel .th-action {
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* ✅ ensure button not pushed */
-.dash-panel.appointment-panel .btn-sm.btn-view {
-  position: static;
-}
-/* ===== FIX: SHOW ACTION COLUMN + BLUE BUTTON IN APPOINTMENT ===== */
-.dash-panel.appointment-panel .dash-table {
-  table-layout: fixed;     /* prevents columns from stealing space */
-  width: 100%;
-}
-
-.dash-panel.appointment-panel .dash-table th,
-.dash-panel.appointment-panel .dash-table td {
-  overflow: visible;       /* allow button to show */
-}
-
-/* make action column guaranteed visible */
-.dash-panel.appointment-panel .th-action,
-.dash-panel.appointment-panel .td-action {
-  width: 140px;            /* adjust if you want bigger */
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* keep status from becoming too wide */
-.dash-panel.appointment-panel .dash-table th:nth-child(3),
-.dash-panel.appointment-panel .dash-table td:nth-child(3) {
-  width: 110px;
-}
-
-/* button look */
-.dash-panel.appointment-panel .btn-view {
-  padding: 8px 12px;
+.badge {
+  padding: 5px 10px;
   border-radius: 999px;
-  width: auto;
-}
-/* ================= FIX APPOINTMENT HEADER OVERLAP + COLUMN WIDTHS ================= */
-.dash-panel.appointment-panel .dash-table {
-  width: 100%;
-  table-layout: fixed;          /* stable columns */
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-/* give header + cells consistent padding */
-.dash-panel.appointment-panel .dash-table th,
-.dash-panel.appointment-panel .dash-table td {
-  padding: 12px 14px;
-  vertical-align: top;
-}
-
-/* prevent header words from crashing into each other */
-.dash-panel.appointment-panel .dash-table thead th {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;      /* if narrow, show ... not overlap */
-}
-
-/* ✅ column widths (adjust if you want) */
-.dash-panel.appointment-panel .dash-table th:nth-child(1),
-.dash-panel.appointment-panel .dash-table td:nth-child(1) {
-  width: 14%;
-}
-
-.dash-panel.appointment-panel .dash-table th:nth-child(2),
-.dash-panel.appointment-panel .dash-table td:nth-child(2) {
-  width: 17%;
-}
-
-.dash-panel.appointment-panel .dash-table th:nth-child(3),
-.dash-panel.appointment-panel .dash-table td:nth-child(3) {
-  width: 15%;
-}
-
-.dash-panel.appointment-panel .dash-table th:nth-child(4),
-.dash-panel.appointment-panel .dash-table td:nth-child(4) {
-  width: 14%;
-  text-align: left;
-  white-space: nowrap;
-}
-/* ✅ APPOINTMENT: FORCE ACTION COLUMN TO THE RIGHT */
-.dash-panel.appointment-panel .dash-table th:nth-child(4),
-.dash-panel.appointment-panel .dash-table td:nth-child(4) {   /* Action + button on the right */
-  padding-right: 0 !important;   /* space from border */
-  padding-left: 10px !important;
-}
-
-/* optional: make the button hug the right edge */
-.dash-panel.appointment-panel .dash-table td:nth-child(4) .btn-view {
-  display: inline-flex !important;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
 }
 
-/* keep the blue button visible + aligned */
-.dash-panel.appointment-panel .td-action {
-  text-align: right;
+.badge-pending {
+  background: #ebcc68;
+  color: #000 !important;
 }
 
-.dash-panel.appointment-panel .btn-view {
-  padding: 8px 12px;
-  border-radius: 999px;
-}
-/* ================= FIX X-AXIS CLIPPING ================= */
-.dash-chart-card {
-  overflow: visible; /* allow X-axis labels to show */
-}/* ================= APPOINTMENT "X-AXIS" (HORIZONTAL SCROLL) ================= */
-.dash-panel.appointment-panel .dash-panel-body {
-  overflow-y: auto;    /* keep vertical scroll */
-  overflow-x: hidden;  /* x-scroll will be on wrapper below */
+.badge-approved {
+  background: #68e99e;
+  color: #000 !important;
 }
 
-/* this is the x-axis container */
-
-  .appt-xaxis {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  position: relative;      /* ✅ makes scrollbar visible */
+.badge-rejected {
+  background: #e04d4d !important;
+  color: #000 !important;
 }
 
-/* optional: style the x-axis scrollbar */
-.appt-xaxis::-webkit-scrollbar {
-  height: 8px;
+.badge-disabled {
+  background: #cfd8dc;
+  color: #000 !important;
 }
-.appt-xaxis::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 999px;
+
+/* ================= RECENT ACTIVITY ================= */
+.dash-aside .dash-panel-title {
+  font-size: 16px !important;
+  font-weight: 900;
+  position: relative;
+  top: 10px;
 }
-.appt-xaxis::-webkit-scrollbar-track {
+
+.dash-aside .dash-right-top {
+  width: 100%;
+  min-width: 340px;
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px;
+  padding: 10px;
+  background: #ffffff;
+  margin-bottom: 16px;
+}
+
+.dash-aside .dash-right-top .dash-panel-body {
+  padding: 12px;
+  overflow: hidden;
+}
+
+.activity-list {
+  height: auto !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 5px 0;
+  list-style: none;
+  margin: 0;
+}
+
+.activity-item {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.activity-text {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.activity-time {
+  font-size: 11px;
+  color: #666;
+}
+
+.activity-empty {
+  font-size: 12px;
+  color: #666;
+}
+
+/* ================= APPOINTMENT ================= */
+.dash-panel.appointment-panel {
+  width: 100%;
+  min-width: 340px;
+  border: none !important;
+  padding: 0;
   background: transparent;
 }
 
-/* make appointment table wider so X scroll appears when needed */
-.dash-table-appt {
-  min-width: 520px;  /* ✅ increase if you want more space */
-  width: 100%;
-  table-layout: auto;
+.dash-panel.appointment-panel .dash-panel-title {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 900;
+  position: relative;
+  top: 10px;
+
 }
 
-/* keep Action always visible and not squished */
-.dash-table-appt .th-action,
-.dash-table-appt .td-action {
-  white-space: nowrap;
-  text-align: right;
-  min-width: 140px;
-  
-}/* ================= APPOINTMENT X-AXIS (HORIZONTAL SCROLL) ================= */
 .dash-panel.appointment-panel .dash-panel-body {
-  overflow: hidden !important;   /* parent clips */
-  padding-bottom: 10px;  
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px;
+  padding: 12px;
+  background: #ffffff;
 }
 
-/* the actual x-axis/slider container */
-.appt-xaxis {
+/* ================= METRICS ================= */
+.dash-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+}
+
+.metric-title {
+  font-weight: 900;
+  font-size: 14px !important;
+}
+
+.metric-box {
+  height: 90px;
+  border-radius: 14px;
+  background: #00bfa6 !important;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+/* ================= CHART ================= */
+.dash-chart-card {
+  border: 2px dashed rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+/* ================= PENDING APPROVAL TITLE OUTSIDE ================= */
+.dash-left > :nth-child(1) {
+  background: transparent !important;
+  border: none !important;
+  padding: 0;
+  background: transparent;
+}
+
+.dash-left > :nth-child(1) .dash-panel-title {
+  background: transparent !important;
+  margin-bottom: 1px;
+  font-weight: 900;
+  font-size: 16px;
+  position: relative;
+  top: 10px;
+}
+
+.dash-left > :nth-child(1) .dash-panel-body {
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.dash-left > :nth-child(1) .dash-panel-head {
+  background: transparent !important;
+  padding: 0;
+}
+
+/* ================= CLINIC TITLE OUTSIDE ================= */
+.dash-center {
+  background: transparent !important;
+  border: none !important;
+  padding: 0;
+}
+
+.dash-center > .dash-panel {
+  background: transparent !important;
+}
+
+.dash-center > .dash-panel .dash-panel-head {
+  background: transparent !important;
+  padding: 0;
+}
+
+.dash-center > .dash-panel .dash-panel-title {
+  background: transparent !important;
+  font-weight: 900;
+  font-size: 16px;
+  position: relative;
+  top: 10px;
+}
+
+.dash-center .dash-panel-body {
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+/* ================= USERS TITLE OUTSIDE ================= */
+.dash-left > :nth-child(2) {
+  background: transparent !important;
+  border: none !important;
+  padding: 0;
+}
+
+.dash-left > :nth-child(2) .dash-panel-head {
+  background: transparent !important;
+  padding: 0;
+}
+
+.dash-left > :nth-child(2) .dash-panel-title {
+  background: transparent !important;
+  margin-bottom: 1px;
+  font-weight: 900;
+  font-size: 16px;
+  position: relative;
+  top: 10px;
+}
+
+.dash-left > :nth-child(2) .dash-panel-body {
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+/* ================= FORCE REMOVE GRAY (APPOINTMENT TITLE AREA) ================= */
+.dash-panel.appointment-panel,
+.dash-panel.appointment-panel .dash-panel-head,
+.dash-panel.appointment-panel .dash-panel-title {
+  background: transparent !important;
+}
+
+.dash-panel.appointment-panel *:not(.dash-panel-body) {
+  background: transparent !important;
+}
+
+/* ================= FORCE DASHBOARD TABLE SPACING ================= */
+.dash-panel-body .dash-table {
+  width: 100% !important;
+  margin: 0 !important;
+  border-collapse: collapse !important;
+}
+
+.dash-panel-body .dash-table th {
+  padding: 14px 16px !important;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: left;
+}
+
+.dash-panel-body .dash-table tr {
+  height: 60px;
+}
+
+.dash-panel-body .dash-table td,
+.dash-panel-body .dash-table th {
+  word-break: break-word;
+}
+
+/* ================= APPOINTMENT STYLE (MATCH ADMIN SERVICES) ================= */
+.appointment-panel .dash-table {
   width: 100%;
-  overflow-x: auto;          /* ✅ show horizontal scrollbar */
-  overflow-y: hidden;
-  padding-bottom: 10px;      /* ✅ make scrollbar visible */
+  table-layout: fixed;
 }
 
-/* force table wider so scrollbar appears */
-.dash-table-appt {
-  width: 100%;
-  min-width: 700px; 
+.appointment-panel .dash-table th:nth-child(1),
+.appointment-panel .dash-table td:nth-child(1) {
+  width: 35%;
 }
 
-/* optional scrollbar style */
-.appt-xaxis::-webkit-scrollbar { height: 10px; }
-.appt-xaxis::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.25);
+.appointment-panel .dash-table th:nth-child(2),
+.appointment-panel .dash-table td:nth-child(2) {
+  width: 30%;
+  text-align: center;
+}
+
+.appointment-panel .dash-table th:nth-child(3),
+.appointment-panel .dash-table td:nth-child(3) {
+  width: 35%;
+  text-align: left;
+}
+
+.appointment-panel .dash-table .td-action {
+  text-align: left;
+  white-space: nowrap;
+  padding-left: 20px;
+}
+
+.appointment-panel .dash-table tbody td {
+  vertical-align: middle;
+}
+
+.appointment-panel .appt-status-cell {
+  text-align: center;
+}
+
+.appointment-panel .appt-status-cell .appt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 76px;
+  height: 30px;
+  padding: 0 10px;
   border-radius: 999px;
-}
-/* Move Action column a bit left (appointment only) */
-.dash-panel.appointment-panel .th-action,
-.dash-panel.appointment-panel .td-action {
-  text-align: right;
-  padding-right: 1px; /* ✅ increase = move left more */
-}
-/* align button to the right */
-.dash-table .btn-view{
-  margin-left: auto;
-}
-/* ✅ ACTION column (header + cells) to RIGHT only */
-.dash-table th.th-action,
-.dash-table td.td-action{
-  text-align: right !important;
-  padding-left: 33px !important;   /* remove left push */
-  padding-right: 10px !important;  /* spacing from border */
+  font-size: 11px;
+  font-weight: 900;
+  border: none;
+  white-space: nowrap;
+  margin: 0 auto;
+  text-transform: lowercase;
+  position: relative;
+  right: 50px;
 }
 
-/* keep button right */
-.dash-table td.td-action .btn-view{
-  margin-left: 10px !important; /* remove old margin tweaks */
-}
-/* ✅ move ONLY the Action header text */
-.dash-table th.th-action{
-  text-align: left !important;
-}
-/* ✅ keep the button cell as-is (don’t move) */
-.dash-table td.td-action{
-  text-align: center !important;
-  padding-right: px !important; /* keep fixed */
-  padding-left: 0 !important;
-}
-.dash-right-top{
-  margin-bottom: 18px; /* ✅ space before appointment */
-}
-/* ✅ Move STATUS column a bit to the left */
-.dash-table th:nth-child(2),
-.dash-table td:nth-child(2) {
-  padding-left: 1px !important;   /* adjust: 0-12 */
-}
-/* ✅ Move ACTION column a bit to the LEFT (Appointment table only) */
-.dash-panel.appointment-panel .dash-table th.th-action,
-.dash-panel.appointment-panel .dash-table td.td-action {
-  padding-right: 58px !important;  /* adjust: 20 / 24 / 28 / 32 */
-  padding-left: 5px !important;      /* stop pushing to the right */
-  text-align: right !important;
-}
-/* ✅ correct widths for 3 columns */
-.dash-panel.appointment-panel .dash-table th:nth-child(1),
-.dash-panel.appointment-panel .dash-table td:nth-child(1) {
-  width: 30% !important;
+.appointment-panel .appt-action-cell {
+  text-align: left;
+  padding-left: 20px;
 }
 
-.dash-panel.appointment-panel .dash-table th:nth-child(2),
-.dash-panel.appointment-panel .dash-table td:nth-child(2) {
-  width: 20% !important;
+.appointment-panel .appt-action-cell .appt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 96px;
+  width: 96px;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  border: none;
+  white-space: nowrap;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  text-transform: none;
+  cursor: pointer;
+  position: relative;
+  right: 30px;
 }
 
-.dash-panel.appointment-panel .dash-table th:nth-child(3),
-.dash-panel.appointment-panel .dash-table td:nth-child(3) {
-  width: 30% !important;
+.appointment-panel .appt-badge.badge-cancelled,
+.appointment-panel .appt-badge.badge-canceled,
+.appointment-panel .appt-badge.badge-rejected,
+.appointment-panel .appt-badge.badge-declined {
+  background: #ea6666 !important;
+  color: #000 !important;
 }
 
+.appointment-panel .appt-badge.badge-pending {
+  background: #e2c457 !important;
+  color: #000 !important;
+}
+
+.appointment-panel .appt-badge.badge-approved,
+.appointment-panel .appt-badge.badge-confirmed,
+.appointment-panel .appt-badge.badge-completed,
+.appointment-panel .appt-badge.badge-scheduled {
+  background: #7ed36d !important;
+  color: #000 !important;
+}
+
+.appointment-panel .appt-badge.badge-view {
+  background: #58b6f3 !important;
+  color: #000 !important;
+  cursor: pointer !important;
+}
+
+/* ================= CLINIC BADGE SIZE ================= */
+.dash-center .badge {
+  min-width: 80px;
+  max-width: 100px;
+  font-size: 10px;
+  padding: 4px 8px;
+}
+
+/* ================= TABLE HELPER CLASSES ================= */
+.t-main {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.t-sub {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.t-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.td-empty {
+  text-align: center;
+  color: #666;
+}
+
+.th-action-pending {
+  text-align: center;
+}
+
+.th-joined {
+  position: relative;
+}
+
+.btn-outline.btn-view-users {
+  margin-left: 10px;
+  border: 1px solid #00bfa6;
+  background: #fff;
+  color: #00bfa6;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ================= POPUP ================= */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.popup-card {
+  width: 100%;
+  max-width: 620px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+}
+
+.popup-card h3 {
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+
+.popup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 18px;
+  font-size: 14px;
+}
+
+.popup-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.appointment-panel .dash-table thead th:nth-child(2) {
+  padding-left: 2px !important;
+  position: relative;
+  right: 25px;
+}
+.appointment-panel .dash-table thead th:nth-child(3) {
+  padding-left: 2px !important;
+  position: relative;
+  right: 2px;
+}
+
+/* ================= SCROLL FOR ALL PANELS ================= */
+
+/* Appointment */
+.dash-panel.appointment-panel .dash-panel-body {
+  max-height: 300px;
+  overflow-y: auto !important;
+}
+
+/* Pending Approvals */
+.dash-left > :nth-child(1) .dash-panel-body {
+  max-height: 250px;
+  overflow-y: auto !important;
+}
+
+/* Users section */
+.dash-left > :nth-child(2) .dash-panel-body {
+  max-height: 250px;
+  overflow-y: auto !important;
+}
+
+/* Clinic section */
+.dash-center .dash-panel-body {
+  max-height: 350px;
+  overflow-y: auto !important;
+}
+
+/* Recent activity */
+.dash-aside .dash-right-top .dash-panel-body {
+  max-height: 200px;
+  overflow-y: auto !important;
+}
+
+/* MOVE USERS / PATIENTS SECTION UP */
+.dash-left > :nth-child(2) {
+  margin-top: -60px;
+}

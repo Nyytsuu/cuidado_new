@@ -59,12 +59,10 @@ export default function AdminClinics() {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
 
-  // NEW: edit popup
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<ClinicRow | null>(null);
   const [editClinicNameInput, setEditClinicNameInput] = useState("");
 
-  // NEW: activate / deactivate popup
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
   const [statusClinic, setStatusClinic] = useState<ClinicRow | null>(null);
   const [pendingAccountStatus, setPendingAccountStatus] = useState<"active" | "disabled" | null>(
@@ -226,7 +224,6 @@ export default function AdminClinics() {
     }
   };
 
-  // NEW
   const openEditPopup = (clinic: ClinicRow) => {
     setEditingClinic(clinic);
     setEditClinicNameInput(clinic.clinic_name);
@@ -248,7 +245,6 @@ export default function AdminClinics() {
     closeEditPopup();
   };
 
-  // NEW
   const openStatusPopup = (clinic: ClinicRow, status: "active" | "disabled") => {
     setStatusClinic(clinic);
     setPendingAccountStatus(status);
@@ -472,82 +468,82 @@ export default function AdminClinics() {
                 </div>
               </section>
 
-              <aside className="admin-right">
-                <div className="dash-panel dash-right-top">
-                  <div className="dash-panel-title">Recent activity</div>
+              <aside className="dash-aside">
+  <div className="dash-panel dash-right-top">
+    <div className="dash-panel-title">Recent activity</div>
 
-                  <div className="dash-panel-body dash-body-small">
-                    {activities.length === 0 ? (
-                      <div className="activity-empty">No recent activity yet.</div>
-                    ) : (
-                      <ul className="activity-list">
-                        {activities.slice(0, 3).map((item) => (
-                          <li key={item.id} className={`activity-item ${item.type}`}>
-                            <div className="activity-icon">
-                              {item.type === "user" && "👤"}
-                              {item.type === "clinic" && "🏥"}
-                              {item.type === "clinic-approved" && "✅"}
-                              {item.type === "clinic-rejected" && "❌"}
-                              {item.type === "appointment" && "📅"}
-                            </div>
+    <div className="dash-panel-body dash-body-small">
+      {activities.length === 0 ? (
+        <div className="activity-empty">No recent activity yet.</div>
+      ) : (
+        <ul className="activity-list">
+          {activities.slice(0, 3).map((item) => (
+            <li key={item.id} className={`activity-item ${item.type}`}>
+              <div className="activity-icon">
+                {item.type === "user" && "👤"}
+                {item.type === "clinic" && "🏥"}
+                {item.type === "clinic-approved" && "✅"}
+                {item.type === "clinic-rejected" && "❌"}
+                {item.type === "appointment" && "📅"}
+              </div>
 
-                            <div className="activity-content">
-                              <div className="activity-text">{item.text}</div>
-                              <div className="activity-time">
-                                {new Date(item.time).toLocaleString()}
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+              <div className="activity-content">
+                <div className="activity-text">{item.text}</div>
+                <div className="activity-time">
+                  {new Date(item.time).toLocaleString()}
                 </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
 
-                <Panel title="Appointment Section">
-                  <table className="dash-table">
-                    <thead>
-                      <tr>
-                        <th>Patient</th>
-                        <th>Status</th>
-                        <th className="th-action">Action</th>
-                      </tr>
-                    </thead>
+  <Panel title="Appointment Section" className="appointment-panel">
+    <table className="dash-table">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Status</th>
+          <th className="th-action">Action</th>
+        </tr>
+      </thead>
 
-                    <tbody>
-                      {appointments.length === 0 ? (
-                        <tr>
-                          <td colSpan={3} className="td-empty">
-                            Appointments API not connected yet.
-                          </td>
-                        </tr>
-                      ) : (
-                        appointments.map((ap) => (
-                          <tr key={ap.id}>
-                            <td>
-                              <div className="t-main">{ap.patient}</div>
-                              <div className="t-sub">{ap.clinic}</div>
-                            </td>
-                            <td>
-                              <span className={`badge badge-${ap.status.toLowerCase()}`}>
-                                {ap.status}
-                              </span>
-                            </td>
-                            <td className="td-action">
-                              <button
-                                className="btn-sm btn-view"
-                                onClick={() => onViewAppointment(ap.id)}
-                              >
-                                View details
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </Panel>
-              </aside>
+      <tbody>
+        {appointments.length === 0 ? (
+          <tr>
+            <td colSpan={3} className="td-empty">
+              Appointments API not connected yet.
+            </td>
+          </tr>
+        ) : (
+          appointments.map((ap) => (
+            <tr key={ap.id}>
+              <td>
+                <div className="t-main">{ap.patient}</div>
+                <div className="t-sub">{ap.clinic}</div>
+              </td>
+              <td>
+                <span className={`badge badge-${ap.status.toLowerCase()}`}>
+                  {ap.status}
+                </span>
+              </td>
+              <td className="td-action">
+                <button
+                  className="btn-sm btn-view"
+                  onClick={() => onViewAppointment(ap.id)}
+                >
+                  View details
+                </button>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </Panel>
+</aside>
             </div>
           </div>
         </section>
@@ -688,9 +684,9 @@ export default function AdminClinics() {
   );
 }
 
-function Panel({ title, children }: any) {
+function Panel({ title, children, className = "" }: any) {
   return (
-    <div className="dash-panel">
+    <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">
         <div className="dash-panel-title">{title}</div>
       </div>
