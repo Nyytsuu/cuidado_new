@@ -316,12 +316,12 @@ body {
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
-  color: #000;
+  color: white;
 }
 
-.admin-Userpage .pill-view { background: #eaf2ff; }
-.admin-Userpage .pill-success { background: #e8fff1; }
-.admin-Userpage .pill-danger { background: #ffecec; }
+.admin-Userpage .pill-view { background: #414242; }
+.admin-Userpage .pill-success { background: #51be1f; }
+.admin-Userpage .pill-danger { background: #c62828; }
 
 .admin-Userpage .pill-btn:disabled {
   opacity: 0.55;
@@ -330,17 +330,20 @@ body {
 
 /* ================= STATUS BADGES ================= */
 .admin-Userpage .status-badge {
-  display: inline-block;
+  display: inline-flex;
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
-  color: #000;
+  color: white !important;
   text-transform: capitalize;
+  text-align: center;
+  position: relative;
+  left: 12px;
 }
 
-.admin-Userpage .status-badge.is-active { background: #e8fff1; }
-.admin-Userpage .status-badge.is-disabled { background: #ffecec; }  
+.admin-Userpage .status-badge.is-active { background: #51be1f; color: #0f0f0f;}
+.admin-Userpage .status-badge.is-disabled { background: #c62828; color: #0f0f0f;}  
 
 /* ===================================================================== */
 /* ================= ASIDE (SAME AS DASHBOARD CSS) ====================== */
@@ -561,6 +564,7 @@ body {
    ============================================================ */
 
 /* Panel wrapper (already shared with other panels) */
+
 .dash-panel {
   min-height: 0;
   display: flex;
@@ -653,28 +657,53 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 5px 9px;
+  justify-content: center;
+  min-width: 92px;
+  height: 30px;
+  padding: 0 12px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 900;
-  white-space: nowrap;
+  text-transform: lowercase;
+  border: none;
 }
 
 /* status colors */
 .badge-scheduled {
-  background: #5db5ec;
+  background: #5db5ec !important;
   color: #0a4f7a;
 }
 
 .badge-completed {
-  background: #68e99e;
+  background: #68e99e !important;
   color: #0b6b3c;
 }
 
 .badge-cancelled {
-  background: #e95c5c;
+  background: #e95c5c !important;
   color: #8d1d1d;
 }
+
+/* Pending (yellow) */
+.badge-pending {
+  background: #f4c430 !important;
+  color: #5c4700;
+}
+
+/* Approved / completed (green) */
+.badge-approved {
+  background: #51be1f !important;
+  color: #0f0f0f;
+}
+
+/* 🔵 View button as badge */
+.badge-view {
+  background: #4eb4f3 !important;
+  color: #0a4f7a;
+  cursor: pointer;
+  border: none;
+}
+
 
 /* ================= ACTION COLUMN ================= */
 
@@ -706,7 +735,6 @@ body {
    APPOINTMENT SECTION ONLY
    ========================= */
 
-/* scroll area (vertical only) */
 .dash-panel-body.dash-panel-pad{
   max-height: 320px;
   overflow-y: auto;
@@ -796,4 +824,192 @@ body {
 .admin-Userpage .user-status-popup-danger {
   background: #c62828;
   color: #ffffff;
+}
+
+/* ===== FORCE LEFT ALIGN STATUS + ACTION ===== */
+.admin-Userpage .appointment-panel .dash-table td:nth-child(2),
+.admin-Userpage .appointment-panel .dash-table th:nth-child(2) {
+  text-align: left !important;
+  padding-left: 8px !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table td:nth-child(3),
+.admin-Userpage .appointment-panel .dash-table th:nth-child(3) {
+  text-align: left !important;
+  padding-left: 0 !important;
+}
+
+/* REMOVE RIGHT PUSH */
+.admin-Userpage .appointment-panel .td-action,
+.admin-Userpage .appointment-panel .th-action {
+  text-align: left !important;
+  width: auto !important; /* 🔥 IMPORTANT */
+}
+
+/* MOVE STATUS HEADER (TOP) TO LEFT */
+.admin-Userpage .appointment-panel .dash-table thead th:nth-child(2) {
+  text-align: left !important;
+  padding-left: 40px !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table tbody td:nth-child(2) {
+  text-align: left !important;
+  padding-left: 6px !important; /* adjust mo: 0px / 4px / 8px */
+}
+
+.admin-Userpage .appointment-panel .dash-table tbody td:nth-child(2) .badge {
+  position: relative;
+  left: -30px;
+}
+
+/* FLEX para magkatabi + gap */
+.admin-Userpage .appointment-panel .dash-table td:nth-child(3) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start !important; /* 🔥 FORCE LEFT */
+  gap: 10px;
+}
+
+/* bawasan spacing sa loob */
+.admin-Userpage .appointment-panel .badge {
+  margin: 0;
+}
+
+.admin-Userpage .appointment-panel .btn-view {
+  margin: 0;
+}
+
+/* APPOINTMENT SCROLL */
+.admin-Userpage .appointment-panel .dash-panel-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* ===== APPOINTMENT SECTION BADGES ONLY ===== */
+
+/* ===== COPY APPOINTMENT BADGE POSITION FROM ADMIN CLINIC ===== */
+
+.admin-Userpage .appointment-panel .dash-table {
+  width: 100%;
+  table-layout: fixed !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table th:nth-child(1),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(1) {
+  width: 35% !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table th:nth-child(2),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(2) {
+  width: 30% !important;
+  text-align: center !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table th:nth-child(3)  {
+  width: 35% !important;
+  text-align: left !important;
+  padding-left: 12px !important;
+}
+
+
+.admin-Userpage .appointment-panel .dash-table td:nth-child(3) {
+  width: 35% !important;
+  text-align: left !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table .th-action,
+.admin-Userpage .appointment-panel .dash-table .td-action {
+  text-align: left !important;
+  white-space: nowrap;
+  padding-left: 20px !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table tbody td {
+  vertical-align: middle !important;
+}
+
+/* status badge */
+.admin-Userpage .appointment-panel .appt-status-cell {
+  text-align: center !important;
+}
+
+.admin-Userpage .appointment-panel .appt-status-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 76px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  white-space: nowrap !important;
+  margin: 0 auto !important;
+  position: relative;
+  right: 2px;
+}
+
+/* action badge */
+.admin-Userpage .appointment-panel .appt-action-cell {
+  text-align: left !important;
+  padding-left: 20px !important;
+}
+
+.admin-Userpage .appointment-panel .appt-action-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 96px !important;
+  width: 96px !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  margin-left: 25px !important;
+}
+
+/* colors */
+.admin-Userpage .appointment-panel .appt-badge.badge-cancelled,
+.admin-Userpage .appointment-panel .appt-badge.badge-canceled,
+.admin-Userpage .appointment-panel .appt-badge.badge-rejected,
+.admin-Userpage .appointment-panel .appt-badge.badge-declined {
+  background: #ea6666 !important;
+  color: #000 !important;
+}
+
+.admin-Userpage .appointment-panel .appt-badge.badge-pending {
+  background: #e2c457 !important;
+  color: #000 !important;
+}
+
+.admin-Userpage .appointment-panel .appt-badge.badge-approved,
+.admin-Userpage .appointment-panel .appt-badge.badge-confirmed,
+.admin-Userpage .appointment-panel .appt-badge.badge-completed {
+  background: #7ed36d !important;
+  color: #000 !important;
+}
+
+.admin-Userpage .appointment-panel .appt-badge.badge-view {
+  background: #58b6f3 !important;
+  color: #000 !important;
+  cursor: pointer !important;
+}
+
+.admin-Userpage .appointment-panel .dash-panel-title {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  position: relative;
+  top: 10px;
+}
+
+.admin-Userpage .dash-right-top .dash-panel-title {
+  font-size: 16px !important;
+  font-weight: 900 !important;
 }
