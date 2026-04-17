@@ -56,6 +56,14 @@ export default function Services() {
   const [modalMode, setModalMode] = useState<"add" | "edit">("add");
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [form, setForm] = useState<ServiceForm>(emptyForm);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+   const [showSuccess, setShowSuccess] = useState(false);
+
+   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+    
+   const [validationPopup, setValidationPopup] = useState<string | null>(null);
+
 
   const loadServices = async () => {
     try {
@@ -172,10 +180,10 @@ export default function Services() {
   });
 
   const handleSaveService = async () => {
-    if (!form.name.trim()) {
-      alert("Service name is required.");
-      return;
-    }
+   if (!form.name.trim()) {
+  setValidationPopup("Service name is required.");
+  return;
+}
 
     try {
       setIsSaving(true);
@@ -213,7 +221,11 @@ export default function Services() {
 
       await loadServices();
       closeModal();
-      alert(`Service ${isAdd ? "added" : "updated"} successfully.`);
+      setShowSuccess(true);
+
+setTimeout(() => {
+  setShowSuccess(false);
+}, 2500);
     } catch (error) {
       console.error("Save service error:", error);
       alert(`Failed to save service: ${String(error)}`);
@@ -239,6 +251,11 @@ export default function Services() {
       }
 
       setServices((prev) => prev.filter((service) => service.id !== id));
+      setShowDeleteSuccess(true);
+
+setTimeout(() => {
+  setShowDeleteSuccess(false);
+}, 2500);
     } catch (error) {
       console.error("Delete service error:", error);
       alert(`Failed to delete service: ${String(error)}`);
@@ -278,6 +295,38 @@ export default function Services() {
   } catch (error) {
     console.error("Toggle service error:", error);
     alert(`Failed to update service status: ${String(error)}`);
+  }
+};
+
+const confirmDeleteService = async () => {
+  if (!deleteTargetId) return;
+
+  try {
+    const res = await fetch(`${API}/clinic/services/${deleteTargetId}`, {
+      method: "DELETE",
+    });
+
+    const raw = await res.text();
+    console.log("Delete service response:", res.status, raw);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} - ${raw}`);
+    }
+
+    setServices((prev) =>
+      prev.filter((service) => service.id !== deleteTargetId)
+    );
+
+    setIsDeleteModalOpen(false);
+    setDeleteTargetId(null);
+
+    // OPTIONAL: trigger your delete toast here
+    setShowDeleteSuccess(true);
+    setTimeout(() => setShowDeleteSuccess(false), 2500);
+
+  } catch (error) {
+    console.error("Delete service error:", error);
+    alert(`Failed to delete service: ${String(error)}`);
   }
 };
 
@@ -416,7 +465,10 @@ export default function Services() {
                             <button
                               type="button"
                               className="pill pill-danger"
-                              onClick={() => deleteService(row.id)}
+                              onClick={() => {
+  setDeleteTargetId(row.id);
+  setIsDeleteModalOpen(true);
+}}
                             >
                               Delete
                             </button>
@@ -453,6 +505,63 @@ export default function Services() {
           </div>
         </section>
       </main>
+         
+            {isDeleteModalOpen && (
+  <div
+    className="delete-modal-overlay"
+    onClick={() => setIsDeleteModalOpen(false)}
+  >
+    <div
+      className="delete-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="delete-modal-header">
+        <h3>Delete Service</h3>
+      </div>
+
+      <div className="delete-modal-body">
+        <p>Are you sure you want to delete this service?</p>
+      </div>
+
+      <div className="delete-modal-footer">
+        <button
+          className="pill pill-gray"
+          onClick={() => setIsDeleteModalOpen(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="pill pill-danger"
+          onClick={confirmDeleteService}
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+           {showSuccess && (
+  <div className="success-toast">
+    <div className="success-toast-content">
+      <span className="success-icon">✔</span>
+      <span>
+        Service {modalMode === "add" ? "added" : "updated"} successfully
+      </span>
+    </div>
+  </div>
+)}
+
+{showDeleteSuccess && (
+  <div className="delete-toast">
+    <div className="delete-toast-content">
+      <span className="delete-icon">🗑</span>
+      <span>Service deleted successfully</span>
+    </div>
+  </div>
+)}
 
       {isModalOpen && (
         <div className="service-modal-overlay" onClick={closeModal}>
@@ -555,7 +664,52 @@ export default function Services() {
             </div>
           </div>
         </div>
-      )}
+      )}  
+
+
+        {validationPopup && (
+  <div
+    className="service-modal-overlay"
+    onClick={() => setValidationPopup(null)}
+  >
+    <div
+      className="service-modal"
+      style={{ maxWidth: "380px", textAlign: "center" }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="service-modal-body">
+        <h3 style={{ color: "#0f4242", marginBottom: "10px" }}>
+          Missing Information
+        </h3>
+
+        <p style={{ color: "#4b5563", marginBottom: "20px" }}>
+          {validationPopup}
+        </p>
+
+        <button
+          className="pill"
+          style={{
+            background: "#399a91",
+            color: "#fff",
+            padding: "8px 20px",
+          }}
+          onClick={() => setValidationPopup(null)}
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+        
+
+
+
+
     </div>
   );
 }

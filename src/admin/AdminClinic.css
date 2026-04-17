@@ -24,21 +24,18 @@ body {
   font-family: "Poppins", sans-serif;
 }
 
-/* WRAPPER */
 .admin-UserClinics.with-sidebar {
   display: flex;
-  height: 100vh;
+  min-height: 100vh; /* ✅ allow it to grow */
   background: #ffffff;
   padding-left: var(--sidebar-width-collapsed);
-  overflow: hidden;
+  overflow: visible; /* ✅ allow content to expand */
 }
 
 /* MAIN scroll area */
 .admin-UserClinics .preview-canvas {
-  flex: 1;
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  min-height: 100vh;
+  overflow: visible;
 }
 
 /* ================= SIDEBAR ================= */
@@ -370,6 +367,8 @@ body {
   cursor: pointer;
 }
 
+
+
 .admin-UserClinics .admin-table .pill {
   color: #ffffff !important;
 }
@@ -417,6 +416,21 @@ body {
 
 .admin-UserClinics .clinics-actions .pill {
   min-width: 92px;
+}
+
+.admin-UserClinics .clinics-actions .pill-dark {
+  grid-column: 5;
+}
+
+.admin-UserClinics .clinics-actions .pill-wide {
+  width: 80%;
+ }
+
+ 
+
+.admin-UserClinics .clinics-actions .pill-dark,
+.admin-UserClinics .clinics-actions .pill-success:last-child {
+  grid-column: 5; /* Activate / Deactivate */
 }
 
 .admin-UserClinics .clinics-actions.slots {
@@ -515,9 +529,11 @@ body {
   background: #ffffff;
   border: 5px solid #00bfa6;
   border-radius: 30px;
-  overflow: hidden;
+  overflow: visible;
   padding: 0;
   max-height: none;
+  height: auto;
+   
 }
 
 .admin-UserClinics .dash-panel-body.dash-panel-pad {
@@ -680,10 +696,17 @@ body {
 }
 
 .dash-body-small {
-  max-height: 360px;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
 }
 
+
+
+.admin-UserClinics .admin-right {
+   display: flex;
+  flex-direction: column;
+  gap: 20px; /* space between Recent Activity & Appointment */
+}
 .activity-empty {
   color: #0f0f0f;
   font-weight: 600;
@@ -780,18 +803,26 @@ body {
   .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
     display: none;
   }
-}
+
 /* ===== EDIT POPUP ONLY ===== */
 .admin-UserClinics .clinic-edit-popup-overlay {
   position: fixed;
   inset: 0;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw;
+  height: 100vh;
+
   background: rgba(0, 0, 0, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
+
   z-index: 999999;
   padding: 20px;
 }
+
+
 
 .admin-UserClinics .clinic-edit-popup-card {
   width: 100%;
@@ -923,4 +954,48 @@ body {
 .admin-UserClinics .clinic-status-popup-danger {
   background: #c62828;
   color: #fff;
+}
+
+/* ===== CLEAN RESULT POPUP (TEAL THEME) ===== */
+.admin-UserClinics .result-popup-success {
+  border-top: 5px solid #399a91;
+}
+
+.admin-UserClinics .result-popup-error {
+  border-top: 5px solid #399a91; /* same palette, no red */
+}
+
+.admin-UserClinics .result-popup-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f4242; /* darker teal text */
+  margin-bottom: 8px;
+}
+
+.admin-UserClinics .result-popup-message {
+  font-size: 15px;
+  color: #4b5563;
+  margin-bottom: 18px;
+}
+
+.admin-UserClinics .result-popup-btn {
+  background: #399a91;
+  color: #fff;
+}
+
+.admin-UserClinics .result-popup-btn:hover {
+  opacity: 0.9;
+}
+
+.admin-UserClinics .dash-right-top {
+  display: block;
+}
+
+.admin-UserClinics .dash-right-top .dash-panel-body {
+  height: auto;
+  min-height: fit-content;
+}
+
+.admin-UserClinics .admin-right > *:nth-child(2) {
+  margin-top: 200px;
 }

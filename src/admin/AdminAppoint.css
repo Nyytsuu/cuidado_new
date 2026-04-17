@@ -147,6 +147,10 @@ body {
   font-size: 0.92rem;
 }
 
+/* make cancel popup appear above everything */
+.admin-UserAppoint .cancel-popup {
+  z-index: 10000;
+}
 .admin-UserAppoint .profile-dropdown a:hover {
   background: rgba(15, 66, 66, 0.08);
 }
@@ -514,4 +518,16 @@ body {
   .admin-UserAppoint .users-actions {
     flex-wrap: wrap;
   }
+}
+
+
+.user-layout .appointments-card-head {
+  position: relative; /* allow positioning */
+}
+
+.user-layout .view-all-btn {
+  position: absolute;
+  left: 90%;
+  bottom: -22px; /* adjust if needed */
+  transform: translateX(-50%);
 }
