@@ -358,7 +358,7 @@ export default function AdminServices() {
                       <tr>
                         <th>Patient</th>
                         <th>Status</th>
-                        <th className="th-action">Action:</th>
+                        <th className="th-action">Action</th>
                       </tr>
                     </thead>
 
@@ -382,17 +382,20 @@ export default function AdminServices() {
                               <div className="t-main">{ap.patient}</div>
                               <div className="t-sub">{ap.clinic}</div>
                             </td>
-                            <td>
-                              <span className={`badge badge-${ap.status.toLowerCase()}`}>
+
+                            <td className="appt-status-cell">
+                              <span className={`appt-badge ${getStatusClass(ap.status)}`}>
                                 {ap.status}
                               </span>
                             </td>
-                            <td className="td-action">
+
+                            <td className="td-action appt-action-cell">
                               <button
-                                className="btn-sm btn-view"
+                                type="button"
+                                className="appt-badge badge-view"
                                 onClick={() => onViewAppointment(ap.id)}
                               >
-                                View details
+                                View
                               </button>
                             </td>
                           </tr>
@@ -498,7 +501,7 @@ export default function AdminServices() {
 
 function Panel({ title, children }: any) {
   return (
-    <div className="dash-panel">
+    <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">
         <div className="dash-panel-title">{title}</div>
       </div>

@@ -87,7 +87,6 @@ body {
   right: 130px;
 }
 
-
 .admin-UserServices .search-btn img {
   width: 18px;
   height: 18px;
@@ -195,6 +194,7 @@ body {
   gap: 26px;
   align-items: start;
 }
+
 /* =========================================================
    ✅ SERVICES BOX DESIGN - same style as previous tables
    ========================================================= */
@@ -364,6 +364,7 @@ body {
     flex-wrap: wrap;
   }
 }
+
 /* make the services card a column layout */
 .admin-UserServices .admin-table-card{
   display: flex;
@@ -380,6 +381,7 @@ body {
   margin-top: auto;
   padding: 16px;
 }
+
 /* ======================================================
    ✅ SERVICES ONLY: Move "+ Add service" to BOTTOM
    (NO TOUCH sa appointment section)

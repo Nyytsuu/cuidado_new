@@ -286,6 +286,45 @@ export default function AdminClinics() {
     closeStatusPopup();
   };
 
+  const openEditPopup = (clinic: ClinicRow) => {
+    setEditingClinic(clinic);
+    setEditClinicNameInput(clinic.clinic_name);
+    setEditPopupOpen(true);
+  };
+
+  const closeEditPopup = () => {
+    setEditPopupOpen(false);
+    setEditingClinic(null);
+    setEditClinicNameInput("");
+  };
+
+  const saveEditedClinic = async () => {
+    if (!editingClinic) return;
+    const newName = editClinicNameInput.trim();
+    if (!newName) return;
+
+    await editClinicName(editingClinic.id, newName);
+    closeEditPopup();
+  };
+
+  const openStatusPopup = (clinic: ClinicRow, status: "active" | "disabled") => {
+    setStatusClinic(clinic);
+    setPendingAccountStatus(status);
+    setStatusPopupOpen(true);
+  };
+
+  const closeStatusPopup = () => {
+    setStatusPopupOpen(false);
+    setStatusClinic(null);
+    setPendingAccountStatus(null);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!statusClinic || !pendingAccountStatus) return;
+    await setClinicStatus(statusClinic.id, pendingAccountStatus);
+    closeStatusPopup();
+  };
+
   const filtered = clinics.filter((c) => {
     const s = q.trim().toLowerCase();
     if (!s) return true;
@@ -527,46 +566,206 @@ export default function AdminClinics() {
                   <table className="dash-table">
                     <thead>
                       <tr>
-                        <th>Patient</th>
-                        <th>Status</th>
-                        <th className="th-action">Action</th>
+                        <th>Registered Clinics</th>
+                        <th>Approval</th>
+                        <th>Account</th>
+                        <th>Actions:</th>
                       </tr>
                     </thead>
 
                     <tbody>
-                      {appointments.length === 0 ? (
+                      {loading ? (
                         <tr>
-                          <td colSpan={3} className="td-empty">
-                            Appointments API not connected yet.
-                          </td>
+                          <td colSpan={4} style={{ textAlign: "center" }}>Loading...</td>
+                        </tr>
+                      ) : filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} style={{ textAlign: "center" }}>No clinics found.</td>
                         </tr>
                       ) : (
-                        appointments.map((ap) => (
-                          <tr key={ap.id}>
-                            <td>
-                              <div className="t-main">{ap.patient}</div>
-                              <div className="t-sub">{ap.clinic}</div>
-                            </td>
-                            <td>
-                              <span className={`badge badge-${ap.status.toLowerCase()}`}>
-                                {ap.status}
-                              </span>
-                            </td>
-                            <td className="td-action">
-                              <button
-                                className="btn-sm btn-view"
-                                onClick={() => onViewAppointment(ap.id)}
-                              >
-                                View details
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                        filtered.map((c) => {
+                          const isPending = c.status === "pending";
+                          const isApproved = c.status === "approved";
+                          const isRejected = c.status === "rejected";
+
+                          const isActive = c.account_status === "active";
+                          const isDisabled = c.account_status === "disabled";
+
+                          return (
+                            <tr key={c.id}>
+                              <td className="users-name">{c.clinic_name}</td>
+
+                              <td>
+                                <span
+                                  className={[
+                                    "pill",
+                                    isPending ? "pill-warning" : "",
+                                    isApproved ? "pill-success" : "",
+                                    isRejected ? "pill-danger" : "",
+                                  ].join(" ")}
+                                >
+                                  {c.status}
+                                </span>
+                              </td>
+
+                              <td>
+                                <span
+                                  className={[
+                                    "pill",
+                                    isActive ? "pill-success" : "",
+                                    isDisabled ? "pill-dark" : "",
+                                  ].join(" ")}
+                                >
+                                  {c.account_status}
+                                </span>
+                              </td>
+
+                              <td>
+                                <div className="users-actions clinics-actions slots">
+                                  <button
+                                    type="button"
+                                    className="pill pill-view pill-wide"
+                                    onClick={() => {
+                                      setSelectedClinic(c);
+                                      setIsClinicPopupOpen(true);
+                                    }}
+                                  >
+                                    View
+                                  </button>
+
+                                  {isPending && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="pill pill-success pill-wide"
+                                        onClick={() => approveClinic(c.id)}
+                                      >
+                                        Approve
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        className="pill pill-danger pill-wide"
+                                        onClick={() => rejectClinic(c.id)}
+                                      >
+                                        Reject
+                                      </button>
+                                    </>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    className="pill pill-gray pill-wide"
+                                    onClick={() => openEditPopup(c)}
+                                  >
+                                    Edit
+                                  </button>
+
+                                  {isApproved &&
+                                    (isDisabled ? (
+                                      <button
+                                        type="button"
+                                        className="pill pill-success pill-wide"
+                                        onClick={() => openStatusPopup(c, "active")}
+                                      >
+                                        Activate
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className="pill pill-dark pill-wide"
+                                        onClick={() => openStatusPopup(c, "disabled")}
+                                      >
+                                        Deactivate
+                                      </button>
+                                    ))}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
-                </Panel>
-              </aside>
+                </div>
+              </section>
+
+              <aside className="dash-aside">
+  <div className="dash-panel dash-right-top">
+    <div className="dash-panel-title">Recent activity</div>
+
+    <div className="dash-panel-body dash-body-small">
+      {activities.length === 0 ? (
+        <div className="activity-empty">No recent activity yet.</div>
+      ) : (
+        <ul className="activity-list">
+          {activities.slice(0, 3).map((item) => (
+            <li key={item.id} className={`activity-item ${item.type}`}>
+              <div className="activity-icon">
+                {item.type === "user" && "👤"}
+                {item.type === "clinic" && "🏥"}
+                {item.type === "clinic-approved" && "✅"}
+                {item.type === "clinic-rejected" && "❌"}
+                {item.type === "appointment" && "📅"}
+              </div>
+
+              <div className="activity-content">
+                <div className="activity-text">{item.text}</div>
+                <div className="activity-time">
+                  {new Date(item.time).toLocaleString()}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  </div>
+
+  <Panel title="Appointment Section" className="appointment-panel">
+    <table className="dash-table">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Status</th>
+          <th className="th-action">Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {appointments.length === 0 ? (
+          <tr>
+            <td colSpan={3} className="td-empty">
+              Appointments API not connected yet.
+            </td>
+          </tr>
+        ) : (
+          appointments.map((ap) => (
+            <tr key={ap.id}>
+              <td>
+                <div className="t-main">{ap.patient}</div>
+                <div className="t-sub">{ap.clinic}</div>
+              </td>
+              <td>
+                <span className={`badge badge-${ap.status.toLowerCase()}`}>
+                  {ap.status}
+                </span>
+              </td>
+              <td className="td-action">
+                <button
+                  className="btn-sm btn-view"
+                  onClick={() => onViewAppointment(ap.id)}
+                >
+                  View details
+                </button>
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
+    </table>
+  </Panel>
+</aside>
             </div>
           </div>
         </section>
@@ -749,7 +948,7 @@ export default function AdminClinics() {
 
 function Panel({ title, children }: any) {
   return (
-    <div className="dash-panel">
+    <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">
         <div className="dash-panel-title">{title}</div>
       </div>

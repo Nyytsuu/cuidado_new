@@ -316,12 +316,12 @@ body {
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
-  color: #000;
+  color: white;
 }
 
-.admin-Userpage .pill-view { background: #eaf2ff; }
-.admin-Userpage .pill-success { background: #e8fff1; }
-.admin-Userpage .pill-danger { background: #ffecec; }
+.admin-Userpage .pill-view { background: #414242; }
+.admin-Userpage .pill-success { background: #51be1f; }
+.admin-Userpage .pill-danger { background: #c62828; }
 
 .admin-Userpage .pill-btn:disabled {
   opacity: 0.55;
@@ -330,17 +330,20 @@ body {
 
 /* ================= STATUS BADGES ================= */
 .admin-Userpage .status-badge {
-  display: inline-block;
+  display: inline-flex;
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 900;
-  color: #000;
+  color: white !important;
   text-transform: capitalize;
+  text-align: center;
+  position: relative;
+  left: 12px;
 }
 
-.admin-Userpage .status-badge.is-active { background: #e8fff1; }
-.admin-Userpage .status-badge.is-disabled { background: #ffecec; }  
+.admin-Userpage .status-badge.is-active { background: #51be1f; color: #0f0f0f;}
+.admin-Userpage .status-badge.is-disabled { background: #c62828; color: #0f0f0f;}  
 
 /* ===================================================================== */
 /* ================= ASIDE (SAME AS DASHBOARD CSS) ====================== */
@@ -561,6 +564,7 @@ body {
    ============================================================ */
 
 /* Panel wrapper (already shared with other panels) */
+
 .dash-panel {
   min-height: 0;
   display: flex;
@@ -653,28 +657,53 @@ body {
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 5px 9px;
+  justify-content: center;
+  min-width: 92px;
+  height: 30px;
+  padding: 0 12px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 900;
-  white-space: nowrap;
+  text-transform: lowercase;
+  border: none;
 }
 
 /* status colors */
 .badge-scheduled {
-  background: #5db5ec;
+  background: #5db5ec !important;
   color: #0a4f7a;
 }
 
 .badge-completed {
-  background: #68e99e;
+  background: #68e99e !important;
   color: #0b6b3c;
 }
 
 .badge-cancelled {
-  background: #e95c5c;
+  background: #e95c5c !important;
   color: #8d1d1d;
 }
+
+/* Pending (yellow) */
+.badge-pending {
+  background: #f4c430 !important;
+  color: #5c4700;
+}
+
+/* Approved / completed (green) */
+.badge-approved {
+  background: #51be1f !important;
+  color: #0f0f0f;
+}
+
+/* 🔵 View button as badge */
+.badge-view {
+  background: #4eb4f3 !important;
+  color: #0a4f7a;
+  cursor: pointer;
+  border: none;
+}
+
 
 /* ================= ACTION COLUMN ================= */
 
@@ -706,7 +735,6 @@ body {
    APPOINTMENT SECTION ONLY
    ========================= */
 
-/* scroll area (vertical only) */
 .dash-panel-body.dash-panel-pad{
   max-height: 320px;
   overflow-y: auto;

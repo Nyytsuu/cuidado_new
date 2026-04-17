@@ -1,29 +1,29 @@
-import { useEffect, useState, type SetStateAction } from "react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./AdminUser.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 
-/* ---------- TYPES ---------- */
 type UserRow = {
   id: number;
   full_name: string;
   email: string;
-  phone: string;
+  phone: string | null;
   created_at: string;
-  status: "active" | "disabled";
+  account_status?: "active" | "disabled";
+  status?: "active" | "disabled";
 };
 
 type UserProfile = {
   id: number;
   full_name: string;
   email: string;
-  phone: string;
-  gender: string | null;
-  date_of_birth: string | null;
+  phone: string | null;
   address: string | null;
   created_at: string;
-  status: "active" | "disabled";
+  account_status?: "active" | "disabled";
+  status?: "active" | "disabled";
 };
 
 type ActivityItem = {
@@ -33,7 +33,6 @@ type ActivityItem = {
   time: string;
 };
 
-/* ✅ Appointment type (for panel inside aside) */
 type AppointmentRow = {
   id: number;
   patient: string;
@@ -42,7 +41,7 @@ type AppointmentRow = {
   status: string;
 };
 
-export default function AdminUser() {
+export default function AdminUsers() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
@@ -50,11 +49,17 @@ export default function AdminUser() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-
-  const [viewOpen, setViewOpen] = useState(false);
+  const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [q, setQ] = useState("");
+  const navigate = useNavigate();
+
+  const [statusPopupOpen, setStatusPopupOpen] = useState(false);
+  const [statusUser, setStatusUser] = useState<UserRow | null>(null);
+  const [pendingAccountStatus, setPendingAccountStatus] = useState<"active" | "disabled" | null>(
+    null
+  );
 
   // ✅ Popup state for activate / disable
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
@@ -81,7 +86,6 @@ export default function AdminUser() {
     }
   };
 
-  // ✅ Load recent activity
   const loadActivity = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/admin/recent-activity?limit=8");
@@ -126,37 +130,44 @@ export default function AdminUser() {
   };
 
   useEffect(() => {
-    loadUsers();
-    loadActivity();
     loadAppointments();
   }, []);
 
-  // ✅ View profile
   const viewUser = async (id: number) => {
     try {
       const res = await fetch(`http://localhost:5000/api/admin/users/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: UserProfile = await res.json();
       setProfile(data);
-      setViewOpen(true);
+      setIsUserPopupOpen(true);
     } catch (e) {
       console.error("View user error:", e);
+      alert("Failed to view user.");
     }
   };
 
-  // ✅ Activate/Disable
-  const setStatus = async (id: number, status: "active" | "disabled") => {
+  const setUserStatus = async (id: number, accountStatus: "active" | "disabled") => {
     try {
       const res = await fetch(`http://localhost:5000/api/admin/users/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status: accountStatus }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status } : u)));
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === id
+            ? {
+                ...u,
+                account_status: accountStatus,
+                status: accountStatus,
+              }
+            : u
+        )
+      );
     } catch (e) {
-      console.error("Update status error:", e);
+      console.error("Update user status error:", e);
       alert("Failed to update user status.");
     }
   };
@@ -190,10 +201,6 @@ export default function AdminUser() {
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
-        headerProfileOpen={headerProfileOpen}
-        setHeaderProfileOpen={
-          setHeaderProfileOpen as unknown as (value: SetStateAction<boolean>) => void
-        }
       />
 
       <main className="preview-canvas">
@@ -202,7 +209,12 @@ export default function AdminUser() {
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
             <div className="header-search">
-              <input type="text" placeholder="Search keywords..." />
+              <input
+                type="text"
+                placeholder="Search keywords..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
               <button aria-label="Search" type="button" className="search-btn">
                 <img src={searchIcon} alt="Search" />
               </button>
@@ -227,9 +239,11 @@ export default function AdminUser() {
               </button>
 
               <div className="profile-dropdown">
-                <a href="#">My Profile</a>
-                <a href="#">Settings</a>
-                <a href="#">Logout</a>
+                <Link to="/admin/profile">My Profile</Link>
+                <Link to="/admin/settings">Settings</Link>
+                <button type="button" className="dropdown-logout" onClick={handleLogout}>
+                  Logout
+                </button>
               </div>
             </div>
           </nav>
@@ -238,36 +252,32 @@ export default function AdminUser() {
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title">
-              <h2>User (Patient) Management</h2>
+              <h2>Users Management</h2>
             </div>
 
             <div className="admin-grid">
-              {/* LEFT: TABLE */}
               <section className="admin-card admin-table-card">
                 <div className="users-table-wrap">
                   <table className="users-table">
                     <thead>
                       <tr>
-                        <th>Name</th>
-                        <th>Gmail</th>
-                        <th>Contact</th>
-                        <th>Date</th>
+                        <th>Registered Users</th>
+                        <th>Email</th>
                         <th>Status</th>
-                        <th>Profiles</th>
-                        <th>Actions:</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
 
                     <tbody>
                       {loading ? (
                         <tr>
-                          <td colSpan={7} className="users-empty">
+                          <td colSpan={4} className="users-empty">
                             Loading...
                           </td>
                         </tr>
-                      ) : users.length === 0 ? (
+                      ) : filtered.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="users-empty">
+                          <td colSpan={4} className="users-empty">
                             No users found.
                           </td>
                         </tr>
@@ -360,7 +370,7 @@ export default function AdminUser() {
                   </div>
                 </div>
 
-                <Panel title="Appointment Section">
+                <Panel title="Appointment Section" className="appointment-panel">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -385,26 +395,29 @@ export default function AdminUser() {
                         </tr>
                       ) : (
                         appointments.map((ap) => (
-                          <tr key={ap.id}>
-                            <td>
-                              <div className="t-main">{ap.patient}</div>
-                              <div className="t-sub">{ap.clinic}</div>
-                            </td>
-                            <td>
-                              <span className={`badge badge-${ap.status.toLowerCase()}`}>
-                                {ap.status}
-                              </span>
-                            </td>
-                            <td className="td-action">
-                              <button
-                                className="btn-sm btn-view"
-                                onClick={() => onViewAppointment(ap.id)}
-                              >
-                                View details
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+  <tr key={ap.id}>
+    <td>
+      <div className="t-main">{ap.patient}</div>
+      <div className="t-sub">{ap.clinic}</div>
+    </td>
+
+    <td className="appt-status-cell">
+      <span className={`appt-badge ${getStatusClass(ap.status)}`}>
+        {ap.status}
+      </span>
+    </td>
+
+    <td className="td-action appt-action-cell">
+      <button
+        type="button"
+        className="appt-badge badge-view"
+        onClick={() => onViewAppointment(ap.id)}
+      >
+        View
+      </button>
+    </td>
+  </tr>
+))
                       )}
                     </tbody>
                   </table>
@@ -415,41 +428,38 @@ export default function AdminUser() {
         </section>
       </main>
 
-      {/* VIEW PROFILE MODAL */}
-      {viewOpen && profile && (
-        <div className="modal-backdrop" onClick={() => setViewOpen(false)}>
+      {isUserPopupOpen && profile && (
+        <div className="modal-backdrop" onClick={() => setIsUserPopupOpen(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head">
-              <h3>User Profile</h3>
-              <button className="modal-close" onClick={() => setViewOpen(false)}>
+              <h3>User Details</h3>
+              <button
+                type="button"
+                className="modal-close"
+                onClick={() => setIsUserPopupOpen(false)}
+              >
                 ✕
               </button>
             </div>
 
             <div className="modal-body">
               <p>
-                <b>Name:</b> {profile.full_name}
+                <b>Full Name:</b> {profile.full_name ?? "—"}
               </p>
               <p>
-                <b>Email:</b> {profile.email}
+                <b>Email:</b> {profile.email ?? "—"}
               </p>
               <p>
-                <b>Phone:</b> {profile.phone || "—"}
+                <b>Phone:</b> {profile.phone ?? "—"}
               </p>
               <p>
-                <b>Status:</b> {profile.status}
+                <b>Address:</b> {profile.address ?? "—"}
               </p>
               <p>
-                <b>Registered:</b> {new Date(profile.created_at).toLocaleString()}
+                <b>Account:</b> {getUserStatus(profile)}
               </p>
               <p>
-                <b>Gender:</b> {profile.gender || "—"}
-              </p>
-              <p>
-                <b>Date of Birth:</b> {profile.date_of_birth || "—"}
-              </p>
-              <p>
-                <b>Address:</b> {profile.address || "—"}
+                <b>Created At:</b> {profile.created_at ?? "—"}
               </p>
             </div>
           </div>
@@ -504,10 +514,17 @@ export default function AdminUser() {
   );
 }
 
-/* ✅ same Panel helper style used in dashboard */
-function Panel({ title, children }: any) {
+function Panel({
+  title,
+  children,
+  className = "",
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <div className="dash-panel">
+    <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">
         <div className="dash-panel-title">{title}</div>
       </div>

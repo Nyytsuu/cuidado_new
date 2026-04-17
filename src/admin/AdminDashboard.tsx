@@ -564,8 +564,8 @@ export default function AdminDashboard() {
           </div>
 
           <aside className="dash-aside">
+            <div className="dash-panel-title">Recent activity</div>
             <div className="dash-panel dash-right-top">
-              <div className="dash-panel-title">Recent activity</div>
               <div className="dash-panel-body dash-body-small">
                 {activities.length === 0 ? (
                   <div className="activity-empty">No recent activity yet.</div>
@@ -594,13 +594,13 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <Panel title="Appointment Section">
+            <Panel title="Appointment Section" className="appointment-panel">
               <table className="dash-table">
                 <thead>
                   <tr>
                     <th>Patient</th>
                     <th>Status</th>
-                    <th className="th-action">Action</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
 
@@ -620,21 +620,26 @@ export default function AdminDashboard() {
                   ) : (
                     appointments.map((ap) => (
                       <tr key={ap.id}>
-                        <td>
+                        <td className="appt-patient-cell">
                           <div className="t-main">{ap.patient}</div>
                           <div className="t-sub">{ap.clinic}</div>
                         </td>
-                        <td>
-                          <span className={`badge badge-${ap.status.toLowerCase()}`}>
+
+                        <td className="appt-status-cell">
+                          <span
+                            className={`appt-badge appt-status-badge badge-${ap.status.toLowerCase()}`}
+                          >
                             {ap.status}
                           </span>
                         </td>
-                        <td className="td-action">
+
+                        <td className="appt-action-cell">
                           <button
-                            className="btn-sm btn-view"
+                            type="button"
+                            className="appt-badge appt-view-btn badge-view"
                             onClick={() => viewDetails(ap.id)}
                           >
-                            View details
+                            View
                           </button>
                         </td>
                       </tr>
@@ -646,6 +651,55 @@ export default function AdminDashboard() {
           </aside>
         </section>
       </main>
+
+      {isPopupOpen && selected && (
+        <div className="popup-overlay" onClick={() => setIsPopupOpen(false)}>
+          <div className="popup-card" onClick={(e) => e.stopPropagation()}>
+            <h3>Appointment Details</h3>
+
+            <div className="popup-grid">
+              <div>
+                <strong>Patient:</strong> {selected.patient_name_snapshot ?? "N/A"}
+              </div>
+              <div>
+                <strong>Clinic:</strong> {selected.clinic_name_snapshot ?? "N/A"}
+              </div>
+              <div>
+                <strong>Status:</strong> {selected.status}
+              </div>
+              <div>
+                <strong>Purpose:</strong> {selected.purpose ?? "N/A"}
+              </div>
+              <div>
+                <strong>Symptoms:</strong> {selected.symptoms ?? "N/A"}
+              </div>
+              <div>
+                <strong>Patient Note:</strong> {selected.patient_note ?? "N/A"}
+              </div>
+              <div>
+                <strong>Clinic Note:</strong> {selected.clinic_note ?? "N/A"}
+              </div>
+              <div>
+                <strong>Start:</strong> {new Date(selected.start_at).toLocaleString()}
+              </div>
+              <div>
+                <strong>End:</strong>{" "}
+                {selected.end_at ? new Date(selected.end_at).toLocaleString() : "N/A"}
+              </div>
+            </div>
+
+            <div className="popup-actions">
+              <button
+                type="button"
+                className="btn-sm btn-view"
+                onClick={() => setIsPopupOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
