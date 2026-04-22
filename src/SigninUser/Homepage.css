@@ -905,3 +905,19 @@ body,
     transform: scale(1);
   }
 }
+.article-text small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.article-tip-box a {
+  color: #0b8a84;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.article-tip-box a:hover {
+  text-decoration: underline;
+}

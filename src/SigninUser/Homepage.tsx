@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -8,6 +8,17 @@ import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import UserSidebar from "../Categories/UserSidebar";
 import "./Homepage.css";
+
+type Article = {
+  id: number;
+  title: string;
+  subtitle: string;
+  content: string;
+  image?: string;
+  url?: string;
+  source?: string;
+  publishedAt?: string | null;
+};
 
 const topServices = [
   {
@@ -66,29 +77,6 @@ const otherServices = [
   },
 ];
 
-const articles = [
-  {
-    title: "Simple tips to maintain a healthy heart",
-    subtitle: "Read tips to keep your heart strong",
-  },
-  {
-    title: "Stretches to reduce stress at home",
-    subtitle: "Simple ways to help your body relax",
-  },
-  {
-    title: "Superfoods you must know about",
-    subtitle: "Easy food choices for better health",
-  },
-  {
-    title: "Exercises to boost your health",
-    subtitle: "Daily movement for a stronger body",
-  },
-  {
-    title: "Healthy habits for everyday living",
-    subtitle: "Small changes that make a big difference",
-  },
-];
-
 const clinicMarkers = [
   {
     id: 1,
@@ -129,14 +117,46 @@ export default function Homepage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
-   const [selectedArticle, setSelectedArticle] = useState<{
-  title: string;
-  subtitle: string;
-} | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [articlesError, setArticlesError] = useState("");
 
   const handleNavigate = (path: string) => {
     navigate(path);
   };
+
+  const loadArticles = async (query?: string) => {
+    try {
+      setArticlesLoading(true);
+      setArticlesError("");
+
+      const finalQuery = (query || "health").trim();
+
+      const res = await fetch(
+        `http://localhost:5000/api/articles?q=${encodeURIComponent(finalQuery)}`
+      );
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to load articles.");
+      }
+
+      setArticles(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setArticlesError(
+        err instanceof Error ? err.message : "Failed to load articles."
+      );
+      setArticles([]);
+    } finally {
+      setArticlesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadArticles("health");
+  }, []);
 
   return (
     <div className={`homepage ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -156,6 +176,28 @@ export default function Homepage() {
               <div className="welcome-box">
                 <h1>Welcome back, Dr. John Smith!</h1>
                 <p>What are you looking for?</p>
+              </div>
+
+              <div className="header-search">
+                <input
+                  type="text"
+                  placeholder="Search health topics..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      loadArticles(searchQuery || "health");
+                    }
+                  }}
+                />
+                <button
+                  aria-label="Search"
+                  type="button"
+                  className="search-btn"
+                  onClick={() => loadArticles(searchQuery || "health")}
+                >
+                  Search
+                </button>
               </div>
 
               <div className="services-grid">
@@ -365,7 +407,7 @@ export default function Homepage() {
                               <button
                                 type="button"
                                 className="popup-route-btn"
-                                onClick={() => handleNavigate("/clinics")}
+                                onClick={() => handleNavigate("/find-clinic")}
                               >
                                 View clinics
                               </button>
@@ -378,7 +420,7 @@ export default function Homepage() {
                     <button
                       type="button"
                       className="find-clinic-btn"
-                      onClick={() => handleNavigate("/clinics")}
+                      onClick={() => handleNavigate("/find-clinic")}
                     >
                       Find Clinics Nearby
                     </button>
@@ -424,91 +466,114 @@ export default function Homepage() {
               <h3>Health Articles</h3>
 
               <div className="articles-list">
-                {articles.map((article, index) => (
-                  <div
-                    key={`${article.title}-${index}`}
-                    className="article-item"
-                    onClick={() => setSelectedArticle(article)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        handleNavigate("/health-tips");
-                      }
-                    }}
-                  >
-                    <div className="article-img"></div>
-                    <div className="article-text">
-                      <h4>{article.title}</h4>
-                      <p>{article.subtitle}</p>
+                {articlesLoading ? (
+                  <p>Loading articles...</p>
+                ) : articlesError ? (
+                  <p>{articlesError}</p>
+                ) : articles.length === 0 ? (
+                  <p>No articles found.</p>
+                ) : (
+                  articles.slice(0, 5).map((article) => (
+                    <div
+                      key={article.id}
+                      className="article-item"
+                      onClick={() => setSelectedArticle(article)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          setSelectedArticle(article);
+                        }
+                      }}
+                    >
+                      <div
+                        className="article-img"
+                        style={
+                          article.image
+                            ? {
+                                backgroundImage: `url(${article.image})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                              }
+                            : undefined
+                        }
+                      ></div>
+
+                      <div className="article-text">
+                        <h4>{article.title}</h4>
+                        <p>{article.subtitle}</p>
+                        <small>{article.source || "Unknown source"}</small>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </aside>
           </div>
         </main>
       </div>
-{selectedArticle && (
-  <div
-    className="article-modal-overlay"
-    onClick={() => setSelectedArticle(null)}
-  >
-    <div
-      className="article-modal"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* HERO */}
-      <div className="article-modal-hero">
-        <div className="article-hero-content">
-          <h2>{selectedArticle.title}</h2>
-          <p>{selectedArticle.subtitle}</p>
-        </div>
 
-        {/* CLOSE BUTTON */}
-        <button
-          className="article-close-btn"
+      {selectedArticle && (
+        <div
+          className="article-modal-overlay"
           onClick={() => setSelectedArticle(null)}
         >
-          ✕
-        </button>
-      </div>
+          <div
+            className="article-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="article-modal-hero"
+              style={
+                selectedArticle.image
+                  ? {
+                      backgroundImage: `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url(${selectedArticle.image})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }
+                  : undefined
+              }
+            >
+              <div className="article-hero-content">
+                <h2>{selectedArticle.title}</h2>
+                <p>{selectedArticle.subtitle}</p>
+                <small>
+                  {selectedArticle.source || "Unknown source"}
+                  {selectedArticle.publishedAt
+                    ? ` • ${new Date(selectedArticle.publishedAt).toLocaleDateString()}`
+                    : ""}
+                </small>
+              </div>
 
-      {/* BODY */}
-      <div className="article-modal-body">
-        <div className="article-section">
-          <h4>Overview</h4>
-          <p>
-            Maintaining your health doesn’t have to be complicated. Simple daily
-            habits like eating balanced meals, staying active, and getting enough
-            rest can significantly improve your well-being.
-          </p>
+              <button
+                className="article-close-btn"
+                onClick={() => setSelectedArticle(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="article-modal-body">
+              <div className="article-section">
+                <h4>Article Summary</h4>
+                <p>{selectedArticle.content}</p>
+              </div>
+
+              {selectedArticle.url && (
+                <div className="article-tip-box">
+                  <a
+                    href={selectedArticle.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Read full article from {selectedArticle.source || "source"} →
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-
-        <div className="article-section">
-          <h4>Why it matters</h4>
-          <p>
-            Consistency is key. Small actions done daily can lead to long-term
-            improvements in your physical and mental health.
-          </p>
-        </div>
-
-        <div className="article-tip-box">
-          💡 Tip: Start small. Even 10 minutes of activity daily can make a big difference.
-        </div>
-
-        <div className="article-section">
-          <h4>Conclusion</h4>
-          <p>
-            Always consult healthcare professionals when needed. Prevention and
-            awareness are your best tools for a healthier life.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
     </div>
   );
 }

@@ -466,3 +466,92 @@ body {
     justify-content: space-between;
   }
 }
+.bmi-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.bmi-popup-card {
+  width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.bmi-popup-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.bmi-popup-card h2 {
+  margin: 0 0 14px;
+  font-size: 24px;
+  color: #172033;
+}
+
+.bmi-popup-value {
+  font-size: 42px;
+  font-weight: 800;
+  color: #0b8a84;
+  margin-bottom: 12px;
+}
+
+.bmi-popup-category {
+  font-size: 16px;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.bmi-popup-message {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.bmi-popup-checkup {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.bmi-popup-checkup.warning {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+}
+
+.bmi-popup-checkup.ok {
+  background: #ecfdf3;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.bmi-popup-btn {
+  border: none;
+  background: #0b8a84;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}

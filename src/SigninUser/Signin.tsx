@@ -66,47 +66,48 @@ function Signin() {
   };
 
   // login submit
-  const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setLoginError("");
+  // login submit
+const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setLoading(true);
+  setLoginError("");
 
-    // require captcha after 5 failed attempts
-    if (showCaptcha && !captchaToken) {
-      setLoginError("Please complete the CAPTCHA first.");
-      setLoading(false);
-      return;
-    }
-console.log("CAPTCHA KEY:", siteKey);
-    try {
-      // If your backend supports captcha verification,
-      // pass captchaToken to login(email, password, captchaToken)
-     const data = await login(email, password, captchaToken || undefined);
+  // require captcha after 5 failed attempts
+  if (showCaptcha && !captchaToken) {
+    setLoginError("Please complete the CAPTCHA first.");
+    setLoading(false);
+    return;
+  }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
+  console.log("CAPTCHA KEY:", siteKey);
 
-      // reset on success
-      setFailedAttempts(0);
+  try {
+    const data = await login(email, password, captchaToken || undefined);
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.user.role);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    localStorage.setItem("userId", String(data.user.id));
+
+    // reset on success
+    setFailedAttempts(0);
+    setCaptchaToken(null);
+
+    if (data.user.role === "admin") navigate("/admin/dashboard", { replace: true });
+    else if (data.user.role === "clinic") navigate("/clinic/dashboard", { replace: true });
+    else navigate("/homepage", { replace: true });
+  } catch (err: any) {
+    const newAttempts = failedAttempts + 1;
+    setFailedAttempts(newAttempts);
+    setLoginError(err.message || "Login failed.");
+
+    if (newAttempts >= 5) {
       setCaptchaToken(null);
-
-      if (data.user.role === "admin") navigate("/admin/dashboard", { replace: true });
-      else if (data.user.role === "clinic") navigate("/clinic/dashboard", { replace: true });
-      else navigate("/homepage", { replace: true });
-    } catch (err: any) {
-      const newAttempts = failedAttempts + 1;
-      setFailedAttempts(newAttempts);
-      setLoginError(err.message || "Login failed.");
-
-      // optional: clear captcha so user solves again after failed try
-      if (newAttempts >= 5) {
-        setCaptchaToken(null);
-      }
-    } finally {
-      setLoading(false);
     }
-  };
-
+  } finally {
+    setLoading(false);
+  }
+};
   // 1) send otp
   const sendOtp = async (emailToSend: string) => {
     const res = await fetch(`${apiBase}/api/auth/otp/send`, {
@@ -186,7 +187,7 @@ console.log("CAPTCHA KEY:", siteKey);
   const closeSuccess = () => {
     closeAllFp();
   };
-
+console.log("CAPTCHA KEY:", siteKey);
   return (
     <div className="signin-container">
       <div className="left-side">
@@ -231,16 +232,18 @@ console.log("CAPTCHA KEY:", siteKey);
               </p>
             )}
 
-            {showCaptcha && (
+           {showCaptcha && (
   <div className="captcha-wrap">
     {!siteKey ? (
       <p className="captcha-error">Missing reCAPTCHA site key.</p>
     ) : (
-      <ReCAPTCHA
-        sitekey={siteKey}
-        onChange={(token) => setCaptchaToken(token)}
-        onExpired={() => setCaptchaToken(null)}
-      />
+      <div className="captcha-box">
+        <ReCAPTCHA
+          sitekey={siteKey}
+          onChange={(token) => setCaptchaToken(token)}
+          onExpired={() => setCaptchaToken(null)}
+        />
+      </div>
     )}
   </div>
 )}
@@ -259,7 +262,6 @@ console.log("CAPTCHA KEY:", siteKey);
         </div>
       </div>
 
-      <div className="logsides"></div>
 
       <div className="right-side">
         <div className="right-content">
