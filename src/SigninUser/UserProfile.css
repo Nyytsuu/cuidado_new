@@ -33,7 +33,51 @@ textarea {
   overflow-x: hidden;
   background: linear-gradient(180deg, #f6f8f9 0%, #eef3f4 100%);
   position: relative;
-  transition: margin-left 0.25s ease;
+}
+
+/* ================= HEADER ================= */
+.app-header {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  display: grid;
+  grid-template-columns: 220px 1fr 120px;
+  align-items: center;
+  gap: 24px;
+  z-index: 20;
+  border-bottom: 1px solid #e6ebee;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
+}
+
+
+.brand-logo {
+  width: 170px;
+  max-height: 42px;
+  object-fit: contain;
+  display: block;
+}
+
+.header-search {
+  margin-left: 550px;
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+}
+
+.header-search input {
+  width: 100%;
+  height: 40px;
+  padding: 0 52px 0 20px;
+  border-radius: 999px;
+  border: 1px solid #d8dde3;
+  font-size: 15px;
+  background: #f8f8fa;
+  outline: none;
+  color: #4b5660;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .profile-page.sidebar-expanded .health-app {
@@ -701,42 +745,4 @@ textarea {
   line-height: 1.65;
   color: #667686;
   font-weight: 600;
-}
-
-.current-btn,
-.new-btn,
-.confirm-btn {
-  background: transparent;
-  border: none;
-  color: #7b8790;
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.current-btn svg,
-.new-btn svg,
-.confirm-btn svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2;
-}
-
-.current-btn:hover,
-.new-btn:hover,
-.confirm-btn:hover {
-  color: #0f6b68;
-  background: rgba(159, 212, 212, 0.18);
-}
-
-.current-btn:active,
-.new-btn:active,
-.confirm-btn:active {
-  transform: scale(0.95);
 }

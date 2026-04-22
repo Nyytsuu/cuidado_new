@@ -9,7 +9,7 @@ import appointmentIcon from "../img/appointment.png";
 import userIcon from "../img/friends.png";
 import serviceIcon from "../img/doctor-bag.png";
 import logoutIcon from "../img/logout.png";
-
+import reportIcon from "../img/graph-analysis.png"
 import conditionIcon from "../img/stethoscope.png";
 import symptomIcon from "../img/thermometer.png";
 import mappingIcon from "../img/link.png";
@@ -101,6 +101,12 @@ const cancelLogout = () => {
             <Link to="/admin/services">
               <img src={serviceIcon} alt="Services" />
               <span>Services</span>
+            </Link>
+          </div>
+          <div className="sidebar-item">
+            <Link to="/admin/reports">
+              <img src={reportIcon} alt="Reports" />
+              <span>Reports</span>
             </Link>
           </div>
 

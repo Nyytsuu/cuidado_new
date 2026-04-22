@@ -24,15 +24,17 @@ body {
 
 .admin-UserClinics.with-sidebar {
   display: flex;
-  min-height: 100vh; /* ✅ allow it to grow */
+  height: 100vh;
   background: #ffffff;
   padding-left: var(--sidebar-width-collapsed);
-  overflow: visible; /* ✅ allow content to expand */
+  overflow: hidden;
 }
 
 .admin-UserClinics .preview-canvas {
-  min-height: 100vh;
-  overflow: visible;
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ================= SIDEBAR ================= */
@@ -316,25 +318,7 @@ body {
   padding: 18px;
 }
 
-.admin-UserClinics .clinics-table th:nth-child(3),
-.admin-UserClinics .clinics-table td:nth-child(3) {
-  width: 16%;
-  text-align: center;
-}
-
-.admin-UserClinics .clinics-table th:nth-child(4),
-.admin-UserClinics .clinics-table td:nth-child(4) {
-  width: 34%;
-}
-
-/* empty / loading row */
-.admin-UserClinics .clinics-table td[colspan="4"] {
-  text-align: center;
-  font-weight: 700;
-  padding: 18px;
-}
-
-/* ================= PILL BUTTONS ================= */
+/* ================= PILLS ================= */
 .admin-UserClinics .pill {
   border: none;
   border-radius: 999px;
@@ -349,8 +333,6 @@ body {
   white-space: nowrap;
   cursor: pointer;
 }
-
-
 
 .admin-UserClinics .admin-table .pill {
   color: #ffffff !important;
@@ -399,21 +381,6 @@ body {
 
 .admin-UserClinics .clinics-actions .pill {
   min-width: 92px;
-}
-
-.admin-UserClinics .clinics-actions .pill-dark {
-  grid-column: 5;
-}
-
-.admin-UserClinics .clinics-actions .pill-wide {
-  width: 80%;
- }
-
- 
-
-.admin-UserClinics .clinics-actions .pill-dark,
-.admin-UserClinics .clinics-actions .pill-success:last-child {
-  grid-column: 5; /* Activate / Deactivate */
 }
 
 .admin-UserClinics .clinics-actions.slots {
@@ -632,11 +599,8 @@ body {
   background: #ffffff;
   border: 5px solid #00bfa6;
   border-radius: 30px;
-  overflow: visible;
+  overflow: hidden;
   padding: 0;
-  max-height: none;
-  height: auto;
-   
 }
 
 .admin-UserClinics .dash-panel-pad {
@@ -813,22 +777,22 @@ body {
   text-align: center;
 }
 
-.dash-body-small {
-  max-height: none;
-  overflow: visible;
+.admin-UserClinics .clinic-edit-popup-title {
+  margin: 0 0 16px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f4242;
 }
 
-
-
-.admin-UserClinics .admin-right {
-   display: flex;
-  flex-direction: column;
-  gap: 20px; /* space between Recent Activity & Appointment */
-}
-.activity-empty {
-  color: #0f0f0f;
-  font-weight: 600;
-  opacity: 0.85;
+.admin-UserClinics .clinic-edit-popup-input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 18px;
 }
 
 .admin-UserClinics .clinic-edit-popup-actions {
@@ -963,10 +927,94 @@ body {
   background: #7ed36d !important;
 }
 
-.admin-UserClinics .dash-panel-title {
-  font-size: 16px;
-  font-weight: 900;
-  color: #000;
+/* VIEW BUTTON */
+.admin-UserClinics .btn-view {
+  background: #58b6f3 !important;
+  color: #000 !important;
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+
+/* ALIGN LEFT */
+.admin-UserClinics .td-action {
+  text-align: left !important;
+  padding-left: 10px !important;
+}
+/* ===== APPOINTMENT PANEL FINAL FIX ===== */
+.admin-UserClinics .appointment-panel .dash-table .badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 60px !important;
+  height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  text-transform: lowercase !important;
+  border: none !important;
+}
+
+.admin-UserClinics .appointment-panel .dash-table .badge-cancelled,
+.admin-UserClinics .appointment-panel .dash-table .badge-rejected,
+.admin-UserClinics .appointment-panel .dash-table .badge-declined {
+  background: #ea6666 !important;
+  color: #000 !important;
+}
+
+.admin-UserClinics .appointment-panel .dash-table .badge-pending {
+  background: #e2c457 !important;
+  color: #000 !important;
+}
+
+.admin-UserClinics .appointment-panel .dash-table .badge-approved,
+.admin-UserClinics .appointment-panel .dash-table .badge-confirmed,
+.admin-UserClinics .appointment-panel .dash-table .badge-completed {
+  background: #7ed36d !important;
+  color: #000 !important;
+}
+
+.admin-UserClinics .appointment-panel .dash-table .btn-view,
+.admin-UserClinics .appointment-panel .dash-table .btn-sm {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 110px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: #58b6f3 !important;
+  color: #000 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.admin-UserClinics .appointment-panel .dash-table .td-action,
+.admin-UserClinics .appointment-panel .dash-table td.td-action {
+  text-align: left !important;
+  padding-left: 20px !important;
+}
+/* ===== APPOINTMENT LAYOUT FIX ===== */
+.admin-UserClinics .appointment-panel .dash-table {
+  width: 100%;
+  table-layout: fixed !important;
+}
+
+.admin-UserClinics .appointment-panel .dash-table th:nth-child(1),
+.admin-UserClinics .appointment-panel .dash-table td:nth-child(1) {
+  width: 35% !important;
+}
+
+.admin-UserClinics .appointment-panel .dash-table th:nth-child(2),
+.admin-UserClinics .appointment-panel .dash-table td:nth-child(2) {
+  width: 30% !important;
+  text-align: center !important;
 }
 
 .admin-UserClinics .appointment-panel .dash-table th:nth-child(3),
@@ -988,202 +1036,11 @@ body {
   font-size: 11px !important;
 }
 
-  .admin-UserClinics .clinics-actions.slots > *:nth-child(n + 2)::before {
-    display: none;
-  }
-
-/* ===== EDIT POPUP ONLY ===== */
-.admin-UserClinics .clinic-edit-popup-overlay {
-  position: fixed;
-  inset: 0;
-  left: 0 !important;
-  right: 0 !important;
-  width: 100vw;
-  height: 100vh;
-
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  z-index: 999999;
-  padding: 20px;
-}
-
-
-
-.admin-UserClinics .clinic-edit-popup-card {
-  width: 100%;
-  max-width: 430px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
-  text-align: center;
-}
-
-.admin-UserClinics .clinic-edit-popup-title {
-  margin: 0 0 16px;
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f4242;
-}
-
-.admin-UserClinics .clinic-edit-popup-input {
-  width: 100%;
-  height: 46px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
-  padding: 0 14px;
-  font-size: 15px;
-  outline: none;
-  margin-bottom: 18px;
-}
-
-.admin-UserClinics .clinic-edit-popup-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.admin-UserClinics .clinic-edit-popup-btn {
-  min-width: 110px;
-  height: 40px;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.admin-UserClinics .clinic-edit-popup-cancel {
-  background: #e8e8e8;
-  color: #333;
-}
-
-.admin-UserClinics .clinic-edit-popup-save {
-  background: #399a91;
-  color: #fff;
-}
-
-/* ===== STATUS POPUP ONLY ===== */
-.admin-UserClinics .clinic-status-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999999;
-  padding: 20px;
-}
-
-.admin-UserClinics .clinic-status-popup-card {
-  width: 100%;
-  max-width: 430px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
-  text-align: center;
-}
-
-.admin-UserClinics .clinic-status-popup-title {
-  margin: 0 0 16px;
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f4242;
-}
-
-.admin-UserClinics .clinic-status-popup-text {
-  margin: 0 0 18px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: #333;
-}
-
-.admin-UserClinics .clinic-status-popup-name {
-  font-weight: 700;
-  color: #0f4242;
-}
-
-.admin-UserClinics .clinic-status-popup-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.admin-UserClinics .clinic-status-popup-btn {
-  min-width: 110px;
-  height: 40px;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.activity-item:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
-}
-
-.admin-UserClinics .clinic-status-popup-cancel {
-  background: #e8e8e8;
-  color: #333;
-}
-
-.admin-UserClinics .clinic-status-popup-save {
-  background: #399a91;
-  color: #fff;
-}
-
-.admin-UserClinics .clinic-status-popup-danger {
-  background: #c62828;
-  color: #fff;
-}
-
-/* ===== CLEAN RESULT POPUP (TEAL THEME) ===== */
-.admin-UserClinics .result-popup-success {
-  border-top: 5px solid #399a91;
-}
-
-.admin-UserClinics .result-popup-error {
-  border-top: 5px solid #399a91; /* same palette, no red */
-}
-
-.admin-UserClinics .result-popup-title {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f4242; /* darker teal text */
-  margin-bottom: 8px;
-}
-
-.admin-UserClinics .result-popup-message {
-  font-size: 15px;
-  color: #4b5563;
-  margin-bottom: 18px;
-}
-
-.admin-UserClinics .result-popup-btn {
-  background: #399a91;
-  color: #fff;
-}
-
-.admin-UserClinics .result-popup-btn:hover {
-  opacity: 0.9;
-}
-
-.admin-UserClinics .dash-right-top {
-  display: block;
-}
-
-.admin-UserClinics .dash-right-top .dash-panel-body {
-  height: auto;
-  min-height: fit-content;
-}
-
-.admin-UserClinics .admin-right > *:nth-child(2) {
-  margin-top: 200px;
+.admin-UserClinics .appointment-panel .dash-table .btn-view,
+.admin-UserClinics .appointment-panel .dash-table .btn-sm {
+  min-width: 96px !important;
+  width: 96px !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  font-size: 11px !important;
 }

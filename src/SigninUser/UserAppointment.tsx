@@ -77,32 +77,61 @@ type BookingModalProps = {
   userId: number;
 };
 
-function isValidDate(value: string | number | Date | null | undefined): boolean {
-  if (!value) return false;
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime());
+function parseDateTime(
+  value: string | number | Date | null | undefined
+): Date | null {
+  if (!value) return null;
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  const parsed =
+    typeof value === "string"
+      ? new Date(value.replace(" ", "T"))
+      : new Date(value);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function formatTime(dateString: string | number | Date | null | undefined): string {
-  if (!isValidDate(dateString)) return "--:--";
-  return new Date(dateString as string | number | Date).toLocaleTimeString([], {
+function isValidDate(
+  value: string | number | Date | null | undefined
+): boolean {
+  return parseDateTime(value) !== null;
+}
+
+function formatTime(
+  dateString: string | number | Date | null | undefined
+): string {
+  const date = parseDateTime(dateString);
+  if (!date) return "--:--";
+
+  return date.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
 }
 
-function formatDate(dateString: string | number | Date | null | undefined): string {
-  if (!isValidDate(dateString)) return "No date";
-  return new Date(dateString as string | number | Date).toLocaleDateString([], {
+function formatDate(
+  dateString: string | number | Date | null | undefined
+): string {
+  const date = parseDateTime(dateString);
+  if (!date) return "No date";
+
+  return date.toLocaleDateString([], {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
 }
 
-function formatDay(dateString: string | number | Date | null | undefined): string {
-  if (!isValidDate(dateString)) return "";
-  return new Date(dateString as string | number | Date).toLocaleDateString([], {
+function formatDay(
+  dateString: string | number | Date | null | undefined
+): string {
+  const date = parseDateTime(dateString);
+  if (!date) return "";
+
+  return date.toLocaleDateString([], {
     weekday: "long",
   });
 }
@@ -145,8 +174,8 @@ function isWithinClinicHours(
 
   if (!open || !close) return true;
 
-  const end = new Date(endDateTime.replace(" ", "T"));
-  if (Number.isNaN(end.getTime())) return false;
+  const end = parseDateTime(endDateTime);
+  if (!end) return false;
 
   const endTime = `${String(end.getHours()).padStart(2, "0")}:${String(
     end.getMinutes()
@@ -201,7 +230,12 @@ function sameDate(a: Date, b: Date) {
   );
 }
 
-function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
+function BookingModal({
+  open,
+  onClose,
+  onBooked,
+  userId,
+}: BookingModalProps) {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [services, setServices] = useState<ClinicService[]>([]);
 
@@ -220,8 +254,6 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
   const [loadingServices, setLoadingServices] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
-  
- const [rescheduleConfirmOpen, setRescheduleConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -265,7 +297,9 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
         if (!res.ok) throw new Error("Failed to load services");
 
         const data: ClinicService[] = await res.json();
-        setServices(Array.isArray(data) ? data.filter((s) => s.is_active === 1) : []);
+        setServices(
+          Array.isArray(data) ? data.filter((s) => s.is_active === 1) : []
+        );
       } catch (err) {
         console.error(err);
         setError("Failed to load clinic services.");
@@ -310,22 +344,10 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
     try {
       setError("");
 
-      const today = new Date();
-today.setHours(0, 0, 0, 0);
-
-const selectedDate = new Date(appointmentDate);
-
-if (selectedDate < today) {
-  setError("You cannot book a past date.");
-  return;
-}
-
-
-if (patientPhone.length !== 11) {
-  setError("Phone number must be exactly 11 digits.");
-  return;
-}
-
+      if (!userId) {
+        setError("No logged-in user found.");
+        return;
+      }
 
       if (!clinicId || !serviceId || !appointmentDate || !appointmentTime) {
         setError("Please complete clinic, service, date, and time.");
@@ -373,6 +395,8 @@ if (patientPhone.length !== 11) {
         ],
       };
 
+      console.log("BOOK PAYLOAD:", payload);
+
       const res = await fetch("http://localhost:5000/api/appointments/book", {
         method: "POST",
         headers: {
@@ -381,17 +405,75 @@ if (patientPhone.length !== 11) {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const rawText = await res.text();
+      console.log("BOOK STATUS:", res.status);
+      console.log("BOOK RAW RESPONSE:", rawText);
+
+      let data: any = null;
+      try {
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        data = null;
+      }
 
       if (!res.ok) {
-        throw new Error(data.message || "Failed to book appointment");
+        const serverMessage =
+          typeof data?.error_detail === "string" && data.error_detail.trim()
+            ? data.error_detail.trim()
+            : typeof data?.message === "string" && data.message.trim()
+            ? data.message.trim()
+            : rawText.trim();
+
+        let friendlyMessage = serverMessage;
+
+        if (serverMessage.toLowerCase().includes("not available for booking")) {
+          friendlyMessage =
+            "This clinic is not approved or active for booking yet.";
+        } else if (
+          serverMessage
+            .toLowerCase()
+            .includes("already has an appointment at that time")
+        ) {
+          friendlyMessage =
+            "That time slot is already taken. Please choose another schedule.";
+        } else if (serverMessage.toLowerCase().includes("required")) {
+          friendlyMessage = "Some required booking details are missing.";
+        } else if (
+          serverMessage
+            .toLowerCase()
+            .includes("cannot add or update a child row")
+        ) {
+          friendlyMessage =
+            "A required clinic, user, or service record is missing in the database.";
+        } else if (
+          serverMessage.toLowerCase().includes("incorrect datetime value")
+        ) {
+          friendlyMessage = "The selected date or time format is invalid.";
+        } else if (
+          serverMessage
+            .toLowerCase()
+            .includes("doesn't have a default value")
+        ) {
+          friendlyMessage =
+            "The database requires a field that is not being sent.";
+        } else if (!friendlyMessage) {
+          friendlyMessage = `Failed to book appointment. Server returned ${res.status}.`;
+        }
+
+        setError(friendlyMessage);
+        return;
       }
 
       onBooked();
       handleClose();
     } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : "Failed to book appointment.");
+      console.error("BOOKING CATCH:", err);
+
+      if (err instanceof Error && err.message.trim()) {
+        setError(err.message);
+      } else {
+        setError("Something went wrong while booking the appointment.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -400,14 +482,19 @@ if (patientPhone.length !== 11) {
   if (!open) return null;
 
   return (
-   <div className="booking-modal-overlay front">
+    <div className="booking-modal-overlay front">
       <div className="booking-modal">
         <div className="booking-modal-header">
           <div>
             <h2>Book Appointment</h2>
             <p>Choose your clinic, service, and preferred schedule.</p>
           </div>
-          <button type="button" className="modal-close-btn" onClick={handleClose}>
+          <button
+            type="button"
+            className="modal-close-btn"
+            onClick={handleClose}
+            aria-label="Close booking modal"
+          >
             <X size={18} />
           </button>
         </div>
@@ -543,7 +630,8 @@ if (patientPhone.length !== 11) {
             <h4>Selected Service</h4>
             <p>{selectedService.name}</p>
             <small>
-              ₱{Number(selectedService.price).toFixed(2)} • {selectedService.duration_minutes} mins
+              ₱{Number(selectedService.price).toFixed(2)} •{" "}
+              {selectedService.duration_minutes} mins
             </small>
           </div>
         )}
@@ -552,7 +640,12 @@ if (patientPhone.length !== 11) {
           <button type="button" className="cancel-btn" onClick={handleClose}>
             Cancel
           </button>
-          <button type="button" className="book-btn" onClick={handleSubmit} disabled={submitting}>
+          <button
+            type="button"
+            className="book-btn"
+            onClick={handleSubmit}
+            disabled={submitting}
+          >
             {submitting ? "Booking..." : "Confirm Booking"}
           </button>
         </div>
@@ -567,7 +660,8 @@ function UserAppointmentsContent() {
   const [error, setError] = useState<string>("");
   const [bookingOpen, setBookingOpen] = useState<boolean>(false);
 
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<Appointment | null>(null);
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -575,13 +669,16 @@ function UserAppointmentsContent() {
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [rescheduleConfirmOpen, setRescheduleConfirmOpen] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleTime, setRescheduleTime] = useState("");
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
 
   const [actionMessage, setActionMessage] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "calendar">("upcoming");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "calendar">(
+    "upcoming"
+  );
   const [showAllAppointments, setShowAllAppointments] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   
@@ -600,14 +697,25 @@ function UserAppointmentsContent() {
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
-  const userId = 1;
+  const storedUser = localStorage.getItem("user");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+  const userId = currentUser?.id;
 
   const loadAppointments = async () => {
     try {
+      if (!userId) {
+        setError("No logged-in user found.");
+        setAppointments([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError("");
 
-      const res = await fetch(`http://localhost:5000/api/appointments/by-user/${userId}`);
+      const res = await fetch(
+        `http://localhost:5000/api/appointments/by-user/${userId}`
+      );
 
       if (!res.ok) {
         throw new Error(`Request failed: ${res.status}`);
@@ -626,7 +734,7 @@ function UserAppointmentsContent() {
 
   useEffect(() => {
     loadAppointments();
-  }, []);
+  }, [userId]);
 
   const now = Date.now();
 
@@ -636,19 +744,29 @@ function UserAppointmentsContent() {
 
   const upcomingAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
-      .filter((a) => new Date(a.start_at).getTime() >= now)
-      .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+      .filter((a) => (parseDateTime(a.start_at)?.getTime() ?? 0) >= now)
+      .sort(
+        (a, b) =>
+          (parseDateTime(a.start_at)?.getTime() ?? 0) -
+          (parseDateTime(b.start_at)?.getTime() ?? 0)
+      );
   }, [validAppointments, now]);
 
   const pastAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
-      .filter((a) => new Date(a.start_at).getTime() < now)
-      .sort((a, b) => new Date(b.start_at).getTime() - new Date(a.start_at).getTime());
+      .filter((a) => (parseDateTime(a.start_at)?.getTime() ?? 0) < now)
+      .sort(
+        (a, b) =>
+          (parseDateTime(b.start_at)?.getTime() ?? 0) -
+          (parseDateTime(a.start_at)?.getTime() ?? 0)
+      );
   }, [validAppointments, now]);
 
   const allAppointments = useMemo<Appointment[]>(() => {
     return [...validAppointments].sort(
-      (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+      (a, b) =>
+        (parseDateTime(a.start_at)?.getTime() ?? 0) -
+        (parseDateTime(b.start_at)?.getTime() ?? 0)
     );
   }, [validAppointments]);
 
@@ -700,19 +818,27 @@ function UserAppointmentsContent() {
     }
 
     list.sort((a, b) => {
-      const aTime = new Date(a.start_at).getTime();
-      const bTime = new Date(b.start_at).getTime();
+      const aTime = parseDateTime(a.start_at)?.getTime() ?? 0;
+      const bTime = parseDateTime(b.start_at)?.getTime() ?? 0;
       return sortOrder === "asc" ? aTime - bTime : bTime - aTime;
     });
 
     return showAllAppointments ? list : list.slice(0, 4);
-  }, [baseAppointments, statusFilter, clinicFilter, searchTerm, sortOrder, showAllAppointments]);
+  }, [
+    baseAppointments,
+    statusFilter,
+    clinicFilter,
+    searchTerm,
+    sortOrder,
+    showAllAppointments,
+  ]);
 
   const confirmedCount = appointments.filter((a) => a.status === "confirmed").length;
   const pendingCount = appointments.filter((a) => a.status === "pending").length;
   const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
 
-  const nextAppointment = upcomingAppointments.length > 0 ? upcomingAppointments[0] : null;
+  const nextAppointment =
+    upcomingAppointments.length > 0 ? upcomingAppointments[0] : null;
 
   const canEditAppointment = (appointment: Appointment) =>
     appointment.status === "pending" || appointment.status === "confirmed";
@@ -726,6 +852,7 @@ function UserAppointmentsContent() {
 
   const closeRescheduleModal = () => {
     setRescheduleOpen(false);
+    setRescheduleConfirmOpen(false);
     setRescheduleDate("");
     setRescheduleTime("");
     setRescheduleSubmitting(false);
@@ -740,6 +867,7 @@ function UserAppointmentsContent() {
     setActionMessage("");
     setSelectedAppointment(appointment);
     setRescheduleOpen(false);
+    setRescheduleConfirmOpen(false);
     setCancelReason("");
     setCancelConfirmOpen(false);
     setCancelOpen(true);
@@ -756,8 +884,9 @@ function UserAppointmentsContent() {
     setCancelOpen(false);
     setCancelConfirmOpen(false);
 
-    if (isValidDate(appointment.start_at)) {
-      const start = new Date(appointment.start_at);
+    const start = parseDateTime(appointment.start_at);
+
+    if (start) {
       const yyyy = start.getFullYear();
       const mm = String(start.getMonth() + 1).padStart(2, "0");
       const dd = String(start.getDate()).padStart(2, "0");
@@ -771,6 +900,7 @@ function UserAppointmentsContent() {
       setRescheduleTime("");
     }
 
+    setRescheduleConfirmOpen(false);
     setRescheduleOpen(true);
   };
 
@@ -778,6 +908,11 @@ function UserAppointmentsContent() {
     if (!selectedAppointment) return;
 
     try {
+      if (!userId) {
+        setActionMessage("No logged-in user found.");
+        return;
+      }
+
       setCancelSubmitting(true);
       setActionMessage("");
 
@@ -818,6 +953,11 @@ function UserAppointmentsContent() {
     if (!selectedAppointment) return;
 
     try {
+      if (!userId) {
+        setActionMessage("No logged-in user found.");
+        return;
+      }
+
       setRescheduleSubmitting(true);
       setActionMessage("");
 
@@ -876,7 +1016,6 @@ function UserAppointmentsContent() {
       }
 
       closeRescheduleModal();
-      setRescheduleConfirmOpen(false);
       setSelectedAppointment(null);
       setActionMessage("Appointment rescheduled successfully.");
       await loadAppointments();
@@ -894,13 +1033,25 @@ function UserAppointmentsContent() {
   }, [calendarDate]);
 
   const appointmentDates = useMemo(() => {
-    return validAppointments.map((a) => new Date(a.start_at));
+    return validAppointments
+      .map((a) => parseDateTime(a.start_at))
+      .filter((d): d is Date => d !== null);
   }, [validAppointments]);
 
-  const todayReference = nextAppointment ? new Date(nextAppointment.start_at) : new Date();
+  const todayReference = nextAppointment
+    ? parseDateTime(nextAppointment.start_at) || new Date()
+    : new Date();
+
   const dayAppointments = validAppointments
-    .filter((a) => sameDate(new Date(a.start_at), todayReference))
-    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+    .filter((a) => {
+      const date = parseDateTime(a.start_at);
+      return date ? sameDate(date, todayReference) : false;
+    })
+    .sort(
+      (a, b) =>
+        (parseDateTime(a.start_at)?.getTime() ?? 0) -
+        (parseDateTime(b.start_at)?.getTime() ?? 0)
+    );
 
 
     
@@ -926,7 +1077,11 @@ function UserAppointmentsContent() {
               Filter
             </button>
 
-            <button className="book-btn" type="button" onClick={() => setBookingOpen(true)}>
+            <button
+              className="book-btn"
+              type="button"
+              onClick={() => setBookingOpen(true)}
+            >
               <Plus size={18} />
               Book Appointment
             </button>
@@ -1057,6 +1212,7 @@ function UserAppointmentsContent() {
                       new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1)
                     )
                   }
+                  aria-label="Previous month"
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -1076,6 +1232,7 @@ function UserAppointmentsContent() {
                       new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1)
                     )
                   }
+                  aria-label="Next month"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -1156,30 +1313,29 @@ function UserAppointmentsContent() {
 
           <div className="center-column">
             <div className="card appointments-card">
-                <div className="appointments-card-head">
-  <div>
-    <h2>
-      {activeTab === "past"
-        ? "Past Appointments"
-        : activeTab === "calendar"
-        ? "Calendar Appointments"
-        : "Upcoming Appointments"}
-    </h2>
-  </div>
+              <div className="appointments-card-head">
+                <div>
+                  <h2>
+                    {activeTab === "past"
+                      ? "Past Appointments"
+                      : activeTab === "calendar"
+                      ? "Calendar Appointments"
+                      : "Upcoming Appointments"}
+                  </h2>
+                </div>
 
-  {activeTab !== "calendar" && (
-    <button
-      className="view-all-btn"
-      type="button"
-      onClick={() => {
-        setActiveTab("calendar");
-        setShowAllAppointments(true);
-      }}
-    >
-      View All Appointments →
-    </button>
-  )}
-</div>
+                {activeTab !== "calendar" && (
+                  <button
+                    className="view-all-btn"
+                    type="button"
+                    onClick={() => {
+                      setActiveTab("calendar");
+                      setShowAllAppointments(true);
+                    }}
+                  >
+                    View All Appointments →
+                  </button>
+                )}
               </div>
 
               {loading ? (
@@ -1233,7 +1389,7 @@ function UserAppointmentsContent() {
                       </div>
 
                       <div className="appointment-more">
-                        <button type="button" className="more-btn">
+                        <button type="button" className="more-btn" aria-label="More options">
                           <MoreVertical size={18} />
                         </button>
                       </div>
@@ -1260,7 +1416,23 @@ function UserAppointmentsContent() {
                 </div>
               )}
 
-             
+              {activeTab !== "calendar" && (
+                <button
+                  className="view-all-btn"
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("calendar");
+                    setShowAllAppointments(true);
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                    setClinicFilter("all");
+                    setSortOrder("asc");
+                  }}
+                >
+                  View All Appointments →
+                </button>
+              )}
+            </div>
 
             {actionMessage && <div className="booking-success">{actionMessage}</div>}
           </div>
@@ -1347,7 +1519,7 @@ function UserAppointmentsContent() {
         open={bookingOpen}
         onClose={() => setBookingOpen(false)}
         onBooked={loadAppointments}
-        userId={userId}
+        userId={userId || 0}
       />
 
       {cancelOpen && selectedAppointment && (
@@ -1362,7 +1534,12 @@ function UserAppointmentsContent() {
                     "Clinic"}
                 </p>
               </div>
-              <button type="button" className="modal-close-btn" onClick={closeCancelModal}>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={closeCancelModal}
+                aria-label="Close cancel modal"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -1406,6 +1583,7 @@ function UserAppointmentsContent() {
                 type="button"
                 className="modal-close-btn"
                 onClick={() => setCancelConfirmOpen(false)}
+                aria-label="Close confirmation modal"
               >
                 <X size={18} />
               </button>
@@ -1457,7 +1635,12 @@ function UserAppointmentsContent() {
                     "Clinic"}
                 </p>
               </div>
-              <button type="button" className="modal-close-btn" onClick={closeRescheduleModal}>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={closeRescheduleModal}
+                aria-label="Close reschedule modal"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -1496,11 +1679,12 @@ function UserAppointmentsContent() {
               <button type="button" className="cancel-btn" onClick={closeRescheduleModal}>
                 Back
               </button>
-             <button
-  type="button"
-  className="book-btn"
-  onClick={() => setRescheduleConfirmOpen(true)}
->
+              <button
+                type="button"
+                className="book-btn"
+                onClick={() => setRescheduleConfirmOpen(true)}
+                disabled={rescheduleSubmitting}
+              >
                 {rescheduleSubmitting ? "Saving..." : "Confirm Reschedule"}
               </button>
             </div>
@@ -1508,7 +1692,56 @@ function UserAppointmentsContent() {
         </div>
       )}
 
-      
+      {rescheduleConfirmOpen && selectedAppointment && (
+        <div className="booking-modal-overlay">
+          <div className="booking-modal small-modal">
+            <div className="booking-modal-header">
+              <div>
+                <h2>Confirm Reschedule</h2>
+                <p>Please review your new appointment schedule.</p>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setRescheduleConfirmOpen(false)}
+                aria-label="Close reschedule confirmation modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="booking-summary-box">
+              <h4>
+                {selectedAppointment.clinic_name_snapshot ||
+                  selectedAppointment.clinic_name ||
+                  "Clinic"}
+              </h4>
+              <small>
+                New schedule: {rescheduleDate || "--"} at {rescheduleTime || "--:--"}
+              </small>
+            </div>
+
+            <div className="booking-modal-actions">
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => setRescheduleConfirmOpen(false)}
+                disabled={rescheduleSubmitting}
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                className="book-btn"
+                onClick={handleRescheduleAppointment}
+                disabled={rescheduleSubmitting}
+              >
+                {rescheduleSubmitting ? "Saving..." : "Yes, reschedule"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

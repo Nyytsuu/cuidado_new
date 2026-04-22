@@ -18,6 +18,7 @@ const appointmentRoutes = require("./routes/appointments");
 const symptomCheckerRoute = require("./routes/symptomChecker");
 const findClinicRoute = require("./routes/findClinic");
 const usersRouter = require("./routes/users");
+const articlesRouter = require("./routes/articles");
 const app = express();
 
 
@@ -1053,6 +1054,7 @@ app.use("/api/admin/symptoms", adminSymptomsRoutes);
 app.use("/api/admin/condition-symptoms", adminConditionSymptomsRoutes);
 app.use("/api/symptom-checker", symptomCheckerRoute);
 app.use("/api/users", usersRouter);
+app.use("/api/articles", articlesRouter);
 
 /* ✅ ERROR HANDLER LAST */
 app.use((err, req, res, next) => {

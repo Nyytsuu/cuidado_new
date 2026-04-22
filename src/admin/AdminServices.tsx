@@ -40,14 +40,24 @@ export default function AdminServices() {
 
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
-  // Add/Edit modal
   const [serviceModalOpen, setServiceModalOpen] = useState(false);
   const [serviceInput, setServiceInput] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  // Activate/Deactivate confirm modal
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+
+  const getStatusClass = (status: string) => {
+    const s = status.trim().toLowerCase();
+
+    if (["approved", "confirmed", "completed"].includes(s)) return "badge-approved";
+    if (["pending"].includes(s)) return "badge-pending";
+    if (["cancelled", "canceled", "rejected", "declined"].includes(s)) {
+      return "badge-cancelled";
+    }
+
+    return "badge-pending";
+  };
 
   const loadServices = async () => {
     try {
@@ -304,14 +314,12 @@ export default function AdminServices() {
                             </button>
 
                             <button
-  type="button"
-  className={`pill ${
-    s.is_active === 1 ? "pill-deactivate" : "pill-activate"
-  }`}
-  onClick={() => openToggleModal(s)}
->
-  {s.is_active === 1 ? "Deactivate" : "Activate"}
-</button>
+                              type="button"
+                              className="pill pill-danger"
+                              onClick={() => openToggleModal(s)}
+                            >
+                              {s.is_active === 1 ? "Deactivate" : "Activate"}
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -352,7 +360,7 @@ export default function AdminServices() {
                   </div>
                 </div>
 
-                <Panel title="Appointment Section">
+                <Panel title="Appointment Section" className="appointment-panel">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -499,7 +507,15 @@ export default function AdminServices() {
   );
 }
 
-function Panel({ title, children }: any) {
+function Panel({
+  title,
+  children,
+  className = "",
+}: {
+  title: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">

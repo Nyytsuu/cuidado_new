@@ -58,13 +58,8 @@ const confirmLogout = () => {
   setTimeout(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/signin");// this goes to Signin
-  }, 1500);
-};
-
-const cancelLogout = () => {
-  setShowConfirmLogout(false);
-};
+    navigate("/Signin");
+  };
 
   const isPathActive = (path: string) => location.pathname === path;
 
@@ -119,12 +114,6 @@ const cancelLogout = () => {
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/records") ? "active" : ""}`}>
-              <Link to="/admin/records" className="sidebar-btn">
-                <ChartColumn size={24} />
-                <span>Records</span>
-              </Link>
-            </div>
           </div>
 
           <div className="sidebar-section">
@@ -144,15 +133,15 @@ const cancelLogout = () => {
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/bmi") ? "active" : ""}`}>
-              <Link to="/admin/bmi" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/bmi-calculator") ? "active" : ""}`}>
+              <Link to="/bmi-calculator" className="sidebar-btn">
                 <Scale size={24} />
                 <span>BMI</span>
               </Link>
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/stress-index") ? "active" : ""}`}>
-              <Link to="/admin/stress-index" className="sidebar-btn">
+              <Link to="/stress-index" className="sidebar-btn">
                 <Smile size={24} />
                 <span>Stress Index</span>
               </Link>

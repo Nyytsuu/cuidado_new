@@ -18,36 +18,15 @@ const leftTools = [
     icon: "⚖️",
     button: "Check BMI",
   },
-  {
-    id: "medication",
-    title: "Medication",
-    desc: "Manage health state",
-    icon: "💊",
-    button: "Manage",
-  },
 ];
 
 const rightTools = [
-  {
-    id: "bmi2",
-    title: "BMI Calculator",
-    desc: "Find a location",
-    icon: "⚖️",
-    button: "",
-  },
   {
     id: "clinic",
     title: "Find Clinic",
     desc: "Find a location",
     icon: "📍",
     button: "Find Clinic",
-  },
-  {
-    id: "medication2",
-    title: "Medication",
-    desc: "Manage useful tips",
-    icon: "💊",
-    button: "",
   },
   {
     id: "tips",

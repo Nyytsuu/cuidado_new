@@ -61,29 +61,29 @@ export default function AdminUsers() {
     null
   );
 
-  // ✅ Popup state for activate / disable
-  const [statusPopupOpen, setStatusPopupOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserRow | null>(null);
-  const [pendingStatus, setPendingStatus] = useState<"active" | "disabled" | null>(null);
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
-  // ✅ Load users
-  const loadUsers = async () => {
-    try {
-      setLoading(true);
+  const getUserStatus = (
+    user: UserRow | UserProfile | null | undefined
+  ): "active" | "disabled" => {
+    const raw = user?.account_status || user?.status;
+    return raw === "active" ? "active" : "disabled";
+  };
 
-      const res = await fetch("http://localhost:5000/api/admin/users");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const getStatusClass = (status: string) => {
+    const s = status.trim().toLowerCase();
 
-      const data: UserRow[] = await res.json();
-
-      console.log("USERS API RESPONSE:", data);
-      setUsers(data);
-    } catch (e) {
-      console.error("Load users error:", e);
-      setUsers([]);
-    } finally {
-      setLoading(false);
+    if (["approved", "confirmed", "completed"].includes(s)) return "badge-approved";
+    if (["pending"].includes(s)) return "badge-pending";
+    if (["cancelled", "canceled", "rejected", "declined"].includes(s)) {
+      return "badge-cancelled";
     }
+
+    return "badge-pending";
   };
 
   const loadActivity = async () => {
@@ -98,7 +98,30 @@ export default function AdminUsers() {
     }
   };
 
-  // ✅ Load appointments
+  useEffect(() => {
+    loadActivity();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:5000/api/admin/users");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: UserRow[] = await res.json();
+      console.log("USERS API SAMPLE:", data?.[0]);
+      setUsers(data);
+    } catch (e) {
+      console.error("Load users error:", e);
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
   const loadAppointments = async () => {
     try {
       setLoadingAppointments(true);
@@ -107,8 +130,6 @@ export default function AdminUsers() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
-
-      console.log("APPOINTMENTS API SAMPLE:", data?.[0]);
 
       const mapped: AppointmentRow[] = data.map((a: any) => ({
         id: a.id,
@@ -173,22 +194,32 @@ export default function AdminUsers() {
   };
 
   const openStatusPopup = (user: UserRow, status: "active" | "disabled") => {
-    setSelectedUser(user);
-    setPendingStatus(status);
+    setStatusUser(user);
+    setPendingAccountStatus(status);
     setStatusPopupOpen(true);
   };
 
   const closeStatusPopup = () => {
     setStatusPopupOpen(false);
-    setSelectedUser(null);
-    setPendingStatus(null);
+    setStatusUser(null);
+    setPendingAccountStatus(null);
   };
 
-  const confirmStatusPopup = async () => {
-    if (!selectedUser || !pendingStatus) return;
-    await setStatus(selectedUser.id, pendingStatus);
+  const confirmStatusChange = async () => {
+    if (!statusUser || !pendingAccountStatus) return;
+    await setUserStatus(statusUser.id, pendingAccountStatus);
     closeStatusPopup();
   };
+
+  const filtered = users.filter((u) => {
+    const s = q.trim().toLowerCase();
+    if (!s) return true;
+    return (
+      u.full_name.toLowerCase().includes(s) ||
+      u.email.toLowerCase().includes(s) ||
+      (u.phone || "").toLowerCase().includes(s)
+    );
+  });
 
   const onViewAppointment = (id: number) => {
     console.log("View appointment:", id);
@@ -282,62 +313,62 @@ export default function AdminUsers() {
                           </td>
                         </tr>
                       ) : (
-                        users.map((u) => (
-                          <tr key={u.id}>
-                            <td className="users-name">{u.full_name}</td>
-                            <td className="users-email">{u.email}</td>
-                            <td className="users-phone">{u.phone || "—"}</td>
-                            <td className="users-date">
-                              {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
-                            </td>
-                            <td className="users-status">
-                              <span
-                                className={`status-badge ${
-                                  u.status === "active" ? "is-active" : "is-disabled"
-                                }`}
-                              >
-                                {u.status}
-                              </span>
-                            </td>
-                            <td className="users-view">
-                              <button
-                                type="button"
-                                className="pill-btn pill-view"
-                                onClick={() => viewUser(u.id)}
-                              >
-                                View
-                              </button>
-                            </td>
-                            <td className="users-actions">
-                              <div className="users-actions-wrap">
-                                <button
-                                  type="button"
-                                  className="pill-btn pill-success"
-                                  disabled={u.status === "active"}
-                                  onClick={() => openStatusPopup(u, "active")}
-                                >
-                                  Activate
-                                </button>
+                        filtered.map((u) => {
+                          const userStatus = getUserStatus(u);
+                          const isActive = userStatus === "active";
+                          const isDisabled = userStatus === "disabled";
 
-                                <button
-                                  type="button"
-                                  className="pill-btn pill-danger"
-                                  disabled={u.status === "disabled"}
-                                  onClick={() => openStatusPopup(u, "disabled")}
+                          return (
+                            <tr key={u.id}>
+                              <td className="users-name">{u.full_name}</td>
+                              <td>{u.email}</td>
+                              <td>
+                                <span
+                                  className={`status-badge ${
+                                    isActive ? "is-active" : "is-disabled"
+                                  }`}
                                 >
-                                  Disable
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
+                                  {userStatus}
+                                </span>
+                              </td>
+                              <td>
+                                <div className="users-actions-wrap">
+                                  <button
+                                    type="button"
+                                    className="pill-btn pill-view"
+                                    onClick={() => viewUser(u.id)}
+                                  >
+                                    View
+                                  </button>
+
+                                  {isDisabled ? (
+                                    <button
+                                      type="button"
+                                      className="pill-btn pill-success"
+                                      onClick={() => openStatusPopup(u, "active")}
+                                    >
+                                      Activate
+                                    </button>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="pill-btn pill-danger"
+                                      onClick={() => openStatusPopup(u, "disabled")}
+                                    >
+                                      Deactivate
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
                 </div>
               </section>
 
-              {/* RIGHT: ASIDE */}
               <aside className="dash-aside">
                 <div className="dash-panel dash-right-top">
                   <div className="dash-panel-title">Recent activity</div>
@@ -466,24 +497,19 @@ export default function AdminUsers() {
         </div>
       )}
 
-      {/* STATUS POPUP */}
-      {statusPopupOpen && selectedUser && pendingStatus && (
+      {statusPopupOpen && statusUser && pendingAccountStatus && (
         <div className="user-status-popup-overlay" onClick={closeStatusPopup}>
-          <div
-            className="user-status-popup-card"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="userStatusPopupTitle"
-          >
-            <h3 id="userStatusPopupTitle" className="user-status-popup-title">
-              {pendingStatus === "active" ? "Activate User" : "Disable User"}
+          <div className="user-status-popup-card" onClick={(e) => e.stopPropagation()}>
+            <h3 className="user-status-popup-title">
+              {pendingAccountStatus === "disabled" ? "Deactivate User" : "Activate User"}
             </h3>
 
             <p className="user-status-popup-text">
               Are you sure you want to{" "}
-              <strong>{pendingStatus === "active" ? "activate" : "disable"}</strong>{" "}
-              <span className="user-status-popup-name">"{selectedUser.full_name}"</span>?
+              <strong>
+                {pendingAccountStatus === "disabled" ? "deactivate" : "activate"}
+              </strong>{" "}
+              <span className="user-status-popup-name">"{statusUser.full_name}"</span>?
             </p>
 
             <div className="user-status-popup-actions">
@@ -494,17 +520,16 @@ export default function AdminUsers() {
               >
                 Cancel
               </button>
-
               <button
                 type="button"
                 className={`user-status-popup-btn ${
-                  pendingStatus === "active"
-                    ? "user-status-popup-success"
-                    : "user-status-popup-danger"
+                  pendingAccountStatus === "disabled"
+                    ? "user-status-popup-danger"
+                    : "user-status-popup-success"
                 }`}
-                onClick={confirmStatusPopup}
+                onClick={confirmStatusChange}
               >
-                {pendingStatus === "active" ? "Activate" : "Disable"}
+                {pendingAccountStatus === "disabled" ? "Deactivate" : "Activate"}
               </button>
             </div>
           </div>

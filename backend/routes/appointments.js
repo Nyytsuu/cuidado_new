@@ -212,19 +212,25 @@ router.post("/book", async (req, res) => {
       appointment_id: appointmentId,
     });
   } catch (err) {
-    await connection.rollback();
-    console.error("Book appointment error:", err);
+  await connection.rollback();
+  console.error("Book appointment error:", err);
 
-    if (err.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({
-        message: "That clinic already has an appointment at that time",
-      });
-    }
-
-    res.status(500).json({ message: "Failed to book appointment" });
-  } finally {
-    connection.release();
+  if (err.code === "ER_DUP_ENTRY") {
+    return res.status(409).json({
+      message: "That clinic already has an appointment at that time",
+      error_code: err.code,
+      error_detail: err.sqlMessage || err.message,
+    });
   }
+
+  res.status(500).json({
+    message: "Failed to book appointment",
+    error_code: err.code || null,
+    error_detail: err.sqlMessage || err.message || "Unknown database error",
+  });
+} finally {
+  connection.release();
+}
 });
 router.patch("/:id/cancel", async (req, res) => {
   const connection = await pool.getConnection();

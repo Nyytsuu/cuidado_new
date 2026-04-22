@@ -219,7 +219,6 @@
 .user-layout .app-header {
   position: fixed;
   top: 0;
-  left: var(--sidebar-width-collapsed);
   right: 0;
   height: var(--header-height);
   background: #f7f7f7;

@@ -357,26 +357,33 @@ function Signup() {
                 <div className="input-group">
                   <label htmlFor="phone">Phone Number:</label>
                   <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={phone}
-                    className={errors.phone ? "error-input" : ""}
-                    onChange={(e) => {
-                      let v = e.target.value.replace(/[^\d+]/g, "");
-                      v = v.replace(/(?!^)\+/g, "");
-                      if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
-                      if (v.startsWith("0") && !v.startsWith("09")) v = "09";
-                      setPhone(v);
-                      clearError("phone");
-                    }}
-                    inputMode="numeric"
-                    placeholder="+63XXXXXXXXXX"
-                    pattern="^(\+639|09)\d{9}$"
-                    maxLength={13}
-                    autoComplete="tel"
-                    required
-                  />
+                          type="tel"
+                          id="phone"
+                          name="phone"
+                          value={phone}
+                          className={errors.phone ? "error-input" : ""}
+                          onChange={(e) => {
+                            let v = e.target.value.replace(/[^\d+]/g, "");
+                            v = v.replace(/(?!^)\+/g, "");
+
+                            if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
+                            if (v.startsWith("0") && !v.startsWith("09")) v = "09";
+
+                            if (v.startsWith("+639")) {
+                              v = v.slice(0, 13);
+                            } else if (v.startsWith("09")) {
+                              v = v.slice(0, 11);
+                            }
+
+                            setPhone(v);
+                            clearError("phone");
+                          }}
+                          inputMode="numeric"
+                          placeholder="+639 or 09"
+                          pattern="^(\+639|09)\d{9}$"
+                          autoComplete="tel"
+                          required
+                        />
                   {errors.phone && <div className="error-text">{errors.phone}</div>}
                 </div>
 
@@ -617,6 +624,13 @@ function Signup() {
                 Already have an account?{" "}
                 <Link to="/signin" style={{ color: "#004D40" }}>
                   Login here
+                </Link>
+                .
+              </p>
+              <p className="login-link">
+                Have A Clinic?{" "}
+                <Link to="/clinic/signup" style={{ color: "#004D40" }}>
+                  Sign Up Here
                 </Link>
                 .
               </p>

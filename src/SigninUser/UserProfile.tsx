@@ -113,11 +113,13 @@ interface SpeechRecognition extends EventTarget {
 }
 
 export default function UserProfile() {
-  const userId = 1; // replace with logged-in user id
+  const storedUser = localStorage.getItem("user");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+  const userId = currentUser?.id;
 
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false); // FIXED
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const [voicePopupOpen, setVoicePopupOpen] = useState(false);
   const [voiceStep, setVoiceStep] = useState<VoiceStep>("idle");
@@ -149,9 +151,9 @@ export default function UserProfile() {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-const [showNewPassword, setShowNewPassword] = useState(false);
-const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -467,6 +469,12 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const loadProfile = async () => {
     try {
+      if (!userId) {
+        setError("No logged-in user found.");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError("");
       setMessage("");
@@ -493,8 +501,12 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
       setConsent(Boolean(data.consent));
       setStatus(data.status || "active");
 
-      if (data.province_id) await loadMunicipalities(data.province_id);
-      if (data.municipality_id) await loadBarangays(data.municipality_id);
+      if (data.province_id) {
+        await loadMunicipalities(data.province_id);
+      }
+      if (data.municipality_id) {
+        await loadBarangays(data.municipality_id);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load profile.");
     } finally {
@@ -538,6 +550,10 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSaveProfile = async () => {
     try {
+      if (!userId) {
+        throw new Error("No logged-in user found.");
+      }
+
       setProfileSaving(true);
       setError("");
       setMessage("");
@@ -579,6 +595,10 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleUpdatePassword = async () => {
     try {
+      if (!userId) {
+        throw new Error("No logged-in user found.");
+      }
+
       setPasswordSaving(true);
       setError("");
       setMessage("");
@@ -632,17 +652,16 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
       <div className="health-app">
         <main className="main-content">
-
           <aside className="profilenav">
             <div className="profile-mini">
-  <div className="avatar profile-mini-avatar">
-    <img src={profileImg} alt="Profile" className="profile-mini-img" />
-  </div>
-  <div>
-    <h3>{fullName || "Loading..."}</h3>
-    <p>{email || "Loading..."}</p>
-  </div>
-</div>
+              <div className="avatar profile-mini-avatar">
+                <img src={profileImg} alt="Profile" className="profile-mini-img" />
+              </div>
+              <div>
+                <h3>{fullName || "Loading..."}</h3>
+                <p>{email || "Loading..."}</p>
+              </div>
+            </div>
 
             <nav className="nav-section">
               {menuItems.map((item) => (
@@ -708,9 +727,9 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
               <div className="account-card">
                 <div className="account-top">
                   <div className="account-user">
-                   <div className="avatar large profile-mini-avatar">
-  <img src={profileImg} alt="Profile" className="profile-mini-img" />
-</div>
+                    <div className="avatar large profile-mini-avatar">
+                      <img src={profileImg} alt="Profile" className="profile-mini-img" />
+                    </div>
                     <div>
                       <h3>{fullName || "No name"}</h3>
                       <p>{email || "No email"}</p>
@@ -861,74 +880,74 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
               <h2>Security</h2>
 
               <div className="security-card">
-  <div className="security-row1">
-    <span>Current Password</span>
-    <div className="password-box">
-      <input
-        type={showCurrentPassword ? "text" : "password"}
-        value={currentPassword}
-        onChange={(e) => setCurrentPassword(e.target.value)}
-        placeholder="Enter current password"
-      />
-      <button
-        type="button"
-        className="current-btn"
-        onClick={() => setShowCurrentPassword((prev) => !prev)}
-      >
-        {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
-      </button>
-    </div>
-  </div>
+                <div className="security-row1">
+                  <span>Current Password</span>
+                  <div className="password-box">
+                    <input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Enter current password"
+                    />
+                    <button
+                      type="button"
+                      className="current-btn"
+                      onClick={() => setShowCurrentPassword((prev) => !prev)}
+                    >
+                      {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                </div>
 
-  <div className="security-row2">
-    <span>New Password</span>
-    <div className="password-box">
-      <input
-        type={showNewPassword ? "text" : "password"}
-        value={newPassword}
-        onChange={(e) => setNewPassword(e.target.value)}
-        placeholder="Enter new password"
-      />
-      <button
-        type="button"
-        className="new-btn"
-        onClick={() => setShowNewPassword((prev) => !prev)}
-      >
-        {showNewPassword ? <FiEyeOff /> : <FiEye />}
-      </button>
-    </div>
-  </div>
+                <div className="security-row2">
+                  <span>New Password</span>
+                  <div className="password-box">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                    />
+                    <button
+                      type="button"
+                      className="new-btn"
+                      onClick={() => setShowNewPassword((prev) => !prev)}
+                    >
+                      {showNewPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                </div>
 
-  <div className="security-row3">
-    <span>Confirm New Password</span>
-    <div className="password-box">
-      <input
-        type={showConfirmPassword ? "text" : "password"}
-        value={confirmNewPassword}
-        onChange={(e) => setConfirmNewPassword(e.target.value)}
-        placeholder="Confirm new password"
-      />
-      <button
-        type="button"
-        className="confirm-btn"
-        onClick={() => setShowConfirmPassword((prev) => !prev)}
-      >
-        {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-      </button>
-    </div>
-  </div>
+                <div className="security-row3">
+                  <span>Confirm New Password</span>
+                  <div className="password-box">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      className="confirm-btn"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+                    </button>
+                  </div>
+                </div>
 
-  <div className="security-actions">
-    <button
-      className="update-btn"
-      type="button"
-      onClick={handleUpdatePassword}
-      disabled={passwordSaving}
-    >
-      {passwordSaving ? "Updating..." : "Update Password"}
-    </button>
-  </div>
-</div>
+                <div className="security-actions">
+                  <button
+                    className="update-btn"
+                    type="button"
+                    onClick={handleUpdatePassword}
+                    disabled={passwordSaving}
+                  >
+                    {passwordSaving ? "Updating..." : "Update Password"}
+                  </button>
+                </div>
+              </div>
 
               <footer className="footer-links">
                 <a href="/">About Us</a>
@@ -939,22 +958,22 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
             </section>
 
             <aside className="right-panel">
-  <div className="side-widget info-widget">
-    <h3>Profile Summary</h3>
-    <p><strong>Name:</strong> {fullName || "--"}</p>
-    <p><strong>Email:</strong> {email || "--"}</p>
-    <p><strong>Phone:</strong> {phone || "--"}</p>
-    <p><strong>Status:</strong> {status}</p>
-  </div>
+              <div className="side-widget info-widget">
+                <h3>Profile Summary</h3>
+                <p><strong>Name:</strong> {fullName || "--"}</p>
+                <p><strong>Email:</strong> {email || "--"}</p>
+                <p><strong>Phone:</strong> {phone || "--"}</p>
+                <p><strong>Status:</strong> {status}</p>
+              </div>
 
-  <div className="side-widget did-you-know-card">
-    <div className="did-you-know-title">💡 Did You Know?</div>
-    <p>
-      Keep your account details updated so clinics can reach you correctly for
-      appointment confirmations and reminders.
-    </p>
-  </div>
-</aside>
+              <div className="side-widget did-you-know-card">
+                <div className="did-you-know-title">💡 Did You Know?</div>
+                <p>
+                  Keep your account details updated so clinics can reach you correctly for
+                  appointment confirmations and reminders.
+                </p>
+              </div>
+            </aside>
           </div>
         </main>
 
@@ -980,51 +999,71 @@ const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
               {voiceTranscript && (
                 <div className="voice-transcript-preview">
-                  <strong>You said:</strong> {voiceTranscript}
+                  <strong>Heard:</strong> {voiceTranscript}
                 </div>
               )}
 
-              {symptomResult && (
+              {voiceError && voiceStep === "retry" && (
+                <div className="voice-error-text">{voiceError}</div>
+              )}
+
+              {voiceStep === "result" && symptomResult && (
                 <div className="voice-result-card">
                   <div className="voice-result-section">
                     <strong>Detected symptoms:</strong>
-                    <ul>
-                      {symptomResult.symptoms.map((symptom) => (
-                        <li key={symptom}>{symptom}</li>
-                      ))}
-                    </ul>
+                    {symptomResult.symptoms.length > 0 ? (
+                      <ul>
+                        {symptomResult.symptoms.map((symptom, index) => (
+                          <li key={`${symptom}-${index}`}>{symptom}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p>No symptoms detected.</p>
+                    )}
                   </div>
 
                   <div className="voice-result-section">
-                    <strong>Possible conditions:</strong>
-                    <ol>
-                      {symptomResult.possible_conditions.map((condition) => (
-                        <li key={condition.name}>
-                          {condition.name}
-                        </li>
-                      ))}
-                    </ol>
+                    <strong>Possible conditions (ranked):</strong>
+                    {symptomResult.possible_conditions.length > 0 ? (
+                      <ol>
+                        {symptomResult.possible_conditions.map((condition, index) => (
+                          <li key={`${condition.name}-${index}`}>
+                            {condition.name} — {(condition.score * 100).toFixed(0)}% match
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p>No likely conditions found.</p>
+                    )}
                   </div>
 
                   <div className="voice-result-section">
-                    <strong>Advice:</strong> {symptomResult.advice}
+                    <p>
+                      <strong>Urgency:</strong> {symptomResult.urgency}
+                    </p>
+                    <p>
+                      <strong>Advice:</strong> {symptomResult.advice}
+                    </p>
+                    {symptomResult.emergency && (
+                      <p className="voice-emergency-text">
+                        This may require urgent medical attention.
+                      </p>
+                    )}
                   </div>
-
-                  {symptomResult.emergency && (
-                    <div className="voice-emergency-text">
-                      Emergency signs detected. Please seek urgent care.
-                    </div>
-                  )}
                 </div>
               )}
 
-              {(voiceStep === "retry" || voiceStep === "unsupported") && (
-                <button className="voice-popup-retry" type="button" onClick={startVoiceAssistant}>
-                  Try Again
+              {voiceStep === "retry" && (
+                <button
+                  type="button"
+                  className="voice-popup-retry"
+                  onClick={startVoiceAssistant}
+                >
+                  Try again
                 </button>
               )}
 
-              <div className="voice-popup-language">Language: English (PH)</div>
+              <div className="voice-popup-language">English (Philippines)</div>
             </div>
           </div>
         )}

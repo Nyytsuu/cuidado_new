@@ -94,8 +94,22 @@ body {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.55);
   overflow: hidden;
+  overflow-y: auto;
+  padding-right: 6px; /* space for scrollbar */
+}
+/* optional: nicer scrollbar */
+.stress-question-list::-webkit-scrollbar {
+  width: 6px;
 }
 
+.stress-question-list::-webkit-scrollbar-thumb {
+  background: #cbd5f5;
+  border-radius: 6px;
+}
+
+.stress-question-list::-webkit-scrollbar-track {
+  background: transparent;
+}
 .stress-question-item {
   padding: 14px 18px;
   border-bottom: 1px solid #dfe6ea;
@@ -322,4 +336,112 @@ body {
   .stress-options-row {
     padding-left: 0;
   }
+}
+.stress-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.stress-popup-card {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.stress-popup-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.stress-popup-card h2 {
+  margin: 0 0 16px;
+  font-size: 24px;
+  color: #172033;
+}
+
+.stress-result-badge {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 14px;
+}
+
+.stress-result-badge.low {
+  background: #ecfdf3;
+  color: #15803d;
+}
+
+.stress-result-badge.moderate {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.stress-result-badge.high {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.stress-result-score {
+  font-size: 15px;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.stress-result-description {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.stress-result-advice-box {
+  text-align: left;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.stress-result-advice-box p {
+  margin: 8px 0 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.stress-result-note {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 18px;
+}
+
+.stress-popup-btn {
+  border: none;
+  background: #0b8a84;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
