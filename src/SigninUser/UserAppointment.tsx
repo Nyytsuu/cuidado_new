@@ -1,3 +1,5 @@
+
+
 import { useEffect, useMemo, useState } from "react";
 import "./UserAppointment.css";
 import UserSidebar from "../Categories/UserSidebar";
@@ -308,6 +310,23 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
     try {
       setError("");
 
+      const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const selectedDate = new Date(appointmentDate);
+
+if (selectedDate < today) {
+  setError("You cannot book a past date.");
+  return;
+}
+
+
+if (patientPhone.length !== 11) {
+  setError("Phone number must be exactly 11 digits.");
+  return;
+}
+
+
       if (!clinicId || !serviceId || !appointmentDate || !appointmentTime) {
         setError("Please complete clinic, service, date, and time.");
         return;
@@ -431,10 +450,11 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
           <div className="booking-field">
             <label>Date</label>
             <input
-              type="date"
-              value={appointmentDate}
-              onChange={(e) => setAppointmentDate(e.target.value)}
-              disabled={submitting}
+  type="date"
+  value={appointmentDate}
+  onChange={(e) => setAppointmentDate(e.target.value)}
+  min={new Date().toISOString().split("T")[0]} // ✅ disables past dates
+  disabled={submitting}
             />
           </div>
 
@@ -462,12 +482,18 @@ function BookingModal({ open, onClose, onBooked, userId }: BookingModalProps) {
           <div className="booking-field">
             <label>Phone Number</label>
             <input
-              type="text"
-              value={patientPhone}
-              onChange={(e) => setPatientPhone(e.target.value)}
-              placeholder="Enter your phone number"
-              disabled={submitting}
-            />
+  type="text"
+  value={patientPhone}
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, ""); // allow digits only
+    if (value.length <= 11) {
+      setPatientPhone(value);
+    }
+  }}
+  maxLength={11}
+  placeholder="Enter your phone number"
+  disabled={submitting}
+/>
           </div>
 
           <div className="booking-field full-width">
@@ -558,6 +584,9 @@ function UserAppointmentsContent() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "calendar">("upcoming");
   const [showAllAppointments, setShowAllAppointments] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  
+  const [logoutPopupOpen, setLogoutPopupOpen] = useState(false);
+
 
   const [statusFilter, setStatusFilter] = useState<
     "all" | "pending" | "confirmed" | "cancelled" | "completed" | "no_show"
@@ -872,6 +901,9 @@ function UserAppointmentsContent() {
   const dayAppointments = validAppointments
     .filter((a) => sameDate(new Date(a.start_at), todayReference))
     .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
+
+
+    
 
   return (
     <>

@@ -14,7 +14,8 @@ import SympCheck from "./SigninUser/SympCheck";
 import UserAppointment from "./SigninUser/UserAppointment";
 import FindClinic from "./SigninUser/FindClinic";
 import Homepage from "./SigninUser/Homepage";
-
+import UserProfile from "./SigninUser/UserProfile";
+import UserSidebar from "./Categories/UserSidebar";
 // admin
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 import AdminUser from "./admin/AdminUser";
@@ -54,8 +55,8 @@ function App() {
         <Route path="/appointments" element={<UserAppointment />} />
         <Route path="/find-clinic" element={<FindClinic />} />
         <Route path="/homepage" element={<Homepage />} />
-        
-        
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/sidebar" element={<UserSidebar />} />
         {/* clinic */}
 <Route path="/clinic/signup" element={<ClinicSignup />} />
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />

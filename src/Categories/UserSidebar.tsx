@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import "./UserSidebar.css";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -26,6 +27,7 @@ import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
 
 interface SidebarProps {
+
   sidebarExpanded: boolean;
   setSidebarExpanded: Dispatch<SetStateAction<boolean>>;
   profileOpen: boolean;
@@ -44,12 +46,25 @@ export default function UserSidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [showConfirmLogout, setShowConfirmLogout] = useState(false);
+const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
   const handleLogout = () => {
+  setShowConfirmLogout(true);
+};
+const confirmLogout = () => {
+  setShowConfirmLogout(false);
+  setShowLogoutSuccess(true);
+
+  setTimeout(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
-  };
+    navigate("/signin");// this goes to Signin
+  }, 1500);
+};
+
+const cancelLogout = () => {
+  setShowConfirmLogout(false);
+};
 
   const isPathActive = (path: string) => location.pathname === path;
 
@@ -266,6 +281,40 @@ export default function UserSidebar({
           </div>
         </nav>
       </header>
+
+
+
+      {/* LOGOUT CONFIRM MODAL */}
+{showConfirmLogout && (
+  <div className="logout-confirm-overlay">
+    <div className="logout-confirm-modal">
+      <h3>Confirm Logout</h3>
+      <p>Are you sure you want to logout?</p>
+
+      <div className="logout-actions">
+        <button className="btn-cancel" onClick={cancelLogout}>
+          No
+        </button>
+        <button className="btn-confirm" onClick={confirmLogout}>
+          Yes
+        </button>
+      </div>
     </div>
+  </div>
+)}
+
+{/* LOGOUT SUCCESS POPUP */}
+{showLogoutSuccess && (
+  <div className="logout-popup-overlay">
+    <div className="logout-popup">
+      <div className="logout-icon">✓</div>
+      <p>Logout successful!</p>
+    </div>
+  </div>
+)}
+    </div>
+
+
+
   );
 }
