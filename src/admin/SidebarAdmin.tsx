@@ -29,15 +29,32 @@ export default function SidebarAdmin({
   setSidebarExpanded,
 }: SidebarProps) {
   const navigate = useNavigate();
+const [showConfirmLogout, setShowConfirmLogout] = useState(false);
+const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+ 
 
-  const handleLogout = () => {
+const handleLogout = () => {
+  setShowConfirmLogout(true);
+};
+
+const confirmLogout = () => {
+  setShowConfirmLogout(false);
+  setShowLogoutSuccess(true);
+
+  setTimeout(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("admin_token");
     localStorage.removeItem("clinic_token");
     localStorage.removeItem("user_token");
+
     navigate("/signin", { replace: true });
-  };
+  }, 1500);
+};
+
+const cancelLogout = () => {
+  setShowConfirmLogout(false);
+};
 
   return (
     <div className="SidebarAdmin">
@@ -132,6 +149,37 @@ export default function SidebarAdmin({
           </div>
         </div>
       </aside>
+
+
+
+      {/* CONFIRM LOGOUT */}
+{showConfirmLogout && (
+  <div className="logout-confirm-overlay">
+    <div className="logout-confirm-modal">
+      <h3>Confirm Logout</h3>
+      <p>Are you sure you want to logout?</p>
+
+      <div className="logout-actions">
+        <button className="btn-cancel" onClick={cancelLogout}>
+          No
+        </button>
+        <button className="btn-confirm" onClick={confirmLogout}>
+          Yes
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* SUCCESS POPUP */}
+{showLogoutSuccess && (
+  <div className="logout-popup-overlay">
+    <div className="logout-popup">
+      <div className="logout-icon">✓</div>
+      <p>Logout successful</p>
+    </div>
+  </div>
+)}
     </div>
   );
 }
