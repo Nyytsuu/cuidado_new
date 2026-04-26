@@ -174,7 +174,22 @@ body {
 .profile-dropdown button:hover {
   background: rgba(0, 0, 0, 0.05);
 }
+.admin-UserClinics .clinics-table td:last-child {
+  text-align: right;
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+}
+.admin-UserClinics .clinics-table thead th:nth-child(4) {
+  padding-left: 109px !important;
+}
 
+.admin-UserClinics .clinics-actions.slots {
+  padding-left: 1px;
+}
+
+.admin-UserClinics .clinics-table tbody td:nth-child(4) .clinics-actions {
+  transform: translateX(100px);
+}
 /* ================= CONTENT ================= */
 .admin-UserClinics .admin-content {
   padding: calc(var(--header-height) + 20px) 24px 40px;
@@ -224,7 +239,6 @@ body {
   min-height: 520px;
   padding: 0;
   overflow: hidden;
-  border: 5px solid #00bfa6;
   border-radius: 16px;
   background: linear-gradient(
     to bottom,
@@ -243,22 +257,15 @@ body {
   overflow-y: hidden;
 }
 
-.admin-UserClinics .clinics-table {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  border-collapse: collapse;
-  table-layout: fixed;
-  background: transparent;
-}
+
 
 .admin-UserClinics .clinics-table thead tr {
   background: #bfbfbf !important;
 }
 
 .admin-UserClinics .clinics-table thead th {
-  background: #bfbfbf !important;
-  color: black !important;
+  background: rgb(16, 156, 133) !important;
+  color: white !important;
   font-weight: 900;
   font-size: 14px;
   padding: 24px 18px;
@@ -268,9 +275,6 @@ body {
   border: none;
 }
 
-.admin-UserClinics .clinics-table thead th + th {
-  border-left: 1px solid rgba(0, 0, 0, 0.25);
-}
 
 .admin-UserClinics .clinics-table tbody {
   background: #ffffff;
@@ -286,9 +290,7 @@ body {
   border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.admin-UserClinics .clinics-table tbody td + td {
-  border-left: 1px solid rgba(0, 0, 0, 0.18);
-}
+
 
 .admin-UserClinics .clinics-table th:nth-child(1),
 .admin-UserClinics .clinics-table td:nth-child(1) {
@@ -343,11 +345,11 @@ body {
 }
 
 .admin-UserClinics .pill-view {
-  background: #414242;
+  background: rgb(16, 156, 133);
 }
 
 .admin-UserClinics .pill-success {
-  background: #51be1f;
+  background: green;
 }
 
 .admin-UserClinics .pill-danger {
@@ -359,7 +361,7 @@ body {
 }
 
 .admin-UserClinics .pill-gray {
-  background: #4eb4f3;
+  background: rgb(11, 122, 104);
 }
 
 .admin-UserClinics .pill-dark {
@@ -410,6 +412,8 @@ body {
   width: 1px;
   height: var(--actions-line-height);
   background: var(--actions-line-color);
+  display: none !important;
+  content: none !important;
 }
 
 /* ================= RIGHT SIDE ================= */
@@ -998,7 +1002,7 @@ body {
 .admin-UserClinics .appointment-panel .dash-table .td-action,
 .admin-UserClinics .appointment-panel .dash-table td.td-action {
   text-align: left !important;
-  padding-left: 20px !important;
+  padding-left: 1px !important;
 }
 /* ===== APPOINTMENT LAYOUT FIX ===== */
 .admin-UserClinics .appointment-panel .dash-table {
@@ -1008,7 +1012,7 @@ body {
 
 .admin-UserClinics .appointment-panel .dash-table th:nth-child(1),
 .admin-UserClinics .appointment-panel .dash-table td:nth-child(1) {
-  width: 35% !important;
+  width: 30% !important;
 }
 
 .admin-UserClinics .appointment-panel .dash-table th:nth-child(2),
@@ -1019,14 +1023,14 @@ body {
 
 .admin-UserClinics .appointment-panel .dash-table th:nth-child(3),
 .admin-UserClinics .appointment-panel .dash-table td:nth-child(3) {
-  width: 35% !important;
+  width: 30% !important;
   text-align: left !important;
 }
 
 .admin-UserClinics .appointment-panel .dash-table .td-action,
 .admin-UserClinics .appointment-panel .dash-table td.td-action {
   text-align: left !important;
-  padding-left: 20px !important;
+  padding-left: 1px !important;
 }
 
 .admin-UserClinics .appointment-panel .dash-table .badge {

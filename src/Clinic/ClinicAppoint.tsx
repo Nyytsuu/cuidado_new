@@ -3,6 +3,8 @@ import "./ClinicAppoint.css";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import SidebarClinic from "./SidebarClinic";
+import { FaCalendarAlt } from "react-icons/fa";
+import { FaEye } from "react-icons/fa";
 
 type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
 
@@ -450,57 +452,85 @@ export default function ClinicAppoint() {
                         </div>
 
                         <div className="users-cell">
-                          <div className="users-actions">
-                            <button
-                              type="button"
-                              className="pill pill-view"
-                              onClick={() => openViewModal(row)}
-                            >
-                              View
-                            </button>
+                          
 
-                            {row.status === "Pending" && (
-                              <>
-                                <button
-                                  type="button"
-                                  className="pill pill-success"
-                                  onClick={() => handleConfirm(row.id)}
-                                >
-                                  Confirm
-                                </button>
-                                <button
-                                  type="button"
-                                  className="pill pill-danger"
-                                  onClick={() => handleReject(row.id)}
-                                >
-                                  Reject
-                                </button>
-                              </>
-                            )}
+<div className="users-actions">
+  {row.status === "Cancelled" || row.status === "Completed" ? (
+    <button
+      type="button"
+      className="pill pill-view"
+      onClick={() => openViewModal(row)}
+    >
+      View
+    </button>
+  ) : (
+    <>
+      <button
+        type="button"
+        className="icon-btn pill-view"
+        title="View"
+        onClick={() => openViewModal(row)}
+      >
+        <FaEye />
+      </button>
 
-                            {(row.status === "Pending" ||
-                              row.status === "Confirmed") && (
-                              <button
-                                type="button"
-                                className="pill pill-resched"
-                                onClick={() => openRescheduleModal(row)}
-                              >
-                                Reschedule
-                              </button>
-                            )}
+      {row.status === "Pending" && (
+        <>
+          <button
+            type="button"
+            className="icon-btn pill-success"
+            title="Confirm"
+            onClick={() => handleConfirm(row.id)}
+          >
+            ✓
+          </button>
 
+          <button
+            type="button"
+            className="icon-btn pill-danger"
+            title="Reject"
+            onClick={() => handleReject(row.id)}
+          >
+            ✕
+          </button>
+        </>
+      )}
+
+      {(row.status === "Pending" || row.status === "Confirmed") && (
+        <button
+          type="button"
+          className="icon-btn pill-resched"
+          title="Reschedule"
+          onClick={() => openRescheduleModal(row)}
+        >
+           <FaCalendarAlt />
+        </button>
+      )}
+
+      {row.status === "Confirmed" && (
+        <button
+          type="button"
+          className="icon-btn pill-gray "
+          title="Mark Done"
+          onClick={() => handleComplete(row.id)}
+        >
+          ✓
+        </button>
+      )}
+    </>
+  )}
+</div>
                             {row.status === "Confirmed" && (
                               <button
-                                type="button"
-                                className="pill pill-gray"
-                                onClick={() => handleComplete(row.id)}
-                              >
-                                Mark Done
-                              </button>
+  type="button"
+  className="pill pill-gray mark-done-btn"
+  onClick={() => handleComplete(row.id)}
+>
+  Mark Done
+</button>
                             )}
                           </div>
                         </div>
-                      </div>
                     ))
                   )}
                 </div>
@@ -673,7 +703,7 @@ export default function ClinicAppoint() {
                 <>
                   <button
                     type="button"
-                    className="pill pill-gray"
+                    className="pill pill-gray and-danger"
                     onClick={closeModal}
                     disabled={savingAction}
                   >
