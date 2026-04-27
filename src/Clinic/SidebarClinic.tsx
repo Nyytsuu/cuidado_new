@@ -9,7 +9,6 @@ import logoutIcon from "../img/logout.png";
 import searchIcon from "../img/search.png";
 import appointmentIcon from "../img/appointment.png";
 import logo from "../img/logo.png";
-import appointmentIcon from "../img/appointment.png";
 
 
 interface SidebarProps {
@@ -17,17 +16,16 @@ interface SidebarProps {
   setSidebarExpanded: Dispatch<SetStateAction<boolean>>;
   profileOpen: boolean;
   setProfileOpen: Dispatch<SetStateAction<boolean>>;
-  headerProfileOpen: boolean;
-  setHeaderProfileOpen: Dispatch<SetStateAction<boolean>>;
+  headerProfileOpen?: boolean;
+  setHeaderProfileOpen?: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function SidebarClinic({
   sidebarExpanded,
   setSidebarExpanded,
-  profileOpen,
   setProfileOpen,
-  headerProfileOpen,
-  setHeaderProfileOpen,
+  headerProfileOpen = false,
+  setHeaderProfileOpen = () => {},
 }: SidebarProps) {
   return (
     <div className="SidebarClinic">
@@ -65,9 +63,9 @@ export default function SidebarClinic({
           </div>
           
           <div className="sidebar-item">
-            <Link to="/clinic/appointments">
-              <img src={appointmentIcon} alt="Appointments" />
-              <span>Appointments</span>
+            <Link to="/clinic/schedule">
+              <img src={appointmentIcon} alt="Schedule" />
+              <span>Schedule</span>
             </Link>
           </div>
 

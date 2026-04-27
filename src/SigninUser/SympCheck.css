@@ -12,12 +12,12 @@ body,
 
 body {
   font-family: Arial, sans-serif;
-  background: #eef3f6;
+  background: #e6eff5;
 }
 
 .sympcheck-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #8cb8c2 0%, #dfe8ef 100%);
+  background: linear-gradient(180deg, #e1e1e1 0%, #dfe8ef 100%);
 }
 
 .sympcheck-content {
@@ -270,6 +270,8 @@ body {
   border: 1px solid #d9e2e8;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.76);
+  position: relative;
+  bottom: 15px;
 }
 
 .tool-card.large {

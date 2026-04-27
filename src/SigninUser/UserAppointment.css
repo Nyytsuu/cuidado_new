@@ -607,6 +607,8 @@
   font-size: 15px;
   font-weight: 800;
   transition: all 0.2s ease;
+  position: relative;
+  left: 170px;
 }
 
 .user-layout .view-all-btn:hover {
@@ -1164,9 +1166,3 @@
   position: relative; /* allow positioning */
 }
 
-.user-layout .view-all-btn {
-  position: absolute;
-  left: 90%;
-  bottom: -22px; /* adjust if needed */
-  transform: translateX(-50%);
-}

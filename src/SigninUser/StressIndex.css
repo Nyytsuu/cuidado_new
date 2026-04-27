@@ -15,13 +15,14 @@ body {
   font-family: Arial, sans-serif;
   background: #eef3f6;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .stress-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #a9c4cd 0%, #dfe8ef 100%);
-  overflow: hidden;
+  background: linear-gradient(180deg, #d8e1e4 0%, #dfe8ef 100%);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .stress-content {

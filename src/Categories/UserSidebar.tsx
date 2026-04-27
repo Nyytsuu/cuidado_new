@@ -152,7 +152,7 @@ const confirmLogout = () => {
             <p className="sidebar-section-title">SMART</p>
 
             <div className={`sidebar-item ${isPathActive("/admin/voice-assistant") ? "active" : ""}`}>
-              <Link to="/admin/voice-assistant" className="sidebar-btn">
+              <Link to="/voice-assistant" className="sidebar-btn">
                 <Mic size={24} />
                 <span>Voice Assistant</span>
               </Link>

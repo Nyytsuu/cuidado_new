@@ -15,7 +15,8 @@ import "leaflet/dist/leaflet.css";
 import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as L.Icon.Default & { _getIconUrl?: unknown })
+  ._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -56,6 +57,28 @@ type ClinicWithDistance = Clinic & {
   distanceKm: number | null;
   isOpenNow: boolean;
 };
+
+function toDateInputValue(date: Date = new Date()): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function toTimeInputValue(date: Date = new Date()): string {
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function isPastAppointmentTime(date: string, time: string): boolean {
+  const selected = new Date(`${date}T${time}:00`);
+  return Number.isNaN(selected.getTime()) || selected.getTime() <= Date.now();
+}
+
+function getMinimumTimeForDate(date: string): string | undefined {
+  return date === toDateInputValue() ? toTimeInputValue() : undefined;
+}
 
 function MapFlyTo({
   center,
@@ -304,16 +327,9 @@ export default function FindClinic() {
     setShowBookingModal(true);
     setBookingMessage("");
 
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    setAppointmentDate(`${yyyy}-${mm}-${dd}`);
-
-    const plusThirty = new Date(now.getTime() + 30 * 60 * 1000);
-    const hh = String(plusThirty.getHours()).padStart(2, "0");
-    const min = String(plusThirty.getMinutes()).padStart(2, "0");
-    setAppointmentTime(`${hh}:${min}`);
+    const plusThirty = new Date(Date.now() + 30 * 60 * 1000);
+    setAppointmentDate(toDateInputValue(plusThirty));
+    setAppointmentTime(toTimeInputValue(plusThirty));
 
     setPurpose("Clinic Booking");
     setSymptoms("");
@@ -336,6 +352,11 @@ export default function FindClinic() {
 
   if (!appointmentDate || !appointmentTime) {
     setBookingMessage("Please select appointment date and time.");
+    return;
+  }
+
+  if (isPastAppointmentTime(appointmentDate, appointmentTime)) {
+    setBookingMessage("Please choose a future date and time.");
     return;
   }
 
@@ -688,6 +709,7 @@ if (!res.ok) {
                   <input
                     type="date"
                     value={appointmentDate}
+                    min={toDateInputValue()}
                     onChange={(e) => setAppointmentDate(e.target.value)}
                   />
                 </div>
@@ -697,6 +719,7 @@ if (!res.ok) {
                   <input
                     type="time"
                     value={appointmentTime}
+                    min={getMinimumTimeForDate(appointmentDate)}
                     onChange={(e) => setAppointmentTime(e.target.value)}
                   />
                 </div>
