@@ -4,7 +4,8 @@ import "./ClinicSignup.css";
 import zxcvbn from "zxcvbn";
 import { useEffect, useState, useMemo } from "react";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import OtpPopup from "../SigninUser/OtpPopup";
 
 /* ---------- TYPES ---------- */
 interface Province {
@@ -36,7 +37,9 @@ type Errors = {
   address?: string;
   specialization?: string;
   licenseNumber?: string;
+  yearsOperation?: string;
   password?: string;
+  confirmPassword?: string;
 
   // Step 2
   repName?: string;
@@ -46,6 +49,8 @@ type Errors = {
   openingTime?: string;
   closingTime?: string;
   operatingDays?: string;
+  clinicLicenseFile?: string;
+  repValidIdFile?: string;
   consent?: string;
 };
 
@@ -55,7 +60,61 @@ type ToastState = {
   type: "success" | "error" | "info";
 };
 
+type ApiErrorResponse = {
+  message?: string;
+  errors?: string[];
+  verificationToken?: string;
+};
+
+const API_BASE = "http://localhost:5000";
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const PH_PHONE_RE = /^(\+639|09)\d{9}$/;
+const LICENSE_RE = /^R\d{2}-\d{2}-\d{6}$/;
+const MAX_UPLOAD_SIZE = 8 * 1024 * 1024;
+const UPLOAD_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
+const UPLOAD_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".webp"];
+const VALID_OPERATING_DAYS = new Set(["mon-fri", "mon-sat", "daily"]);
+const VALID_SERVICE_VALUES = new Set(["general", "dental", "pediatric", "laboratory"]);
+
+const normalizePhPhone = (value: string) => {
+  let v = value.replace(/[^\d+]/g, "");
+  v = v.replace(/(?!^)\+/g, "");
+
+  if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
+  if (v.startsWith("0") && !v.startsWith("09")) v = "09";
+
+  if (v.startsWith("+639")) return v.slice(0, 13);
+  if (v.startsWith("09")) return v.slice(0, 11);
+
+  return v.slice(0, 13);
+};
+
+const isStrongPassword = (value: string) =>
+  value.length >= 8 &&
+  /[A-Z]/.test(value) &&
+  /[a-z]/.test(value) &&
+  /\d/.test(value) &&
+  /[^A-Za-z0-9]/.test(value);
+
+const getUploadFileError = (file: File | null, label: string) => {
+  if (!file) return `${label} is required.`;
+
+  const lowerName = file.name.toLowerCase();
+  const hasAllowedExtension = UPLOAD_EXTENSIONS.some((ext) => lowerName.endsWith(ext));
+
+  if (!hasAllowedExtension || !UPLOAD_TYPES.has(file.type)) {
+    return `${label} must be a PDF, JPG, PNG, or WEBP file.`;
+  }
+
+  if (file.size > MAX_UPLOAD_SIZE) {
+    return `${label} must be 8MB or smaller.`;
+  }
+
+  return "";
+};
+
 export default function ClinicSignup() {
+  const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2>(1);
 
   /* ---------- STEP 1 STATE ---------- */
@@ -90,11 +149,17 @@ export default function ClinicSignup() {
   const [repValidIdFile, setRepValidIdFile] = useState<File | null>(null);
   const [consent, setConsent] = useState(false);
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   /* ---------- UI STATE ---------- */
   const [errors, setErrors] = useState<Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [otpOpen, setOtpOpen] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [loadingConfirm, setLoadingConfirm] = useState(false);
+  const [loadingResend, setLoadingResend] = useState(false);
   
   const [toast, setToast] = useState<ToastState>({
     open: false,
@@ -115,7 +180,7 @@ export default function ClinicSignup() {
   const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
   /* ---------- FETCH PROVINCES ---------- */
   useEffect(() => {
-    fetch("http://localhost:5000/api/provinces")
+    fetch(`${API_BASE}/api/provinces`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
         return res.json();
@@ -128,7 +193,7 @@ export default function ClinicSignup() {
   useEffect(() => {
     if (!provinceId) return;
 
-    fetch(`http://localhost:5000/api/municipalities/${provinceId}`)
+    fetch(`${API_BASE}/api/municipalities/${provinceId}`)
       .then((res) => res.json())
       .then((data: Municipality[]) => {
         setMunicipalities(data);
@@ -143,7 +208,7 @@ export default function ClinicSignup() {
   useEffect(() => {
     if (!municipalityId) return;
 
-    fetch(`http://localhost:5000/api/barangays/${municipalityId}`)
+    fetch(`${API_BASE}/api/barangays/${municipalityId}`)
       .then((res) => res.json())
       .then((data: Barangay[]) => {
         setBarangays(data);
@@ -156,17 +221,32 @@ export default function ClinicSignup() {
   const validateStep1 = (): Errors => {
     const e: Errors = {};
 
-    if (clinicName.trim().length < 2) e.clinicName = "Please enter clinic name.";
-    if (!/^\S+@\S+\.\S+$/.test(email)) e.email = "Please enter a valid email.";
-    if (password.trim().length < 8) e.password = "Password must be at least 8 characters.";
+    if (clinicName.trim().length < 3) e.clinicName = "Clinic name must be at least 3 characters.";
+    if (!EMAIL_RE.test(email.trim().toLowerCase())) e.email = "Please enter a valid email.";
+    if (!PH_PHONE_RE.test(phone)) e.phone = "Use +639XXXXXXXXX or 09XXXXXXXXX.";
     if (!provinceId) e.provinceId = "Select a province.";
     if (!municipalityId) e.municipalityId = "Select a municipality.";
     if (!barangayId) e.barangayId = "Select a barangay.";
 
-    if (address.trim().length < 5) e.address = "Address must be at least 5 characters.";
+    if (address.trim().length < 10) e.address = "Address must be at least 10 characters.";
 
     if (!specialization) e.specialization = "Select clinic type/specialization.";
-    if (!licenseNumber.trim()) e.licenseNumber = "License number is required.";
+    if (!LICENSE_RE.test(licenseNumber.trim().toUpperCase())) {
+      e.licenseNumber = "Use format R06-23-007645.";
+    }
+
+    if (yearsOperation.trim()) {
+      const years = Number(yearsOperation);
+      if (!Number.isInteger(years) || years < 0 || years > 150) {
+        e.yearsOperation = "Enter a number from 0 to 150.";
+      }
+    }
+
+    if (!isStrongPassword(password)) {
+      e.password = "8+ chars with uppercase, lowercase, number, and symbol.";
+    }
+
+    if (password !== confirmPassword) e.confirmPassword = "Passwords do not match.";
 
     return e;
   };
@@ -177,14 +257,21 @@ export default function ClinicSignup() {
 
     if (repName.trim().length < 2) e.repName = "Representative full name required.";
     if (repPosition.trim().length < 2) e.repPosition = "Position is required.";
+    if (!PH_PHONE_RE.test(repPhone)) e.repPhone = "Use +639XXXXXXXXX or 09XXXXXXXXX.";
 
-    if (!servicesOffered) e.servicesOffered = "Select service offered.";
+    if (!VALID_SERVICE_VALUES.has(servicesOffered)) e.servicesOffered = "Select service offered.";
     if (!openingTime) e.openingTime = "Opening time required.";
     if (!closingTime) e.closingTime = "Closing time required.";
-    if (!operatingDays.trim()) e.operatingDays = "Operating days required.";
+    if (openingTime && closingTime && openingTime >= closingTime) {
+      e.closingTime = "Closing time must be after opening time.";
+    }
+    if (!VALID_OPERATING_DAYS.has(operatingDays)) e.operatingDays = "Select operating days.";
 
-    if (!clinicLicenseFile) showToast("Upload clinic license.", "error");
-    if (!repValidIdFile) showToast("Upload representative valid ID.", "error");
+    const clinicLicenseError = getUploadFileError(clinicLicenseFile, "Clinic license");
+    if (clinicLicenseError) e.clinicLicenseFile = clinicLicenseError;
+
+    const repValidIdError = getUploadFileError(repValidIdFile, "Representative valid ID");
+    if (repValidIdError) e.repValidIdFile = repValidIdError;
 
     if (!consent) e.consent = "Consent is required.";
 
@@ -210,64 +297,168 @@ export default function ClinicSignup() {
     e.preventDefault();
 
     const v = validateStep2();
-    setErrors((prev) => ({ ...prev, ...v }));
+    setErrors(v);
 
-    if (Object.keys(v).length > 0 || !clinicLicenseFile || !repValidIdFile) {
+    if (Object.keys(v).length > 0) {
       showToast("Please fix the highlighted fields.", "error");
       return;
     }
 
     setIsSubmitting(true);
+    setOtpError("");
 
-  try {
+    try {
+      await sendClinicSignupOtp(email);
+      setOtpOpen(true);
+      showToast("Verification code sent to your clinic email.", "info");
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Failed to send verification code.",
+        "error"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const buildClinicSignupFormData = (verificationToken: string) => {
     const fd = new FormData();
 
-    // STEP 1
-    fd.append("clinic_name", clinicName);
-    fd.append("email", email);
+    fd.append("clinic_name", clinicName.trim());
+    fd.append("email", email.trim().toLowerCase());
     fd.append("phone", phone);
     fd.append("province_id", provinceId);
     fd.append("municipality_id", municipalityId);
     fd.append("barangay_id", barangayId);
-    fd.append("address", address);
+    fd.append("address", address.trim());
     fd.append("specialization", specialization);
-    fd.append("license_number", licenseNumber);
+    fd.append("license_number", licenseNumber.trim().toUpperCase());
     fd.append("years_operation", yearsOperation ? String(parseInt(yearsOperation, 10)) : "0");
 
-    // STEP 2
-    fd.append("rep_full_name", repName);
-    fd.append("rep_position", repPosition);
+    fd.append("rep_full_name", repName.trim());
+    fd.append("rep_position", repPosition.trim());
     fd.append("rep_phone", repPhone);
     fd.append("services_offered", servicesOffered);
     fd.append("opening_time", openingTime);
     fd.append("closing_time", closingTime);
     fd.append("operating_days", operatingDays);
 
-    // FILES
-    fd.append("clinic_license_file", clinicLicenseFile!);
-    fd.append("rep_valid_id_file", repValidIdFile!);
+    if (clinicLicenseFile) fd.append("clinic_license_file", clinicLicenseFile);
+    if (repValidIdFile) fd.append("rep_valid_id_file", repValidIdFile);
 
-    // PASSWORD (YOU MUST ADD PASSWORD STATE)
     fd.append("password", password);
+    fd.append("email_verification_token", verificationToken);
 
-    const res = await fetch("http://localhost:5000/api/clinic/signup", {
+    return fd;
+  };
+
+  const sendClinicSignupOtp = async (emailToSend: string) => {
+    const res = await fetch(`${API_BASE}/api/auth/otp/send`, {
       method: "POST",
-      body: fd,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        identifier: emailToSend.trim().toLowerCase(),
+        purpose: "clinic_signup_verification",
+      }),
     });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.message || "Clinic signup failed");
+    const data: ApiErrorResponse = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || "Failed to send verification code.");
+    }
+  };
 
-    showToast(data.message, "success");
-    setIsSubmitting(false);
-  } catch (err) {
-    showToast(
-      err instanceof Error ? err.message : "An error occurred during signup",
-      "error"
-    );
-    setIsSubmitting(false);
-  }
-};
+  const submitClinicSignup = async (verificationToken: string) => {
+    const res = await fetch(`${API_BASE}/api/clinic/signup`, {
+      method: "POST",
+      body: buildClinicSignupFormData(verificationToken),
+    });
+
+    const data: ApiErrorResponse = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.message || "Clinic signup failed.");
+    }
+
+    return data;
+  };
+
+  const closeOtpModal = () => {
+    if (loadingConfirm) return;
+
+    setOtpOpen(false);
+    setOtpError("");
+    setLoadingConfirm(false);
+    setLoadingResend(false);
+  };
+
+  const handleConfirmClinicOtp = async (otp: string) => {
+    setOtpError("");
+    setLoadingConfirm(true);
+    let verificationToken = "";
+
+    try {
+      const verifyRes = await fetch(`${API_BASE}/api/auth/otp/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: email.trim().toLowerCase(),
+          otp,
+          purpose: "clinic_signup_verification",
+        }),
+      });
+
+      const verifyData: ApiErrorResponse = await verifyRes.json().catch(() => ({}));
+      if (!verifyRes.ok) {
+        setOtpError(verifyData.message || "Invalid OTP.");
+        setLoadingConfirm(false);
+        return;
+      }
+
+      if (!verifyData.verificationToken) {
+        setOtpError("Email verification session was not created. Please resend the code.");
+        setLoadingConfirm(false);
+        return;
+      }
+
+      verificationToken = verifyData.verificationToken;
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : "Failed to verify OTP.");
+      setLoadingConfirm(false);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const signupData = await submitClinicSignup(verificationToken);
+      showToast(signupData.message || "Clinic signup submitted for admin approval.", "success");
+      setOtpOpen(false);
+
+      setTimeout(() => {
+        navigate("/signin");
+      }, 1500);
+    } catch (err) {
+      setOtpOpen(false);
+      showToast(err instanceof Error ? err.message : "Clinic signup failed.", "error");
+    } finally {
+      setIsSubmitting(false);
+      setLoadingConfirm(false);
+    }
+  };
+
+  const handleResendClinicOtp = async () => {
+    setOtpError("");
+    setLoadingResend(true);
+
+    try {
+      await sendClinicSignupOtp(email);
+      showToast("Verification code resent.", "info");
+    } catch (err) {
+      setOtpError(err instanceof Error ? err.message : "Failed to resend OTP.");
+    } finally {
+      setLoadingResend(false);
+    }
+  };
 
 return (
     <div>
@@ -307,7 +498,7 @@ return (
           value={email}
           className={errors.email ? "error-input" : ""}
           onChange={(e) => {
-            setEmail(e.target.value.trim());
+            setEmail(e.target.value.trim().toLowerCase());
             clearError("email");
           }}
           required
@@ -324,19 +515,7 @@ return (
           value={phone}
           className={errors.phone ? "error-input" : ""}
           onChange={(e) => {
-            let v = e.target.value.replace(/[^\d+]/g, "");
-            v = v.replace(/(?!^)\+/g, "");
-
-            if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
-            if (v.startsWith("0") && !v.startsWith("09")) v = "09";
-
-            if (v.startsWith("+639")) {
-              v = v.slice(0, 13);
-            } else if (v.startsWith("09")) {
-              v = v.slice(0, 11);
-            }
-
-            setPhone(v);
+            setPhone(normalizePhPhone(e.target.value));
             clearError("phone");
           }}
           inputMode="numeric"
@@ -473,10 +652,20 @@ return (
 
       <label>Years of Operation (Optional):</label>
       <input
+        type="number"
+        min={0}
+        max={150}
         value={yearsOperation}
-        onChange={(e) => setYearsOperation(e.target.value)}
+        className={errors.yearsOperation ? "error-input" : ""}
+        onChange={(e) => {
+          setYearsOperation(e.target.value);
+          clearError("yearsOperation");
+        }}
         placeholder="Years of operation"
       />
+      {errors.yearsOperation && (
+        <div className="error-text">{errors.yearsOperation}</div>
+      )}
 
       <label>Password:</label>
       <div className="field-with-icon">
@@ -521,6 +710,33 @@ return (
             <li className={/[^A-Za-z0-9]/.test(password) ? "ok" : ""}>Symbol</li>
           </ul>
         </div>
+      )}
+
+      <label>Confirm Password:</label>
+      <div className="field-with-icon">
+        <input
+          type={showConfirmPassword ? "text" : "password"}
+          value={confirmPassword}
+          className={errors.confirmPassword ? "error-input" : ""}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            clearError("confirmPassword");
+          }}
+          placeholder="Re-enter password"
+          required
+        />
+
+        <button
+          type="button"
+          className="eye-btn"
+          onClick={() => setShowConfirmPassword((s) => !s)}
+          aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+        >
+          {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+        </button>
+      </div>
+      {errors.confirmPassword && (
+        <div className="error-text">{errors.confirmPassword}</div>
       )}
 
       <button type="submit">Next</button>
@@ -578,19 +794,12 @@ return (
                       value={repPhone}
                       className={errors.repPhone ? "error-input" : ""}
                       onChange={(e) => {
-                        let v = e.target.value.replace(/[^\d+]/g, "");
-                        v = v.replace(/(?!^)\+/g, "");
-
-                         // If it starts with 0, keep it 09 + 9 digits
-    if (v.startsWith("0")) v = v.slice(0, 11);
-
-    // If it starts with +, keep +63 + 10 digits
-    if (v.startsWith("+")) v = v.slice(0, 13);
-
-                        setRepPhone(v);
+                        setRepPhone(normalizePhPhone(e.target.value));
                         clearError("repPhone");
                       }}
-                      placeholder="+63XXXXXXXXXX"
+                      inputMode="numeric"
+                      placeholder="+639XXXXXXXXX or 09XXXXXXXXX"
+                      pattern="^(\+639|09)\d{9}$"
                       maxLength={13}
                       required
                     />
@@ -653,16 +862,20 @@ return (
 
                   <div className="input-group">
                     <label>Operating Days:</label>
-                    <input
+                    <select
                       value={operatingDays}
                       className={errors.operatingDays ? "error-input" : ""}
                       onChange={(e) => {
                         setOperatingDays(e.target.value);
                         clearError("operatingDays");
                       }}
-                      placeholder="e.g. Mon - Fri"
                       required
-                    />
+                    >
+                      <option value="">Select</option>
+                      <option value="mon-fri">Monday to Friday</option>
+                      <option value="mon-sat">Monday to Saturday</option>
+                      <option value="daily">Daily</option>
+                    </select>
                     {errors.operatingDays && (
                       <div className="error-text">{errors.operatingDays}</div>
                     )}
@@ -674,17 +887,31 @@ return (
                   <input
                     type="file"
                     accept="image/*,.pdf"
-                    onChange={(e) => setClinicLicenseFile(e.target.files?.[0] ?? null)}
+                    className={errors.clinicLicenseFile ? "error-input" : ""}
+                    onChange={(e) => {
+                      setClinicLicenseFile(e.target.files?.[0] ?? null);
+                      clearError("clinicLicenseFile");
+                    }}
                     required
                   />
+                  {errors.clinicLicenseFile && (
+                    <div className="error-text">{errors.clinicLicenseFile}</div>
+                  )}
 
                   <label>Upload a Valid ID of representative:</label>
                   <input
                     type="file"
                     accept="image/*,.pdf"
-                    onChange={(e) => setRepValidIdFile(e.target.files?.[0] ?? null)}
+                    className={errors.repValidIdFile ? "error-input" : ""}
+                    onChange={(e) => {
+                      setRepValidIdFile(e.target.files?.[0] ?? null);
+                      clearError("repValidIdFile");
+                    }}
                     required
                   />
+                  {errors.repValidIdFile && (
+                    <div className="error-text">{errors.repValidIdFile}</div>
+                  )}
                 </div>
 
                 <label className="checkbox-label">
@@ -706,7 +933,7 @@ return (
                 </p>
 
                 <button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Signing up..." : "Sign Up"}
+                  {isSubmitting ? "Sending code..." : "Verify Email & Sign Up"}
                 </button>
 
                 <p className="login-link">
@@ -724,6 +951,27 @@ return (
           </div>
         </div>
       </div>
+
+      {otpOpen && (
+        <div className="fp-modal-overlay" onClick={closeOtpModal}>
+          <div className="fp-modal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="fp-modal-close" type="button" onClick={closeOtpModal}>
+              <FiX />
+            </button>
+
+            <OtpPopup
+              open={true}
+              email={email}
+              error={otpError}
+              loadingConfirm={loadingConfirm}
+              loadingResend={loadingResend}
+              onClose={closeOtpModal}
+              onConfirm={handleConfirmClinicOtp}
+              onResend={handleResendClinicOtp}
+            />
+          </div>
+        </div>
+      )}
 
       {toast.open && <div className={`toast toast-${toast.type}`}>{toast.message}</div>}
     </div>

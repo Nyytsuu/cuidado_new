@@ -190,6 +190,9 @@ body,
   display: flex;
   align-items: center;
   margin-bottom: 14px;
+  margin-top: 70px;
+  position: relative;
+  bottom: 40px;
 }
 
 .see-all-btn {
@@ -201,7 +204,9 @@ body,
   cursor: pointer;
   padding: 0;
   margin-left: auto;
-  margin-right: -380px;
+  margin-right: -360px;
+  position: relative;
+  bottom: 55px;
 }
 
 /* quick actions + map + other services */
@@ -214,6 +219,8 @@ body,
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 16px;
   align-items: start;
+  position: relative;
+  bottom: 70px;
 }
 
 .quick-other-left {
@@ -227,6 +234,8 @@ body,
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+  position: relative;
+  top: 20px;
 }
 
 .quick-card {
@@ -318,6 +327,7 @@ body,
   font-size: 20px;
   font-weight: 700;
   color: #1f2d35;
+  margin-top: 20px;
 }
 
 /* other services */
@@ -515,6 +525,8 @@ body,
   max-width: 630px;
   margin: 8px auto 18px;
   transform: translateY(-110px);
+  position: relative;
+  left: 90px;
 }
 
 .voice-left {
@@ -578,6 +590,8 @@ body,
   color: #687781;
   padding: 4px 2px 0;
   flex-wrap: wrap;
+  position: relative;
+  bottom: 80px;
 }
 
 .footer-links span {
@@ -920,4 +934,55 @@ body,
 
 .article-tip-box a:hover {
   text-decoration: underline;
+}
+
+.main-search {
+  width: 100%;
+  max-width: 420px;
+  height: 46px;
+  margin: 12px 0 26px;
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d7dce0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.main-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0 18px;
+  font-size: 16px;
+  color: #4b5563;
+}
+
+.main-search input::placeholder {
+  color: #8b95a7;
+}
+
+.main-search-btn {
+  width: 92px;
+  min-width: 92px;
+  height: 100%;
+  border: none;
+  border-left: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #17807d;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.main-search-btn:hover {
+  background: #f7fafa;
 }

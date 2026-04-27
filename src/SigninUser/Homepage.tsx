@@ -178,27 +178,27 @@ export default function Homepage() {
                 <p>What are you looking for?</p>
               </div>
 
-              <div className="header-search">
-                <input
-                  type="text"
-                  placeholder="Search health topics..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      loadArticles(searchQuery || "health");
-                    }
-                  }}
-                />
-                <button
-                  aria-label="Search"
-                  type="button"
-                  className="search-btn"
-                  onClick={() => loadArticles(searchQuery || "health")}
-                >
-                  Search
-                </button>
-              </div>
+            <div className="main-search">
+  <input
+    type="text"
+    placeholder="Search health topics..."
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") {
+        loadArticles(searchQuery || "health");
+      }
+    }}
+  />
+  <button
+    aria-label="Search"
+    type="button"
+    className="main-search-btn"
+    onClick={() => loadArticles(searchQuery || "health")}
+  >
+    Search
+  </button>
+</div>
 
               <div className="services-grid">
                 {topServices.map((item) => (

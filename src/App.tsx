@@ -17,6 +17,7 @@ import Homepage from "./SigninUser/Homepage";
 import Profile from "./SigninUser/UserProfile";
 import BMICalculator from "./SigninUser/BMICalculator";
 import StressIndex from "./SigninUser/StressIndex"  ;
+import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
 
 // admin
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
@@ -37,6 +38,7 @@ import ClinicAppoint from "./Clinic/ClinicAppoint";
 import Patients from "./Clinic/Patient";
 import Services from "./Clinic/services";
 import ClinicProfile from "./Clinic/ClinicProfile";
+import Schedule from "./Clinic/Schedule";
 function App() {
   return (
     <BrowserRouter>
@@ -60,7 +62,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/bmi-calculator" element={<BMICalculator />} />
         <Route path="/stress-index" element={<StressIndex />} />
-        
+        <Route path="/voice-assistant" element={<UserVoiceAssistant />} />
         
         {/* clinic */}
 <Route path="/clinic/signup" element={<ClinicSignup />} />
@@ -69,6 +71,7 @@ function App() {
 <Route path="/clinic/patients" element={<Patients />} />
 <Route path="/clinic/services" element={<Services />} /> 
 <Route path="/clinic/profile" element={<ClinicProfile />} />
+<Route path="/clinic/schedule" element={<Schedule />} />
 
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>

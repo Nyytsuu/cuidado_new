@@ -471,6 +471,40 @@ html, body, #root {
 .toast-error { background: #d92d20; }
 .toast-info { background: #111; }
 
+.fp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.fp-modal-card {
+  position: relative;
+  width: min(640px, 100%);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+}
+
+.fp-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: #eef5f4;
+  color: #0b5d4c;
+  cursor: pointer;
+}
+
 /* =========================
    RESPONSIVE WIDTH
 ========================= */
