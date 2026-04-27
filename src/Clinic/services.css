@@ -223,12 +223,9 @@ body {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
-  border: 5px solid #00bfa6;
   border-radius: 26px;
   background: linear-gradient(
-    to bottom,
-    #d9d9d9 0,
-    #bfbfbf 73px,
+    rgb(16, 156, 133) 73px,
     white 78px,
     white 100%
   );
@@ -256,15 +253,18 @@ body {
 }
 
 .services .users-header .users-cell {
-  color: black;
-  font-size: 1.12rem;
-  font-weight: 900;
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
   white-space: nowrap;
 }
 .services .users-cell {
   min-width: 0;
   position: relative;
   padding-left: 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2937;
 }
 
 /* first column no line + no padding */
@@ -273,16 +273,7 @@ body {
 }
 
 /* ✅ VERTICAL LINES */
-.services .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 36px;
-  background: rgba(58, 43, 43, 0.75);
-}
+
 
 .services .users-name {
   font-size: 1.05rem;
@@ -337,7 +328,7 @@ body {
 
 /* Buttons */
 .services .pill-view {
-  background: #5b5b5b;
+  background: #0f9b7d;
   color: #fff;
   cursor: pointer;
 }
@@ -348,18 +339,18 @@ body {
 }
 
 .services .pill-success {
-  background: #2e7d32;
+  background: rgb(16, 156, 133);
   cursor: pointer;
 }
 
 .services .pill-gray {
-  background: #6b7280;
+  background: #6ca375;
   color: #fff;
   cursor: pointer;
 }
 
 .services .pill-resched {
-  background: #2563eb;
+  background: rgb(16, 156, 133);
   color: #fff;
   cursor: pointer;
 }
@@ -385,6 +376,8 @@ body {
   min-height: 34px;
   width: auto;         /* ✅ prevent full width */
   padding: 0 18px;
+  border-radius: 6px;
+  border: 1px solid rgb(16, 156, 133); /* border color */
   position: relative;
   left: 250px
 }

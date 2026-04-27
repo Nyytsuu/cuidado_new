@@ -222,12 +222,9 @@ body {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
-  border: 5px solid #00bfa6;
   border-radius: 26px;
   background: linear-gradient(
-    to bottom,
-    #d9d9d9 0,
-    #bfbfbf 73px,
+   rgb(16, 156, 133) 73px,
     white 78px,
     white 100%
   );
@@ -236,59 +233,65 @@ body {
 .Patient .users-table {
   width: 100%;
 }
-.Patient .users-row {
-  display: grid;
-  grid-template-columns: 1.1fr 0.5fr 1.2fr 1fr 1.8fr;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  background: transparent;
-}
+
 
 .Patient .users-header {
   font-weight: 900;
 }
 
 .Patient .users-header .users-cell {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+
+
+.Patient .users-name {
+  font-size: 1rem;
+  font-weight: 600;
   color: black;
-  font-size: 1.15rem;
-  font-weight: 900;
+}
+
+.Patient .users-row {
+  display: grid;
+  grid-template-columns: 1.1fr 0.5fr 1.2fr 1fr 1.8fr;
+  align-items: center;
+  gap: 0;
+  padding: 16px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background: transparent;
 }
 
 .Patient .users-cell {
   min-width: 0;
-  position: relative;
-  padding-left: 16px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
 }
 
 .Patient .users-row .users-cell:first-child {
-  padding-left: 0;
+  justify-content: flex-start;
+  text-align: left;
 }
 
-.Patient .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 42px;
-  background: rgba(0, 0, 0, 0.75);
-}
-
-.Patient .users-name {
-  font-size: 1rem;
-  font-weight: 500;
-  color: black;
-}
-
-.Patient .users-center {
-  display: flex;
-  align-items: center;
+.Patient .users-row .users-cell:nth-child(2),
+.Patient .users-row .users-cell:nth-child(3),
+.Patient .users-row .users-cell:nth-child(4),
+.Patient .users-header .users-cell:nth-child(2),
+.Patient .users-header .users-cell:nth-child(3),
+.Patient .users-header .users-cell:nth-child(4) {
   justify-content: center;
   text-align: center;
 }
+
+.Patient .users-row .users-cell:nth-child(5),
+.Patient .users-header .users-cell:nth-child(5) {
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 20px; /* adjust mo lang 5px–20px depende sa gusto mo */
+}
+
 
 .Patient .pills {
   border: none;
@@ -332,13 +335,27 @@ body {
 }
 
 .Patient .pill-view {
-  background: #5b5b5b;
+  background:    rgb(16, 156, 133) !important;
   min-width: 120px;
 }
 
+
 .Patient .pill-history {
-  background: #2563eb;
-  min-width: 150px;
+  border: 2px solid #04a57d !important;
+  padding: 10px !important;
+  outline: none;
+  box-shadow: none;
+  color: rgb(18, 136, 106) !important;
+  background-color: white !important;
+  max-width: 175px;
+  margin-left: 35px;
+
+  border-radius: 6px !important; /* 🔥 ito ang importante */
+}
+.Patient .pill-history:focus,
+.Patient .pill-history:active {
+  outline: none;
+  box-shadow: none;
 }
 
 .Patient .pill:focus,
@@ -396,17 +413,6 @@ body {
   min-width: unset;
 }
 
-.Patient .pill-history {
-  background: #2563eb;
-  padding: 0 12px;
-  color: #fff;
-  min-width: unset;
-   max-width: 160px;  /* optional limit */
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-
 .Patient .pill:focus,
 .Patient .pill:active {
   outline: none;
@@ -447,9 +453,6 @@ body {
   min-width: 110px;
 }
 
-.Patient .pill-history {
-  min-width: 140px;
-}
 
 /* RESPONSIVE */
 @media screen and (max-width: 900px) {

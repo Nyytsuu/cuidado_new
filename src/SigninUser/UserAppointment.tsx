@@ -630,8 +630,7 @@ function BookingModal({
             <h4>Selected Service</h4>
             <p>{selectedService.name}</p>
             <small>
-              ₱{Number(selectedService.price).toFixed(2)} •{" "}
-              {selectedService.duration_minutes} mins
+              ₱{Number(selectedService.price).toFixed(2)} • {selectedService.duration_minutes} mins
             </small>
           </div>
         )}

@@ -1,4 +1,3 @@
-
 import "./Signin.css";
 import { useState } from "react";
 import { login } from "../api/api";
@@ -26,6 +25,9 @@ function Signin() {
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loginError, setLoginError] = useState("");
+
+  // error popup
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
 
   // forgot flow state
   const [fpOpen, setFpOpen] = useState(false);
@@ -112,17 +114,22 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
   const sendOtp = async (emailToSend: string) => {
     const res = await fetch(`${apiBase}/api/auth/otp/send`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ identifier: emailToSend, purpose: "forgot_password" }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        identifier: emailToSend,
+        purpose: "forgot_password",
+      }),
     });
 
     const data = await res.json().catch(() => ({}));
+
     if (!res.ok) throw new Error(data?.message || "Failed to send OTP.");
 
     sessionStorage.setItem("fp_email", emailToSend);
   };
 
-  // called from ForgotPassword modal
   const handleForgotSubmit = async (emailToSend: string) => {
     setOtpError("");
     await sendOtp(emailToSend);
@@ -130,7 +137,6 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     setFpStep("otp");
   };
 
-  // 2) confirm otp -> get resetToken
   const handleConfirmOtp = async (otp: string) => {
     setOtpError("");
     setLoadingConfirm(true);
@@ -140,7 +146,9 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 
       const res = await fetch(`${apiBase}/api/auth/otp/verify`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           identifier: emailSaved,
           otp,
@@ -149,12 +157,14 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         setOtpError(data?.message || "Invalid OTP.");
         return;
       }
 
       const resetToken = data?.resetToken || data?.token;
+
       if (!resetToken) {
         setOtpError("Missing reset token from server.");
         return;
@@ -162,6 +172,7 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 
       sessionStorage.setItem("resetToken", resetToken);
       setFpStep("change");
+
     } catch (err: any) {
       setOtpError(err?.message || "Server error.");
     } finally {
@@ -169,7 +180,6 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     }
   };
 
-  // 3) resend otp
   const handleResendOtp = async () => {
     setOtpError("");
     setLoadingResend(true);
@@ -214,7 +224,11 @@ console.log("CAPTCHA KEY:", siteKey);
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <span className="eye-icon" onClick={() => setShowPassword((p) => !p)}>
+
+              <span
+                className="eye-icon"
+                onClick={() => setShowPassword(!showPassword)}
+              >
                 {showPassword ? <FiEyeOff /> : <FiEye />}
               </span>
             </div>
@@ -227,32 +241,38 @@ console.log("CAPTCHA KEY:", siteKey);
             </p>
 
             {loginError && (
-              <p style={{ color: "red", fontSize: "14px", marginTop: "8px" }}>
+              <p style={{ color: "red", fontSize: "14px" }}>
                 {loginError}
               </p>
             )}
 
-           {showCaptcha && (
-  <div className="captcha-wrap">
-    {!siteKey ? (
-      <p className="captcha-error">Missing reCAPTCHA site key.</p>
-    ) : (
-      <div className="captcha-box">
-        <ReCAPTCHA
-          sitekey={siteKey}
-          onChange={(token) => setCaptchaToken(token)}
-          onExpired={() => setCaptchaToken(null)}
-        />
-      </div>
-    )}
-  </div>
-)}
+            {showCaptcha && (
+              <div className="captcha-wrap">
+                {!siteKey ? (
+                  <p className="captcha-error">
+                    Missing reCAPTCHA site key.
+                  </p>
+                ) : (
+                  <ReCAPTCHA
+                    sitekey={siteKey}
+                    onChange={(token) => setCaptchaToken(token)}
+                    onExpired={() => setCaptchaToken(null)}
+                  />
+                )}
+              </div>
+            )}
 
             <button type="submit" disabled={loading}>
               {loading ? "Logging in..." : "Login"}
             </button>
 
-            <p style={{ marginTop: 10, fontSize: 14, textAlign: "center" }}>
+            <p
+              style={{
+                marginTop: 10,
+                fontSize: 14,
+                textAlign: "center",
+              }}
+            >
               Don’t have an account?{" "}
               <Link to="/signup" style={{ color: "#004D40" }}>
                 Sign up
@@ -273,23 +293,35 @@ console.log("CAPTCHA KEY:", siteKey);
             <h2>
               GOOD TO SEE <br /> YOU AGAIN!
             </h2>
+
             <p>
-              Log in to continue your journey toward better health and manage your
-              appointments with ease.
+              Log in to continue your journey toward better health and
+              manage your appointments with ease.
             </p>
           </div>
         </div>
       </div>
 
+      {/* Forgot Password Modal */}
       {fpOpen && (
         <div className="fp-modal-overlay" onClick={closeAllFp}>
-          <div className="fp-modal-card" onClick={(e) => e.stopPropagation()}>
-            <button className="fp-modal-close" type="button" onClick={closeAllFp}>
+          <div
+            className="fp-modal-card"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="fp-modal-close"
+              type="button"
+              onClick={closeAllFp}
+            >
               <FiX />
             </button>
 
             {fpStep === "forgot" && (
-              <ForgotPassword onClose={closeAllFp} onSubmitEmail={handleForgotSubmit} />
+              <ForgotPassword
+                onClose={closeAllFp}
+                onSubmitEmail={handleForgotSubmit}
+              />
             )}
 
             {fpStep === "otp" && (
@@ -306,10 +338,32 @@ console.log("CAPTCHA KEY:", siteKey);
             )}
 
             {fpStep === "change" && (
-              <Changepass onClose={closeAllFp} onSuccess={handlePasswordResetSuccess} />
+              <Changepass
+                onClose={closeAllFp}
+                onSuccess={handlePasswordResetSuccess}
+              />
             )}
 
-            {fpStep === "success" && <PasswordChanged onClose={closeSuccess} />}
+            {fpStep === "success" && (
+              <PasswordChanged onClose={closeSuccess} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Error Popup */}
+      {showErrorPopup && (
+        <div className="error-popup-overlay">
+          <div className="error-popup">
+            <h2>Too Many Failed Attempts</h2>
+            <p>You entered the wrong password multiple times.</p>
+            <p>Please try again carefully.</p>
+
+            <button
+              onClick={() => setShowErrorPopup(false)}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
