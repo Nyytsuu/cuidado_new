@@ -223,7 +223,14 @@ body {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
+  border-radius: 26px;
+  background: linear-gradient(
+   rgb(16, 156, 133) 75px,
+    white 78px,
+    white 100%
+  );
 }
+
 
 /* ================= TABLE ================= */
 .ClinicAppoint .users-row {
@@ -240,16 +247,17 @@ body {
 }
 
 .ClinicAppoint .users-header .users-cell {
-  color: black;
-  font-size: 1.3rem;
+  color: white;
+  font-size: 1.2rem;
+  padding-left: 14px;
 }
 
 .ClinicAppoint .users-cell {
   min-width: 0;
   position: relative;
-
-  /* spacing before vertical line */
-  padding-left: 18px;
+}
+.ClinicAppoint .users-row:not(.users-header) .users-cell {
+  padding-left: 6px;
 }
 
 /* first column no line + no padding */
@@ -257,26 +265,10 @@ body {
   padding-left: 0;
 }
 
-/* ✅ VERTICAL LINES with adjustable height (NOT border-left) */
-.ClinicAppoint .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-
-  width: 1px;
-
-  /* 👇 ADJUST THIS HEIGHT */
-  height: 28px;
-
-  background: rgba(0, 0, 0, 0.75);
-}
-
 /* text style */
 .ClinicAppoint .users-name {
   font-size: 1.1rem;
-  font-weight: 500;
+  font-weight: 600;
   color: black;
 }
 
@@ -321,7 +313,7 @@ body {
 }
 
 .ClinicAppoint .pill-view {
-  background: #5b5b5b;
+  background: rgb(16, 156, 133) !important;
   cursor: pointer;
 }
 
@@ -331,14 +323,20 @@ body {
 }
 
 .ClinicAppoint .pill-success {
-  background: #2e7d32;
+  background: gray;
   cursor: pointer;
 }
 
 .ClinicAppoint .pill-warning {
   background: #b7791f;
 }
-
+.ClinicAppoint .mark-done-btn {
+  transform: translateX(12px);
+}
+.ClinicAppoint .mark-done-btn {
+  margin-left: 20px;
+  margin-top: 10px;
+}
 /* actions */
 .ClinicAppoint .users-actions {
   display: flex;
@@ -371,19 +369,24 @@ body {
 
 /* Optional: completed pill */
 .SidebarClinic .pill-gray {
-  background: #6b7280;
+  background: green;
   color: #fff;
 }
 /* ✅ Completed status */
 .ClinicAppoint .pill-gray {
-  background: #6b7280;
+  background: #2e7d32;
   color: #fff;
   cursor: pointer;
 }
 
 /* ✅ Reschedule button */
 .ClinicAppoint .pill-resched {
-  background: #2563eb; /* blue */
+  background: rgb(18, 151, 129) !important;
+  color: #fff;
+  cursor: pointer;
+}
+.ClinicAppoint .pill.pill-gray.and-danger {
+  background: #c62828 !important;
   color: #fff;
   cursor: pointer;
 }

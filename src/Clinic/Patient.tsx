@@ -4,6 +4,7 @@ import SidebarClinic from "./SidebarClinic";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 
+
 type ApiPatientRow = {
   id: number;
   name: string;
@@ -266,12 +267,13 @@ export default function Patients() {
                             </button>
 
                             <button
-                              type="button"
-                              className="pill pill-history"
-                              onClick={() => viewHistory(row)}
-                            >
-                              Appointment History
-                            </button>
+  type="button"
+  className="pill pill-history"
+  onClick={() => viewHistory(row)}
+>
+  <i className="bx bx-calendar-detail"></i>
+  <span>Appointment History</span>
+</button>
                           </div>
                         </div>
                       </div>

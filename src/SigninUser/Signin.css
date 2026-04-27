@@ -261,3 +261,41 @@
   font-size: 14px;
   text-align: center;
 }
+
+.error-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+}
+
+.error-popup {
+  background: white;
+  width: 380px;
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+}
+
+.error-popup h2 {
+  color: #b00020;
+  margin-bottom: 15px;
+}
+
+.error-popup p {
+  margin: 8px 0;
+}
+
+.error-popup button {
+  margin-top: 20px;
+  padding: 12px 25px;
+  border: none;
+  background: #004d40;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}
