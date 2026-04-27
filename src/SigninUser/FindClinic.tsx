@@ -103,7 +103,8 @@ export default function FindClinic() {
   const [purpose, setPurpose] = useState("Clinic Booking");
   const [symptoms, setSymptoms] = useState("");
   const [patientNote, setPatientNote] = useState("");
-
+  const storedUser = localStorage.getItem("user");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successPopupMessage, setSuccessPopupMessage] = useState("");
 
@@ -325,79 +326,86 @@ export default function FindClinic() {
     setSelectedClinic(null);
   };
 
-  const handleConfirmBooking = async () => {
-    if (!selectedClinic) return;
+ const handleConfirmBooking = async () => {
+  if (!selectedClinic) return;
 
-    if (!appointmentDate || !appointmentTime) {
-      setBookingMessage("Please select appointment date and time.");
-      return;
-    }
+  if (!currentUser?.id) {
+    setBookingMessage("No logged-in user found.");
+    return;
+  }
 
-    try {
-      setBooking(true);
-      setBookingMessage("");
+  if (!appointmentDate || !appointmentTime) {
+    setBookingMessage("Please select appointment date and time.");
+    return;
+  }
 
-      const user_id = 1;
-      const patient_name_snapshot = "Railee Babiano";
-      const patient_phone_snapshot = "+639669875311";
+  try {
+    setBooking(true);
+    setBookingMessage("");
 
-      const start_at = `${appointmentDate} ${appointmentTime}:00`;
+    const user_id = currentUser.id;
+    const patient_name_snapshot = currentUser.full_name || currentUser.name || "";
+    const patient_phone_snapshot = currentUser.phone || "";
 
-      const startDateObj = new Date(`${appointmentDate}T${appointmentTime}:00`);
-      const endDateObj = new Date(startDateObj.getTime() + 30 * 60 * 1000);
-      const end_at = `${endDateObj.getFullYear()}-${String(
-        endDateObj.getMonth() + 1
-      ).padStart(2, "0")}-${String(endDateObj.getDate()).padStart(2, "0")} ${String(
-        endDateObj.getHours()
-      ).padStart(2, "0")}:${String(endDateObj.getMinutes()).padStart(2, "0")}:00`;
+    const start_at = `${appointmentDate} ${appointmentTime}:00`;
 
-      const res = await fetch("http://localhost:5000/api/appointments/book", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id,
-          clinic_id: selectedClinic.id,
-          start_at,
-          end_at,
-          purpose,
-          symptoms,
-          patient_note: patientNote,
-          patient_name_snapshot,
-          patient_phone_snapshot,
-          clinic_name_snapshot: selectedClinic.clinic_name,
-          services: [],
-        }),
-      });
+    const startDateObj = new Date(`${appointmentDate}T${appointmentTime}:00`);
+    const endDateObj = new Date(startDateObj.getTime() + 30 * 60 * 1000);
+    const end_at = `${endDateObj.getFullYear()}-${String(
+      endDateObj.getMonth() + 1
+    ).padStart(2, "0")}-${String(endDateObj.getDate()).padStart(2, "0")} ${String(
+      endDateObj.getHours()
+    ).padStart(2, "0")}:${String(endDateObj.getMinutes()).padStart(2, "0")}:00`;
 
-      const result = await res.json();
+    const res = await fetch("http://localhost:5000/api/appointments/book", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id,
+        clinic_id: selectedClinic.id,
+        start_at,
+        end_at,
+        purpose,
+        symptoms,
+        patient_note: patientNote,
+        patient_name_snapshot,
+        patient_phone_snapshot,
+        clinic_name_snapshot: selectedClinic.clinic_name,
+        services: [],
+      }),
+    });
 
-      if (!res.ok) {
-        throw new Error(result.message || "Failed to book appointment");
-      }
+    const result = await res.json();
+console.log("BOOK STATUS:", res.status);
+console.log("BOOK RESPONSE:", result);
 
-      const clinicName = selectedClinic.clinic_name;
+if (!res.ok) {
+  throw new Error(result.message || "Failed to book appointment");
+}
 
-      setShowBookingModal(false);
-      setSelectedClinic(null);
+    const clinicName = selectedClinic.clinic_name;
 
-      setSuccessPopupMessage(
-        `Your appointment with ${clinicName} was booked successfully.`
-      );
-      setShowSuccessPopup(true);
+    setShowBookingModal(false);
+    setSelectedClinic(null);
 
-      setAppointmentDate("");
-      setAppointmentTime("");
-      setPurpose("Clinic Booking");
-      setSymptoms("");
-      setPatientNote("");
-    } catch (err) {
-      setBookingMessage(err instanceof Error ? err.message : "Booking failed.");
-    } finally {
-      setBooking(false);
-    }
-  };
+    setSuccessPopupMessage(
+      `Your appointment with ${clinicName} was booked successfully.`
+    );
+    setShowSuccessPopup(true);
+
+    setAppointmentDate("");
+    setAppointmentTime("");
+    setPurpose("Clinic Booking");
+    setSymptoms("");
+    setPatientNote("");
+  } catch (err) {
+    setBookingMessage(err instanceof Error ? err.message : "Booking failed.");
+  } finally {
+    setBooking(false);
+  }
+};
 
   const renderStars = () => {
     return (
@@ -520,7 +528,9 @@ export default function FindClinic() {
 
                 return (
                   <div
-                    className={`fc-card ${showImageCard ? "fc-card-with-image" : ""} ${isNearest ? "fc-card-nearest" : ""}`}
+                    className={`fc-card ${showImageCard ? "fc-card-with-image" : ""} ${
+                      isNearest ? "fc-card-nearest" : ""
+                    }`}
                     key={clinic.id}
                   >
                     <div className="fc-card-left">
@@ -561,14 +571,23 @@ export default function FindClinic() {
                           : "2.5 km"}
                       </div>
 
-                      <button
-                        type="button"
-                        className="fc-book-btn"
-                        disabled={!clinic.isOpenNow || booking}
-                        onClick={() => openBookingModal(clinic)}
-                      >
-                        {clinic.isOpenNow ? "Book Now" : "Closed"}
-                      </button>
+                     <button
+  type="button"
+  className="fc-book-btn"
+  disabled={
+    !clinic.isOpenNow ||
+    booking ||
+    clinic.status !== "approved" ||
+    clinic.account_status !== "active"
+  }
+  onClick={() => openBookingModal(clinic)}
+>
+  {clinic.status !== "approved" || clinic.account_status !== "active"
+    ? "Unavailable"
+    : clinic.isOpenNow
+    ? "Book Now"
+    : "Closed"}
+</button>
                     </div>
                   </div>
                 );
@@ -737,8 +756,14 @@ export default function FindClinic() {
       )}
 
       {showSuccessPopup && (
-        <div className="fc-success-overlay">
-          <div className="fc-success-card">
+        <div
+          className="fc-success-overlay"
+          onClick={() => setShowSuccessPopup(false)}
+        >
+          <div
+            className="fc-success-card"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="fc-success-icon">✅</div>
             <h3>Booking Successful</h3>
             <p>{successPopupMessage}</p>

@@ -33,6 +33,16 @@ export default function Patients() {
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [patients, setPatients] = useState<PatientRow[]>([]);
+   const [profilePopup, setProfilePopup] = useState<PatientRow | null>(null);
+
+   const [historyPopup, setHistoryPopup] = useState<{
+  patient: PatientRow;
+  history: {
+    date: string;
+    service: string;
+    status: string;
+  }[];
+} | null>(null);
 
   const calculateAge = (dateOfBirth: string) => {
     if (!dateOfBirth) return 0;
@@ -115,16 +125,37 @@ export default function Patients() {
   }, [patients, searchTerm]);
 
   const viewProfile = (row: PatientRow) => {
-    alert(`View patient profile: ${row.name}`);
+  setProfilePopup(row);
+};
     // later:
     // navigate(`/clinic/patients/${row.id}`);
-  };
+  
 
-  const viewHistory = (row: PatientRow) => {
-    alert(`See appointment history: ${row.name}`);
+ const viewHistory = (row: PatientRow) => {
+  setHistoryPopup({
+    patient: row,
+    history: [
+      {
+        date: "03/10/25",
+        service: "Dental Checkup",
+        status: "Completed",
+      },
+      {
+        date: "02/22/25",
+        service: "Teeth Cleaning",
+        status: "Cancelled",
+      },
+      {
+        date: "01/15/25",
+        service: "Consultation",
+        status: "Completed",
+      },
+    ],
+  });
+};
     // later:
     // navigate(`/clinic/patients/${row.id}/history`);
-  };
+  
 
   return (
     <div className={`Patient with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
@@ -263,6 +294,137 @@ export default function Patients() {
           </div>
         </section>
       </main>
+   
+           {profilePopup && (
+  <div
+    className="service-modal-overlay"
+    onClick={() => setProfilePopup(null)}
+  >
+    <div
+      className="service-modal profile-popup-card"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="service-modal-body">
+
+        {/* HEADER */}
+        <div className="profile-popup-header">
+          <div className="profile-avatar">
+            {profilePopup.name.charAt(0).toUpperCase()}
+          </div>
+
+          <h3 className="profile-name">{profilePopup.name}</h3>
+          <p className="profile-subtext">Patient Profile</p>
+        </div>
+
+        {/* DIVIDER */}
+        <div className="profile-divider" />
+
+        {/* DETAILS */}
+        <div className="profile-details">
+
+          <div className="profile-row">
+            <span className="profile-label">Age</span>
+            <span className="profile-value">
+              {profilePopup.age || "-"}
+            </span>
+          </div>
+
+          <div className="profile-row">
+            <span className="profile-label">Contact</span>
+            <span className="profile-value">
+              {profilePopup.contact}
+            </span>
+          </div>
+
+          <div className="profile-row">
+            <span className="profile-label">Last Visit</span>
+            <span className="profile-value">
+              {profilePopup.lastVisit}
+            </span>
+          </div>
+
+        </div>
+
+        {/* BUTTON */}
+        <div className="profile-footer">
+          <button
+            className="pill profile-close-btn"
+            onClick={() => setProfilePopup(null)}
+          >
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
+        
+   {historyPopup && (
+  <div
+    className="service-modal-overlay"
+    onClick={() => setHistoryPopup(null)}
+  >
+    <div
+      className="service-modal profile-popup-card"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="service-modal-body">
+
+        {/* HEADER */}
+        <div className="profile-popup-header">
+          <div className="profile-avatar">
+            {historyPopup.patient.name.charAt(0).toUpperCase()}
+          </div>
+
+          <h3 className="profile-name">
+            {historyPopup.patient.name}
+          </h3>
+          <p className="profile-subtext">Appointment History</p>
+        </div>
+
+        {/* DIVIDER */}
+        <div className="profile-divider" />
+
+        {/* HISTORY LIST */}
+        <div className="history-list">
+          {historyPopup.history.map((item, index) => (
+            <div className="history-item" key={index}>
+              
+              <div className="history-left">
+                <span className="history-service">{item.service}</span>
+                <span className="history-date">{item.date}</span>
+              </div>
+
+              <span
+                className={`history-status ${
+                  item.status.toLowerCase()
+                }`}
+              >
+                {item.status}
+              </span>
+
+            </div>
+          ))}
+        </div>
+
+        {/* BUTTON */}
+        <div className="profile-footer">
+          <button
+            className="pill profile-close-btn"
+            onClick={() => setHistoryPopup(null)}
+          >
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
+
+
+
     </div>
   );
 } 

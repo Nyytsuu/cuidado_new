@@ -38,6 +38,13 @@ export default function AdminConditionalManagement() {
   const [whenToSeekHelp, setWhenToSeekHelp] = useState("");
   const [disclaimer, setDisclaimer] = useState("For informational purposes only.");
 
+   const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const [toast, setToast] = useState<{
+  type: "success" | "error" | "warning";
+  message: string;
+} | null>(null);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -91,7 +98,13 @@ export default function AdminConditionalManagement() {
   const handleSaveCondition = async () => {
     try {
       if (!conditionName.trim() || !description.trim() || !adviceLevel) {
-        alert("Please fill in condition name, description, and advice level.");
+        setToast({
+  type: "warning",
+  message: "Please fill in condition name, description, and advice level.",
+});
+
+setTimeout(() => setToast(null), 2500);
+return;
         return;
       }
 
@@ -122,15 +135,34 @@ export default function AdminConditionalManagement() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Failed to save condition.");
+       setToast({
+  type: "error",
+  message: data.message || "Failed to save condition",
+});
+
+setTimeout(() => setToast(null), 2500);
         return;
       }
 
       resetForm();
-      fetchConditions();
+fetchConditions();
+
+setToast({
+  type: "success",
+  message: editingId !== null
+    ? "Condition updated successfully"
+    : "Condition added successfully",
+});
+
+setTimeout(() => setToast(null), 2500);
     } catch (err) {
       console.error("Save condition error:", err);
-      alert("Something went wrong while saving.");
+      setToast({
+  type: "error",
+  message: "Something went wrong while saving",
+});
+
+setTimeout(() => setToast(null), 2500);
     }
   };
 
@@ -143,28 +175,45 @@ export default function AdminConditionalManagement() {
     setDisclaimer(item.disclaimer || "For informational purposes only.");
   };
 
-  const handleDelete = async (id: number) => {
-    const confirmed = window.confirm("Are you sure you want to delete this condition?");
-    if (!confirmed) return;
+  const confirmDelete = async () => {
+  if (!deleteId) return;
 
-    try {
-      const res = await fetch(`${API_BASE}/${id}`, {
-        method: "DELETE",
+  try {
+    const res = await fetch(`${API_BASE}/${deleteId}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setToast({
+        type: "error",
+        message: data.message || "Failed to delete condition",
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Failed to delete condition.");
-        return;
-      }
-
-      fetchConditions();
-    } catch (err) {
-      console.error("Delete condition error:", err);
-      alert("Something went wrong while deleting.");
+      setTimeout(() => setToast(null), 2500);
+      return;
     }
-  };
+
+    setDeleteId(null);
+    fetchConditions();
+
+    setToast({
+      type: "success",
+      message: "Condition deleted successfully",
+    });
+
+    setTimeout(() => setToast(null), 2500);
+  } catch (err) {
+    console.error("Delete error:", err);
+
+    setToast({
+      type: "error",
+      message: "Something went wrong while deleting",
+    });
+
+    setTimeout(() => setToast(null), 2500);
+  }
+};
 
   return (
     <div className="admin-UserClinics with-sidebar">
@@ -368,7 +417,7 @@ export default function AdminConditionalManagement() {
         <button
           type="button"
           className="action-link delete"
-          onClick={() => handleDelete(item.condition_id)}
+          onClick={() => setDeleteId(item.condition_id)}
         >
           Delete
         </button>
@@ -376,6 +425,10 @@ export default function AdminConditionalManagement() {
     </td>
   </tr>
 ))
+
+
+
+
                     )}
                   </tbody>
                 </table>
@@ -384,6 +437,59 @@ export default function AdminConditionalManagement() {
           </div>
         </section>
       </main>
+   
+    {toast && (
+  <div className={`condition-toast ${toast.type}`}>
+    <div className="condition-toast-content">
+      <span className="toast-icon">
+  {toast.type === "success"
+    ? "✔"
+    : toast.type === "error"
+    ? "✖"
+    : "⚠"}
+</span>
+      <span>{toast.message}</span>
+    </div>
+  </div>
+)}
+
+
+   {deleteId && (
+  <div
+    className="delete-modal-overlay"
+    onClick={() => setDeleteId(null)}
+  >
+    <div
+      className="delete-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="delete-modal-content">
+        <h3>Delete Condition</h3>
+
+        <p>
+          Are you sure you want to delete this condition?
+        </p>
+
+        <div className="delete-modal-actions">
+          <button
+            className="btn-cancel"
+            onClick={() => setDeleteId(null)}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="btn-delete"
+            onClick={confirmDelete}
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

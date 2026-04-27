@@ -1140,3 +1140,33 @@
     width: 100%;
   }
 }
+
+.booking-modal-overlay.front {
+  z-index: 10001; /* higher than other modals */
+}
+
+/* FORCE FRONT POPUP (STRONG FIX) */
+.booking-modal-overlay.front {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 999999 !important;
+  isolation: isolate; /* breaks stacking issues */
+}
+
+/* also ensure modal itself is above */
+.booking-modal-overlay.front .booking-modal {
+  position: relative;
+  z-index: 1000000;
+}
+
+
+.user-layout .appointments-card-head {
+  position: relative; /* allow positioning */
+}
+
+.user-layout .view-all-btn {
+  position: absolute;
+  left: 90%;
+  bottom: -22px; /* adjust if needed */
+  transform: translateX(-50%);
+}

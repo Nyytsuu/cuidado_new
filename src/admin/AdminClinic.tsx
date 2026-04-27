@@ -534,7 +534,7 @@ export default function AdminClinics() {
                   className="btn-sm btn-view"
                   onClick={() => onViewAppointment(ap.id)}
                 >
-                  View 
+                  View details
                 </button>
               </td>
             </tr>

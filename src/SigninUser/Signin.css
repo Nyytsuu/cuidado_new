@@ -1,8 +1,15 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 /* MAIN CONTAINER */
 .signin-container {
   display: flex;
   height: 100vh;
   width: 100vw;
+  position: relative;
+  overflow: hidden;
 }
 
 /* LEFT SIDE */
@@ -16,11 +23,15 @@
 
 /* LOGIN CARD */
 .login-card {
-  width: 450px;
+  width: 500px;
   padding: 60px 50px;
   border-radius: 40px;
   background: white;
   color: black;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .login-card h1 {
@@ -98,24 +109,14 @@
   font-size: 16px;
   cursor: pointer;
 }
-
-.logsides {
+.left-side,
+.right-side {
   position: relative;
-  left: 60px;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  height: 95vh;
-  width: 40px;
-  background-color: #0b5d4c;
-
-  border-top-right-radius: 60px;
-  border-bottom-right-radius: 60px;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-
-  z-index: 2;
+  z-index: 1;
 }
-
+.logsides {
+  display: none;
+}
 /* RIGHT SIDE */
 .right-side {
   flex: 1;
@@ -229,21 +230,32 @@
   background: rgba(15, 23, 42, 0.06);
   z-index: 10;
 }
-/*captcha*/
+/* CAPTCHA */
 .captcha-wrap {
-  margin: 15px 0;
+  width: 100%;
+  margin: 20px 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 78px;
-  width: 100%;
-  overflow: visible;
 }
 
-.captcha-wrap iframe {
-  display: block;
+.captcha-box {
+  width: 304px;
+  height: 78px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
 }
 
+/* force correct iframe size */
+.captcha-box iframe {
+  width: 304px !important;
+  height: 78px !important;
+  border: none;
+}
+
+/* error text */
 .captcha-error {
   color: red;
   font-size: 14px;

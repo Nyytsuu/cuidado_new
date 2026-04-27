@@ -14,6 +14,9 @@ import SympCheck from "./SigninUser/SympCheck";
 import UserAppointment from "./SigninUser/UserAppointment";
 import FindClinic from "./SigninUser/FindClinic";
 import Homepage from "./SigninUser/Homepage";
+import Profile from "./SigninUser/UserProfile";
+import BMICalculator from "./SigninUser/BMICalculator";
+import StressIndex from "./SigninUser/StressIndex"  ;
 
 // admin
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
@@ -54,6 +57,9 @@ function App() {
         <Route path="/appointments" element={<UserAppointment />} />
         <Route path="/find-clinic" element={<FindClinic />} />
         <Route path="/homepage" element={<Homepage />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/bmi-calculator" element={<BMICalculator />} />
+        <Route path="/stress-index" element={<StressIndex />} />
         
         
         {/* clinic */}

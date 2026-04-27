@@ -1,7 +1,9 @@
 
 import Logotag from "../components/Logotag";
 import "./ClinicSignup.css";
-import { useEffect, useState } from "react";
+import zxcvbn from "zxcvbn";
+import { useEffect, useState, useMemo } from "react";
+import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 /* ---------- TYPES ---------- */
@@ -92,7 +94,8 @@ export default function ClinicSignup() {
   /* ---------- UI STATE ---------- */
   const [errors, setErrors] = useState<Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
+  
   const [toast, setToast] = useState<ToastState>({
     open: false,
     message: "",
@@ -107,7 +110,9 @@ export default function ClinicSignup() {
   const clearError = (key: keyof Errors) => {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
-
+  const result = useMemo(() => zxcvbn(password), [password]);
+  const score = result.score;
+  const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
   /* ---------- FETCH PROVINCES ---------- */
   useEffect(() => {
     fetch("http://localhost:5000/api/provinces")
@@ -275,220 +280,260 @@ return (
           <div className="signup-container">
             {/* ---------- STEP 1 ---------- */}
             {step === 1 && (
-              <form onSubmit={onSubmitStep1} className="signup-form">
-                <p className="Sign">Sign Up</p>
-                <p>Register Your Clinic</p>
+  <form onSubmit={onSubmitStep1} className="signup-form">
+    <p className="Sign">Sign Up</p>
+    <p>Register Your Clinic</p>
 
-                <div className="row">
-                  <div className="input-group">
-                    <label>Clinic Name:</label>
-                    <input
-                      value={clinicName}
-                      className={errors.clinicName ? "error-input" : ""}
-                      onChange={(e) => {
-                        setClinicName(e.target.value);
-                        clearError("clinicName");
-                      }}
-                      placeholder="Enter your clinic name"
-                      required
-                    />
-                    {errors.clinicName && <div className="error-text">{errors.clinicName}</div>}
-                  </div>
+    <div className="row">
+      <div className="input-group">
+        <label>Clinic Name:</label>
+        <input
+          value={clinicName}
+          className={errors.clinicName ? "error-input" : ""}
+          onChange={(e) => {
+            setClinicName(e.target.value);
+            clearError("clinicName");
+          }}
+          placeholder="Enter your clinic name"
+          required
+        />
+        {errors.clinicName && <div className="error-text">{errors.clinicName}</div>}
+      </div>
 
-                  <div className="input-group">
-                    <label>Email:</label>
-                    <input
-                      type="email"
-                      value={email}
-                      className={errors.email ? "error-input" : ""}
-                      onChange={(e) => {
-                        setEmail(e.target.value.trim());
-                        clearError("email");
-                      }}
-                      required
-                    />
-                    {errors.email && <div className="error-text">{errors.email}</div>}
-                  </div>
-                </div>
+      <div className="input-group">
+        <label>Email:</label>
+        <input
+          type="email"
+          value={email}
+          className={errors.email ? "error-input" : ""}
+          onChange={(e) => {
+            setEmail(e.target.value.trim());
+            clearError("email");
+          }}
+          required
+        />
+        {errors.email && <div className="error-text">{errors.email}</div>}
+      </div>
+    </div>
 
-                <div className="row">
-                  <div className="input-group">
-                    <label>Phone Number:</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      className={errors.phone ? "error-input" : ""}
-                      onChange={(e) => {
-                        let v = e.target.value.replace(/[^\d+]/g, "");
-                        v = v.replace(/(?!^)\+/g, "");
+    <div className="row">
+      <div className="input-group">
+        <label>Phone Number:</label>
+        <input
+          type="tel"
+          value={phone}
+          className={errors.phone ? "error-input" : ""}
+          onChange={(e) => {
+            let v = e.target.value.replace(/[^\d+]/g, "");
+            v = v.replace(/(?!^)\+/g, "");
 
-                           // If it starts with 0, keep it 09 + 9 digits
-    if (v.startsWith("0")) v = v.slice(0, 11);
+            if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
+            if (v.startsWith("0") && !v.startsWith("09")) v = "09";
 
-    // If it starts with +, keep +63 + 10 digits
-    if (v.startsWith("+")) v = v.slice(0, 13);
+            if (v.startsWith("+639")) {
+              v = v.slice(0, 13);
+            } else if (v.startsWith("09")) {
+              v = v.slice(0, 11);
+            }
 
-                        setPhone(v);
-                        clearError("phone");
-                      }}
-                      placeholder="+63XXXXXXXXXX"
-                      maxLength={13}
-                      required
-                    />
-                    {errors.phone && <div className="error-text">{errors.phone}</div>}
-                  </div>
-                </div>
+            setPhone(v);
+            clearError("phone");
+          }}
+          inputMode="numeric"
+          placeholder="+639XXXXXXXXXX or 09XXXXXXXXX"
+          pattern="^(\+639|09)\d{9}$"
+          autoComplete="tel"
+          required
+        />
+        {errors.phone && <div className="error-text">{errors.phone}</div>}
+      </div>
+    </div>
 
-                <div className="row">
-                  <div className="input-group">
-                    <label>Province:</label>
-                    <select
-                    value={provinceId}
-                    className={errors.provinceId ? "error-input" : ""}
-                     onChange={(e) => {
-                      setProvinceId(e.target.value);
-                    clearError("provinceId");
-            }}
-                    required
+    <div className="row">
+      <div className="input-group">
+        <label>Province:</label>
+        <select
+          value={provinceId}
+          className={errors.provinceId ? "error-input" : ""}
+          onChange={(e) => {
+            setProvinceId(e.target.value);
+            clearError("provinceId");
+          }}
+          required
         >
-                    <option value="">Select Province</option>
-                    {provinces.map((p) => (
-                    <option key={p.id} value={String(p.id)}>
-                    {p.province_name}
-                    </option>
-                ))}
-                  </select>
-                    {errors.provinceId && <div className="error-text">{errors.provinceId}</div>}
-                  </div>
+          <option value="">Select Province</option>
+          {provinces.map((p) => (
+            <option key={p.id} value={String(p.id)}>
+              {p.province_name}
+            </option>
+          ))}
+        </select>
+        {errors.provinceId && <div className="error-text">{errors.provinceId}</div>}
+      </div>
 
-                  <div className="input-group">
-                    <label>Municipality:</label>
-                    <select
-                          value={municipalityId}
-                          className={errors.municipalityId ? "error-input" : ""}
-                          onChange={(e) => {
-                          setMunicipalityId(e.target.value);
-                          clearError("municipalityId");
-                            }}
-                          disabled={!provinceId}
-                            required
-                            >
-                          <option value="">Select Municipality</option>
-                          {municipalities.map((m) => (
-                          <option key={m.id} value={String(m.id)}>
-                         {m.name}
-                          </option>
-                                  ))}
-                    </select>
-                    {errors.municipalityId && (
-                      <div className="error-text">{errors.municipalityId}</div>
-                    )}
-                  </div>
+      <div className="input-group">
+        <label>Municipality:</label>
+        <select
+          value={municipalityId}
+          className={errors.municipalityId ? "error-input" : ""}
+          onChange={(e) => {
+            setMunicipalityId(e.target.value);
+            clearError("municipalityId");
+          }}
+          disabled={!provinceId}
+          required
+        >
+          <option value="">Select Municipality</option>
+          {municipalities.map((m) => (
+            <option key={m.id} value={String(m.id)}>
+              {m.name}
+            </option>
+          ))}
+        </select>
+        {errors.municipalityId && (
+          <div className="error-text">{errors.municipalityId}</div>
+        )}
+      </div>
 
-                  <div className="input-group">
-                    <label>Barangay:</label>
-                    <select
-                      value={barangayId}
-                      className={errors.barangayId ? "error-input" : ""}
-                      onChange={(e) => {
-                      setBarangayId(e.target.value);
-                      clearError("barangayId");
-                      }}
-                       disabled={!municipalityId}
-                      required
-                      >
-                        <option value="">Select Barangay</option>
-                      {barangays.map((b) => (
-                         <option key={b.id} value={String(b.id)}>
-                       {b.name}
-                        </option>
-                            ))}
-                        </select>
-                    {errors.barangayId && <div className="error-text">{errors.barangayId}</div>}
-                  </div>
-                </div>
+      <div className="input-group">
+        <label>Barangay:</label>
+        <select
+          value={barangayId}
+          className={errors.barangayId ? "error-input" : ""}
+          onChange={(e) => {
+            setBarangayId(e.target.value);
+            clearError("barangayId");
+          }}
+          disabled={!municipalityId}
+          required
+        >
+          <option value="">Select Barangay</option>
+          {barangays.map((b) => (
+            <option key={b.id} value={String(b.id)}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+        {errors.barangayId && <div className="error-text">{errors.barangayId}</div>}
+      </div>
+    </div>
 
-                <div className="last-group">
-                  <label>Address:</label>
-                  <input
-                    value={address}
-                    className={errors.address ? "error-input" : ""}
-                    onChange={(e) => {
-                      setAddress(e.target.value);
-                      clearError("address");
-                    }}
-                    required
-                  />
-                  {errors.address && <div className="error-text">{errors.address}</div>}
+    <div className="last-group">
+      <label>Address:</label>
+      <input
+        value={address}
+        className={errors.address ? "error-input" : ""}
+        onChange={(e) => {
+          setAddress(e.target.value);
+          clearError("address");
+        }}
+        required
+      />
+      {errors.address && <div className="error-text">{errors.address}</div>}
 
-                  <label>Clinic Type / Specialization:</label>
-                  <select
-                    value={specialization}
-                    className={errors.specialization ? "error-input" : ""}
-                    onChange={(e) => {
-                      setSpecialization(e.target.value);
-                      clearError("specialization");
-                    }}
-                    required
-                  >
-                    <option value="">Select</option>
-                    <option value="general">General Clinic</option>
-                    <option value="dental">Dental</option>
-                    <option value="pediatric">Pediatric</option>
-                    <option value="laboratory">Laboratory</option>
-                  </select>
-                  {errors.specialization && (
-                    <div className="error-text">{errors.specialization}</div>
-                  )}
+      <label>Clinic Type / Specialization:</label>
+      <select
+        value={specialization}
+        className={errors.specialization ? "error-input" : ""}
+        onChange={(e) => {
+          setSpecialization(e.target.value);
+          clearError("specialization");
+        }}
+        required
+      >
+        <option value="">Select</option>
+        <option value="general">General Clinic</option>
+        <option value="dental">Dental</option>
+        <option value="pediatric">Pediatric</option>
+        <option value="laboratory">Laboratory</option>
+      </select>
+      {errors.specialization && (
+        <div className="error-text">{errors.specialization}</div>
+      )}
 
-                  <label>License Number:</label>
-                  <input
-                    value={licenseNumber}
-                    className={errors.licenseNumber ? "error-input" : ""}
-                    onChange={(e) => {
-                      setLicenseNumber(e.target.value);
-                      clearError("licenseNumber");
-                    }}
-                    required
-                  />
-                  {errors.licenseNumber && (
-                    <div className="error-text">{errors.licenseNumber}</div>
-                  )}
+      <label>License Number:</label>
+      <input
+        value={licenseNumber}
+        className={errors.licenseNumber ? "error-input" : ""}
+        onChange={(e) => {
+          let v = e.target.value.toUpperCase();
+          v = v.replace(/[^A-Z0-9-]/g, "");
+          v = v.slice(0, 13);
+          setLicenseNumber(v);
+          clearError("licenseNumber");
+        }}
+        placeholder="R06-23-007645"
+        pattern="^R\d{2}-\d{2}-\d{6}$"
+        title="Use format: R[Region]-[Year]-[Series Number], e.g. R06-23-007645"
+        required
+      />
+      {errors.licenseNumber && (
+        <div className="error-text">{errors.licenseNumber}</div>
+      )}
 
-                  <label>Years of Operation (Optional):</label>
-                  <input
-                    value={yearsOperation}
-                    onChange={(e) => setYearsOperation(e.target.value)}
-                    placeholder="Years of operation"
-                  />
+      <label>Years of Operation (Optional):</label>
+      <input
+        value={yearsOperation}
+        onChange={(e) => setYearsOperation(e.target.value)}
+        placeholder="Years of operation"
+      />
 
-                  <label>Password:</label>
-                  <input
-                    type="password"
-                    value={password}
-                    className={errors.password ? "error-input" : ""}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      clearError("password");
-                    }}
-                    placeholder="Enter a strong password"
-                    required
-                  />
-                  {errors.password && (
-                    <div className="error-text">{errors.password}</div>
-                  )}
-                </div>
+      <label>Password:</label>
+      <div className="field-with-icon">
+        <input
+          type={showPassword ? "text" : "password"}
+          value={password}
+          className={errors.password ? "error-input" : ""}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            clearError("password");
+          }}
+          placeholder="Enter a strong password"
+          required
+        />
 
-                <button type="submit">Next</button>
+        <button
+          type="button"
+          className="eye-btn"
+          onClick={() => setShowPassword((s) => !s)}
+          aria-label={showPassword ? "Hide password" : "Show password"}
+        >
+          {showPassword ? <FiEyeOff /> : <FiEye />}
+        </button>
+      </div>
+      {errors.password && <div className="error-text">{errors.password}</div>}
 
-                <p className="login-link">
-                  Already have an account? <Link to="/clinic-signin">Sign in</Link>
-                </p>
-                <p className="login-link">
-                  Not a clinic? <Link to="/signup">Sign up as a Patient instead.</Link>
-                </p>
-              </form>
-            )}
+      {password.length > 0 && (
+        <div className="pw-meter-wrap">
+          <div className="pw-meter">
+            <div
+              className={`pw-meter-fill score-${score}`}
+              style={{ width: `${((score + 1) / 5) * 100}%` }}
+            />
+          </div>
+          <small className="pw-label">{labels[score]}</small>
+
+          <ul className="pw-criteria">
+            <li className={password.length >= 8 ? "ok" : ""}>8+ characters</li>
+            <li className={/[A-Z]/.test(password) ? "ok" : ""}>Uppercase letter</li>
+            <li className={/[a-z]/.test(password) ? "ok" : ""}>Lowercase letter</li>
+            <li className={/\d/.test(password) ? "ok" : ""}>Number</li>
+            <li className={/[^A-Za-z0-9]/.test(password) ? "ok" : ""}>Symbol</li>
+          </ul>
+        </div>
+      )}
+
+      <button type="submit">Next</button>
+
+      <p className="login-link">
+        Already have an account? <Link to="/signin">Sign in</Link>
+      </p>
+      <p className="login-link">
+        Not a clinic? <Link to="/signup">Sign up as a Patient instead.</Link>
+      </p>
+    </div>
+  </form>
+)}
 
             {/* ---------- STEP 2 ---------- */}
             {step === 2 && (
