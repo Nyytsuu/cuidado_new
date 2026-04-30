@@ -621,10 +621,10 @@ return (
         required
       >
         <option value="">Select</option>
-        <option value="general">General Clinic</option>
-        <option value="dental">Dental</option>
-        <option value="pediatric">Pediatric</option>
-        <option value="laboratory">Laboratory</option>
+        <option value="general">General Clinic (Family Medicine)</option>
+        <option value="dental">Speciality Clinic (Cardiology)</option>
+        <option value="pediatric">Diagnostic Clinic (Lab & X-ray)</option>
+        <option value="laboratory">Aesthetic Clinic (Skin & Cosmetic)</option>
       </select>
       {errors.specialization && (
         <div className="error-text">{errors.specialization}</div>

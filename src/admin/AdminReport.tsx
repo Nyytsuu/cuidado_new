@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import "./AdminReport.css";
 import SidebarAdmin from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
@@ -25,10 +25,40 @@ type AppointmentRow = {
   status: string;
 };
 
+type AdminAppointmentApiRow = {
+  id: number;
+  patient_name: string;
+  clinic_name: string;
+  start_at: string;
+  status: string;
+};
+
+type SummaryRow = {
+  label: string;
+  value: string | number;
+};
+
+const reportExamples = [
+  "Total appointments per month",
+  "Most active clinics",
+  "New users per week",
+];
+
+const matchesSearch = (
+  query: string,
+  ...values: Array<string | number | null | undefined>
+) =>
+  !query ||
+  values.some((value) =>
+    String(value ?? "")
+      .toLowerCase()
+      .includes(query)
+  );
+
 export default function AdminReport() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [isPopupOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [summary, setSummary] = useState<ReportSummary | null>(null);
@@ -37,6 +67,7 @@ export default function AdminReport() {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     const loadSummary = async () => {
@@ -76,9 +107,9 @@ export default function AdminReport() {
       const res = await fetch("http://localhost:5000/api/admin/appointments");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+      const data: AdminAppointmentApiRow[] = await res.json();
 
-      const mapped: AppointmentRow[] = data.map((a: any) => ({
+      const mapped: AppointmentRow[] = data.map((a) => ({
         id: a.id,
         patient: a.patient_name,
         clinic: a.clinic_name,
@@ -131,6 +162,49 @@ export default function AdminReport() {
     console.log("View appointment:", id);
   };
 
+  const query = q.trim().toLowerCase();
+  const summaryRows: SummaryRow[] = [
+    {
+      label: "Total appointments (this month)",
+      value: loadingSummary
+        ? "Loading..."
+        : summary
+        ? summary.totalAppointmentsThisMonth
+        : "-",
+    },
+    {
+      label: "Most active clinic",
+      value: loadingSummary ? "Loading..." : summary ? summary.mostActiveClinic : "-",
+    },
+    {
+      label: "New users (this week)",
+      value: loadingSummary ? "Loading..." : summary ? summary.newUsersThisWeek : "-",
+    },
+  ];
+  const filteredReportExamples = reportExamples.filter((item) =>
+    matchesSearch(query, item)
+  );
+  const filteredSummaryRows = summaryRows.filter((row) =>
+    matchesSearch(query, row.label, row.value)
+  );
+  const filteredActivities = activities.filter((activity) =>
+    matchesSearch(
+      query,
+      activity.text,
+      activity.type,
+      new Date(activity.time).toLocaleString()
+    )
+  );
+  const filteredAppointments = appointments.filter((appointment) =>
+    matchesSearch(
+      query,
+      appointment.patient,
+      appointment.clinic,
+      appointment.schedule,
+      appointment.status
+    )
+  );
+
   return (
     <div className={`admin-UserReport with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
       <SidebarAdmin
@@ -145,12 +219,17 @@ export default function AdminReport() {
           <div className="header-left">
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-            <div className="header-search">
-              <input type="text" placeholder="Search keywords..." />
-              <button aria-label="Search" type="button" className="search-btn">
+            <form className="header-search" onSubmit={(event) => event.preventDefault()}>
+              <input
+                type="text"
+                placeholder="Search reports..."
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+              />
+              <button aria-label="Search" type="submit" className="search-btn">
                 <img src={searchIcon} alt="Search" />
               </button>
-            </div>
+            </form>
           </div>
 
           <nav className="header-nav">
@@ -193,9 +272,11 @@ export default function AdminReport() {
                 <h3 className="reports-section-title">Examples</h3>
 
                 <ul className="reports-list">
-                  <li>Total appointments per month</li>
-                  <li>Most active clinics</li>
-                  <li>New users per week</li>
+                  {filteredReportExamples.length === 0 ? (
+                    <li>No report examples match your search.</li>
+                  ) : (
+                    filteredReportExamples.map((item) => <li key={item}>{item}</li>)
+                  )}
                 </ul>
 
                 <h3 className="reports-section-title">Actions</h3>
@@ -210,30 +291,18 @@ export default function AdminReport() {
                 </div>
 
                 <div className="reports-preview">
-                  <div className="preview-row">
-                    <span className="preview-label">Total appointments (this month)</span>
-                    <span className="preview-value">
-                      {loadingSummary
-                        ? "Loading..."
-                        : summary
-                        ? summary.totalAppointmentsThisMonth
-                        : "—"}
-                    </span>
-                  </div>
-
-                  <div className="preview-row">
-                    <span className="preview-label">Most active clinic</span>
-                    <span className="preview-value">
-                      {loadingSummary ? "Loading..." : summary ? summary.mostActiveClinic : "—"}
-                    </span>
-                  </div>
-
-                  <div className="preview-row">
-                    <span className="preview-label">New users (this week)</span>
-                    <span className="preview-value">
-                      {loadingSummary ? "Loading..." : summary ? summary.newUsersThisWeek : "—"}
-                    </span>
-                  </div>
+                  {filteredSummaryRows.length === 0 ? (
+                    <div className="preview-row">
+                      <span className="preview-label">No report metrics match your search.</span>
+                    </div>
+                  ) : (
+                    filteredSummaryRows.map((row) => (
+                      <div className="preview-row" key={row.label}>
+                        <span className="preview-label">{row.label}</span>
+                        <span className="preview-value">{row.value}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </section>
@@ -245,11 +314,11 @@ export default function AdminReport() {
                 <div className="dash-panel-title">Recent activity</div>
 
                 <div className="dash-panel-body dash-body-small">
-                  {activities.length === 0 ? (
+                  {filteredActivities.length === 0 ? (
                     <div className="activity-empty">No recent activity yet.</div>
                   ) : (
                     <ul className="activity-list">
-                      {activities.slice(0, 3).map((item) => (
+                      {filteredActivities.slice(0, 3).map((item) => (
                         <li key={item.id} className={`activity-item ${item.type}`}>
                           <div className="activity-icon">
                             {item.type === "user" && "👤"}
@@ -287,14 +356,14 @@ export default function AdminReport() {
                           Loading...
                         </td>
                       </tr>
-                    ) : appointments.length === 0 ? (
+                    ) : filteredAppointments.length === 0 ? (
                       <tr>
                         <td colSpan={3} className="td-empty">
                           Appointments API not connected yet.
                         </td>
                       </tr>
                     ) : (
-                      appointments.map((ap) => (
+                      filteredAppointments.map((ap) => (
                         <tr key={ap.id}>
                           <td>
                             <div className="t-main">{ap.patient}</div>
@@ -322,7 +391,15 @@ export default function AdminReport() {
   );
 }
 
-function Panel({ title, children, className = "" }: any) {
+function Panel({
+  title,
+  children,
+  className = "",
+}: {
+  title: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">

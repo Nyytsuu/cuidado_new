@@ -200,7 +200,9 @@ body {
 }
 
 .Patient .admin-card {
-  background: #d9d9d9;
+  background: #ffffff;
+  border: 1px solid #d9ebe8;
+  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
   border-radius: 10px;
 }
 
@@ -208,15 +210,16 @@ body {
   display: flex;
   flex-direction: column;
   gap: 18px;
+  
 }
 
 .Patient .small-card {
-  height: 120px;
+  min-height: 120px;
 }
 
 .Patient .big-card {
-  height: 430px;
-  background: #8f8f8f;
+  min-height: 430px;
+  background: #f5fbfa;
 }
 .Patient .admin-table-card {
   min-height: 520px;
@@ -342,13 +345,13 @@ body {
 
 .Patient .pill-history {
   border: 2px solid #04a57d !important;
-  padding: 10px !important;
+  padding: 1px !important;
   outline: none;
   box-shadow: none;
   color: rgb(18, 136, 106) !important;
   background-color: white !important;
-  max-width: 175px;
-  margin-left: 35px;
+  max-width: 160px;
+  margin-left: 10px !important;
 
   border-radius: 6px !important; /* 🔥 ito ang importante */
 }
@@ -420,10 +423,15 @@ body {
 }
 
 .Patient .admin-right-card {
-  padding: 18px;
+  background: #ffffff;
+  border: 1px solid #d9ebe8;
+  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
+  border-radius: 14px;
+  padding: 26px 24px;
+  min-height: 150px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 /* Titles inside right cards */
@@ -432,6 +440,94 @@ body {
   font-size: 1.1rem;
   font-weight: 700;
   color: #0f4242;
+}
+
+.Patient .admin-right-card p {
+  margin: 0;
+  color: #31514d;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.Patient .patient-schedule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.Patient .patient-schedule-row {
+  display: grid;
+  grid-template-columns: 74px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #d9ebe8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.Patient .patient-schedule-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #0f4242;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.Patient .patient-schedule-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #109c85;
+}
+
+.Patient .patient-schedule-row input[type="time"] {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  border: 1px solid #c9e2df;
+  border-radius: 8px;
+  padding: 0 6px;
+  color: #0f4242;
+  background: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.Patient .patient-schedule-row input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.Patient .patient-schedule-message {
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.Patient .schedule-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.Patient .schedule-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.Patient .pill-save-schedule {
+  width: 100%;
+  background: #109c85 !important;
+  color: #ffffff;
+  border-radius: 8px;
+  margin-top: auto;
+}
+
+.Patient .pill-save-schedule:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .Patient .users-actions {
   display: flex;

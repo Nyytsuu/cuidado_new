@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import "./AdminServices.css";
 import SidebarAdmin from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
@@ -18,6 +18,14 @@ type AppointmentRow = {
   status: string;
 };
 
+type AdminAppointmentApiRow = {
+  id: number;
+  patient_name: string;
+  clinic_name: string;
+  start_at: string;
+  status: string;
+};
+
 type ActivityItem = {
   id: string;
   type: "user" | "clinic" | "clinic-approved" | "clinic-rejected" | "appointment";
@@ -26,6 +34,17 @@ type ActivityItem = {
 };
 
 const API = "http://localhost:5000/api/admin";
+
+const matchesSearch = (
+  query: string,
+  ...values: Array<string | number | null | undefined>
+) =>
+  !query ||
+  values.some((value) =>
+    String(value ?? "")
+      .toLowerCase()
+      .includes(query)
+  );
 
 export default function AdminServices() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -46,6 +65,7 @@ export default function AdminServices() {
 
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [q, setQ] = useState("");
 
   const getStatusClass = (status: string) => {
     const s = status.trim().toLowerCase();
@@ -85,9 +105,9 @@ export default function AdminServices() {
       const res = await fetch("http://localhost:5000/api/admin/appointments");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+      const data: AdminAppointmentApiRow[] = await res.json();
 
-      const mapped: AppointmentRow[] = data.map((a: any) => ({
+      const mapped: AppointmentRow[] = data.map((a) => ({
         id: a.id,
         patient: a.patient_name,
         clinic: a.clinic_name,
@@ -123,9 +143,30 @@ export default function AdminServices() {
     loadAppointments();
   }, []);
 
-  const activeServices = useMemo(
-    () => services.filter((s) => s.is_active === 1),
-    [services]
+  const query = q.trim().toLowerCase();
+  const filteredServices = services.filter((service) =>
+    matchesSearch(
+      query,
+      service.name,
+      service.is_active === 1 ? "active" : "inactive"
+    )
+  );
+  const filteredActivities = activities.filter((activity) =>
+    matchesSearch(
+      query,
+      activity.text,
+      activity.type,
+      new Date(activity.time).toLocaleString()
+    )
+  );
+  const filteredAppointments = appointments.filter((appointment) =>
+    matchesSearch(
+      query,
+      appointment.patient,
+      appointment.clinic,
+      appointment.schedule,
+      appointment.status
+    )
   );
 
   const openAddModal = () => {
@@ -225,12 +266,17 @@ export default function AdminServices() {
           <div className="header-left">
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-            <div className="header-search">
-              <input type="text" placeholder="Search keywords..." />
-              <button aria-label="Search" type="button" className="search-btn">
+            <form className="header-search" onSubmit={(event) => event.preventDefault()}>
+              <input
+                type="text"
+                placeholder="Search services..."
+                value={q}
+                onChange={(event) => setQ(event.target.value)}
+              />
+              <button aria-label="Search" type="submit" className="search-btn">
                 <img src={searchIcon} alt="Search" />
               </button>
-            </div>
+            </form>
           </div>
 
           <nav className="header-nav">
@@ -285,14 +331,14 @@ export default function AdminServices() {
                         Loading...
                       </div>
                     </div>
-                  ) : services.length === 0 ? (
+                  ) : filteredServices.length === 0 ? (
                     <div className="users-row services-row">
                       <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
-                        No services found.
+                        {query ? "No services match your search." : "No services found."}
                       </div>
                     </div>
                   ) : (
-                    services.map((s) => (
+                    filteredServices.map((s) => (
                       <div className="users-row services-row" key={s.id}>
                         <div className="users-cell users-name">
                           {s.name}{" "}
@@ -333,11 +379,11 @@ export default function AdminServices() {
                   <div className="dash-panel-title">Recent activity</div>
 
                   <div className="dash-panel-body dash-body-small">
-                    {activities.length === 0 ? (
+                    {filteredActivities.length === 0 ? (
                       <div className="activity-empty">No recent activity yet.</div>
                     ) : (
                       <ul className="activity-list">
-                        {activities.slice(0, 3).map((item) => (
+                        {filteredActivities.slice(0, 3).map((item) => (
                           <li key={item.id} className={`activity-item ${item.type}`}>
                             <div className="activity-icon">
                               {item.type === "user" && "👤"}
@@ -377,14 +423,14 @@ export default function AdminServices() {
                             Loading appointments...
                           </td>
                         </tr>
-                      ) : appointments.length === 0 ? (
+                      ) : filteredAppointments.length === 0 ? (
                         <tr>
                           <td colSpan={3} className="td-empty">
                             Appointments API not connected yet.
                           </td>
                         </tr>
                       ) : (
-                        appointments.map((ap) => (
+                        filteredAppointments.map((ap) => (
                           <tr key={ap.id}>
                             <td>
                               <div className="t-main">{ap.patient}</div>
@@ -513,7 +559,7 @@ function Panel({
   className = "",
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (
