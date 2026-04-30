@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import "./BrowseHealth.css";
 import searchIcon from "../img/search.png";
@@ -23,6 +23,28 @@ type BodySystem = {
   name?: string;
 };
 
+type BodySystemApiItem = {
+  id: number | string;
+  slug?: string | null;
+  icon?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
+  short_description?: string | null;
+  name?: string | null;
+};
+
+type TopicApiItem = {
+  id: number | string;
+  slug?: string | null;
+  body_system_slug?: string | null;
+  icon?: string | null;
+  title?: string | null;
+  condition_name?: string | null;
+  subtitle?: string | null;
+  body_system_name?: string | null;
+  tag?: string | null;
+};
+
 type QuickAction = {
   id: string;
   icon: string;
@@ -38,6 +60,7 @@ const quickActions: QuickAction[] = [
 
 export default function BrowseHealth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -52,6 +75,13 @@ export default function BrowseHealth() {
   const [error, setError] = useState("");
 
   const userId = 1; // replace with logged-in user id
+  const querySearch = searchParams.get("search") || "";
+
+  useEffect(() => {
+    if (querySearch) {
+      setSearch(querySearch);
+    }
+  }, [querySearch]);
 
   useEffect(() => {
     const loadHealthData = async () => {
@@ -72,11 +102,11 @@ export default function BrowseHealth() {
           throw new Error("Failed to load health topics");
         }
 
-        const systemsData = await systemsRes.json();
-        const topicsData = await topicsRes.json();
+        const systemsData: unknown = await systemsRes.json();
+        const topicsData: unknown = await topicsRes.json();
 
         const normalizedSystems: BodySystem[] = Array.isArray(systemsData)
-          ? systemsData.map((item: any) => ({
+          ? (systemsData as BodySystemApiItem[]).map((item) => ({
               id: String(item.id),
               slug: item.slug ?? null,
               icon: item.icon ?? "🩺",
@@ -87,7 +117,7 @@ export default function BrowseHealth() {
           : [];
 
         const normalizedTopics: TopicCard[] = Array.isArray(topicsData)
-          ? topicsData.map((item: any) => ({
+          ? (topicsData as TopicApiItem[]).map((item) => ({
               id: String(item.id),
               slug: item.slug ?? null,
               body_system_slug: item.body_system_slug ?? null,
@@ -202,6 +232,9 @@ export default function BrowseHealth() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search health topics..."
       />
 
       <div className="browse-page-content">

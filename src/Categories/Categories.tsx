@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import "./Categories.css";
 import Sidebar from "./Sidebar";
 import searchIcon from "../img/search.png";
@@ -12,6 +12,18 @@ export default function Categories() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const keyword = searchTerm.trim();
+    const browserFind = (window as Window & { find?: (query: string) => boolean }).find;
+
+    if (keyword && browserFind) {
+      browserFind(keyword);
+    }
+  };
 
   return (
     <div className={`with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
@@ -28,12 +40,17 @@ export default function Categories() {
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />
           </div>
 
-          <div className="header-search">
-            <input type="text" placeholder="Search keywords..." />
-            <button aria-label="Search" type="button" className="search-btn">
-  <img src={searchIcon} alt="Search" />
-</button>
-          </div>
+          <form className="header-search" onSubmit={handleSearch}>
+            <input
+              type="text"
+              placeholder="Search keywords..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
+            <button aria-label="Search" type="submit" className="search-btn">
+              <img src={searchIcon} alt="Search" />
+            </button>
+          </form>
         </header>
 
         <div className="body">

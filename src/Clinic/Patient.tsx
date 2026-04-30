@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./Patient.css";
 import SidebarClinic from "./SidebarClinic";
+import ClinicScheduleAside from "./ClinicScheduleAside";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 
@@ -21,13 +22,34 @@ type PatientRow = {
   lastVisit: string;
 };
 
+const getStoredClinicId = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (user?.role === "clinic" && user?.id) {
+      return Number(user.id);
+    }
+
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+
+    if (role === "clinic" && userId) {
+      return Number(userId);
+    }
+  } catch {
+    return 1;
+  }
+
+  return 1;
+};
+
 export default function Patients() {
   const API = "http://localhost:5000/api";
-  const clinicId = 1; // TODO: replace with logged-in clinic id
+  const clinicId = useMemo(() => getStoredClinicId(), []);
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -43,6 +65,8 @@ export default function Patients() {
     status: string;
   }[];
 } | null>(null);
+
+  const isPopupOpen = Boolean(profilePopup || historyPopup);
 
   const calculateAge = (dateOfBirth: string) => {
     if (!dateOfBirth) return 0;
@@ -164,6 +188,9 @@ export default function Patients() {
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search patients..."
       />
 
       <main className="preview-canvas">
@@ -282,14 +309,9 @@ export default function Patients() {
                 </div>
               </section>
 
-              <aside className="admin-right">
-                <div className="admin-card admin-right-card small-card">
-                  <h3>Schedule</h3>
-                </div>
-                <div className="admin-card admin-right-card big-card">
-                  <h3>Schedule Option:</h3>
-                </div>
-              </aside>
+              <div className="patient-schedule-wrapper">
+  <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
+</div>
             </div>
           </div>
         </section>
@@ -427,4 +449,4 @@ export default function Patients() {
 
     </div>
   );
-} 
+}

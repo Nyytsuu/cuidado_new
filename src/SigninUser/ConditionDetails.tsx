@@ -181,6 +181,9 @@ export default function ConditionDetails() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search health topics..."
       />
 
       <div className="browse-page-content">

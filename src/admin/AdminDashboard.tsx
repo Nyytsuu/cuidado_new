@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import SidebarAdmin from "./SidebarAdmin";
 import "./AdminDashboard.css";
 import { Link } from "react-router-dom";
@@ -14,6 +14,8 @@ import {
 
 import logo from "../img/logo.png";
 import searchIcon from "../img/search.png";
+
+const ADMIN_API = "http://localhost:5000/api/admin";
 
 /* ---------- TYPES ---------- */
 type MetricsResponse = {
@@ -55,7 +57,16 @@ type AppointmentRow = {
   id: number;
   patient: string;
   clinic: string;
+  startAt: string;
   schedule: string;
+  status: string;
+};
+
+type AdminAppointmentApiRow = {
+  id: number;
+  patient_name: string;
+  clinic_name: string;
+  start_at: string;
   status: string;
 };
 
@@ -89,9 +100,18 @@ type AppointmentDetails = {
   updated_at: string;
 };
 
-export default function AdminDashboard() {
-  const API = "http://localhost:5000/api/admin";
+const matchesSearch = (
+  query: string,
+  ...values: Array<string | number | null | undefined>
+) =>
+  !query ||
+  values.some((value) =>
+    String(value ?? "")
+      .toLowerCase()
+      .includes(query)
+  );
 
+export default function AdminDashboard() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -118,7 +138,7 @@ export default function AdminDashboard() {
     const loadClinics = async () => {
       try {
         setLoadingClinics(true);
-        const res = await fetch(`${API}/clinics`);
+        const res = await fetch(`${ADMIN_API}/clinics`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ClinicRow[] = await res.json();
         setClinics(data);
@@ -130,13 +150,13 @@ export default function AdminDashboard() {
       }
     };
     loadClinics();
-  }, [API]);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoadingMetrics(true);
-        const res = await fetch(`${API}/dashboard-metrics`);
+        const res = await fetch(`${ADMIN_API}/dashboard-metrics`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: MetricsResponse = await res.json();
         setMetrics(data);
@@ -148,12 +168,12 @@ export default function AdminDashboard() {
       }
     };
     load();
-  }, [API]);
+  }, []);
 
   useEffect(() => {
     const loadActivity = async () => {
       try {
-        const res = await fetch(`${API}/recent-activity?limit=8`);
+        const res = await fetch(`${ADMIN_API}/recent-activity?limit=8`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: ActivityItem[] = await res.json();
         setActivities(data);
@@ -163,14 +183,14 @@ export default function AdminDashboard() {
       }
     };
     loadActivity();
-  }, [API]);
+  }, []);
 
   useEffect(() => {
     const loadTables = async () => {
       try {
         const [clinicsRes, usersRes] = await Promise.all([
-          fetch(`${API}/clinics?limit=20`),
-          fetch(`${API}/users?limit=8`),
+          fetch(`${ADMIN_API}/clinics?limit=20`),
+          fetch(`${ADMIN_API}/users?limit=8`),
         ]);
 
         if (!clinicsRes.ok) throw new Error(`Clinics HTTP ${clinicsRes.status}`);
@@ -189,16 +209,24 @@ export default function AdminDashboard() {
     };
 
     loadTables();
-  }, [API]);
+  }, []);
 
   const userTrend = useMemo(() => {
     if (!metrics?.userTrend) return [];
     return metrics.userTrend.map((p) => {
       const d = new Date(p.day);
       const label = d.toLocaleDateString("en-US", { weekday: "short" });
-      return { day: label, total: p.total };
+      return { day: label, total: Number(p.total || 0) };
     });
   }, [metrics]);
+
+  const userTrendMax = useMemo(
+    () => userTrend.reduce((max, item) => Math.max(max, item.total), 0),
+    [userTrend]
+  );
+
+  const userTrendYAxisMax = Math.max(1, Math.ceil(userTrendMax * 1.2));
+  const hasUserTrendData = userTrendMax > 0;
 
   const totalUsers = metrics?.totalUsers ?? 0;
   const totalClinics = metrics?.totalClinics ?? 0;
@@ -210,6 +238,47 @@ export default function AdminDashboard() {
   const locationText = (c: ClinicRow) =>
     `${c.address ?? "No address"} (P:${c.province_id}, M:${c.municipality_id}, B:${c.barangay_id})`;
 
+  const dashboardQuery = q.trim().toLowerCase();
+  const filteredClinics = clinics.filter((clinic) =>
+    matchesSearch(
+      dashboardQuery,
+      clinic.clinic_name,
+      clinic.email,
+      clinic.phone,
+      clinic.status,
+      locationText(clinic),
+      fmtDate(clinic.created_at)
+    )
+  );
+  const pendingClinics = filteredClinics.filter(
+    (clinic) => clinic.status === "pending"
+  );
+  const filteredLatestUsers = latestUsers.filter((user) =>
+    matchesSearch(
+      dashboardQuery,
+      user.full_name,
+      user.email,
+      fmtDate(user.created_at)
+    )
+  );
+  const filteredActivities = activities.filter((activity) =>
+    matchesSearch(
+      dashboardQuery,
+      activity.text,
+      activity.type,
+      new Date(activity.time).toLocaleString()
+    )
+  );
+  const filteredAppointments = appointments.filter((appointment) =>
+    matchesSearch(
+      dashboardQuery,
+      appointment.patient,
+      appointment.clinic,
+      appointment.schedule,
+      appointment.status
+    )
+  );
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -218,7 +287,7 @@ export default function AdminDashboard() {
 
   const updateClinicStatus = async (id: number, status: "approved" | "rejected") => {
     try {
-      const res = await fetch(`${API}/clinics/${id}/status`, {
+      const res = await fetch(`${ADMIN_API}/clinics/${id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -236,15 +305,16 @@ export default function AdminDashboard() {
     try {
       setLoadingAppointments(true);
 
-      const res = await fetch(`${API}/appointments`);
+      const res = await fetch(`${ADMIN_API}/appointments`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = await res.json();
+      const data: AdminAppointmentApiRow[] = await res.json();
 
-      const mapped: AppointmentRow[] = data.map((a: any) => ({
+      const mapped: AppointmentRow[] = data.map((a) => ({
         id: a.id,
         patient: a.patient_name,
         clinic: a.clinic_name,
+        startAt: a.start_at,
         schedule: `${new Date(a.start_at).toLocaleDateString()} • ${new Date(
           a.start_at
         ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
@@ -262,12 +332,12 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadAppointments();
-  }, [API]);
+  }, []);
 
   const loadLatestUsers = async () => {
     try {
       setLoadingUsers(true);
-      const res = await fetch(`${API}/users?limit=6`);
+      const res = await fetch(`${ADMIN_API}/users?limit=6`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: LatestUserRow[] = await res.json();
       setLatestUsers(data);
@@ -281,11 +351,11 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadLatestUsers();
-  }, [API]);
+  }, []);
 
   const viewDetails = async (id: number) => {
     try {
-      const res = await fetch(`${API}/appointments/${id}`);
+      const res = await fetch(`${ADMIN_API}/appointments/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: AppointmentDetails = await res.json();
       setSelected(data);
@@ -297,7 +367,11 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className={`ad-wrap ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div
+      className={`admin-dashboard-page ad-wrap ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <SidebarAdmin
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -337,7 +411,7 @@ export default function AdminDashboard() {
                 className="nav-link profile-btn"
                 onClick={() => setHeaderProfileOpen((v) => !v)}
               >
-                Profile <span className="caret">▾</span>
+                Profile <span className="caret">v</span>
               </button>
 
               <div className="profile-dropdown">
@@ -360,12 +434,12 @@ export default function AdminDashboard() {
           <div className="dash-maincol">
             <section className="dash-metrics">
               <div className="metric-card">
-                <div className="metric-title">Total user</div>
+                <div className="metric-title">Total Users</div>
                 <div className="metric-box">{loadingMetrics ? "..." : totalUsers}</div>
               </div>
 
               <div className="metric-card">
-                <div className="metric-title">Total clinic Registered</div>
+                <div className="metric-title">Registered Clinics</div>
                 <div className="metric-box">{loadingMetrics ? "..." : totalClinics}</div>
               </div>
 
@@ -377,7 +451,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="metric-card">
-                <div className="metric-title">Total Appointments Scheduled</div>
+                <div className="metric-title">Scheduled Appointments</div>
                 <div className="metric-box">
                   {loadingMetrics ? "..." : scheduledAppointments}
                 </div>
@@ -389,7 +463,11 @@ export default function AdminDashboard() {
                 <h3>User Trend (Last 7 Days)</h3>
               </div>
 
-              <div className="dash-chart-card">
+              <div
+                className={`dash-chart-card ${
+                  hasUserTrendData ? "" : "is-empty-trend"
+                }`}
+              >
                 <ResponsiveContainer width="100%" height={260}>
                   <LineChart
                     data={userTrend}
@@ -402,17 +480,27 @@ export default function AdminDashboard() {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="day" height={30} tickMargin={10} interval={0} />
-                    <YAxis allowDecimals={false} />
+                    <YAxis
+                      allowDecimals={false}
+                      domain={[0, userTrendYAxisMax]}
+                      tickCount={4}
+                    />
                     <Tooltip />
                     <Line
                       type="monotone"
                       dataKey="total"
                       stroke="#00bfa6"
                       strokeWidth={3}
-                      dot={false}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                      activeDot={{ r: 6 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                {!loadingMetrics && !hasUserTrendData && (
+                  <div className="trend-empty-note">
+                    No new users in the last 7 days.
+                  </div>
+                )}
               </div>
             </section>
 
@@ -436,17 +524,14 @@ export default function AdminDashboard() {
                             Loading...
                           </td>
                         </tr>
-                      ) : clinics.filter((c) => c.status === "pending").length === 0 ? (
+                      ) : pendingClinics.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="td-empty">
                             No pending clinics.
                           </td>
                         </tr>
                       ) : (
-                        clinics
-                          .filter((c) => c.status === "pending")
-                          .slice(0, 6)
-                          .map((c) => (
+                        pendingClinics.slice(0, 6).map((c) => (
                             <tr key={c.id}>
                               <td>
                                 <div className="t-main">{c.clinic_name}</div>
@@ -477,7 +562,7 @@ export default function AdminDashboard() {
                   </table>
                 </Panel>
 
-                <Panel title="Users / Patients Section">
+                <Panel title="Users / Patients">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -500,14 +585,14 @@ export default function AdminDashboard() {
                             Loading...
                           </td>
                         </tr>
-                      ) : latestUsers.length === 0 ? (
+                      ) : filteredLatestUsers.length === 0 ? (
                         <tr>
                           <td colSpan={2} className="td-empty">
                             No users yet.
                           </td>
                         </tr>
                       ) : (
-                        latestUsers.map((u) => (
+                        filteredLatestUsers.map((u) => (
                           <tr key={u.id}>
                             <td>
                               <div className="t-main">{u.full_name}</div>
@@ -523,7 +608,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="dash-center">
-                <Panel title="Clinic Section">
+                <Panel title="Clinics">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -535,14 +620,14 @@ export default function AdminDashboard() {
                     </thead>
 
                     <tbody>
-                      {clinics.length === 0 ? (
+                      {filteredClinics.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="td-empty">
                             No clinics yet.
                           </td>
                         </tr>
                       ) : (
-                        clinics.slice(0, 10).map((c) => (
+                        filteredClinics.slice(0, 10).map((c) => (
                           <tr key={c.id}>
                             <td>
                               <div className="t-main">{c.clinic_name}</div>
@@ -564,14 +649,14 @@ export default function AdminDashboard() {
           </div>
 
           <aside className="dash-aside">
-            <div className="dash-panel-title">Recent activity</div>
+            <div className="dash-panel-title">Recent Activity</div>
             <div className="dash-panel dash-right-top">
               <div className="dash-panel-body dash-body-small">
-                {activities.length === 0 ? (
+                {filteredActivities.length === 0 ? (
                   <div className="activity-empty">No recent activity yet.</div>
                 ) : (
                   <ul className="activity-list">
-                    {activities.slice(0, 3).map((item) => (
+                    {filteredActivities.slice(0, 3).map((item) => (
                       <li key={item.id} className={`activity-item ${item.type}`}>
                         <div className="activity-icon">
                           {item.type === "user" && "👤"}
@@ -594,7 +679,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <Panel title="Appointment Section" className="appointment-panel">
+            <Panel title="Appointments" className="appointment-panel">
               <table className="dash-table">
                 <thead>
                   <tr>
@@ -611,18 +696,20 @@ export default function AdminDashboard() {
                         Loading...
                       </td>
                     </tr>
-                  ) : appointments.length === 0 ? (
+                  ) : filteredAppointments.length === 0 ? (
                     <tr>
                       <td colSpan={3} className="td-empty">
-                        Appointments API not connected yet.
+                        No appointments yet.
                       </td>
                     </tr>
                   ) : (
-                    appointments.map((ap) => (
+                    filteredAppointments.map((ap) => (
                       <tr key={ap.id}>
                         <td className="appt-patient-cell">
                           <div className="t-main">{ap.patient}</div>
-                          <div className="t-sub">{ap.clinic}</div>
+                          <div className="t-sub">
+                            {ap.clinic} - {ap.schedule}
+                          </div>
                         </td>
 
                         <td className="appt-status-cell">
@@ -710,7 +797,7 @@ function Panel({
   className = "",
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (

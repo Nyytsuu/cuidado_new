@@ -228,8 +228,9 @@ body {
 }
 
 .Schedule .admin-card {
-  background: #d9d9d9;
+  background: white;
   border-radius: 10px;
+  border: 1px solid #d9ebe8;
 }
 
 .Schedule .admin-right {
@@ -239,7 +240,7 @@ body {
 }
 
 .Schedule .small-card {
-  height: 120px;
+  height: 130px;
 }
 
 .Schedule .big-card {
@@ -247,10 +248,16 @@ body {
   background: #8f8f8f;
 }
 
-.Schedule .admin-table-card {
+.admin-table-card {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
+  border-radius: 26px;
+  background: linear-gradient(
+   rgb(16, 156, 133) 73px,
+    white 78px,
+    white 100%
+  ) !important;
 }
 
 /* ================= TABLE ================= */
@@ -261,11 +268,12 @@ body {
 /* ✅ Schedule columns: Day | Working | Open | Close | Actions */
 .Schedule .users-row {
   display: grid;
-  grid-template-columns: 1.6fr 1.1fr 1.4fr 1.4fr 2.5fr;
+  grid-template-columns: 1.6fr 1.2fr 1.6fr 1.4fr 2.0fr;
   align-items: center;
-  gap: 12px;
+  gap: 0;
   padding: 16px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  background: transparent;
 }
 
 .Schedule .users-header {
@@ -273,14 +281,8 @@ body {
 }
 
 .Schedule .users-header .users-cell {
-  color: black;
-  font-size: 1.3rem;
-}
-
-.Schedule .users-cell {
-  min-width: 0;
-  position: relative;
-  padding-left: 18px;
+  color: white;
+  font-size: 1.2rem;
 }
 
 /* first column no line + no padding */
@@ -302,8 +304,8 @@ body {
 
 /* text style */
 .Schedule .users-name {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   color: black;
 }
 
@@ -346,7 +348,7 @@ body {
 }
 
 .Schedule .pill-view {
-  background: #5b5b5b;
+  background: #1b8169;
   color: #fff;
   cursor: pointer;
 }
@@ -367,7 +369,7 @@ body {
 
 /* ✅ closed day status */
 .Schedule .pill-gray {
-  background: #6b7280;
+  background: #c62828;
   color: #fff;
 }
 
@@ -492,6 +494,16 @@ body {
   min-height: 26px;
   padding: 0 10px;
 }
+.users-header .users-cell:nth-child(5) {
+  padding-left: 45px;   /* lower value = more left */
+}
+.users-header .users-cell:nth-child(4) {
+  padding-left: 10px;   /* lower value = more left */
+}
+.users-header .users-cell:nth-child(3) {
+  padding-left: 10px;   /* lower value = more left */
+}
+
 
 /* RESPONSIVE */
 @media screen and (max-width: 900px) {

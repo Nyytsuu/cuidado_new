@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./ClinicAppoint.css";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import SidebarClinic from "./SidebarClinic";
+import ClinicScheduleAside from "./ClinicScheduleAside";
 import { FaCalendarAlt } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
 
@@ -58,9 +59,31 @@ const emptyRescheduleForm: RescheduleForm = {
   time: "",
 };
 
+const getStoredClinicId = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (user?.role === "clinic" && user?.id) {
+      return Number(user.id);
+    }
+
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+
+    if (role === "clinic" && userId) {
+      return Number(userId);
+    }
+  } catch {
+    return 1;
+  }
+
+  return 1;
+};
+
 export default function ClinicAppoint() {
   const API = "http://localhost:5000/api";
-  const clinicId = 1; // replace with logged-in clinic id
+  const clinicId = useMemo(() => getStoredClinicId(), []);
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -126,13 +149,7 @@ export default function ClinicAppoint() {
     return local.toISOString().slice(0, 16);
   };
 
-  const fromDateAndTimeToIso = (date: string, time: string) => {
-    const combined = new Date(`${date} ${time}`);
-    if (Number.isNaN(combined.getTime())) return null;
-    return combined.toISOString().slice(0, 19).replace("T", " ");
-  };
-
-  const loadAppointments = async () => {
+  const loadAppointments = useCallback(async () => {
     try {
       setLoadingAppointments(true);
 
@@ -172,11 +189,11 @@ export default function ClinicAppoint() {
     } finally {
       setLoadingAppointments(false);
     }
-  };
+  }, [API, clinicId]);
 
   useEffect(() => {
     loadAppointments();
-  }, [clinicId]);
+  }, [loadAppointments]);
 
   const statusClass = (status: AppointmentStatus) => {
     switch (status) {
@@ -344,6 +361,9 @@ export default function ClinicAppoint() {
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search appointments..."
       />
 
       <main className="preview-canvas">
@@ -536,17 +556,7 @@ export default function ClinicAppoint() {
                 </div>
               </section>
 
-              <aside className="admin-right">
-                <div className="admin-card admin-right-card small-card">
-                  <h3>Appointment Tips</h3>
-                  <p>Use View to check details and Reschedule to update date and time.</p>
-                </div>
-
-                <div className="admin-card admin-right-card big-card">
-                  <h3>Note</h3>
-                  <p>Pending appointments can be confirmed, rejected, or rescheduled.</p>
-                </div>
-              </aside>
+              <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
             </div>
           </div>
         </section>

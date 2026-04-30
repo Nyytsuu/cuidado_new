@@ -493,3 +493,24 @@ body {
 .modal-open {
   overflow: hidden;
 }
+.appoint-form .admin-right-card {
+  padding: 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.appoint-form .admin-right-card h3 {
+  margin: 0 !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+  color: #0f4242 !important;
+}
+
+.appoint-form .admin-right-card p {
+  margin: 0 !important;
+  font-size: 0.95rem !important;
+  color: #1f2937 !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+}

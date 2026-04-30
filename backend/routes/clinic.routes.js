@@ -532,6 +532,240 @@ router.patch("/clinics/:id", (req, res) => {
   );
 });
 
+/* =================================================
+   CLINIC PROFILE
+   Final routes:
+   GET /api/clinic/profile?clinic_id=1
+   PUT /api/clinic/profile
+================================================= */
+
+router.get("/clinic/profile", async (req, res) => {
+  try {
+    const clinicId = Number(req.query.clinic_id);
+
+    if (!clinicId) {
+      return res.status(400).json({ message: "clinic_id is required." });
+    }
+
+    const [[clinic]] = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.clinic_name,
+        c.email,
+        c.phone,
+        c.province_id,
+        c.municipality_id,
+        c.barangay_id,
+        c.address,
+        c.specialization,
+        c.license_number,
+        c.years_operation,
+        c.rep_full_name,
+        c.rep_position,
+        c.rep_phone,
+        c.services_offered,
+        c.opening_time,
+        c.closing_time,
+        c.operating_days,
+        c.clinic_license_file,
+        c.rep_valid_id_file,
+        c.status,
+        c.account_status,
+        c.created_at,
+        p.province_name,
+        m.name AS municipality_name,
+        b.name AS barangay_name
+      FROM clinics c
+      LEFT JOIN provinces p ON p.id = c.province_id
+      LEFT JOIN municipalities m ON m.id = c.municipality_id
+      LEFT JOIN barangays b ON b.id = c.barangay_id
+      WHERE c.id = ?
+      LIMIT 1
+      `,
+      [clinicId]
+    );
+
+    if (!clinic) {
+      return res.status(404).json({ message: "Clinic not found." });
+    }
+
+    const [services] = await pool.query(
+      `
+      SELECT
+        id,
+        name,
+        description,
+        price,
+        duration_minutes,
+        is_active
+      FROM clinic_services
+      WHERE clinic_id = ?
+      ORDER BY name ASC
+      `,
+      [clinicId]
+    );
+
+    const locationParts = [
+      clinic.address,
+      clinic.barangay_name,
+      clinic.municipality_name,
+      clinic.province_name,
+    ].filter(Boolean);
+
+    return res.json({
+      ...clinic,
+      location_text: locationParts.join(", "),
+      services,
+    });
+  } catch (err) {
+    console.error("Load clinic profile error:", err);
+    return res.status(500).json({ message: "Failed to load clinic profile." });
+  }
+});
+
+router.put("/clinic/profile", async (req, res) => {
+  try {
+    const clinicId = Number(req.body.clinic_id);
+    const normalizedClinicName = cleanText(req.body.clinic_name);
+    const normalizedPhone = cleanText(req.body.phone);
+    const normalizedAddress = cleanText(req.body.address);
+    const normalizedSpecialization = cleanText(req.body.specialization).toLowerCase();
+    const yearsOperation =
+      cleanText(req.body.years_operation) === ""
+        ? 0
+        : Number(cleanText(req.body.years_operation));
+    const normalizedRepName = cleanText(req.body.rep_full_name);
+    const normalizedRepPosition = cleanText(req.body.rep_position);
+    const normalizedRepPhone = cleanText(req.body.rep_phone);
+    const normalizedServicesOffered = cleanText(req.body.services_offered).toLowerCase();
+    const normalizedOpeningTime = cleanText(req.body.opening_time);
+    const normalizedClosingTime = cleanText(req.body.closing_time);
+    const normalizedOperatingDays = cleanText(req.body.operating_days).toLowerCase();
+    const validationErrors = [];
+
+    if (!clinicId) {
+      validationErrors.push("clinic_id is required.");
+    }
+
+    if (normalizedClinicName.length < 3) {
+      validationErrors.push("Clinic name must be at least 3 characters.");
+    }
+
+    if (!PH_PHONE_RE.test(normalizedPhone)) {
+      validationErrors.push("Clinic phone must use +639XXXXXXXXX or 09XXXXXXXXX.");
+    }
+
+    if (normalizedAddress.length < 10) {
+      validationErrors.push("Clinic address must be at least 10 characters.");
+    }
+
+    if (normalizedSpecialization.length < 2) {
+      validationErrors.push("Clinic type or specialization is required.");
+    }
+
+    if (!Number.isInteger(yearsOperation) || yearsOperation < 0 || yearsOperation > 150) {
+      validationErrors.push("Years of operation must be between 0 and 150.");
+    }
+
+    if (normalizedRepName.length < 2) {
+      validationErrors.push("Representative full name is required.");
+    }
+
+    if (normalizedRepPosition.length < 2) {
+      validationErrors.push("Representative position is required.");
+    }
+
+    if (!PH_PHONE_RE.test(normalizedRepPhone)) {
+      validationErrors.push("Representative phone must use +639XXXXXXXXX or 09XXXXXXXXX.");
+    }
+
+    if (normalizedServicesOffered.length < 2) {
+      validationErrors.push("Services offered is required.");
+    }
+
+    if (!isValidClinicTime(normalizedOpeningTime) || !isValidClinicTime(normalizedClosingTime)) {
+      validationErrors.push("Opening and closing time must be valid.");
+    } else if (clinicTimeToMinutes(normalizedOpeningTime) >= clinicTimeToMinutes(normalizedClosingTime)) {
+      validationErrors.push("Opening time must be before closing time.");
+    }
+
+    if (!hasValidOperatingDays(normalizedOperatingDays)) {
+      validationErrors.push("Please choose valid operating days.");
+    }
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        message: validationErrors[0],
+        errors: validationErrors,
+      });
+    }
+
+    const [[clinic]] = await pool.query("SELECT id FROM clinics WHERE id = ? LIMIT 1", [
+      clinicId,
+    ]);
+
+    if (!clinic) {
+      return res.status(404).json({ message: "Clinic not found." });
+    }
+
+    const [duplicateClinics] = await pool.query(
+      `
+      SELECT id
+      FROM clinics
+      WHERE LOWER(clinic_name) = LOWER(?)
+        AND id <> ?
+      LIMIT 1
+      `,
+      [normalizedClinicName, clinicId]
+    );
+
+    if (duplicateClinics.length > 0) {
+      return res.status(400).json({ message: "A clinic with this name already exists." });
+    }
+
+    await pool.query(
+      `
+      UPDATE clinics
+      SET
+        clinic_name = ?,
+        phone = ?,
+        address = ?,
+        specialization = ?,
+        years_operation = ?,
+        rep_full_name = ?,
+        rep_position = ?,
+        rep_phone = ?,
+        services_offered = ?,
+        opening_time = ?,
+        closing_time = ?,
+        operating_days = ?
+      WHERE id = ?
+      `,
+      [
+        normalizedClinicName,
+        normalizedPhone,
+        normalizedAddress,
+        normalizedSpecialization,
+        yearsOperation,
+        normalizedRepName,
+        normalizedRepPosition,
+        normalizedRepPhone,
+        normalizedServicesOffered,
+        `${normalizedOpeningTime}:00`,
+        `${normalizedClosingTime}:00`,
+        normalizedOperatingDays,
+        clinicId,
+      ]
+    );
+
+    return res.json({ message: "Clinic profile updated." });
+  } catch (err) {
+    console.error("Update clinic profile error:", err);
+    return res.status(500).json({ message: "Failed to update clinic profile." });
+  }
+});
+
 const DAYS = [
   "Monday",
   "Tuesday",

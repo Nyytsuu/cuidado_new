@@ -65,21 +65,33 @@ app.get("/api/admin/dashboard-metrics", async (req, res) => {
     const [[pendingClinics]] = await pool.query(
       "SELECT COUNT(*) AS pendingClinics FROM clinics WHERE status = 'pending'"
     );
+    const [[scheduledAppointments]] = await pool.query(`
+      SELECT COUNT(*) AS scheduledAppointments
+      FROM appointments
+      WHERE status IN ('pending', 'confirmed', 'scheduled', 'approved')
+    `);
 
     const [trendRows] = await pool.query(`
-      SELECT DATE(created_at) AS day, COUNT(*) AS total
+      SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS total
       FROM users
       WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-      GROUP BY DATE(created_at)
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
       ORDER BY day ASC
     `);
+
+    const toDateKey = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
 
     const filled = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      const found = trendRows.find((r) => String(r.day).slice(0, 10) === key);
+      const key = toDateKey(d);
+      const found = trendRows.find((r) => String(r.day) === key);
 
       filled.push({ day: key, total: found ? Number(found.total) : 0 });
     }
@@ -88,7 +100,7 @@ app.get("/api/admin/dashboard-metrics", async (req, res) => {
       totalUsers: Number(usersCount.totalUsers),
       totalClinics: Number(clinicsCount.totalClinics),
       pendingClinics: Number(pendingClinics.pendingClinics),
-      scheduledAppointments: 0,
+      scheduledAppointments: Number(scheduledAppointments.scheduledAppointments),
       userTrend: filled,
     });
   } catch (err) {

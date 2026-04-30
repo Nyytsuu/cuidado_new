@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
@@ -34,11 +34,53 @@ type AppointmentRow = {
   status: string;
 };
 
+type RawAppointmentRow = {
+  id?: number | string;
+  patient?: string;
+  full_name?: string;
+  service?: string;
+  service_name?: string;
+  schedule?: string;
+  appointment_date?: string;
+  created_at?: string;
+  status?: string;
+};
+
+type RawPatientRow = {
+  id?: number | string;
+  full_name?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  created_at?: string;
+  joined_at?: string;
+};
+
+type RawActivityItem = {
+  id?: number | string;
+  type?: ActivityItem["type"];
+  text?: string;
+  message?: string;
+  time?: string;
+  created_at?: string;
+};
+
 type PanelProps = {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 };
+
+const matchesSearch = (
+  query: string,
+  ...values: Array<string | number | null | undefined>
+) =>
+  !query ||
+  values.some((value) =>
+    String(value ?? "")
+      .toLowerCase()
+      .includes(query)
+  );
 
 /* ---------- SMALL PANEL COMPONENT ---------- */
 function Panel({ title, children, className = "" }: PanelProps) {
@@ -56,6 +98,8 @@ export default function ClinicDashboard() {
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   /* ---------- METRICS ---------- */
   const [loadingMetrics, setLoadingMetrics] = useState(true);
@@ -115,6 +159,34 @@ export default function ClinicDashboard() {
     // navigate(`/clinic/appointments/${id}`);
   };
 
+  const dashboardQuery = searchTerm.trim().toLowerCase();
+  const filteredAppointments = appointments.filter((appointment) =>
+    matchesSearch(
+      dashboardQuery,
+      appointment.patient,
+      appointment.service,
+      fmtDateTime(appointment.schedule),
+      appointment.status
+    )
+  );
+  const filteredPatients = patients.filter((patient) =>
+    matchesSearch(
+      dashboardQuery,
+      patient.full_name,
+      patient.email,
+      patient.phone,
+      fmtDate(patient.created_at)
+    )
+  );
+  const filteredActivities = activities.filter((activity) =>
+    matchesSearch(
+      dashboardQuery,
+      activity.text,
+      activity.type,
+      fmtDate(activity.time)
+    )
+  );
+
   /* ---------- FETCH METRICS ---------- */
   useEffect(() => {
     const fetchMetrics = async () => {
@@ -157,11 +229,11 @@ export default function ClinicDashboard() {
         );
         if (!res.ok) throw new Error("Failed to fetch appointments");
 
-        const data = await res.json();
+        const data = (await res.json()) as RawAppointmentRow[];
 
         const normalized: AppointmentRow[] = Array.isArray(data)
-          ? data.map((item: any) => ({
-              id: Number(item.id),
+          ? data.map((item) => ({
+              id: Number(item.id || 0),
               patient: item.patient || item.full_name || "Unknown Patient",
               service: item.service || item.service_name || "General Checkup",
               schedule:
@@ -193,11 +265,11 @@ export default function ClinicDashboard() {
         );
         if (!res.ok) throw new Error("Failed to fetch patients");
 
-        const data = await res.json();
+        const data = (await res.json()) as RawPatientRow[];
 
         const normalized: PatientRow[] = Array.isArray(data)
-          ? data.map((item: any) => ({
-              id: Number(item.id),
+          ? data.map((item) => ({
+              id: Number(item.id || 0),
               full_name: item.full_name || item.name || "Unknown Patient",
               email: item.email || "No email",
               phone: item.phone || "",
@@ -228,10 +300,10 @@ export default function ClinicDashboard() {
         );
         if (!res.ok) throw new Error("Failed to fetch activities");
 
-        const data = await res.json();
+        const data = (await res.json()) as RawActivityItem[];
 
         const normalized: ActivityItem[] = Array.isArray(data)
-          ? data.map((item: any, index: number) => ({
+          ? data.map((item, index) => ({
               id: String(item.id ?? index),
               type: item.type || "appointment",
               text: item.text || item.message || "No activity",
@@ -252,12 +324,21 @@ export default function ClinicDashboard() {
   }, [API, clinicId]);
 
   return (
-    <div className={`ad-wrap ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div
+      className={`ad-wrap clinic-dashboard-page ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
+        headerProfileOpen={headerProfileOpen}
+        setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search dashboard..."
       />
 
       <main className="ad-main">
@@ -312,11 +393,11 @@ export default function ClinicDashboard() {
                   <div className="dash-chart-card schedule-card">
                     {loadingAppointments ? (
                       <div className="box-empty">Loading schedule...</div>
-                    ) : appointments.length === 0 ? (
+                    ) : filteredAppointments.length === 0 ? (
                       <div className="box-empty">No schedule today.</div>
                     ) : (
                       <div className="simple-list">
-                        {appointments.slice(0, 5).map((ap) => (
+                        {filteredAppointments.slice(0, 5).map((ap) => (
                           <div key={ap.id} className="simple-list-item">
                             <div className="simple-main">{ap.patient}</div>
                             <div className="simple-sub">
@@ -375,14 +456,14 @@ export default function ClinicDashboard() {
                             Loading appointments...
                           </td>
                         </tr>
-                      ) : appointments.length === 0 ? (
+                      ) : filteredAppointments.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="td-empty">
                             No appointments yet.
                           </td>
                         </tr>
                       ) : (
-                        appointments.slice(0, 6).map((ap) => (
+                        filteredAppointments.slice(0, 6).map((ap) => (
                           <tr key={ap.id}>
                             <td>
                               <div className="t-main">{ap.patient}</div>
@@ -428,11 +509,11 @@ export default function ClinicDashboard() {
               <div className="dash-panel-body dash-body-small right-small-box">
                 {loadingActivities ? (
                   <div className="box-empty">Loading...</div>
-                ) : activities.length === 0 ? (
+                ) : filteredActivities.length === 0 ? (
                   <div className="box-empty">No schedule summary.</div>
                 ) : (
                   <div className="simple-list compact">
-                    {activities.slice(0, 3).map((item) => (
+                    {filteredActivities.slice(0, 3).map((item) => (
                       <div key={item.id} className="simple-list-item">
                         <div className="simple-main">{item.text}</div>
                         <div className="simple-sub">{fmtDate(item.time)}</div>
@@ -460,14 +541,14 @@ export default function ClinicDashboard() {
                           Loading patients...
                         </td>
                       </tr>
-                    ) : patients.length === 0 ? (
+                    ) : filteredPatients.length === 0 ? (
                       <tr>
                         <td colSpan={2} className="td-empty">
                           No patients yet.
                         </td>
                       </tr>
                     ) : (
-                      patients.slice(0, 6).map((p) => (
+                      filteredPatients.slice(0, 6).map((p) => (
                         <tr key={p.id}>
                           <td>
                             <div className="t-main">{p.full_name}</div>
