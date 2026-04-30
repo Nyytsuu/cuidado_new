@@ -216,9 +216,14 @@ body {
   min-height: 520px;
   padding: 0;
   overflow: hidden;
-  background: #ffffff;
-  border: 5px solid #00bfa6;
   border-radius: 16px;
+  background: linear-gradient(
+    to bottom,
+    #bfbfbf 0,
+    #bfbfbf 78px,
+    #ffffff 78px,
+    #ffffff 100%
+  );
 }
 
 .admin-UserAppoint .admin-table-header {
@@ -246,18 +251,19 @@ body {
 }
 /* header */
 .admin-UserAppoint .users-header {
-  background: #bfbfbf;
+  background: rgb(16, 156, 133);
   border-bottom: 2px solid rgba(0, 0, 0, 0.10);
 }
 
 .admin-UserAppoint .users-header .users-cell {
-  color: #000;
-  font-size: 13.9px;
-  font-weight: 900;
+  color: white;
+  font-size: 16px !important;
+  font-weight: 700;
+  text-align: left;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
   white-space: nowrap;
-  padding: 14px 12px;
+  padding: 24px 18px;
+  border: none;
 }
 /* body rows */
 .admin-UserAppoint .users-row:not(.users-header) {
@@ -266,20 +272,16 @@ body {
 
 .admin-UserAppoint .users-row:not(.users-header) .users-cell {
   padding: 18px 12px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: #000;
   min-width: 0;
 }
 
-/* vertical dividers like first pic */
-.admin-UserAppoint .users-row .users-cell + .users-cell {
-  border-left: 1px solid rgba(0, 0, 0, 0.35);
-}
 
 /* name */
 .admin-UserAppoint .users-name {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   color: #000;
 }
@@ -455,7 +457,7 @@ body {
 }
 
 /* status colors */
-.admin-UserAppoint .pill-view { background: #5b5b5b; cursor: pointer; }
+.admin-UserAppoint .pill-view { background: rgb(16, 156, 133); cursor: pointer; }
 .admin-UserAppoint .pill-danger { background: #c62828; cursor: pointer; }
 .admin-UserAppoint .pill-success { background: #2e7d32; cursor: pointer; }
 .admin-UserAppoint .pill-warning { background: #b7791f; }
@@ -475,15 +477,30 @@ body {
   outline: none;
   box-shadow: none;
 }
+.admin-UserAppoint .users-header .users-cell:nth-child(1) {
+  padding-left: 24px;
+} 
+.admin-UserAppoint .users-header .users-cell:nth-child(2) {
+  padding-left: 19px;
+} 
+.admin-UserAppoint .users-header .users-cell:nth-child(3) {
+  padding-left: 19px;
+} 
 /* ACTIONS column header */
 .admin-UserAppoint .users-header .users-cell:last-child {
-  padding-left: 10px;
+  padding-left: 28px;
 }
-
+.admin-UserAppoint .users-header .users-cell:nth-child(5) {
+  padding-left: 19px;
+} 
+/* SERVICE header */
+.admin-UserAppoint .users-header .users-cell:nth-child(4) {
+  padding-left: 20px;   /* lower value = more left */
+}
 /* ACTIONS column body */
 .admin-UserAppoint .users-row:not(.users-header) .users-cell:last-child {
-  padding-left: 6px;
-  padding-right: 10px;
+  padding-left: 6px !important;
+  
 }
 
 /* mismo yung container ng button */

@@ -9,6 +9,8 @@ import logoutIcon from "../img/logout.png";
 import searchIcon from "../img/search.png";
 import appointmentIcon from "../img/appointment.png";
 import logo from "../img/logo.png";
+import appointmentIcon from "../img/appointment.png";
+
 
 
 interface SidebarProps {
@@ -66,6 +68,13 @@ export default function SidebarClinic({
             <Link to="/clinic/schedule">
               <img src={appointmentIcon} alt="Schedule" />
               <span>Schedule</span>
+            </Link>
+          </div>
+
+          <div className="sidebar-item">
+            <Link to="/clinic/appointments">
+              <img src={appointmentIcon} alt="Appointments" />
+              <span>Appointments</span>
             </Link>
           </div>
 
