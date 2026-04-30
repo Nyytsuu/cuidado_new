@@ -75,6 +75,11 @@ type BookingModalProps = {
   userId: number;
 };
 
+type ApiErrorResponse = {
+  message?: string;
+  error_detail?: string;
+};
+
 function parseDateTime(
   value: string | number | Date | null | undefined
 ): Date | null {
@@ -136,6 +141,28 @@ function formatDay(
 
 function toMySqlDateTime(date: string, time: string): string {
   return `${date} ${time}:00`;
+}
+
+function toDateInputValue(date: Date = new Date()): string {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function toTimeInputValue(date: Date = new Date()): string {
+  const hh = String(date.getHours()).padStart(2, "0");
+  const mm = String(date.getMinutes()).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
+function isPastAppointmentTime(date: string, time: string): boolean {
+  const selected = parseDateTime(`${date} ${time}:00`);
+  return !selected || selected.getTime() <= Date.now();
+}
+
+function getMinimumTimeForDate(date: string): string | undefined {
+  return date === toDateInputValue() ? toTimeInputValue() : undefined;
 }
 
 function addMinutes(date: string, time: string, minutes: number): string {
@@ -352,6 +379,11 @@ function BookingModal({
         return;
       }
 
+      if (isPastAppointmentTime(appointmentDate, appointmentTime)) {
+        setError("Please choose a future date and time.");
+        return;
+      }
+
       if (!patientName.trim() || !patientPhone.trim()) {
         setError("Please enter your name and phone number.");
         return;
@@ -407,7 +439,7 @@ function BookingModal({
       console.log("BOOK STATUS:", res.status);
       console.log("BOOK RAW RESPONSE:", rawText);
 
-      let data: any = null;
+      let data: ApiErrorResponse | null = null;
       try {
         data = rawText ? JSON.parse(rawText) : null;
       } catch {
@@ -537,6 +569,7 @@ function BookingModal({
             <input
               type="date"
               value={appointmentDate}
+              min={toDateInputValue()}
               onChange={(e) => setAppointmentDate(e.target.value)}
               disabled={submitting}
             />
@@ -547,6 +580,7 @@ function BookingModal({
             <input
               type="time"
               value={appointmentTime}
+              min={getMinimumTimeForDate(appointmentDate)}
               onChange={(e) => setAppointmentTime(e.target.value)}
               disabled={submitting}
             />
@@ -950,6 +984,10 @@ function UserAppointmentsContent() {
 
       if (!rescheduleDate || !rescheduleTime) {
         throw new Error("Please select date and time.");
+      }
+
+      if (isPastAppointmentTime(rescheduleDate, rescheduleTime)) {
+        throw new Error("Please choose a future date and time.");
       }
 
       const startAt = toMySqlDateTime(rescheduleDate, rescheduleTime);
@@ -1399,23 +1437,6 @@ function UserAppointmentsContent() {
                   ))}
                 </div>
               )}
-
-              {activeTab !== "calendar" && (
-                <button
-                  className="view-all-btn"
-                  type="button"
-                  onClick={() => {
-                    setActiveTab("calendar");
-                    setShowAllAppointments(true);
-                    setSearchTerm("");
-                    setStatusFilter("all");
-                    setClinicFilter("all");
-                    setSortOrder("asc");
-                  }}
-                >
-                  View All Appointments →
-                </button>
-              )}
             </div>
 
             {actionMessage && <div className="booking-success">{actionMessage}</div>}
@@ -1632,20 +1653,22 @@ function UserAppointmentsContent() {
             <div className="booking-form-grid">
               <div className="booking-field">
                 <label>Date</label>
-                <input
-                  type="date"
-                  value={rescheduleDate}
-                  onChange={(e) => setRescheduleDate(e.target.value)}
-                />
+                  <input
+                    type="date"
+                    value={rescheduleDate}
+                    min={toDateInputValue()}
+                    onChange={(e) => setRescheduleDate(e.target.value)}
+                  />
               </div>
 
               <div className="booking-field">
                 <label>Time</label>
-                <input
-                  type="time"
-                  value={rescheduleTime}
-                  onChange={(e) => setRescheduleTime(e.target.value)}
-                />
+                  <input
+                    type="time"
+                    value={rescheduleTime}
+                    min={getMinimumTimeForDate(rescheduleDate)}
+                    onChange={(e) => setRescheduleTime(e.target.value)}
+                  />
               </div>
             </div>
 

@@ -17,12 +17,15 @@ export default function Signin() {
     try {
       const data = await login(email, password);
       localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.user.role);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("userId", String(data.user.id));
 
       if (data.user.role === "admin") navigate("/admin");
-      else if (data.user.role === "clinic") navigate("/clinic");
+      else if (data.user.role === "clinic") navigate("/clinic/dashboard");
       else navigate("/dashboard");
-    } catch (err: any) {
-      alert(err.message || "Login failed");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Login failed");
     } finally {
       setLoading(false);
     }

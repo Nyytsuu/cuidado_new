@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./UserProfile.css";
 import UserSidebar from "../Categories/UserSidebar";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import micIcon from "../img/mic.png";
 import profileImg from "../img/profile1.jpg";
+import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
 
 const menuItems = [
   { label: "Home", icon: "⌂" },
@@ -25,21 +26,6 @@ type VoiceStep =
   | "retry"
   | "unsupported";
 
-type PossibleCondition = {
-  name: string;
-  score: number;
-  matchedSymptoms: string[];
-};
-
-type SymptomResult = {
-  transcript: string;
-  symptoms: string[];
-  possible_conditions: PossibleCondition[];
-  urgency: "low" | "medium" | "high";
-  advice: string;
-  emergency: boolean;
-};
-
 type ProfileData = {
   id: number;
   full_name: string | null;
@@ -56,6 +42,10 @@ type ProfileData = {
   province_name?: string | null;
   municipality_name?: string | null;
   barangay_name?: string | null;
+};
+
+type ProfileResponse = ProfileData & {
+  message?: string;
 };
 
 type Province = {
@@ -106,10 +96,10 @@ interface SpeechRecognition extends EventTarget {
   start: () => void;
   stop: () => void;
   abort: () => void;
-  onstart: ((this: SpeechRecognition, ev: Event) => any) | null;
-  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEventLike) => any) | null;
-  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEventLike) => any) | null;
-  onend: ((this: SpeechRecognition, ev: Event) => any) | null;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
 }
 
 export default function UserProfile() {
@@ -127,8 +117,6 @@ export default function UserProfile() {
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
-
-  const [profile, setProfile] = useState<ProfileData | null>(null);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -166,152 +154,14 @@ export default function UserProfile() {
     };
   }, []);
 
-  const CONDITION_DB = [
-    {
-      name: "Common Cold",
-      symptoms: ["cough", "sore throat", "runny nose", "sneezing", "mild fever", "congestion"],
-      urgency: "low" as const,
-      advice: "Rest, drink fluids, and monitor symptoms.",
-    },
-    {
-      name: "Flu",
-      symptoms: ["fever", "cough", "body ache", "fatigue", "headache", "chills", "sore throat"],
-      urgency: "medium" as const,
-      advice: "Rest, hydrate, and consult a doctor if symptoms worsen.",
-    },
-    {
-      name: "COVID-19",
-      symptoms: [
-        "fever",
-        "cough",
-        "fatigue",
-        "headache",
-        "sore throat",
-        "loss of taste",
-        "loss of smell",
-        "shortness of breath",
-      ],
-      urgency: "medium" as const,
-      advice: "Isolate if needed and seek medical advice, especially for breathing issues.",
-    },
-    {
-      name: "Dengue",
-      symptoms: ["high fever", "headache", "body ache", "joint pain", "rash", "nausea"],
-      urgency: "high" as const,
-      advice: "Seek medical attention promptly, especially if fever is persistent.",
-    },
-    {
-      name: "Asthma Attack",
-      symptoms: ["shortness of breath", "wheezing", "chest tightness", "cough"],
-      urgency: "high" as const,
-      advice: "Use prescribed medication and seek urgent care if breathing is difficult.",
-    },
-    {
-      name: "Migraine",
-      symptoms: ["headache", "nausea", "light sensitivity", "vomiting"],
-      urgency: "low" as const,
-      advice: "Rest in a quiet room and consult a doctor for recurring severe headaches.",
-    },
-    {
-      name: "Food Poisoning",
-      symptoms: ["vomiting", "diarrhea", "nausea", "stomach pain", "fever"],
-      urgency: "medium" as const,
-      advice: "Drink fluids to avoid dehydration and seek care if symptoms are severe.",
-    },
-  ];
-
-  const KNOWN_SYMPTOMS = [
-    "high fever",
-    "mild fever",
-    "fever",
-    "cough",
-    "sore throat",
-    "runny nose",
-    "sneezing",
-    "congestion",
-    "body ache",
-    "fatigue",
-    "headache",
-    "chills",
-    "loss of taste",
-    "loss of smell",
-    "shortness of breath",
-    "wheezing",
-    "chest tightness",
-    "joint pain",
-    "rash",
-    "nausea",
-    "vomiting",
-    "diarrhea",
-    "stomach pain",
-    "light sensitivity",
-  ];
-
-  const extractSymptoms = (transcript: string) => {
-    const lower = transcript.toLowerCase();
-    return KNOWN_SYMPTOMS.filter((symptom) => lower.includes(symptom));
-  };
-
-  const analyzeSymptomsLocally = (transcript: string): SymptomResult => {
-    const detectedSymptoms = extractSymptoms(transcript);
-
-    const ranked = CONDITION_DB.map((condition) => {
-      const matchedSymptoms = condition.symptoms.filter((symptom) =>
-        detectedSymptoms.includes(symptom)
-      );
-
-      const score =
-        condition.symptoms.length > 0
-          ? matchedSymptoms.length / condition.symptoms.length
-          : 0;
-
-      return {
-        name: condition.name,
-        score,
-        matchedSymptoms,
-        urgency: condition.urgency,
-        advice: condition.advice,
-      };
-    })
-      .filter((condition) => condition.score > 0)
-      .sort((a, b) => b.score - a.score);
-
-    const top = ranked[0];
-
-    const emergency =
-      detectedSymptoms.includes("shortness of breath") ||
-      detectedSymptoms.includes("chest tightness") ||
-      detectedSymptoms.includes("high fever");
-
-    const urgency: "low" | "medium" | "high" = emergency ? "high" : top?.urgency || "low";
-
-    const advice = emergency
-      ? "Seek urgent medical attention immediately."
-      : top?.advice || "Please consult a healthcare professional.";
-
-    return {
-      transcript,
-      symptoms: detectedSymptoms,
-      possible_conditions: ranked.map((item) => ({
-        name: item.name,
-        score: item.score,
-        matchedSymptoms: item.matchedSymptoms,
-      })),
-      urgency,
-      advice,
-      emergency,
-    };
-  };
-
   const analyzeVoiceSymptoms = async (transcript: string) => {
     try {
       setVoiceStep("processing");
       setVoiceError("");
       setSymptomResult(null);
+      setVoiceTranscript(transcript);
 
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      const result = analyzeSymptomsLocally(transcript);
+      const result = await analyzeVoiceTranscript(transcript, userId || null);
 
       setSymptomResult(result);
       setVoiceStep("result");
@@ -370,6 +220,7 @@ export default function UserProfile() {
 
   const closeVoicePopup = () => {
     recognitionRef.current?.abort();
+    recognitionRef.current = null;
     setVoicePopupOpen(false);
     setVoiceStep("idle");
     setVoiceTranscript("");
@@ -389,6 +240,8 @@ export default function UserProfile() {
       setVoiceStep("unsupported");
       return;
     }
+
+    recognitionRef.current?.abort();
 
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
@@ -417,14 +270,13 @@ export default function UserProfile() {
     };
 
     recognition.onerror = (event) => {
-      setVoiceError(event.error || "Speech recognition failed.");
-      setVoiceStep("retry");
-    };
+      const errorMessage =
+        event.error === "network"
+          ? "Speech recognition could not connect. Please try again, or use the full Voice Assistant page."
+          : event.error || "Speech recognition failed.";
 
-    recognition.onend = () => {
-      if (!voiceTranscript && voiceStep === "listening") {
-        setVoiceStep("retry");
-      }
+      setVoiceError(errorMessage);
+      setVoiceStep("retry");
     };
 
     recognition.start();
@@ -482,13 +334,12 @@ export default function UserProfile() {
       await loadProvinces();
 
       const res = await fetch(`http://localhost:5000/api/users/${userId}/profile`);
-      const data: ProfileData = await res.json();
+      const data: ProfileResponse = await res.json();
 
       if (!res.ok) {
-        throw new Error((data as any).message || "Failed to load profile.");
+        throw new Error(data.message || "Failed to load profile.");
       }
 
-      setProfile(data);
       setFullName(data.full_name || "");
       setEmail(data.email || "");
       setPhone(data.phone || "");

@@ -16,6 +16,7 @@ const adminSymptomsRoutes = require("./routes/admin.symptoms.routes");
 const adminConditionSymptomsRoutes = require("./routes/admin.conditionSymptoms.routes");
 const appointmentRoutes = require("./routes/appointments");
 const symptomCheckerRoute = require("./routes/symptomChecker");
+const voiceAssistantRoute = require("./routes/voiceAssistant");
 const findClinicRoute = require("./routes/findClinic");
 const usersRouter = require("./routes/users");
 const articlesRouter = require("./routes/articles");
@@ -1048,6 +1049,7 @@ app.use("/api/admin/conditions", adminConditionsRoutes);
 app.use("/api/admin/symptoms", adminSymptomsRoutes);
 app.use("/api/admin/condition-symptoms", adminConditionSymptomsRoutes);
 app.use("/api/symptom-checker", symptomCheckerRoute);
+app.use("/api/voice-assistant", voiceAssistantRoute);
 app.use("/api/users", usersRouter);
 app.use("/api/articles", articlesRouter);
 
