@@ -297,7 +297,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className={`ad-wrap ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    /* ✅ USE SAME WRAPPER AS APPOINTMENT */
+    <div className={`admin-UserAppoint with-sidebar ${sidebarExpanded ? "expanded" : ""}`}>
       <SidebarAdmin
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -305,7 +306,10 @@ export default function AdminDashboard() {
         setProfileOpen={setProfileOpen}
       />
 
-      <main className="ad-main">
+      {/* ✅ USE SAME MAIN CLASS */}
+      <main className="preview-canvas">
+
+        {/* ✅ HEADER (EXACT SAME STRUCTURE) */}
         <header className="app-header">
           <div className="header-left">
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />
@@ -317,7 +321,7 @@ export default function AdminDashboard() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
-              <button aria-label="Search" type="button" className="search-btn">
+              <button type="button" className="search-btn">
                 <img src={searchIcon} alt="Search" />
               </button>
             </div>
@@ -327,6 +331,7 @@ export default function AdminDashboard() {
             <Link className="nav-link" to="/admin/dashboard">
               Home
             </Link>
+
             <Link className="nav-link" to="/admin/appointments">
               Appointments
             </Link>
@@ -343,14 +348,7 @@ export default function AdminDashboard() {
               <div className="profile-dropdown">
                 <Link to="/admin/profile">My Profile</Link>
                 <Link to="/admin/settings">Settings</Link>
-
-                <button
-                  type="button"
-                  className="dropdown-logout"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
+                <button className="dropdown-logout">Logout</button>
               </div>
             </div>
           </nav>

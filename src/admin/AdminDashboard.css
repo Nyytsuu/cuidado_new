@@ -6,6 +6,13 @@
   box-sizing: border-box;
 }
 
+:root {
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+  --header-height: 55px;
+  --sidebar-bg: #399a91;
+}
+
 html,
 body,
 #root {
@@ -22,28 +29,38 @@ body,
 /* ================= WRAPPER ================= */
 .ad-wrap {
   min-height: 100vh;
-  width: 100vw;
+  width: 100%; /* FIX */
   display: flex;
-  padding: 25px 50px 25px 25px;
+  padding-left: var(--sidebar-width-collapsed);
 }
 
 /* ================= MAIN ================= */
 .ad-main {
   flex: 1;
   margin: 16px;
-  margin-top: 80px;
-  padding: 14px 15px 24px 70px;
+  margin-top: calc(var(--header-height) + 20px);
+  padding: 14px 15px 24px 24px;
   border-radius: 16px;
   background: #ffffff;
   display: flex;
   flex-direction: column;
 }
 
+
+
+.preview-canvas .dash-layout {
+  margin-top: calc(var(--header-height) + 20px);
+  width: 100%;
+  overflow-x: auto;
+}
 /* ================= LAYOUT ================= */
 .dash-layout {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 25px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  width: 100%;
+  max-width: 1600px;     /* 👈 controls total width */
+  margin: 0 auto;        /* 👈 centers it */
 }
 
 /* ================= LEFT SIDE ================= */
@@ -659,4 +676,80 @@ body,
 /* MOVE USERS / PATIENTS SECTION UP */
 .dash-left > :nth-child(2) {
   margin-top: -60px;
+}
+
+/* ================= HEADER (EXACT MATCH APPOINTMENT) ================= */
+.app-header {
+  background: var(--sidebar-bg);
+  height: var(--header-height);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width-collapsed);
+  right: 0;
+  z-index: 999;
+
+  padding: 0 24px;
+}
+
+/* LEFT SIDE */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 24px; /* FIX: smaller gap like appointment */
+}
+
+/* LOGO */
+.brand-logo {
+  width: 120px;
+  height: auto;
+  position: static; /* FIX: remove offset */
+}
+
+/* SEARCH BAR */
+.header-search {
+  display: flex;
+  align-items: center;
+  background: #f1f5f4;
+  border-radius: 999px;
+  padding: 4px 10px;
+  width: 260px;
+}
+
+.header-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-size: 14px;
+  padding: 6px;
+}
+
+.search-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.search-btn img {
+  width: 16px;
+  height: 16px;
+}
+
+/* RIGHT NAV */
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 40px; /* FIX: tighter spacing */
+}
+
+.nav-link {
+  color: #0f4242;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
 }
