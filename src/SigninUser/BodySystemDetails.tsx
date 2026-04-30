@@ -228,6 +228,9 @@ export default function BodySystemDetails() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search health topics..."
       />
 
       <div className="browse-page-content">

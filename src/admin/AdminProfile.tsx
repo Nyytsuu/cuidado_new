@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import profile from "../img/profile1.jpg";
 import "./AdminProfile.css";
 import SidebarAdmin from "./SidebarAdmin";
@@ -9,6 +9,7 @@ function AdminProfile() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const [q, setQ] = useState("");
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -36,6 +37,17 @@ function AdminProfile() {
     setIsEditing(false);
   };
 
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const keyword = q.trim();
+    const browserFind = (window as Window & { find?: (query: string) => boolean }).find;
+
+    if (keyword && browserFind) {
+      browserFind(keyword);
+    }
+  };
+
   return (
     <>
       <SidebarAdmin
@@ -49,12 +61,17 @@ function AdminProfile() {
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-          <div className="header-search">
-            <input type="text" placeholder="Search keywords..." />
-            <button aria-label="Search" type="button" className="search-btn">
+          <form className="header-search" onSubmit={handleSearch}>
+            <input
+              type="text"
+              placeholder="Search profile..."
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+            />
+            <button aria-label="Search" type="submit" className="search-btn">
               <img src={searchIcon} alt="Search" />
             </button>
-          </div>
+          </form>
         </div>
 
         <nav className="header-nav">

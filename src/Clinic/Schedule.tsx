@@ -80,8 +80,34 @@ export default function Schedule() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const rows = useMemo(() => schedule, [schedule]);
+  const rows = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+
+    if (!keyword) return schedule;
+
+    return schedule.filter((item) =>
+      [
+        item.day,
+        item.working ? "open" : "closed",
+        item.open,
+        item.close,
+      ].some((value) => value.toLowerCase().includes(keyword))
+    );
+  }, [schedule, searchTerm]);
+
+  const visibleBlockedDates = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+
+    if (!keyword) return blockedDates;
+
+    return blockedDates.filter((item) =>
+      [item.date, item.reason].some((value) =>
+        value.toLowerCase().includes(keyword)
+      )
+    );
+  }, [blockedDates, searchTerm]);
 
   const loadSchedule = useCallback(async () => {
     try {
@@ -235,6 +261,9 @@ export default function Schedule() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search schedule..."
       />
 
       <main className="preview-canvas">
@@ -242,12 +271,17 @@ export default function Schedule() {
           <div className="header-left">
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-            <div className="header-search">
-              <input type="text" placeholder="Search keywords..." />
-              <button aria-label="Search" type="button" className="search-btn">
+            <form className="header-search" onSubmit={(event) => event.preventDefault()}>
+              <input
+                type="text"
+                placeholder="Search schedule..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+              <button aria-label="Search" type="submit" className="search-btn">
                 <img src={searchIcon} alt="Search" />
               </button>
-            </div>
+            </form>
           </div>
 
           <nav className="header-nav">
@@ -298,54 +332,62 @@ export default function Schedule() {
                     <div className="users-cell">Actions</div>
                   </div>
 
-                  {rows.map((row) => (
-                    <div className="users-row schedule-row" key={row.day}>
-                      <div className="users-cell users-name">{row.day}</div>
-
-                      <div className="users-cell">
-                        <span className={`pill ${row.working ? "pill-success" : "pill-gray"}`}>
-                          {row.working ? "Open" : "Closed"}
-                        </span>
-                      </div>
-
-                      <div className="users-cell">
-                        <input
-                          className="time-input"
-                          type="time"
-                          value={row.open}
-                          disabled={!row.working || loading || saving}
-                          onChange={(event) =>
-                            changeHours(row.day, "open", event.target.value)
-                          }
-                        />
-                      </div>
-
-                      <div className="users-cell">
-                        <input
-                          className="time-input"
-                          type="time"
-                          value={row.close}
-                          disabled={!row.working || loading || saving}
-                          onChange={(event) =>
-                            changeHours(row.day, "close", event.target.value)
-                          }
-                        />
-                      </div>
-
-                      <div className="users-cell">
-                        <div className="users-actions">
-                          <button
-                            type="button"
-                            className="pill pill-view"
-                            disabled={loading || saving}
-                            onClick={() => toggleWorkingDay(row.day)}
-                          >
-                            {row.working ? "Set Closed" : "Set Open"}
-                          </button>
-                        </div>
+                  {rows.length === 0 ? (
+                    <div className="users-row schedule-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        No schedule days match your search.
                       </div>
                     </div>
-                  ))}
+                  ) : (
+                    rows.map((row) => (
+                      <div className="users-row schedule-row" key={row.day}>
+                        <div className="users-cell users-name">{row.day}</div>
+
+                        <div className="users-cell">
+                          <span className={`pill ${row.working ? "pill-success" : "pill-gray"}`}>
+                            {row.working ? "Open" : "Closed"}
+                          </span>
+                        </div>
+
+                        <div className="users-cell">
+                          <input
+                            className="time-input"
+                            type="time"
+                            value={row.open}
+                            disabled={!row.working || loading || saving}
+                            onChange={(event) =>
+                              changeHours(row.day, "open", event.target.value)
+                            }
+                          />
+                        </div>
+
+                        <div className="users-cell">
+                          <input
+                            className="time-input"
+                            type="time"
+                            value={row.close}
+                            disabled={!row.working || loading || saving}
+                            onChange={(event) =>
+                              changeHours(row.day, "close", event.target.value)
+                            }
+                          />
+                        </div>
+
+                        <div className="users-cell">
+                          <div className="users-actions">
+                            <button
+                              type="button"
+                              className="pill pill-view"
+                              disabled={loading || saving}
+                              onClick={() => toggleWorkingDay(row.day)}
+                            >
+                              {row.working ? "Set Closed" : "Set Open"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </section>
 
@@ -391,11 +433,11 @@ export default function Schedule() {
                   </div>
 
                   <div className="blocked-list">
-                    {blockedDates.length === 0 && (
+                    {visibleBlockedDates.length === 0 && (
                       <div className="blocked-empty">No blocked dates.</div>
                     )}
 
-                    {blockedDates.map((item) => (
+                    {visibleBlockedDates.map((item) => (
                       <div className="blocked-item" key={item.id}>
                         <div className="blocked-left">
                           <div className="blocked-date">{item.date}</div>

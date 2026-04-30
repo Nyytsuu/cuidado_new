@@ -72,6 +72,17 @@ export default function Cardio() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const query = search.trim().toLowerCase();
+  const matches = (...values: string[]) =>
+    !query || values.some((value) => value.toLowerCase().includes(query));
+  const filteredBodySystems = bodySystems.filter((item) => matches(item.title));
+  const filteredQuickActions = quickActions.filter((item) => matches(item.label));
+  const filteredDiseaseList = diseaseList.filter((item) =>
+    matches(item.title, item.desc)
+  );
+  const filteredRelatedArticles = relatedArticles.filter((item) => matches(item));
+  const filteredSymptoms = symptoms.filter((item) => matches(item));
+  const filteredPreventionTips = preventionTips.filter((item) => matches(item));
 
   return (
     <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -82,6 +93,9 @@ export default function Cardio() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search health topics..."
       />
 
       <div className="browse-page-content">
@@ -105,7 +119,7 @@ export default function Cardio() {
               <div className="left-card">
                 <h3 className="left-section-title">Body System</h3>
                 <div className="menu-list">
-                  {bodySystems.map((item) => (
+                  {filteredBodySystems.map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -124,7 +138,7 @@ export default function Cardio() {
               <div className="left-card">
                 <h3 className="left-section-title">What are you looking?</h3>
                 <div className="menu-list">
-                  {quickActions.map((item) => (
+                  {filteredQuickActions.map((item) => (
                     <button
                       key={item.id}
                       type="button"
@@ -189,7 +203,7 @@ export default function Cardio() {
                   <div className="related-card">
                     <h3>Related Articles</h3>
                     <div className="related-list">
-                      {relatedArticles.map((item) => (
+                      {filteredRelatedArticles.map((item) => (
                         <button key={item} type="button" className="related-item">
                           <span>{item}</span>
                           <span>›</span>
@@ -205,7 +219,7 @@ export default function Cardio() {
                   <h2>Common Heart Diseases</h2>
 
                   <div className="disease-list">
-                    {diseaseList.map((item) => (
+                    {filteredDiseaseList.map((item) => (
                       <button key={item.id} type="button" className="disease-item">
                         <div className="disease-left">
                           <div className="disease-icon">{item.icon}</div>
@@ -232,7 +246,7 @@ export default function Cardio() {
                   <div className="symptoms-card">
                     <h3>Symptoms of Heart Problems</h3>
                     <ul>
-                      {symptoms.map((item) => (
+                      {filteredSymptoms.map((item) => (
                         <li key={item}>{item}</li>
                       ))}
                     </ul>
@@ -245,7 +259,7 @@ export default function Cardio() {
                   <div className="prevention-card">
                     <h3>Prevention Tips</h3>
                     <ul>
-                      {preventionTips.map((item) => (
+                      {filteredPreventionTips.map((item) => (
                         <li key={item}>{item}</li>
                       ))}
                     </ul>

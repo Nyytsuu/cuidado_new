@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./services.css";
 import SidebarClinic from "./SidebarClinic";
+import ClinicScheduleAside from "./ClinicScheduleAside";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 
@@ -39,9 +40,31 @@ const emptyForm: ServiceForm = {
   enabled: true,
 };
 
+const getStoredClinicId = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (user?.role === "clinic" && user?.id) {
+      return Number(user.id);
+    }
+
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+
+    if (role === "clinic" && userId) {
+      return Number(userId);
+    }
+  } catch {
+    return 1;
+  }
+
+  return 1;
+};
+
 export default function Services() {
   const API = "http://localhost:5000/api";
-  const clinicId = 1; // TODO: replace with logged-in clinic id
+  const clinicId = useMemo(() => getStoredClinicId(), []);
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -65,7 +88,7 @@ const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
    const [validationPopup, setValidationPopup] = useState<string | null>(null);
 
 
-  const loadServices = async () => {
+  const loadServices = useCallback(async () => {
     try {
       setLoadingServices(true);
 
@@ -97,11 +120,11 @@ const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     } finally {
       setLoadingServices(false);
     }
-  };
+  }, [API, clinicId]);
 
   useEffect(() => {
     loadServices();
-  }, []);
+  }, [loadServices]);
 
   const rows = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -234,34 +257,6 @@ setTimeout(() => {
     }
   };
 
-  const deleteService = async (id: string) => {
-    const confirmed = window.confirm("Are you sure you want to delete this service?");
-    if (!confirmed) return;
-
-    try {
-      const res = await fetch(`${API}/clinic/services/${id}`, {
-        method: "DELETE",
-      });
-
-      const raw = await res.text();
-      console.log("Delete service response:", res.status, raw);
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} - ${raw}`);
-      }
-
-      setServices((prev) => prev.filter((service) => service.id !== id));
-      setShowDeleteSuccess(true);
-
-setTimeout(() => {
-  setShowDeleteSuccess(false);
-}, 2500);
-    } catch (error) {
-      console.error("Delete service error:", error);
-      alert(`Failed to delete service: ${String(error)}`);
-    }
-  };
-
   const toggleService = async (id: string) => {
   const target = services.find((service) => service.id === id);
   if (!target) return;
@@ -337,6 +332,9 @@ const confirmDeleteService = async () => {
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search services..."
       />
 
       <main className="preview-canvas">
@@ -490,17 +488,7 @@ const confirmDeleteService = async () => {
                 </div>
               </section>
 
-              <aside className="admin-right">
-                <div className="admin-card admin-right-card small-card">
-                  <h3>Service Tips</h3>
-                  <p>Manage clinic services here using add, edit, delete, and status actions.</p>
-                </div>
-
-                <div className="admin-card admin-right-card big-card">
-                  <h3>Note</h3>
-                  <p>Services can now be created and updated using the popup form.</p>
-                </div>
-              </aside>
+              <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
             </div>
           </div>
         </section>

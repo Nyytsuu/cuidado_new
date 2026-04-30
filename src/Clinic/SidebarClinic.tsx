@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import "./SidebarClinic.css";
 import { Link } from "react-router-dom";
 import dashboardIcon from "../img/dashboard.png";
@@ -9,7 +9,6 @@ import logoutIcon from "../img/logout.png";
 import searchIcon from "../img/search.png";
 import appointmentIcon from "../img/appointment.png";
 import logo from "../img/logo.png";
-import appointmentIcon from "../img/appointment.png";
 
 
 
@@ -20,6 +19,10 @@ interface SidebarProps {
   setProfileOpen: Dispatch<SetStateAction<boolean>>;
   headerProfileOpen?: boolean;
   setHeaderProfileOpen?: Dispatch<SetStateAction<boolean>>;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  onSearchSubmit?: (value: string) => void;
 }
 
 export default function SidebarClinic({
@@ -28,7 +31,27 @@ export default function SidebarClinic({
   setProfileOpen,
   headerProfileOpen = false,
   setHeaderProfileOpen = () => {},
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Search keywords...",
+  onSearchSubmit,
 }: SidebarProps) {
+  const [internalSearch, setInternalSearch] = useState("");
+  const currentSearch = searchValue ?? internalSearch;
+
+  const handleSearchChange = (value: string) => {
+    if (searchValue === undefined) {
+      setInternalSearch(value);
+    }
+
+    onSearchChange?.(value);
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSearchSubmit?.(currentSearch.trim());
+  };
+
   return (
     <div className="SidebarClinic">
       <aside className={`sidebar ${sidebarExpanded ? "expanded" : ""}`}>
@@ -112,12 +135,17 @@ export default function SidebarClinic({
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-          <div className="header-search">
-            <input type="text" placeholder="Search keywords..." />
-            <button aria-label="Search" type="button" className="search-btn">
+          <form className="header-search" onSubmit={handleSearchSubmit}>
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={currentSearch}
+              onChange={(event) => handleSearchChange(event.target.value)}
+            />
+            <button aria-label="Search" type="submit" className="search-btn">
               <img src={searchIcon} alt="Search" />
             </button>
-          </div>
+          </form>
         </div>
 
         <nav className="header-nav">

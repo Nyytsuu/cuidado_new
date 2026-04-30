@@ -1,11 +1,10 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import "./UserSidebar.css";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   House,
   CalendarDays,
   Stethoscope,
-  ChartColumn,
   Brain,
   MapPin,
   Scale,
@@ -32,18 +31,27 @@ interface SidebarProps {
   setProfileOpen: Dispatch<SetStateAction<boolean>>;
   headerProfileOpen: boolean;
   setHeaderProfileOpen: Dispatch<SetStateAction<boolean>>;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
+  onSearchSubmit?: (value: string) => void;
 }
 
 export default function UserSidebar({
   sidebarExpanded,
   setSidebarExpanded,
-  profileOpen,
   setProfileOpen,
   headerProfileOpen,
   setHeaderProfileOpen,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Search...",
+  onSearchSubmit,
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [internalSearch, setInternalSearch] = useState("");
+  const currentSearch = searchValue ?? internalSearch;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -52,6 +60,29 @@ export default function UserSidebar({
   };
 
   const isPathActive = (path: string) => location.pathname === path;
+
+  const handleSearchChange = (value: string) => {
+    if (searchValue === undefined) {
+      setInternalSearch(value);
+    }
+
+    onSearchChange?.(value);
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const keyword = currentSearch.trim();
+
+    if (onSearchSubmit) {
+      onSearchSubmit(keyword);
+      return;
+    }
+
+    if (keyword) {
+      navigate(`/browse-health?search=${encodeURIComponent(keyword)}`);
+    }
+  };
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -205,12 +236,17 @@ export default function UserSidebar({
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
-          <div className="header-search">
-            <input type="text" placeholder="Search..." />
-            <button aria-label="Search" type="button" className="search-btn">
+          <form className="header-search" onSubmit={handleSearchSubmit}>
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={currentSearch}
+              onChange={(event) => handleSearchChange(event.target.value)}
+            />
+            <button aria-label="Search" type="submit" className="search-btn">
               <img src={searchIcon} alt="Search" />
             </button>
-          </div>
+          </form>
         </div>
 
         <nav className="header-nav">

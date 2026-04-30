@@ -75,6 +75,11 @@ type BookingModalProps = {
   userId: number;
 };
 
+type UserAppointmentsContentProps = {
+  searchTerm: string;
+  setSearchTerm: (value: string) => void;
+};
+
 type ApiErrorResponse = {
   message?: string;
   error_detail?: string;
@@ -678,7 +683,10 @@ function BookingModal({
   );
 }
 
-function UserAppointmentsContent() {
+function UserAppointmentsContent({
+  searchTerm,
+  setSearchTerm,
+}: UserAppointmentsContentProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -710,7 +718,6 @@ function UserAppointmentsContent() {
     "all" | "pending" | "confirmed" | "cancelled" | "completed" | "no_show"
   >("all");
   const [clinicFilter, setClinicFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const [calendarDate, setCalendarDate] = useState(() => {
@@ -1757,6 +1764,7 @@ export default function UserAppointments() {
   const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(false);
   const [profileOpen, setProfileOpen] = useState<boolean>(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -1767,10 +1775,16 @@ export default function UserAppointments() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search appointments..."
       />
 
       <main className="page-content">
-        <UserAppointmentsContent />
+        <UserAppointmentsContent
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+        />
       </main>
     </div>
   );

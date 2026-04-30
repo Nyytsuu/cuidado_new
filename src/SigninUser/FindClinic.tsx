@@ -131,13 +131,13 @@ export default function FindClinic() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successPopupMessage, setSuccessPopupMessage] = useState("");
 
-  const fetchClinics = async () => {
+  const fetchClinics = async (searchOverride = search) => {
     try {
       setLoading(true);
       setError("");
 
       const params = new URLSearchParams();
-      if (search) params.append("search", search);
+      if (searchOverride) params.append("search", searchOverride);
       if (specialization !== "All") params.append("specialization", specialization);
       if (openNow) params.append("openNow", "true");
 
@@ -449,6 +449,10 @@ if (!res.ok) {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search clinics..."
+        onSearchSubmit={(value) => fetchClinics(value)}
       />
 
       <div className="findclinic-content">
@@ -493,7 +497,7 @@ if (!res.ok) {
                 <ChevronDown size={14} className="fc-select-arrow" />
               </div>
 
-              <button type="button" className="fc-search-btn" onClick={fetchClinics}>
+              <button type="button" className="fc-search-btn" onClick={() => fetchClinics()}>
                 {loading ? "Searching..." : "Search"}
               </button>
             </div>

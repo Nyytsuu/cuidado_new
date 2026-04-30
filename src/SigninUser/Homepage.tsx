@@ -167,6 +167,10 @@ export default function Homepage() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search health topics..."
+        onSearchSubmit={(value) => loadArticles(value || "health")}
       />
 
       <div className="homepage-content">
