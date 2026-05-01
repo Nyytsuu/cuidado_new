@@ -3,6 +3,7 @@ import "./Schedule.css";
 import SidebarClinic from "./SidebarClinic";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
+import { useNavigate } from "react-router-dom";
 
 type DayKey =
   | "Monday"
@@ -78,9 +79,25 @@ export default function Schedule() {
   const [blockedReason, setBlockedReason] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [toast, setToast] = useState<{
+  type: "success" | "error" | "warning";
+  message: string;
+} | null>(null);
+useEffect(() => {
+  if (!toast) return;
+
+  const timer = setTimeout(() => setToast(null), 2500);
+  return () => clearTimeout(timer);
+}, [toast]);
   const [searchTerm, setSearchTerm] = useState("");
+   
+
+   // logout
+   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+const navigate = useNavigate();
+
+
 
   const rows = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -177,9 +194,15 @@ export default function Schedule() {
         setSchedule(data.schedule);
       }
 
-      setMessage(data.message || "Clinic schedule updated.");
+     setToast({
+  type: "success",
+  message: data.message || "Schedule saved successfully",
+});
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save clinic schedule.");
+     setToast({
+  type: "error",
+  message: err instanceof Error ? err.message : "Failed to save schedule",
+});
     } finally {
       setSaving(false);
     }
@@ -215,10 +238,16 @@ export default function Schedule() {
 
       setBlockedDate("");
       setBlockedReason("");
-      setMessage(data.message || "Blocked date saved.");
+   setToast({
+  type: "success",
+  message: data.message || "Blocked date added",
+});
       await loadSchedule();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save blocked date.");
+      setToast({
+  type: "error",
+  message: err instanceof Error ? err.message : "Failed to add blocked date",
+});
     } finally {
       setSaving(false);
     }
@@ -244,13 +273,19 @@ export default function Schedule() {
       }
 
       setBlockedDates((prev) => prev.filter((item) => item.id !== id));
-      setMessage(data.message || "Blocked date removed.");
+     setToast({
+  type: "success",
+  message: data.message || "Blocked date removed",
+});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to remove blocked date.");
     } finally {
       setSaving(false);
     }
   };
+
+  const [message, setMessage] = useState("");
+const [error, setError] = useState("");
 
   return (
     <div className="Schedule with-sidebar">
@@ -304,7 +339,15 @@ export default function Schedule() {
               <div className="profile-dropdown">
                 <a href="/clinic/profile">My Profile</a>
                 <a href="/clinic/schedule">Schedule</a>
-                <a href="/signin">Logout</a>
+                <button
+  className="logout-btn"
+  onClick={() => {
+    setHeaderProfileOpen(false);
+    setShowLogoutConfirm(true);
+  }}
+>
+  Logout
+</button>
               </div>
             </div>
           </nav>
@@ -318,8 +361,7 @@ export default function Schedule() {
             </div>
 
             {loading && <div className="schedule-message">Loading schedule...</div>}
-            {error && <div className="schedule-message schedule-error">{error}</div>}
-            {message && <div className="schedule-message schedule-success">{message}</div>}
+           
 
             <div className="admin-grid">
               <section className="admin-card admin-table-card">
@@ -461,6 +503,65 @@ export default function Schedule() {
           </div>
         </section>
       </main>
+
+      {toast && (
+  <div className={`symptom-toast ${toast.type}`}>
+    <div className="symptom-toast-content">
+      <span className="toast-icon">
+        {toast.type === "success"
+          ? "✔"
+          : toast.type === "error"
+          ? "✖"
+          : "⚠"}
+      </span>
+      <span>{toast.message}</span>
+    </div>
+  </div>
+)}
+
+
+{showLogoutConfirm && (
+  <div className="logout-confirm-overlay">
+    <div className="logout-confirm-modal">
+      <h3>Log out?</h3>
+      <p>Are you sure you want to log out of your account?</p>
+
+      <div className="logout-actions">
+        <button
+          className="btn-cancel"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn-confirm"
+          onClick={() => {
+            setShowLogoutConfirm(false);
+            setShowLogoutSuccess(true);
+
+            setTimeout(() => {
+              navigate("/signin");
+            }, 1500);
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{showLogoutSuccess && (
+  <div className="logout-popup-overlay">
+    <div className="logout-popup">
+      <div className="logout-icon">✓</div>
+      <h3>Logged out successfully</h3>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

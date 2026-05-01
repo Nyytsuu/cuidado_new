@@ -6,6 +6,7 @@ import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
 import { FaCalendarAlt } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
 
@@ -100,6 +101,10 @@ export default function ClinicAppoint() {
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [savingAction, setSavingAction] = useState(false);
+
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false); 
+  const navigate = useNavigate();
 
   const mapDbStatusToUi = (
     status: ApiAppointmentRow["status"]
@@ -404,7 +409,8 @@ export default function ClinicAppoint() {
               <div className="profile-dropdown">
                 <a href="#">My Profile</a>
                 <a href="#">Settings</a>
-                <a href="#">Logout</a>
+                 <button className="logout-btn" onClick={() => { setHeaderProfileOpen(false);
+                                                                 setShowLogoutConfirm(true);}}>Logout</button>
               </div>
             </div>
           </nav>
@@ -733,6 +739,50 @@ export default function ClinicAppoint() {
           </div>
         </div>
       )}
+
+
+      // logout
+{showLogoutConfirm && (
+  <div className="logout-confirm-overlay">
+    <div className="logout-confirm-modal">
+      <h3>Log out?</h3>
+      <p>Are you sure you want to log out of your account?</p>
+
+      <div className="logout-actions">
+        <button
+          className="btn-cancel"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn-confirm"
+          onClick={() => {
+            setShowLogoutConfirm(false);
+            setShowLogoutSuccess(true);
+
+            setTimeout(() => {
+              navigate("/signin");
+            }, 1500);
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{showLogoutSuccess && (
+  <div className="logout-popup-overlay">
+    <div className="logout-popup">
+      <div className="logout-icon">✓</div>
+      <h3>Logged out successfully</h3>
+    </div>
+  </div>
+)}
     </div>
   );
 }

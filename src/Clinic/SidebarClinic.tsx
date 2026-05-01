@@ -1,6 +1,7 @@
 import { useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import "./SidebarClinic.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import dashboardIcon from "../img/dashboard.png";
 import userIcon from "../img/friends.png";
 import serviceIcon from "../img/doctor-bag.png";
@@ -9,8 +10,6 @@ import logoutIcon from "../img/logout.png";
 import searchIcon from "../img/search.png";
 import appointmentIcon from "../img/appointment.png";
 import logo from "../img/logo.png";
-
-
 
 interface SidebarProps {
   sidebarExpanded: boolean;
@@ -39,11 +38,13 @@ export default function SidebarClinic({
   const [internalSearch, setInternalSearch] = useState("");
   const currentSearch = searchValue ?? internalSearch;
 
-  const handleSearchChange = (value: string) => {
-    if (searchValue === undefined) {
-      setInternalSearch(value);
-    }
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 
+  const navigate = useNavigate();
+
+  const handleSearchChange = (value: string) => {
+    if (searchValue === undefined) setInternalSearch(value);
     onSearchChange?.(value);
   };
 
@@ -54,12 +55,11 @@ export default function SidebarClinic({
 
   return (
     <div className="SidebarClinic">
+      {/* SIDEBAR */}
       <aside className={`sidebar ${sidebarExpanded ? "expanded" : ""}`}>
         <div className="sidebar-top">
           <button
             className="sidebar-toggle"
-            aria-label="Toggle sidebar"
-            type="button"
             onClick={() => {
               setSidebarExpanded((prev) => {
                 const next = !prev;
@@ -75,104 +75,150 @@ export default function SidebarClinic({
         <div className="sidebar-content">
           <div className="sidebar-item">
             <Link to="/clinic/dashboard">
-              <img src={dashboardIcon} alt="Dashboard icon" />
+              <img src={dashboardIcon} />
               <span>Dashboard</span>
             </Link>
           </div>
 
           <div className="sidebar-item">
             <Link to="/clinic/patients">
-              <img src={userIcon} alt="User icon" />
+              <img src={userIcon} />
               <span>Patient</span>
             </Link>
           </div>
-          
+
           <div className="sidebar-item">
             <Link to="/clinic/schedule">
-              <img src={appointmentIcon} alt="Schedule" />
+              <img src={appointmentIcon} />
               <span>Schedule</span>
             </Link>
           </div>
 
           <div className="sidebar-item">
             <Link to="/clinic/appointments">
-              <img src={appointmentIcon} alt="Appointments" />
-              <span>Appointments</span>
-            </Link>
-          </div>
-
-          <div className="sidebar-item">
-            <Link to="/clinic/appointments">
-              <img src={appointmentIcon} alt="Appointments" />
+              <img src={appointmentIcon} />
               <span>Appointments</span>
             </Link>
           </div>
 
           <div className="sidebar-item">
             <Link to="/clinic/services">
-              <img src={serviceIcon} alt="Services icon" />
+              <img src={serviceIcon} />
               <span>Services</span>
             </Link>
           </div>
 
           <div className="sidebar-item">
             <Link to="/clinic/settings">
-              <img src={settingIcon} alt="Settings icon" />
+              <img src={settingIcon} />
               <span>Settings</span>
             </Link>
           </div>
 
+          {/* LOGOUT SIDEBAR */}
           <div className="sidebar-item logout">
-            <Link to="/signin">
-              <img src={logoutIcon} alt="Logout icon" />
+            <button
+              className="logout-btn"
+              onClick={() => setShowLogoutConfirm(true)}
+            >
+              <img src={logoutIcon} />
               <span>LOGOUT</span>
-            </Link>
+            </button>
           </div>
         </div>
       </aside>
 
+      {/* HEADER */}
       <header className="app-header">
         <div className="header-left">
-          <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+          <img src={logo} className="brand-logo" />
 
           <form className="header-search" onSubmit={handleSearchSubmit}>
             <input
               type="text"
               placeholder={searchPlaceholder}
               value={currentSearch}
-              onChange={(event) => handleSearchChange(event.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
-            <button aria-label="Search" type="submit" className="search-btn">
-              <img src={searchIcon} alt="Search" />
+            <button className="search-btn">
+              <img src={searchIcon} />
             </button>
           </form>
         </div>
 
         <nav className="header-nav">
-          <a className="nav-link" href="#">
-            Home
-          </a>
-          <a className="nav-link" href="#">
-            Appointments
-          </a>
+          <a className="nav-link">Home</a>
+          <a className="nav-link">Appointments</a>
 
           <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
             <button
-              type="button"
               className="nav-link profile-btn"
               onClick={() => setHeaderProfileOpen((v) => !v)}
             >
-              Profile <span className="caret">▾</span>
+              Profile ▾
             </button>
 
             <div className="profile-dropdown">
-              <a href="#">My Profile</a>
-              <a href="#">Settings</a>
-              <a href="#">Logout</a>
+              <a>My Profile</a>
+              <a>Settings</a>
+
+              {/* HEADER LOGOUT */}
+              <button
+                className="logout-btn"
+                onClick={() => {
+                  setHeaderProfileOpen(false);
+                  setShowLogoutConfirm(true);
+                }}
+              >
+                Logout
+              </button>
             </div>
           </div>
         </nav>
       </header>
+
+      {/* CONFIRM MODAL */}
+      {showLogoutConfirm && (
+        <div className="logout-confirm-overlay">
+          <div className="logout-confirm-modal">
+            <h3>Log out?</h3>
+            <p>Are you sure you want to log out of your account?</p>
+
+            <div className="logout-actions">
+              <button
+                className="btn-cancel"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                No
+              </button>
+
+              <button
+                className="btn-confirm"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  setShowLogoutSuccess(true);
+
+                  setTimeout(() => {
+                    navigate("/signin");
+                  }, 1500);
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SUCCESS POPUP */}
+      {showLogoutSuccess && (
+        <div className="logout-popup-overlay">
+          <div className="logout-popup">
+            <div className="logout-icon">✓</div>
+            <h3>Logged out successfully</h3>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

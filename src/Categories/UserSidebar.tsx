@@ -25,7 +25,6 @@ import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
 
 interface SidebarProps {
-
   sidebarExpanded: boolean;
   setSidebarExpanded: Dispatch<SetStateAction<boolean>>;
   profileOpen: boolean;
@@ -53,15 +52,10 @@ export default function UserSidebar({
   const location = useLocation();
   const [internalSearch, setInternalSearch] = useState("");
   const currentSearch = searchValue ?? internalSearch;
+ const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 
   const handleLogout = () => {
-  setShowConfirmLogout(true);
-};
-const confirmLogout = () => {
-  setShowConfirmLogout(false);
-  setShowLogoutSuccess(true);
-
-  setTimeout(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/Signin");
@@ -91,6 +85,8 @@ const confirmLogout = () => {
       navigate(`/browse-health?search=${encodeURIComponent(keyword)}`);
     }
   };
+
+
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -232,7 +228,7 @@ const confirmLogout = () => {
           </div>
 
           <div className="sidebar-item logout">
-            <button type="button" className="sidebar-btn" onClick={handleLogout}>
+            <button type="button" className="sidebar-btn" onClick={() => setShowLogoutConfirm(true)}>
               <LogOut size={24} />
               <span>Logout</span>
             </button>
@@ -292,7 +288,10 @@ const confirmLogout = () => {
               <button
                 type="button"
                 className="dropdown-logout"
-                onClick={handleLogout}
+                onClick={() => {
+  setHeaderProfileOpen(false);
+  setShowLogoutConfirm(true);
+}}
               >
                 Logout
               </button>
@@ -305,20 +304,39 @@ const confirmLogout = () => {
         </nav>
       </header>
 
-
-
-      {/* LOGOUT CONFIRM MODAL */}
-{showConfirmLogout && (
+      {/* CONFIRM LOGOUT */}
+{showLogoutConfirm && (
   <div className="logout-confirm-overlay">
     <div className="logout-confirm-modal">
-      <h3>Confirm Logout</h3>
-      <p>Are you sure you want to logout?</p>
+      <h3>Log out?</h3>
+      <p>Are you sure you want to log out of your account?</p>
 
       <div className="logout-actions">
-        <button className="btn-cancel" onClick={cancelLogout}>
+        <button
+          className="btn-cancel"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
           No
         </button>
-        <button className="btn-confirm" onClick={confirmLogout}>
+
+        <button
+          className="btn-confirm"
+          onClick={() => {
+            setShowLogoutConfirm(false);
+
+            // clear session
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+
+            // show success popup
+            setShowLogoutSuccess(true);
+
+            // redirect after delay
+            setTimeout(() => {
+              navigate("/Signin");
+            }, 1500);
+          }}
+        >
           Yes
         </button>
       </div>
@@ -326,18 +344,15 @@ const confirmLogout = () => {
   </div>
 )}
 
-{/* LOGOUT SUCCESS POPUP */}
+{/* SUCCESS POPUP */}
 {showLogoutSuccess && (
   <div className="logout-popup-overlay">
     <div className="logout-popup">
       <div className="logout-icon">✓</div>
-      <p>Logout successful!</p>
+      <p>Logged out successfully</p>
     </div>
   </div>
 )}
     </div>
-
-
-
   );
 }
