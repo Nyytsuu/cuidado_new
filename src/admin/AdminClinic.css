@@ -462,7 +462,9 @@ body {
   line-height: 1.15;
   font-size: 17px !important;
 }
-
+.admin-UserClinics .appointment-panel {
+  margin-top: 50px !important;
+}
 /* ================= RECENT ACTIVITY ONLY ================= */
 .admin-UserClinics .recent-activity-box {
   display: flex;
@@ -500,6 +502,9 @@ body {
 .admin-UserClinics .recent-activity-box .dash-body-small {
   max-height: 360px;
   overflow-y: auto;
+}
+.admin-UserClinics .dash-right-top .dash-panel-body {
+  min-height: 345px !important;
 }
 
 .admin-UserClinics .recent-activity-box .activity-list {
@@ -615,7 +620,7 @@ body {
 
 .admin-UserClinics .appointment-panel .dash-panel-body {
   background: #ffffff;
-  border: 5px solid #00bfa6;
+  border: 3px solid #00bfa6 !important;
   border-radius: 30px;
   overflow: hidden;
   padding: 0;
@@ -747,13 +752,13 @@ body {
   align-items: center;
   justify-content: center;
   width: 128px;
-  min-width: 128px;
+  min-width: 100px !important;
   height: 36px;
   padding: 0 12px;
   border: none;
   border-radius: 999px;
   background: #58b6f3;
-  color: #000;
+  color: white !important;
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
@@ -927,9 +932,9 @@ body {
 }
 .admin-UserClinics .btn-view {
   background: #58b6f3 !important;
-  color: #000 !important;
-  padding: 6px 14px;
-  border-radius: 999px;
+  color: white !important;
+  padding: 6px 1px !important;
+  border-radius: 999px !important;
   font-weight: 700;
 }
 /* STATUS COLORS */
@@ -949,8 +954,8 @@ body {
 .admin-UserClinics .btn-view {
   background: #58b6f3 !important;
   color: #000 !important;
-  border-radius: 999px;
-  padding: 6px 14px;
+  border-radius: 999px !important;
+  padding: 6px 14px !important;
 }
 
 /* ALIGN LEFT */
@@ -1062,4 +1067,6 @@ body {
   padding: 0 10px !important;
   font-size: 11px !important;
 }
-
+.admin-Userpage .dash-right-top .dash-panel-body {
+  min-height: 345px !important;
+}

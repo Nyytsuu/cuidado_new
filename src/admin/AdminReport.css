@@ -250,22 +250,11 @@ body {
 }
 
 .admin-UserReport .admin-table-card.reports-card {
-  min-height: 520px;
+ min-height: 520px;
   padding: 0;
   overflow: hidden;
-
-  background: #ffffff;
-  border: 5px solid var(--accent);
-  border-radius: 14px;
-
-  display: flex;
-  flex-direction: column;
-}
-
-/* gray strip on top */
-.admin-UserReport .admin-table-header {
-  height: 14px;
-  background: rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  background: white;
 }
 
 /* inner body spacing */
@@ -993,4 +982,281 @@ body {
 /* ✅ MOVE ONLY the Status pill (appointment table only) */
 .admin-UserReport .dash-panel.appointment-panel .dash-table td:nth-child(2) .badge{
   transform: translateX(-24px); /* + = right, - = left */
+}
+/* ================================
+   RECENT ACTIVITY ONLY - REPORT PAGE
+   ================================ */
+
+.admin-UserReport .dash-right-top .dash-panel-title {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #000 !important;
+  margin: 0 0 6px !important;
+}
+
+.admin-UserReport .dash-right-top .dash-panel-body {
+  background: #ffffff !important;
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+  max-height: 430px !important;
+  overflow-y: auto !important;
+}
+
+.admin-UserReport .dash-right-top .activity-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  background: transparent !important;
+}
+
+.admin-UserReport .dash-right-top .activity-item {
+  background: #ffffff !important;
+  border-radius: 14px !important;
+  width: 100% !important;
+  padding: 14px 14px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  cursor: pointer !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
+  display: block !important;
+}
+
+.admin-UserReport .dash-right-top .activity-item:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12) !important;
+}
+
+.admin-UserReport .dash-right-top .activity-icon {
+  width: 25px !important;
+  height: 25px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+  font-size: 20px !important;
+  margin-bottom: 1px !important;
+}
+
+.admin-UserReport .dash-right-top .activity-content {
+  min-width: 0 !important;
+}
+
+.admin-UserReport .dash-right-top .activity-text {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #000 !important;
+  line-height: 1.35 !important;
+}
+
+.admin-UserReport .dash-right-top .activity-time {
+  margin-top: 4px !important;
+  font-size: 14px !important;
+  color: #666 !important;
+  opacity: 1 !important;
+}
+
+
+/* ================================
+   APPOINTMENT SECTION ONLY - REPORT PAGE
+   ================================ */
+
+.admin-UserReport .appointment-panel {
+  margin-top: 20px !important;
+}
+
+.admin-UserReport .appointment-panel .dash-panel-title {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  color: #000 !important;
+  margin: 0 0 8px !important;
+  position: static !important;
+  top: auto !important;
+}
+
+.admin-UserReport .appointment-panel .dash-panel-body {
+  background: #ffffff !important;
+  border: 3px solid #00bfa6 !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  max-height: 320px !important;
+  overflow-y: auto !important;
+}
+
+.admin-UserReport .appointment-panel .dash-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  background: #ffffff !important;
+  border-radius: 0 !important;
+}
+
+.admin-UserReport .appointment-panel .dash-table thead th {
+  background: #eef2f2 !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  font-size: 13px !important;
+  text-align: left !important;
+  padding: 14px 16px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  position: static !important;
+}
+
+.admin-UserReport .appointment-panel .dash-table tbody td {
+  padding: 12px 16px !important;
+  vertical-align: middle !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #ffffff !important;
+}
+
+/* column spacing: Patient | Status | Action */
+.admin-UserReport .appointment-panel .dash-table th:nth-child(1),
+.admin-UserReport .appointment-panel .dash-table td:nth-child(1) {
+  width: 37% !important;
+}
+
+.admin-UserReport .appointment-panel .dash-table th:nth-child(2),
+.admin-UserReport .appointment-panel .dash-table td:nth-child(2) {
+  width: 32% !important;
+  text-align: left !important;
+}
+
+.admin-UserReport .appointment-panel .dash-table th:nth-child(3),
+.admin-UserReport .appointment-panel .dash-table td:nth-child(3) {
+  width: 45% !important;
+  text-align: left !important;
+}
+
+/* header spacing */
+.admin-UserReport .appointment-panel .dash-table thead th:nth-child(2) {
+  padding-left: 15px !important;
+}
+
+.admin-UserReport .appointment-panel .dash-table thead th:nth-child(3) {
+  padding-left: 20px !important;
+}
+
+/* patient text */
+.admin-UserReport .appointment-panel .t-main {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+  color: #000 !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+.admin-UserReport .appointment-panel .t-sub {
+  font-size: 10px !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+  margin-top: 2px !important;
+  line-height: 1.1 !important;
+}
+
+/* status cell */
+.admin-UserReport .appointment-panel .dash-table td:nth-child(2),
+.admin-UserReport .appointment-panel .appt-status-cell {
+  padding-left: 12px !important;
+  text-align: left !important;
+  overflow: visible !important;
+}
+
+.admin-UserReport .appointment-panel .appt-status-cell .appt-badge,
+.admin-UserReport .appointment-panel .dash-table td:nth-child(2) .badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 76px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  position: static !important;
+  transform: none !important;
+  text-transform: lowercase !important;
+}
+
+/* action cell */
+.admin-UserReport .appointment-panel .dash-table td:nth-child(3),
+.admin-UserReport .appointment-panel .appt-action-cell,
+.admin-UserReport .appointment-panel .td-action {
+  padding-left: 14px !important;
+  text-align: left !important;
+  display: table-cell !important;
+  white-space: nowrap !important;
+  width: auto !important;
+}
+
+.admin-UserReport .appointment-panel .appt-action-cell .appt-badge,
+.admin-UserReport .appointment-panel .dash-table .btn-view,
+.admin-UserReport .appointment-panel .btn-sm.btn-view {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 110px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: #58b6f3 !important;
+  color: #000 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  position: static !important;
+  transform: none !important;
+  text-transform: none !important;
+}
+
+/* status colors */
+.admin-UserReport .appointment-panel .appt-badge.badge-cancelled,
+.admin-UserReport .appointment-panel .appt-badge.badge-canceled,
+.admin-UserReport .appointment-panel .appt-badge.badge-rejected,
+.admin-UserReport .appointment-panel .appt-badge.badge-declined,
+.admin-UserReport .appointment-panel .badge-cancelled,
+.admin-UserReport .appointment-panel .badge-canceled,
+.admin-UserReport .appointment-panel .badge-rejected,
+.admin-UserReport .appointment-panel .badge-declined {
+  background: #ea6666 !important;
+  color: #000 !important;
+}
+
+.admin-UserReport .appointment-panel .appt-badge.badge-pending,
+.admin-UserReport .appointment-panel .badge-pending {
+  background: #e2c457 !important;
+  color: #000 !important;
+}
+
+.admin-UserReport .appointment-panel .appt-badge.badge-approved,
+.admin-UserReport .appointment-panel .appt-badge.badge-confirmed,
+.admin-UserReport .appointment-panel .appt-badge.badge-completed,
+.admin-UserReport .appointment-panel .badge-approved,
+.admin-UserReport .appointment-panel .badge-confirmed,
+.admin-UserReport .appointment-panel .badge-completed {
+  background: #7ed36d !important;
+  color: #000 !important;
+}
+
+.admin-UserReport .appointment-panel .appt-badge.badge-view,
+.admin-UserReport .appointment-panel .badge-view {
+  background: #58b6f3 !important;
+  color: #000 !important;
+  cursor: pointer !important;
+}
+/* Palakihin yung Recent Activity box */
+.admin-UserReport .dash-right-top .dash-panel-body {
+  height: 430px !important;      /* adjust mo: 400px, 450px, 500px */
+  max-height: 490px !important;
+  overflow-y: auto !important;
 }

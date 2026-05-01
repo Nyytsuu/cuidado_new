@@ -194,48 +194,7 @@ export default function Patients() {
       />
 
       <main className="preview-canvas">
-        <header className="app-header">
-          <div className="header-left">
-            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-
-            <div className="header-search">
-              <input
-                type="text"
-                placeholder="Search keywords..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button aria-label="Search" type="button" className="search-btn">
-                <img src={searchIcon} alt="Search" />
-              </button>
-            </div>
-          </div>
-
-          <nav className="header-nav">
-            <a className="nav-link" href="#">
-              Home
-            </a>
-            <a className="nav-link" href="#">
-              Patients
-            </a>
-
-            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="nav-link profile-btn"
-                onClick={() => setHeaderProfileOpen((v) => !v)}
-              >
-                Profile <span className="caret">▾</span>
-              </button>
-
-              <div className="profile-dropdown">
-                <a href="#">My Profile</a>
-                <a href="#">Settings</a>
-                <a href="#">Logout</a>
-              </div>
-            </div>
-          </nav>
-        </header>
+        
 
         <section className="admin-content">
           <div className="admin-content-inner">
@@ -251,7 +210,7 @@ export default function Patients() {
                     <div className="users-cell">Age</div>
                     <div className="users-cell">Contact Number</div>
                     <div className="users-cell">Last Visit Date</div>
-                    <div className="users-cell">Actions</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {loadingPatients ? (
@@ -429,7 +388,6 @@ export default function Patients() {
             </div>
           ))}
         </div>
-
         {/* BUTTON */}
         <div className="profile-footer">
           <button
@@ -444,9 +402,6 @@ export default function Patients() {
     </div>
   </div>
 )}
-
-
-
     </div>
   );
 }

@@ -404,7 +404,7 @@ const confirmDeleteService = async () => {
                     <div className="users-cell">Price</div>
                     <div className="users-cell">Duration</div>
                     <div className="users-cell">Status</div>
-                    <div className="users-cell">Actions</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {loadingServices ? (

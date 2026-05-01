@@ -407,7 +407,7 @@ export default function AdminUsers() {
                       <tr>
                         <th>Patient</th>
                         <th>Status</th>
-                        <th className="th-action">Action</th>
+                        <th className="th-action">Action:</th>
                       </tr>
                     </thead>
 
@@ -444,7 +444,7 @@ export default function AdminUsers() {
         className="appt-badge badge-view"
         onClick={() => onViewAppointment(ap.id)}
       >
-        View
+        View Details
       </button>
     </td>
   </tr>
