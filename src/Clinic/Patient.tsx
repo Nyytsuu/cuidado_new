@@ -8,6 +8,7 @@ import logo from "../img/logo.png";
 import { useNavigate } from "react-router-dom";
 
 
+
 type ApiPatientRow = {
   id: number;
   name: string;
@@ -261,7 +262,7 @@ export default function Patients() {
                     <div className="users-cell">Age</div>
                     <div className="users-cell">Contact Number</div>
                     <div className="users-cell">Last Visit Date</div>
-                    <div className="users-cell">Actions</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {loadingPatients ? (

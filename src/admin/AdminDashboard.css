@@ -353,6 +353,7 @@
   min-width: 0;
   overflow: auto;
   background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 168, 146, 0.15);
 }
 
 .admin-dashboard-page .dash-panel-pad {

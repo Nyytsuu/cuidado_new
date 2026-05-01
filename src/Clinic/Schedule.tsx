@@ -208,7 +208,7 @@ const navigate = useNavigate();
     }
   };
 
-  const addBlockedDate = async () => {
+  const removeBlockedDate = async (id: number) => {
     try {
       setSaving(true);
       setError("");
@@ -371,7 +371,7 @@ const [error, setError] = useState("");
                     <div className="users-cell">Working</div>
                     <div className="users-cell">Opening Time</div>
                     <div className="users-cell">Closing Time</div>
-                    <div className="users-cell">Actions</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {rows.length === 0 ? (

@@ -431,7 +431,7 @@ export default function ClinicAppoint() {
                     <div className="users-cell">Date</div>
                     <div className="users-cell">Time</div>
                     <div className="users-cell">Status</div>
-                    <div className="users-cell">Actions</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {loadingAppointments ? (

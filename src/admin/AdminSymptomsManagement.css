@@ -16,7 +16,7 @@
 
 .app-header {
   height: 84px;
-  background: #46a7a0;
+  background: #46a7a0 !important;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -168,7 +168,7 @@
   height: 54px;
   border: none;
   border-radius: 999px;
-  background: #005f52;
+  background: #004D40;
   color: #fff;
   font-size: 17px;
   font-weight: 700;
@@ -186,7 +186,7 @@
 }
 
 .symptom-form-header {
-  background: #0b8f88;
+  background: #109C85;
   color: #fff;
   font-size: 22px;
   font-weight: 700;

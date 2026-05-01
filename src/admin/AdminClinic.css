@@ -3,7 +3,7 @@
   --sidebar-text: #0f4242;
   --sidebar-width-collapsed: 70px;
   --sidebar-width-expanded: 220px;
-  --header-height: 55px;
+  --header-height: 45px;
 
   --action-slot-w: 92px;
   --actions-gap: 16px;
@@ -56,21 +56,23 @@ body {
 }
 
 /* ================= HEADER ================= */
+/* ================= HEADER (MATCH CLINIC) ================= */
 .admin-UserClinics .app-header {
-  background: var(--sidebar-bg);
-  padding: 0 24px 0 calc(var(--sidebar-width-collapsed) + 24px);
+  background: var(--admin-header-bg);
+  padding: 0 24px 0 calc(var(--admin-sidebar-collapsed) + 24px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: fixed;
   top: 0;
-  left: var(--sidebar-width-collapsed);
+  left: var(--admin-sidebar-collapsed);
   right: 0;
-  height: var(--header-height);
+  height: 35px;
   z-index: 999;
 }
 
-.admin-UserClinics .header-left {
+/* LEFT SIDE */
+.admin-dashboard-page .header-left {
   display: flex;
   align-items: center;
   gap: 50px;
@@ -78,19 +80,30 @@ body {
   right: 30px;
 }
 
-.admin-UserClinics .brand-logo {
-  width: 120px;
-  max-height: 60px;
+
+
+/* LOGO */
+.admin-dashboard-page .brand-logo {
+ height: 32px;
+  font-size: 13px;
   position: relative;
   right: 130px;
 }
 
-.admin-UserClinics .search-btn img {
-  width: 18px;
-  height: 18px;
+.header-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--admin-text);
+  font: inherit;
+  font-size: 14px;
+  box-shadow: none;
 }
 
-.admin-UserClinics .header-nav {
+/* NAV */
+.admin-dashboard-page .header-nav {
   display: flex;
   align-items: center;
   gap: 70px;
@@ -98,7 +111,8 @@ body {
   right: 60px;
 }
 
-.admin-UserClinics .nav-link {
+/* NAV LINKS */
+.admin-dashboard-page .nav-link {
   color: #0f4242;
   text-decoration: none;
   font-weight: 500;
@@ -448,7 +462,9 @@ body {
   line-height: 1.15;
   font-size: 17px !important;
 }
-
+.admin-UserClinics .appointment-panel {
+  margin-top: 50px !important;
+}
 /* ================= RECENT ACTIVITY ONLY ================= */
 .admin-UserClinics .recent-activity-box {
   display: flex;
@@ -486,6 +502,9 @@ body {
 .admin-UserClinics .recent-activity-box .dash-body-small {
   max-height: 360px;
   overflow-y: auto;
+}
+.admin-UserClinics .dash-right-top .dash-panel-body {
+  min-height: 345px !important;
 }
 
 .admin-UserClinics .recent-activity-box .activity-list {
@@ -601,7 +620,7 @@ body {
 
 .admin-UserClinics .appointment-panel .dash-panel-body {
   background: #ffffff;
-  border: 5px solid #00bfa6;
+  border: 3px solid #00bfa6 !important;
   border-radius: 30px;
   overflow: hidden;
   padding: 0;
@@ -733,13 +752,13 @@ body {
   align-items: center;
   justify-content: center;
   width: 128px;
-  min-width: 128px;
+  min-width: 100px !important;
   height: 36px;
   padding: 0 12px;
   border: none;
   border-radius: 999px;
   background: #58b6f3;
-  color: #000;
+  color: white !important;
   font-size: 11px;
   font-weight: 900;
   white-space: nowrap;
@@ -913,9 +932,9 @@ body {
 }
 .admin-UserClinics .btn-view {
   background: #58b6f3 !important;
-  color: #000 !important;
-  padding: 6px 14px;
-  border-radius: 999px;
+  color: white !important;
+  padding: 6px 1px !important;
+  border-radius: 999px !important;
   font-weight: 700;
 }
 /* STATUS COLORS */
@@ -935,8 +954,8 @@ body {
 .admin-UserClinics .btn-view {
   background: #58b6f3 !important;
   color: #000 !important;
-  border-radius: 999px;
-  padding: 6px 14px;
+  border-radius: 999px !important;
+  padding: 6px 14px !important;
 }
 
 /* ALIGN LEFT */
@@ -1048,4 +1067,6 @@ body {
   padding: 0 10px !important;
   font-size: 11px !important;
 }
-
+.admin-Userpage .dash-right-top .dash-panel-body {
+  min-height: 345px !important;
+}

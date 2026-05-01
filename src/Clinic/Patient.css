@@ -548,6 +548,13 @@ body {
 .Patient .pill-view {
   min-width: 110px;
 }
+/* 🔥 make LEFT table flexible */
+.Patient .admin-table-card {
+  height: auto !important;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
 
 
 /* RESPONSIVE */

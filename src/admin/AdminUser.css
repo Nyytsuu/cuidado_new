@@ -86,14 +86,14 @@ body {
   align-items: center;
   gap: 50px;
   position: relative;
-  right: 30px;
+  right: 90px;
 }
 
 .admin-Userpage .brand-logo {
   width: 120px;
   max-height: 60px;
   position: relative;
-  right: 130px;
+  right: 50px; 
 }
 
 /* SEARCH */
@@ -125,6 +125,7 @@ body {
 /* PROFILE DROPDOWN */
 .admin-Userpage .profile-menu {
   position: relative;
+  right: 20px;
 }
 
 .admin-Userpage .profile-btn {
@@ -214,26 +215,46 @@ body {
   gap: 26px;
   align-items: start;
 }
-
-/* =========================================================
-   ✅ LEFT CARD (APPOINT-LIKE BOX) + NO X-AXIS
-   ========================================================= */
-
-/* keep card container "neutral" */
-.admin-Userpage .admin-card {
-  background: transparent;
-  border-radius: 14px;
+/* USERS TABLE HEADER - same design as Appointment page */
+.admin-Userpage .admin-table-card {
+  min-height: 520px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  border: none !important;
 }
 
-/* main box */
-.admin-Userpage .admin-table-card {
-  min-height: 520px;
-  padding: 0;
-  overflow: hidden;
+/* header green background */
+.admin-Userpage .users-table thead th {
+   background: rgb(16, 156, 133) !important;
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  padding: 24px 18px !important;
+  border: none !important;
+  text-align: left !important;
+}
 
-  background: #ffffff;
-  border: 5px solid var(--accent);
-  border-radius: 16px;
+/* remove gray/line under header */
+.admin-Userpage .users-table thead th {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.10) !important;
+}
+
+/* rounded green top corners */
+.admin-Userpage .users-table thead th:first-child {
+  border-top-left-radius: 16px !important;
+}
+
+.admin-Userpage .users-table thead th:last-child {
+  border-top-right-radius: 16px !important;
+}
+
+/* remove vertical divider lines if meron */
+.admin-Userpage .users-table thead th + th,
+.admin-Userpage .users-table tbody td + td {
+  border-left: none !important;
 }
 
 /* ================= USERS TABLE ================= */
@@ -282,11 +303,6 @@ body {
   background: rgba(255, 255, 255, 0.35);
 }
 
-.admin-Userpage .users-table thead th + th,
-.admin-Userpage .users-table tbody td + td {
-  border-left: 1px solid rgba(0, 0, 0, 0.35);
-}
-
 .admin-Userpage .users-name {
   font-weight: 700;
   color: #000;
@@ -319,8 +335,8 @@ body {
   color: white;
 }
 
-.admin-Userpage .pill-view { background: #414242; }
-.admin-Userpage .pill-success { background: #51be1f; }
+.admin-Userpage .pill-view { background: #109C85; }
+.admin-Userpage .pill-success { background: #008000; }
 .admin-Userpage .pill-danger { background: #c62828; }
 
 .admin-Userpage .pill-btn:disabled {
@@ -342,7 +358,7 @@ body {
   left: 12px;
 }
 
-.admin-Userpage .status-badge.is-active { background: #51be1f; color: #0f0f0f;}
+.admin-Userpage .status-badge.is-active { background: #008000; color: #0f0f0f;}
 .admin-Userpage .status-badge.is-disabled { background: #c62828; color: #0f0f0f;}  
 
 /* ===================================================================== */
@@ -429,25 +445,14 @@ body {
   list-style: none;
 }
 
-.admin-Userpage .activity-item {
-  background: #ffffff !important;
-  color: #0f0f0f !important;
-  border-radius: 12px;
-  width: 100%;
-  padding: 12px;
-  border: 1px solid rgba(0,0,0,0.08);
-  cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
 .admin-Userpage .activity-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 10px 18px rgba(0,0,0,0.08);
 }
 
 .admin-Userpage .activity-icon {
-  width: 36px;
-  height: 36px;
+  width: 25px;
+  height: 25px;
   border-radius: 12px;
   display: grid;
   place-items: center;
@@ -587,7 +592,7 @@ body {
 
 /* Panel body (teal background like dashboard) */
 .dash-panel-body {
-  background: #00bfa6;
+  background: white;
   border-radius: 14px;
   padding: 14px;
   display: flex;
@@ -1009,7 +1014,253 @@ body {
   top: 10px;
 }
 
+
+/* ================================
+   RECENT ACTIVITY ONLY
+   ================================ */
+
 .admin-Userpage .dash-right-top .dash-panel-title {
-  font-size: 16px !important;
+  font-size: 14px !important;
   font-weight: 900 !important;
+  color: #000 !important;
+  margin: 0 0 6px !important;
+}
+
+.admin-Userpage .dash-right-top .dash-panel-body {
+  background: #ffffff !important;
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+  max-height: 430px !important;
+  overflow-y: auto !important;
+}
+
+.admin-Userpage .dash-right-top .activity-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  background: transparent !important;
+}
+
+.admin-Userpage .dash-right-top .activity-item {
+  background: #ffffff !important;
+  border-radius: 14px !important;
+  width: 100% !important;
+  padding: 14px 14px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  cursor: pointer !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+.admin-Userpage .dash-right-top .activity-item:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12) !important;
+}
+
+.admin-Userpage .dash-right-top .activity-icon {
+  width: 25px !important;
+  height: 25px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+  font-size: 20px !important;
+  margin-bottom: 1px !important;
+}
+
+.admin-Userpage .dash-right-top .activity-text {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #000 !important;
+  line-height: 1.35 !important;
+}
+
+.admin-Userpage .dash-right-top .activity-time {
+  margin-top: 4px !important;
+  font-size: 14px !important;
+  color: #666 !important;
+}
+
+
+/* ================================
+   APPOINTMENT SECTION ONLY
+   ================================ */
+
+.admin-Userpage .appointment-panel {
+  margin-top: 40px !important;
+}
+
+.admin-Userpage .appointment-panel .dash-panel-title {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  color: #000 !important;
+  margin: 0 0 8px !important;
+  position: static !important;
+}
+
+.admin-Userpage .appointment-panel .dash-panel-body {
+  background: #ffffff !important;
+  border: 3px solid #00bfa6 !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  max-height: 320px !important;
+  overflow-y: auto !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  background: #ffffff !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table thead th {
+  background: #eef2f2 !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  font-size: 13px !important;
+  text-align: left !important;
+  padding: 14px 16px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table tbody td {
+  padding: 12px 16px !important;
+  vertical-align: middle !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #ffffff !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table th:nth-child(1),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(1) {
+  width: 36% !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table th:nth-child(2),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(2) {
+  width: 24% !important;
+  text-align: left !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table th:nth-child(3),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(3) {
+  width: 40% !important;
+  text-align: left !important;
+}
+
+.admin-Userpage .appointment-panel .t-main {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+  color: #000 !important;
+}
+
+.admin-Userpage .appointment-panel .t-sub {
+  font-size: 10px !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+  margin-top: 2px !important;
+  line-height: 1.1 !important;
+}
+
+.admin-Userpage .appointment-panel .appt-status-cell {
+  text-align: left !important;
+  padding-left: 16px !important;
+}
+
+.admin-Userpage .appointment-panel .appt-status-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 76px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  position: static !important;
+  text-transform: lowercase !important;
+}
+
+.admin-Userpage .appointment-panel .appt-action-cell {
+  text-align: left !important;
+  padding-left: 16px !important;
+  display: table-cell !important;
+}
+
+.admin-Userpage .appointment-panel .appt-action-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 110px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: #58b6f3 !important;
+  color: #000 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+}
+/* FIX APPOINTMENT SECTION COLUMN SPACING ONLY */
+.admin-Userpage .appointment-panel .dash-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+/* Patient column */
+.admin-Userpage .appointment-panel .dash-table th:nth-child(1),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(1) {
+  width: 34% !important;
+}
+
+/* Status column - give more space para hindi dikit sa Action */
+.admin-Userpage .appointment-panel .dash-table th:nth-child(2),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(2) {
+  width: 32% !important;
+  text-align: left !important;
+}
+
+/* Action column */
+.admin-Userpage .appointment-panel .dash-table th:nth-child(3),
+.admin-Userpage .appointment-panel .dash-table td:nth-child(3) {
+  width: 34% !important;
+  text-align: left !important;
+}
+
+/* header spacing */
+.admin-Userpage .appointment-panel .dash-table thead th:nth-child(2) {
+  padding-left: 12px !important;
+}
+
+.admin-Userpage .appointment-panel .dash-table thead th:nth-child(3) {
+  padding-left: 10px !important;
+}
+
+/* body spacing */
+.admin-Userpage .appointment-panel .appt-status-cell {
+  padding-left: 12px !important;
+  text-align: left !important;
+}
+
+.admin-Userpage .appointment-panel .appt-action-cell {
+  padding-left: 14px !important;
+  text-align: left !important;
+  display: table-cell !important;
+}
+
+/* remove extra moves that make them dikit */
+.admin-Userpage .appointment-panel .appt-status-cell .appt-badge,
+.admin-Userpage .appointment-panel .appt-action-cell .appt-badge {
+  margin-left: 0 !important;
+  position: static !important;
+  transform: none !important;
 }

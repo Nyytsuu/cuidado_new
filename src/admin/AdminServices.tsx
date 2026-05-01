@@ -449,7 +449,7 @@ export default function AdminServices() {
                                 className="appt-badge badge-view"
                                 onClick={() => onViewAppointment(ap.id)}
                               >
-                                View
+                                View Details
                               </button>
                             </td>
                           </tr>
@@ -488,7 +488,6 @@ export default function AdminServices() {
                 }}
                 autoFocus
               />
-
               <div className="service-modal-actions">
                 <button type="button" className="service-btn cancel" onClick={closeModal}>
                   Cancel

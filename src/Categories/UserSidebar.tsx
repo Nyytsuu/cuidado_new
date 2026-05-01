@@ -202,7 +202,7 @@ const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
             </div>
 
             <div className={`sidebar-item ${isPathActive("/admin/notifications") ? "active" : ""}`}>
-              <Link to="/admin/notifications" className="sidebar-btn">
+              <Link to="/notifications" className="sidebar-btn">
                 <Bell size={24} />
                 <span>Notifications</span>
               </Link>

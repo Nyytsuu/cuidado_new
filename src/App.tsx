@@ -19,8 +19,7 @@ import Profile from "./SigninUser/UserProfile";
 import BMICalculator from "./SigninUser/BMICalculator";
 import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
-import UserSidebar from "./Categories/UserSidebar";
-import ClinicScheduleAside from "./Clinic/ClinicScheduleAside";
+
 // admin
 import SidebarAdmin from "./admin/SidebarAdmin";
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
@@ -69,7 +68,6 @@ function App() {
         <Route path="/bmi-calculator" element={<BMICalculator />} />
         <Route path="/stress-index" element={<StressIndex />} />
         <Route path="/voice-assistant" element={<UserVoiceAssistant />} />
-        <Route path="/sidebar" element={<UserSidebar />} />
         
         {/* clinic */}
         <Route path="/clinic/schedule-aside" element={<ClinicScheduleAside />} />
@@ -80,7 +78,7 @@ function App() {
 <Route path="/clinic/services" element={<Services />} /> 
 <Route path="/clinic/profile" element={<ClinicProfile />} />
 <Route path="/clinic/schedule" element={<Schedule />} />
-<Route path="/clinic/sidebar" element={<SidebarClinic />} />
+
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />

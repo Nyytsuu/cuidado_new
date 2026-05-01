@@ -506,7 +506,7 @@ export default function AdminDashboard() {
 
             <section className="dash-grid dash-grid-2col">
               <div className="dash-left">
-                <Panel title="Pending Approvals">
+                <Panel title="Pending Approvals ">
                   <table className="dash-table">
                     <thead>
                       <tr>
@@ -799,7 +799,7 @@ function Panel({
   title: string;
   children: ReactNode;
   className?: string;
-}) {
+}) {  
   return (
     <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">
