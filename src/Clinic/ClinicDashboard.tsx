@@ -34,6 +34,38 @@ type AppointmentRow = {
   status: string;
 };
 
+type AppointmentService = {
+  id?: number;
+  service_id?: number;
+  service_name_snapshot?: string | null;
+  price_snapshot?: number | string | null;
+  duration_minutes_snapshot?: number | string | null;
+  description?: string | null;
+};
+
+type AppointmentDetails = {
+  id: number;
+  user_id: number;
+  clinic_id: number;
+  start_at: string;
+  end_at: string | null;
+  purpose: string | null;
+  symptoms: string | null;
+  patient_note: string | null;
+  clinic_note: string | null;
+  status: string;
+  cancelled_at?: string | null;
+  cancelled_by?: "patient" | "clinic" | "admin" | null;
+  cancel_reason?: string | null;
+  completed_at?: string | null;
+  patient_name_snapshot: string | null;
+  patient_phone_snapshot: string | null;
+  clinic_name_snapshot: string | null;
+  created_at?: string;
+  updated_at?: string;
+  services?: AppointmentService[];
+};
+
 type RawAppointmentRow = {
   id?: number | string;
   patient?: string;
@@ -92,9 +124,31 @@ function Panel({ title, children, className = "" }: PanelProps) {
   );
 }
 
+const getStoredClinicId = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (user?.role === "clinic" && user?.id) {
+      return Number(user.id);
+    }
+
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+
+    if (role === "clinic" && userId) {
+      return Number(userId);
+    }
+  } catch {
+    return 1;
+  }
+
+  return 1;
+};
+
 export default function ClinicDashboard() {
   const API = "http://localhost:5000/api";
-  const clinicId = 1; // TODO: replace with logged-in clinic id
+  const [clinicId] = useState(() => getStoredClinicId());
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -111,6 +165,11 @@ export default function ClinicDashboard() {
   /* ---------- APPOINTMENTS ---------- */
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsError, setDetailsError] = useState("");
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<AppointmentDetails | null>(null);
 
   /* ---------- PATIENTS ---------- */
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -149,14 +208,53 @@ export default function ClinicDashboard() {
     });
   };
 
+  const fmtOptionalDateTime = (value?: string | null) =>
+    value ? fmtDateTime(value) : "-";
+
+  const fallbackText = (
+    value: string | number | null | undefined,
+    fallback = "-"
+  ) => {
+    const text = String(value ?? "").trim();
+    return text || fallback;
+  };
+
   const safeStatusClass = (status: string) => {
     return (status || "pending").toLowerCase().replace(/\s+/g, "-");
   };
 
-  const onViewAppointment = (id: number) => {
-    console.log("View appointment:", id);
-    // Example:
-    // navigate(`/clinic/appointments/${id}`);
+  const closeAppointmentDetails = () => {
+    setDetailsOpen(false);
+    setDetailsLoading(false);
+    setDetailsError("");
+    setSelectedAppointment(null);
+  };
+
+  const onViewAppointment = async (id: number) => {
+    try {
+      setDetailsOpen(true);
+      setDetailsLoading(true);
+      setDetailsError("");
+      setSelectedAppointment(null);
+
+      const res = await fetch(`${API}/appointments/details/${id}`);
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to load appointment details.");
+      }
+
+      setSelectedAppointment(data as AppointmentDetails);
+    } catch (error) {
+      console.error("View appointment details error:", error);
+      setDetailsError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load appointment details."
+      );
+    } finally {
+      setDetailsLoading(false);
+    }
   };
 
   const dashboardQuery = searchTerm.trim().toLowerCase();
@@ -565,6 +663,188 @@ export default function ClinicDashboard() {
           </aside>
         </section>
       </main>
+
+      {detailsOpen && (
+        <div
+          className="clinic-dash-modal-overlay"
+          onClick={closeAppointmentDetails}
+        >
+          <div
+            className="clinic-dash-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="clinicDashboardAppointmentTitle"
+          >
+            <div className="clinic-dash-modal-head">
+              <div>
+                <h3 id="clinicDashboardAppointmentTitle">Appointment Details</h3>
+                <p>
+                  {selectedAppointment
+                    ? `Appointment #${selectedAppointment.id}`
+                    : "Loading appointment"}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="clinic-dash-modal-close"
+                onClick={closeAppointmentDetails}
+                aria-label="Close appointment details"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="clinic-dash-modal-body">
+              {detailsLoading ? (
+                <div className="clinic-dash-modal-empty">
+                  Loading appointment details...
+                </div>
+              ) : detailsError ? (
+                <div className="clinic-dash-modal-alert">{detailsError}</div>
+              ) : selectedAppointment ? (
+                <>
+                  <div className="clinic-dash-detail-grid">
+                    <div>
+                      <span>Patient</span>
+                      <strong>
+                        {fallbackText(
+                          selectedAppointment.patient_name_snapshot,
+                          `User #${selectedAppointment.user_id}`
+                        )}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Phone</span>
+                      <strong>
+                        {fallbackText(selectedAppointment.patient_phone_snapshot)}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Clinic</span>
+                      <strong>
+                        {fallbackText(
+                          selectedAppointment.clinic_name_snapshot,
+                          `Clinic #${selectedAppointment.clinic_id}`
+                        )}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Status</span>
+                      <strong
+                        className={`badge badge-${safeStatusClass(
+                          selectedAppointment.status
+                        )}`}
+                      >
+                        {selectedAppointment.status}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span>Start</span>
+                      <strong>{fmtOptionalDateTime(selectedAppointment.start_at)}</strong>
+                    </div>
+
+                    <div>
+                      <span>End</span>
+                      <strong>{fmtOptionalDateTime(selectedAppointment.end_at)}</strong>
+                    </div>
+                  </div>
+
+                  <div className="clinic-dash-detail-section">
+                    <h4>Visit Information</h4>
+                    <p>
+                      <b>Purpose:</b>{" "}
+                      {fallbackText(selectedAppointment.purpose, "No purpose provided")}
+                    </p>
+                    <p>
+                      <b>Symptoms:</b>{" "}
+                      {fallbackText(selectedAppointment.symptoms, "No symptoms listed")}
+                    </p>
+                    <p>
+                      <b>Patient Note:</b>{" "}
+                      {fallbackText(selectedAppointment.patient_note, "No patient note")}
+                    </p>
+                    <p>
+                      <b>Clinic Note:</b>{" "}
+                      {fallbackText(selectedAppointment.clinic_note, "No clinic note")}
+                    </p>
+                  </div>
+
+                  {selectedAppointment.services &&
+                    selectedAppointment.services.length > 0 && (
+                      <div className="clinic-dash-detail-section">
+                        <h4>Services</h4>
+                        <div className="clinic-dash-service-list">
+                          {selectedAppointment.services.map((service, index) => (
+                            <div
+                              className="clinic-dash-service-item"
+                              key={`${service.service_id ?? service.id ?? index}`}
+                            >
+                              <strong>
+                                {fallbackText(
+                                  service.service_name_snapshot,
+                                  `Service #${service.service_id ?? index + 1}`
+                                )}
+                              </strong>
+                              <span>
+                                {service.duration_minutes_snapshot
+                                  ? `${service.duration_minutes_snapshot} mins`
+                                  : "Duration not set"}
+                                {" | "}
+                                {service.price_snapshot
+                                  ? `PHP ${Number(service.price_snapshot).toFixed(2)}`
+                                  : "No price"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {selectedAppointment.status === "cancelled" && (
+                    <div className="clinic-dash-detail-section">
+                      <h4>Cancellation</h4>
+                      <p>
+                        <b>Cancelled By:</b>{" "}
+                        {fallbackText(selectedAppointment.cancelled_by)}
+                      </p>
+                      <p>
+                        <b>Reason:</b>{" "}
+                        {fallbackText(
+                          selectedAppointment.cancel_reason,
+                          "No reason provided"
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="clinic-dash-modal-empty">
+                  No appointment selected.
+                </div>
+              )}
+            </div>
+
+            <div className="clinic-dash-modal-actions">
+              <Link to="/clinic/appointments" className="btn-sm btn-view">
+                Open Appointments
+              </Link>
+              <button
+                type="button"
+                className="btn-sm clinic-dash-secondary-btn"
+                onClick={closeAppointmentDetails}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

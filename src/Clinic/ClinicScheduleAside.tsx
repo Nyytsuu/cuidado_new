@@ -17,8 +17,15 @@ type DaySchedule = {
   close: string;
 };
 
+type BlockedDate = {
+  id: number;
+  date: string;
+  reason: string;
+};
+
 type ScheduleResponse = {
   schedule?: DaySchedule[];
+  blockedDates?: BlockedDate[];
   message?: string;
 };
 
@@ -48,15 +55,66 @@ const formatScheduleTime = (value: string) => {
   return `${displayHours}:${minutes} ${suffix}`;
 };
 
+const getCurrentDay = (date: Date = new Date()) =>
+  date.toLocaleDateString("en-US", { weekday: "long" }) as DayKey;
+
+const timeToMinutes = (value: string) => {
+  const [hours, minutes] = value.split(":").map(Number);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+};
+
+const toDateInputValue = (date: Date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const isBlockedDate = (items: BlockedDate[], date: Date) =>
+  items.some((item) => item.date === toDateInputValue(date));
+
+const isScheduleOpenNow = (
+  item: DaySchedule,
+  now: Date,
+  blockedDates: BlockedDate[] = []
+) => {
+  if (isBlockedDate(blockedDates, now)) return false;
+  if (!item.working || item.day !== getCurrentDay(now)) return false;
+
+  const openMinutes = timeToMinutes(item.open);
+  const closeMinutes = timeToMinutes(item.close);
+
+  if (openMinutes === null || closeMinutes === null) return false;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+};
+
 export default function ClinicScheduleAside({ apiBase, clinicId }: Props) {
   const [schedule, setSchedule] = useState<DaySchedule[]>(defaultSchedule);
+  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [loadingSchedule, setLoadingSchedule] = useState(true);
   const [savingSchedule, setSavingSchedule] = useState(false);
-  const [scheduleMessage, setScheduleMessage] = useState("");
+  const [, setScheduleMessage] = useState("");
   const [scheduleError, setScheduleError] = useState("");
+  const [statusNow, setStatusNow] = useState(() => new Date());
 
 
 const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setStatusNow(new Date());
+    }, 30000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const scheduleSummary = useMemo(() => {
     const openDays = schedule.filter((day) => day.working);
@@ -80,6 +138,17 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
     )}`;
   }, [schedule]);
 
+  const openNow = useMemo(
+    () =>
+      !isBlockedDate(blockedDates, statusNow) &&
+      schedule.some((item) => isScheduleOpenNow(item, statusNow, blockedDates)),
+    [blockedDates, schedule, statusNow]
+  );
+  const blockedToday = useMemo(
+    () => isBlockedDate(blockedDates, statusNow),
+    [blockedDates, statusNow]
+  );
+
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
@@ -94,6 +163,7 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
         }
 
         setSchedule(Array.isArray(data.schedule) ? data.schedule : defaultSchedule);
+        setBlockedDates(Array.isArray(data.blockedDates) ? data.blockedDates : []);
       } catch (error) {
         setScheduleError(
           error instanceof Error ? error.message : "Failed to load clinic schedule."
@@ -105,16 +175,6 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     fetchSchedule();
   }, [apiBase, clinicId]);
-
-  const toggleWorkingDay = (day: DayKey) => {
-    setScheduleMessage("");
-    setScheduleError("");
-    setSchedule((prev) =>
-      prev.map((item) =>
-        item.day === day ? { ...item, working: !item.working } : item
-      )
-    );
-  };
 
   const changeScheduleTime = (
     day: DayKey,
@@ -128,7 +188,7 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
     );
   };
 
-  const saveSchedule = async () => {
+  const saveSchedule = async (nextSchedule: DaySchedule[] = schedule) => {
     try {
       setSavingSchedule(true);
       setScheduleMessage("");
@@ -141,7 +201,7 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
         },
         body: JSON.stringify({
           clinic_id: clinicId,
-          schedule,
+          schedule: nextSchedule,
         }),
       });
 
@@ -156,17 +216,32 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
       }
 
       setScheduleMessage(data.message || "Clinic schedule updated.");
+      return true;
     } catch (error) {
       setScheduleError(
         error instanceof Error ? error.message : "Failed to save clinic schedule."
       );
+      return false;
     } finally {
       setSavingSchedule(false);
     }
   };
 
+  const toggleWorkingDay = (day: DayKey) => {
+    setScheduleMessage("");
+    setScheduleError("");
+    const nextSchedule = schedule.map((item) =>
+      item.day === day ? { ...item, working: !item.working } : item
+    );
+
+    setSchedule(nextSchedule);
+    void saveSchedule(nextSchedule);
+  };
+
   const handleSaveClick = async () => {
-  await saveSchedule();
+  const saved = await saveSchedule();
+  if (!saved) return;
+
   setShowSuccessModal(true);
 
   setTimeout(() => {
@@ -179,6 +254,15 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
       <div className="admin-card admin-right-card small-card">
         <h3>Schedule</h3>
         {loadingSchedule ? <p>Loading clinic schedule...</p> : <p>{scheduleSummary}</p>}
+        {!loadingSchedule && (
+          <div className={`clinic-current-status ${openNow ? "open" : "closed"}`}>
+            {blockedToday
+              ? "Blocked Today"
+              : openNow
+                ? "Currently Open"
+                : "Currently Closed"}
+          </div>
+        )}
         {scheduleError && (
           <div className="clinic-schedule-message schedule-error">{scheduleError}</div>
         )}
@@ -233,7 +317,7 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
         </button>
       </div>
 
-{showSuccessModal && (
+{showSuccessModal && schedule.length < 0 && (
   <div className="service-modal-overlay">
     <div className="schedule-success-card">
       <div className="schedule-check">✓</div>
@@ -243,7 +327,6 @@ const [showSuccessModal, setShowSuccessModal] = useState(false);
   </div>
 )}
 
-{/* SUCCESS MODAL */}
 {showSuccessModal && (
   <div className="service-modal-overlay">
     <div className="schedule-success-card">

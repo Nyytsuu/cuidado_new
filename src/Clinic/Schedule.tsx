@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./Schedule.css";
 import SidebarClinic from "./SidebarClinic";
-import searchIcon from "../img/search.png";
-import logo from "../img/logo.png";
 import { useNavigate } from "react-router-dom";
 
 type DayKey =
@@ -67,6 +65,59 @@ const getStoredClinicId = () => {
   return 1;
 };
 
+const toDateInputValue = (date: Date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getCurrentDay = (date: Date = new Date()) =>
+  date.toLocaleDateString("en-US", { weekday: "long" }) as DayKey;
+
+const timeToMinutes = (value: string) => {
+  const [hours, minutes] = value.split(":").map(Number);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+};
+
+const isBlockedDate = (items: BlockedDate[], date: Date) =>
+  items.some((item) => item.date === toDateInputValue(date));
+
+const isScheduleOpenNow = (
+  item: DaySchedule,
+  now: Date,
+  blockedDates: BlockedDate[] = []
+) => {
+  if (isBlockedDate(blockedDates, now)) return false;
+  if (!item.working || item.day !== getCurrentDay(now)) return false;
+
+  const openMinutes = timeToMinutes(item.open);
+  const closeMinutes = timeToMinutes(item.close);
+
+  if (openMinutes === null || closeMinutes === null) return false;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+};
+
+const getCurrentStatusLabel = (
+  item: DaySchedule,
+  now: Date,
+  blockedDates: BlockedDate[]
+) => {
+  if (item.day !== getCurrentDay(now)) return "Currently Closed";
+  if (isBlockedDate(blockedDates, now)) return "Blocked Today";
+  return isScheduleOpenNow(item, now, blockedDates)
+    ? "Currently Open"
+    : "Currently Closed";
+};
+
 export default function Schedule() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -79,6 +130,7 @@ export default function Schedule() {
   const [blockedReason, setBlockedReason] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [statusNow, setStatusNow] = useState(() => new Date());
   const [toast, setToast] = useState<{
   type: "success" | "error" | "warning";
   message: string;
@@ -89,6 +141,14 @@ useEffect(() => {
   const timer = setTimeout(() => setToast(null), 2500);
   return () => clearTimeout(timer);
 }, [toast]);
+
+useEffect(() => {
+  const timer = window.setInterval(() => {
+    setStatusNow(new Date());
+  }, 1000);
+
+  return () => window.clearInterval(timer);
+}, []);
   const [searchTerm, setSearchTerm] = useState("");
    
 
@@ -96,6 +156,7 @@ useEffect(() => {
    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 const navigate = useNavigate();
+const todayDate = toDateInputValue();
 
 
 
@@ -151,23 +212,23 @@ const navigate = useNavigate();
     loadSchedule();
   }, [loadSchedule]);
 
-  const toggleWorkingDay = (day: DayKey) => {
-    setMessage("");
-    setSchedule((prev) =>
-      prev.map((item) =>
-        item.day === day ? { ...item, working: !item.working } : item
-      )
-    );
-  };
-
   const changeHours = (day: DayKey, field: "open" | "close", value: string) => {
-    setMessage("");
-    setSchedule((prev) =>
-      prev.map((item) => (item.day === day ? { ...item, [field]: value } : item))
-    );
-  };
+  setMessage("");
 
-  const saveSchedule = async () => {
+  setSchedule((prev) =>
+    prev.map((item) =>
+      item.day === day ? { ...item, [field]: value } : item
+    )
+  );
+
+  // ✅ force current open/closed status to recalculate immediately
+  setStatusNow(new Date());
+};
+
+  const saveSchedule = async (
+    nextSchedule: DaySchedule[] = schedule,
+    successMessage = "Schedule saved successfully"
+  ) => {
     try {
       setSaving(true);
       setError("");
@@ -180,7 +241,7 @@ const navigate = useNavigate();
         },
         body: JSON.stringify({
           clinic_id: clinicId,
-          schedule,
+          schedule: nextSchedule,
         }),
       });
 
@@ -193,10 +254,11 @@ const navigate = useNavigate();
       if (Array.isArray(data.schedule)) {
         setSchedule(data.schedule);
       }
+      setStatusNow(new Date());
 
      setToast({
   type: "success",
-  message: data.message || "Schedule saved successfully",
+  message: data.message || successMessage,
 });
     } catch (err) {
      setToast({
@@ -206,6 +268,16 @@ const navigate = useNavigate();
     } finally {
       setSaving(false);
     }
+  };
+
+  const toggleWorkingDay = (day: DayKey) => {
+    setMessage("");
+    const nextSchedule = schedule.map((item) =>
+      item.day === day ? { ...item, working: !item.working } : item
+    );
+
+    setSchedule(nextSchedule);
+    void saveSchedule(nextSchedule, "Schedule updated.");
   };
   const removeBlockedDate = async (id: number) => {
     try {
@@ -243,6 +315,12 @@ const navigate = useNavigate();
       setToast({ type: "error", message: "Please provide both date and reason." });
       return;
     }
+
+    if (blockedDate < todayDate) {
+      setToast({ type: "error", message: "Please choose today or a future date." });
+      return;
+    }
+
     try {
       setSaving(true);
       const res = await fetch(`${API}/clinic/schedule/blocked-dates`, {
@@ -260,7 +338,11 @@ const navigate = useNavigate();
       if (!res.ok) {
         throw new Error(data.message || "Failed to add blocked date.");
       }
-      setBlockedDates((prev) => [...prev, data.blockedDate]);
+      setBlockedDates((prev) => {
+        const next = prev.filter((item) => item.date !== data.blockedDate.date);
+        return [...next, data.blockedDate];
+      });
+      setStatusNow(new Date());
       setBlockedDate("");
       setBlockedReason("");
       setToast({
@@ -277,8 +359,8 @@ const navigate = useNavigate();
     }
   };
 
-  const [message, setMessage] = useState("");
-const [error, setError] = useState("");
+  const [, setMessage] = useState("");
+const [, setError] = useState("");
 
   return (
     <div className="Schedule with-sidebar">
@@ -309,7 +391,7 @@ const [error, setError] = useState("");
                 <div className="users-table">
                   <div className="users-row users-header schedule-header">
                     <div className="users-cell">Day</div>
-                    <div className="users-cell">Working</div>
+                    <div className="users-cell">Status</div>
                     <div className="users-cell">Opening Time</div>
                     <div className="users-cell">Closing Time</div>
                     <div className="users-cell">Actions:</div>
@@ -327,9 +409,20 @@ const [error, setError] = useState("");
                         <div className="users-cell users-name">{row.day}</div>
 
                         <div className="users-cell">
-                          <span className={`pill ${row.working ? "pill-success" : "pill-gray"}`}>
-                            {row.working ? "Open" : "Closed"}
-                          </span>
+                          <div className="schedule-status-stack">
+                            <span
+                              className={`pill ${
+                                isScheduleOpenNow(row, statusNow, blockedDates)
+                                  ? "pill-success"
+                                  : "pill-gray"
+                              }`}
+                            >
+                              {getCurrentStatusLabel(row, statusNow, blockedDates)}
+                            </span>
+                            <span className={`pill ${row.working ? "pill-success" : "pill-gray"}`}>
+                              {row.working ? "Working Day" : "Day Off"}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="users-cell">
@@ -381,7 +474,7 @@ const [error, setError] = useState("");
                   <button
                     type="button"
                     className="pill pill-success block-btn"
-                    onClick={saveSchedule}
+                    onClick={() => saveSchedule()}
                     disabled={loading || saving}
                   >
                     {saving ? "Saving..." : "Save Schedule"}
@@ -395,6 +488,7 @@ const [error, setError] = useState("");
                     <input
                       type="date"
                       value={blockedDate}
+                      min={todayDate}
                       onChange={(event) => setBlockedDate(event.target.value)}
                       disabled={saving}
                     />

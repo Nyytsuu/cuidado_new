@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
 const pool = require("../db/pool");
@@ -10,8 +11,8 @@ const pool = require("../db/pool");
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "root123",
-  database: "cuidado_medihelp",
+  password: "Cuidado_2026-cp1!",
+  database: "Cuidado_medihelp",
   port: 3306,
 });
 
@@ -43,6 +44,43 @@ const UPLOAD_MIME_TYPES = new Set([
   "image/webp",
 ]);
 const MAX_UPLOAD_SIZE = 8 * 1024 * 1024;
+const PROFILE_UPLOAD_DIR = path.join("uploads", "profile-pictures");
+const PROFILE_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
+const PROFILE_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const PROFILE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+
+fs.mkdirSync(PROFILE_UPLOAD_DIR, { recursive: true });
+
+const profilePictureStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, PROFILE_UPLOAD_DIR),
+  filename: (_req, file, cb) => {
+    const extension = path.extname(file.originalname || "").toLowerCase();
+    const baseName = path
+      .basename(file.originalname || "clinic", extension)
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .slice(0, 40);
+
+    cb(null, `clinic-${Date.now()}-${baseName || "profile"}${extension}`);
+  },
+});
+
+const profilePictureUpload = multer({
+  storage: profilePictureStorage,
+  limits: { fileSize: PROFILE_IMAGE_MAX_SIZE },
+});
+
+const uploadProfilePicture = (req, res, next) => {
+  profilePictureUpload.single("profile_picture")(req, res, (error) => {
+    if (!error) return next();
+
+    const message =
+      error.code === "LIMIT_FILE_SIZE"
+        ? "Profile picture must be 5MB or smaller."
+        : "Failed to upload profile picture.";
+
+    return res.status(400).json({ message });
+  });
+};
 
 const cleanText = (value) => String(value || "").trim();
 const cleanEmail = (value) => cleanText(value).toLowerCase();
@@ -72,6 +110,46 @@ const getUploadValidationError = (file, label) => {
   }
 
   return "";
+};
+
+const getProfilePictureValidationError = (file) => {
+  if (!file) return "Profile picture is required.";
+
+  const extension = path.extname(file.originalname || "").toLowerCase();
+  if (!PROFILE_IMAGE_EXTENSIONS.has(extension) || !PROFILE_IMAGE_MIME_TYPES.has(file.mimetype)) {
+    return "Profile picture must be a JPG, PNG, or WEBP image.";
+  }
+
+  if (file.size > PROFILE_IMAGE_MAX_SIZE) {
+    return "Profile picture must be 5MB or smaller.";
+  }
+
+  return "";
+};
+
+const removeUploadedFile = async (filePath) => {
+  if (!filePath) return;
+  await fs.promises.unlink(filePath).catch(() => {});
+};
+
+const ensureClinicProfilePictureColumn = async () => {
+  const [columns] = await pool.query(
+    `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'clinics'
+      AND COLUMN_NAME = 'profile_picture'
+    LIMIT 1
+    `
+  );
+
+  if (columns.length === 0) {
+    await pool.query(`
+      ALTER TABLE clinics
+      ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL
+    `);
+  }
 };
 
 const findAccountByEmail = (email) =>
@@ -369,28 +447,61 @@ router.post(
 ================================================= */
 
 // GET all clinics
-router.get("/clinics", (req, res) => {
-  const sql = `
-    SELECT
-      id,
-      clinic_name,
-      email,
-      phone,
-      address,
-      created_at,
-      status
-    FROM clinics
-    ORDER BY created_at DESC
-  `;
+// GET all clinics
+router.get("/clinics", async (req, res) => {
+  try {
+    await ensureScheduleTables();
 
-  db.query(sql, (err, rows) => {
-    if (err) {
-      console.error("FETCH CLINICS ERROR:", err);
-      return res.status(500).json({ message: "Failed to fetch clinics." });
-    }
+    const today = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      timeZone: "Asia/Manila",
+    });
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.clinic_name,
+        c.email,
+        c.phone,
+        c.address,
+        c.created_at,
+        c.status,
+
+        ws.day_of_week,
+        ws.is_working,
+        TIME_FORMAT(ws.opening_time, '%H:%i') AS opening_time,
+        TIME_FORMAT(ws.closing_time, '%H:%i') AS closing_time,
+
+        CASE
+          WHEN bd.id IS NOT NULL THEN 0
+          WHEN ws.is_working = 1
+            AND TIME(CONVERT_TZ(NOW(), @@session.time_zone, '+08:00')) >= ws.opening_time
+            AND TIME(CONVERT_TZ(NOW(), @@session.time_zone, '+08:00')) < ws.closing_time
+          THEN 1
+          ELSE 0
+        END AS is_open_now
+
+      FROM clinics c
+
+      LEFT JOIN clinic_weekly_schedules ws
+        ON ws.clinic_id = c.id
+        AND ws.day_of_week = ?
+
+      LEFT JOIN clinic_blocked_dates bd
+        ON bd.clinic_id = c.id
+        AND bd.blocked_date = CURDATE()
+
+      ORDER BY c.created_at DESC
+      `,
+      [today]
+    );
 
     res.json(rows);
-  });
+  } catch (err) {
+    console.error("FETCH CLINICS ERROR:", err);
+    return res.status(500).json({ message: "Failed to fetch clinics." });
+  }
 });
 
 // GET one clinic
@@ -547,12 +658,15 @@ router.get("/clinic/profile", async (req, res) => {
       return res.status(400).json({ message: "clinic_id is required." });
     }
 
+    await ensureClinicProfilePictureColumn();
+
     const [[clinic]] = await pool.query(
       `
       SELECT
         c.id,
         c.clinic_name,
         c.email,
+        c.profile_picture,
         c.phone,
         c.province_id,
         c.municipality_id,
@@ -590,6 +704,37 @@ router.get("/clinic/profile", async (req, res) => {
       return res.status(404).json({ message: "Clinic not found." });
     }
 
+    await ensureScheduleTables();
+
+    const [weeklySchedule] = await pool.query(
+      `
+      SELECT
+        clinic_id,
+        day_of_week,
+        is_working,
+        TIME_FORMAT(opening_time, '%H:%i:%s') AS opening_time,
+        TIME_FORMAT(closing_time, '%H:%i:%s') AS closing_time
+      FROM clinic_weekly_schedules
+      WHERE clinic_id = ?
+      ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+      `,
+      [clinicId]
+    );
+
+    const [blockedDates] = await pool.query(
+      `
+      SELECT
+        id,
+        clinic_id,
+        DATE_FORMAT(blocked_date, '%Y-%m-%d') AS date,
+        reason
+      FROM clinic_blocked_dates
+      WHERE clinic_id = ? AND blocked_date >= CURDATE()
+      ORDER BY blocked_date ASC
+      `,
+      [clinicId]
+    );
+
     const [services] = await pool.query(
       `
       SELECT
@@ -617,6 +762,8 @@ router.get("/clinic/profile", async (req, res) => {
       ...clinic,
       location_text: locationParts.join(", "),
       services,
+      weekly_schedule: weeklySchedule,
+      blocked_dates: blockedDates,
     });
   } catch (err) {
     console.error("Load clinic profile error:", err);
@@ -766,6 +913,128 @@ router.put("/clinic/profile", async (req, res) => {
   }
 });
 
+router.put(
+  "/clinic/profile-picture",
+  uploadProfilePicture,
+  async (req, res) => {
+    try {
+      const clinicId = Number(req.body.clinic_id);
+
+      if (!clinicId) {
+        await removeUploadedFile(req.file?.path);
+        return res.status(400).json({ message: "clinic_id is required." });
+      }
+
+      const validationError = getProfilePictureValidationError(req.file);
+      if (validationError) {
+        await removeUploadedFile(req.file?.path);
+        return res.status(400).json({ message: validationError });
+      }
+
+      await ensureClinicProfilePictureColumn();
+
+      const [[clinic]] = await pool.query(
+        `
+        SELECT id
+        FROM clinics
+        WHERE id = ?
+        LIMIT 1
+        `,
+        [clinicId]
+      );
+
+      if (!clinic) {
+        await removeUploadedFile(req.file?.path);
+        return res.status(404).json({ message: "Clinic not found." });
+      }
+
+      const profilePicturePath = path.posix.join(
+        "uploads",
+        "profile-pictures",
+        req.file.filename
+      );
+
+      await pool.query(
+        `
+        UPDATE clinics
+        SET profile_picture = ?
+        WHERE id = ?
+        `,
+        [profilePicturePath, clinicId]
+      );
+
+      return res.json({
+        message: "Clinic profile picture updated.",
+        profile_picture: profilePicturePath,
+      });
+    } catch (err) {
+      await removeUploadedFile(req.file?.path);
+      console.error("Update clinic profile picture error:", err);
+      return res.status(500).json({ message: "Failed to update clinic profile picture." });
+    }
+  }
+);
+
+router.put("/clinic/password", async (req, res) => {
+  try {
+    const clinicId = Number(req.body.clinic_id);
+    const currentPassword = String(req.body.current_password || "");
+    const newPassword = String(req.body.new_password || "");
+
+    if (!clinicId) {
+      return res.status(400).json({ message: "clinic_id is required." });
+    }
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required.",
+      });
+    }
+
+    if (!PASSWORD_RE.test(newPassword)) {
+      return res.status(400).json({
+        message: "New password must be 8+ characters with uppercase, lowercase, number, and symbol.",
+      });
+    }
+
+    const [[clinic]] = await pool.query(
+      `
+      SELECT id, password_hash
+      FROM clinics
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [clinicId]
+    );
+
+    if (!clinic) {
+      return res.status(404).json({ message: "Clinic not found." });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, clinic.password_hash || "");
+
+    if (!validPassword) {
+      return res.status(401).json({ message: "Current password is incorrect." });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+
+    await pool.query(
+      `
+      UPDATE clinics
+      SET password_hash = ?
+      WHERE id = ?
+      `,
+      [passwordHash, clinicId]
+    );
+
+    return res.json({ message: "Clinic password updated." });
+  } catch (err) {
+    console.error("Update clinic password error:", err);
+    return res.status(500).json({ message: "Failed to update clinic password." });
+  }
+});
+
 const DAYS = [
   "Monday",
   "Tuesday",
@@ -826,6 +1095,14 @@ const toTimeInput = (value, fallback) => {
   return match ? `${match[1]}:${match[2]}` : fallback;
 };
 
+const toDateInputValue = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
 const isValidTime = (value) => {
   if (!/^\d{2}:\d{2}$/.test(String(value || ""))) return false;
   const [hours, minutes] = String(value).split(":").map(Number);
@@ -835,6 +1112,14 @@ const isValidTime = (value) => {
 const timeToMinutes = (value) => {
   const [hours, minutes] = String(value).split(":").map(Number);
   return hours * 60 + minutes;
+};
+
+const toBooleanFlag = (value) => {
+  if (value === true || value === 1) return true;
+  if (value === false || value === 0 || value == null) return false;
+
+  const normalized = String(value).trim().toLowerCase();
+  return ["1", "true", "yes", "open", "working"].includes(normalized);
 };
 
 const parseOperatingDays = (value) => {
@@ -895,7 +1180,7 @@ const normalizeSchedule = (items) => {
       throw new Error("Invalid schedule day.");
     }
 
-    const working = Boolean(item.working);
+    const working = toBooleanFlag(item.working);
     const open = String(item.open || "").trim();
     const close = String(item.close || "").trim();
 
@@ -948,7 +1233,7 @@ const toScheduleResponse = (rows) =>
 
     return {
       day,
-      working: Boolean(row?.is_working ?? row?.working),
+      working: toBooleanFlag(row?.is_working ?? row?.working),
       open: toTimeInput(row?.opening_time ?? row?.open, "08:00"),
       close: toTimeInput(row?.closing_time ?? row?.close, "17:00"),
     };
@@ -1152,6 +1437,10 @@ router.post("/clinic/schedule/blocked-dates", async (req, res) => {
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({ message: "A valid blocked date is required." });
+    }
+
+    if (date < toDateInputValue()) {
+      return res.status(400).json({ message: "Blocked date cannot be in the past." });
     }
 
     await ensureScheduleTables();

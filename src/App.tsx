@@ -16,6 +16,7 @@ import FindClinic from "./SigninUser/FindClinic";
 import Homepage from "./SigninUser/Homepage";
 import Notifications from "./SigninUser/Notification";
 import Profile from "./SigninUser/UserProfile";
+import UserSettings from "./SigninUser/UserSettings";
 import BMICalculator from "./SigninUser/BMICalculator";
 import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
@@ -40,7 +41,9 @@ import ClinicAppoint from "./Clinic/ClinicAppoint";
 import Patients from "./Clinic/Patient";
 import Services from "./Clinic/services";
 import ClinicProfile from "./Clinic/ClinicProfile";
+import ClinicSettings from "./Clinic/ClinicSettings";
 import Schedule from "./Clinic/Schedule";
+import Clinicprofile from "./Clinic/ClinicProfile";
 function App() {
   return (
     <BrowserRouter>
@@ -64,6 +67,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         
         <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<UserSettings />} />
         <Route path="/bmi-calculator" element={<BMICalculator />} />
         <Route path="/stress-index" element={<StressIndex />} />
         <Route path="/voice-assistant" element={<UserVoiceAssistant />} />
@@ -75,7 +79,9 @@ function App() {
 <Route path="/clinic/patients" element={<Patients />} />
 <Route path="/clinic/services" element={<Services />} /> 
 <Route path="/clinic/profile" element={<ClinicProfile />} />
+<Route path="/clinic/settings" element={<ClinicSettings />} />
 <Route path="/clinic/schedule" element={<Schedule />} />
+<Route path="/clinic/profile" element={<Clinicprofile />} />
 
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>

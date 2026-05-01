@@ -35,6 +35,7 @@ type ClinicProfileResponse = {
   id: number;
   clinic_name: string;
   email: string;
+  profile_picture: string | null;
   phone: string | null;
   province_id: number | null;
   municipality_id: number | null;
@@ -76,6 +77,15 @@ type ProfileForm = {
 };
 
 const API = "http://localhost:5000/api";
+const API_BASE = "http://localhost:5000";
+const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+
+const toUploadUrl = (value?: string | null) => {
+  const path = String(value || "").trim();
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
+};
 
 const matchesSearch = (
   query: string,
@@ -106,23 +116,29 @@ const emptyForm: ProfileForm = {
 const getStoredClinicId = () => {
   try {
     const storedUser = localStorage.getItem("user");
-    const user = storedUser ? JSON.parse(storedUser) : null;
 
-    if (user?.role === "clinic" && user?.id) {
-      return Number(user.id);
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+
+      if (user?.id) {
+        return Number(user.id);
+      }
+
+      if (user?.clinic_id) {
+        return Number(user.clinic_id);
+      }
     }
 
-    const role = localStorage.getItem("role");
     const userId = localStorage.getItem("userId");
-
-    if (role === "clinic" && userId) {
+    if (userId) {
       return Number(userId);
     }
-  } catch {
-    return 1;
+
+  } catch (err) {
+    console.error("Clinic ID parse error:", err);
   }
 
-  return 1;
+  return null; // ❗ no default clinic
 };
 
 const toTimeInput = (value?: string | null, fallback = "08:00") => {
@@ -201,9 +217,14 @@ export default function ClinicProfile() {
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [profilePictureSaving, setProfilePictureSaving] = useState(false);
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState("");
   const [editOpen, setEditOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const displayProfilePicture =
+    profilePicturePreview || toUploadUrl(profile?.profile_picture);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -230,6 +251,14 @@ export default function ClinicProfile() {
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => {
+    return () => {
+      if (profilePicturePreview) {
+        URL.revokeObjectURL(profilePicturePreview);
+      }
+    };
+  }, [profilePicturePreview]);
 
   const serviceNames = useMemo(() => {
     const activeServiceNames =
@@ -333,6 +362,96 @@ export default function ClinicProfile() {
     }
   };
 
+  const handleProfilePictureChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setMessage("");
+    setError("");
+
+    if (!ACCEPTED_PROFILE_IMAGE_TYPES.has(file.type)) {
+      setProfilePictureFile(null);
+      setProfilePicturePreview("");
+      setError("Profile picture must be a JPG, PNG, or WEBP image.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setProfilePictureFile(null);
+      setProfilePicturePreview("");
+      setError("Profile picture must be 5MB or smaller.");
+      return;
+    }
+
+    setProfilePictureFile(file);
+    setProfilePicturePreview(URL.createObjectURL(file));
+  };
+
+  const saveProfilePicture = async () => {
+    try {
+      if (!clinicId) {
+        throw new Error("No logged-in clinic found.");
+      }
+
+      if (!profilePictureFile) {
+        throw new Error("Please choose a profile picture first.");
+      }
+
+      setProfilePictureSaving(true);
+      setError("");
+      setMessage("");
+
+      const formData = new FormData();
+      formData.append("clinic_id", String(clinicId));
+      formData.append("profile_picture", profilePictureFile);
+
+      const res = await fetch(`${API}/clinic/profile-picture`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to update clinic profile picture.");
+      }
+
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              profile_picture: data.profile_picture || null,
+            }
+          : prev
+      );
+      setProfilePictureFile(null);
+      setProfilePicturePreview("");
+
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...JSON.parse(storedUser),
+              profile_picture: data.profile_picture || "",
+            })
+          );
+        }
+      } catch (storageError) {
+        console.error("Clinic profile picture storage update error:", storageError);
+      }
+
+      setMessage("Clinic profile picture updated.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update clinic profile picture."
+      );
+    } finally {
+      setProfilePictureSaving(false);
+    }
+  };
+
   return (
     <div
       className={`ClinicProfile with-sidebar ${
@@ -357,7 +476,7 @@ export default function ClinicProfile() {
           <div className="profile-title-row">
             <div>
               <h1>Clinic Profile</h1>
-              <p>Manage the public clinic details saved in the database.</p>
+
             </div>
 
             <button
@@ -381,13 +500,41 @@ export default function ClinicProfile() {
             <>
               <div className="top-grid">
                 <aside className="profile-card">
-                  <div className="logo-circle">
-                    <span>{getInitials(profile.clinic_name) || <FaPlus />}</span>
+                  <div className={`logo-circle ${displayProfilePicture ? "has-image" : ""}`}>
+                    {displayProfilePicture ? (
+                      <img src={displayProfilePicture} alt={`${profile.clinic_name} profile`} />
+                    ) : (
+                      <span>{getInitials(profile.clinic_name) || <FaPlus />}</span>
+                    )}
                   </div>
 
                   <h2 className="clinic-name">{profile.clinic_name}</h2>
                   <p className="clinic-subtitle">{toTitle(profile.specialization)}</p>
                   <p className="clinic-email">{profile.email}</p>
+
+                  <div className="profile-picture-actions">
+                    <input
+                      id="clinic-profile-picture"
+                      className="profile-picture-input"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleProfilePictureChange}
+                    />
+                    <label className="profile-picture-upload" htmlFor="clinic-profile-picture">
+                      Choose Photo
+                    </label>
+                    <button
+                      className="profile-picture-save"
+                      type="button"
+                      onClick={saveProfilePicture}
+                      disabled={!profilePictureFile || profilePictureSaving}
+                    >
+                      {profilePictureSaving ? "Saving..." : "Save Photo"}
+                    </button>
+                    <span className="profile-picture-hint">
+                      {profilePictureFile?.name || "JPG, PNG, or WEBP"}
+                    </span>
+                  </div>
 
                   <div className="clinic-type">
                     <FaStethoscope />

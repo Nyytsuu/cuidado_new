@@ -247,20 +247,22 @@ console.log("CAPTCHA KEY:", siteKey);
             )}
 
             {showCaptcha && (
-              <div className="captcha-wrap">
-                {!siteKey ? (
-                  <p className="captcha-error">
-                    Missing reCAPTCHA site key.
-                  </p>
-                ) : (
-                  <ReCAPTCHA
-                    sitekey={siteKey}
-                    onChange={(token) => setCaptchaToken(token)}
-                    onExpired={() => setCaptchaToken(null)}
-                  />
-                )}
-              </div>
-            )}
+  <div className="captcha-wrap">
+    {!siteKey ? (
+      <p className="captcha-error">
+        Missing reCAPTCHA site key.
+      </p>
+    ) : (
+      <div className="captcha-box">
+        <ReCAPTCHA
+          sitekey={siteKey}
+          onChange={(token) => setCaptchaToken(token)}
+          onExpired={() => setCaptchaToken(null)}
+        />
+      </div>
+    )}
+  </div>
+)}
 
             <button type="submit" disabled={loading}>
               {loading ? "Logging in..." : "Login"}

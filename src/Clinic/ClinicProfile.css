@@ -1,3 +1,4 @@
+
 .ClinicProfile {
   --sidebar-width-collapsed: 70px;
   --sidebar-width-expanded: 220px;
@@ -15,6 +16,8 @@
   color: var(--profile-text);
   font-family: Inter, Arial, Helvetica, sans-serif;
   transition: padding-left 0.25s ease;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .ClinicProfile.sidebar-expanded {
@@ -115,6 +118,73 @@
   font-size: 28px;
   font-weight: 900;
   box-shadow: 0 12px 22px rgba(57, 154, 145, 0.18);
+}
+
+.ClinicProfile .logo-circle.has-image {
+  overflow: hidden;
+  padding: 0;
+  background: #ffffff;
+  border: 2px solid #dce9e7;
+}
+
+.ClinicProfile .logo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ClinicProfile .profile-picture-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 auto 18px;
+}
+
+.ClinicProfile .profile-picture-input {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ClinicProfile .profile-picture-upload,
+.ClinicProfile .profile-picture-save {
+  min-height: 36px;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.ClinicProfile .profile-picture-upload {
+  background: #e6f5f3;
+  color: var(--profile-accent-dark);
+  border: 1px solid #c7e5e1;
+}
+
+.ClinicProfile .profile-picture-save {
+  background: var(--profile-accent);
+  color: #ffffff;
+}
+
+.ClinicProfile .profile-picture-save:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ClinicProfile .profile-picture-hint {
+  width: 100%;
+  color: var(--profile-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .ClinicProfile .clinic-name {

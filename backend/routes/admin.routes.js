@@ -3,6 +3,25 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
 const PDFDocument = require("pdfkit");
+
+const csvEscape = (value) => {
+  if (value === null || value === undefined) return "";
+
+  const text = String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+const toCsvRow = (values) => values.map(csvEscape).join(",");
+
+const formatCsvDateTime = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+
+  return date.toISOString().slice(0, 19).replace("T", " ");
+};
+
 /* =========================
    USERS
 ========================= */
@@ -512,6 +531,117 @@ router.get("/reports/export/pdf", async (req, res) => {
   } catch (err) {
     console.error("PDF export error:", err);
     res.status(500).json({ message: "Failed to export PDF" });
+  }
+});
+
+// CSV EXPORT
+// GET /api/admin/reports/export/csv
+router.get("/reports/export/csv", async (req, res) => {
+  try {
+    const [[appt]] = await pool.query(`
+      SELECT
+        COUNT(*) AS total_all,
+        SUM(DATE(start_at) = CURDATE()) AS total_today,
+        SUM(status='pending') AS pending,
+        SUM(status='confirmed') AS confirmed,
+        SUM(status='cancelled') AS cancelled,
+        SUM(status='completed') AS completed,
+        SUM(status='no_show') AS no_show,
+        SUM(start_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
+            AND start_at <  DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
+        ) AS this_month
+      FROM appointments
+    `);
+
+    const [monthly] = await pool.query(`
+      SELECT DATE_FORMAT(start_at, '%Y-%m') AS month, COUNT(*) AS total
+      FROM appointments
+      GROUP BY DATE_FORMAT(start_at, '%Y-%m')
+      ORDER BY month DESC
+      LIMIT 6
+    `);
+
+    const [topClinics] = await pool.query(`
+      SELECT c.clinic_name, COUNT(a.id) AS totalBookings
+      FROM clinics c
+      LEFT JOIN appointments a ON a.clinic_id = c.id
+      GROUP BY c.id
+      ORDER BY totalBookings DESC
+      LIMIT 10
+    `);
+
+    const [appointments] = await pool.query(`
+      SELECT
+        a.id,
+        COALESCE(a.patient_name_snapshot, u.full_name, 'Unknown Patient') AS patient_name,
+        COALESCE(a.clinic_name_snapshot, c.clinic_name, 'Unknown Clinic') AS clinic_name,
+        a.start_at,
+        a.end_at,
+        a.purpose,
+        a.status,
+        a.created_at
+      FROM appointments a
+      LEFT JOIN users u ON u.id = a.user_id
+      LEFT JOIN clinics c ON c.id = a.clinic_id
+      ORDER BY a.start_at DESC
+    `);
+
+    const lines = [
+      toCsvRow(["CUIDADO Admin Reports"]),
+      toCsvRow(["Generated", formatCsvDateTime(new Date())]),
+      "",
+      toCsvRow(["Appointment Summary"]),
+      toCsvRow(["Metric", "Value"]),
+      toCsvRow(["Total appointments", appt.total_all || 0]),
+      toCsvRow(["Appointments today", appt.total_today || 0]),
+      toCsvRow(["Appointments this month", appt.this_month || 0]),
+      toCsvRow(["Pending", appt.pending || 0]),
+      toCsvRow(["Confirmed", appt.confirmed || 0]),
+      toCsvRow(["Cancelled", appt.cancelled || 0]),
+      toCsvRow(["Completed", appt.completed || 0]),
+      toCsvRow(["No-show", appt.no_show || 0]),
+      "",
+      toCsvRow(["Appointments per Month"]),
+      toCsvRow(["Month", "Total"]),
+      ...monthly.map((row) => toCsvRow([row.month, row.total])),
+      "",
+      toCsvRow(["Top Clinics"]),
+      toCsvRow(["Clinic", "Total Bookings"]),
+      ...topClinics.map((row) => toCsvRow([row.clinic_name, row.totalBookings])),
+      "",
+      toCsvRow(["Appointment Details"]),
+      toCsvRow([
+        "ID",
+        "Patient",
+        "Clinic",
+        "Start",
+        "End",
+        "Purpose",
+        "Status",
+        "Created",
+      ]),
+      ...appointments.map((row) =>
+        toCsvRow([
+          row.id,
+          row.patient_name,
+          row.clinic_name,
+          formatCsvDateTime(row.start_at),
+          formatCsvDateTime(row.end_at),
+          row.purpose,
+          row.status,
+          formatCsvDateTime(row.created_at),
+        ])
+      ),
+    ];
+
+    const filename = `reports-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(`\uFEFF${lines.join("\r\n")}`);
+  } catch (err) {
+    console.error("CSV export error:", err);
+    res.status(500).json({ message: "Failed to export CSV" });
   }
 });
 router.get("/reports/summary", async (req, res) => {

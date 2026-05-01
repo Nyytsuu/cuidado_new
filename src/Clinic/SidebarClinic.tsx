@@ -111,12 +111,7 @@ export default function SidebarClinic({
             </Link>
           </div>
 
-          <div className="sidebar-item">
-            <Link to="/clinic/settings">
-              <img src={settingIcon} />
-              <span>Settings</span>
-            </Link>
-          </div>
+          
 
           {/* LOGOUT SIDEBAR */}
           <div className="sidebar-item logout">
@@ -150,8 +145,8 @@ export default function SidebarClinic({
         </div>
 
         <nav className="header-nav">
-          <a className="nav-link">Home</a>
-          <a className="nav-link">Appointments</a>
+          <Link className="nav-link" to="/clinic/dashboard">Home</Link>
+          <Link className="nav-link" to="/clinic/appointments">Appointments</Link>
 
           <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
             <button
@@ -162,8 +157,7 @@ export default function SidebarClinic({
             </button>
 
             <div className="profile-dropdown">
-              <a>My Profile</a>
-              <a>Settings</a>
+              <Link to="/clinic/profile">My Profile</Link>
 
               {/* HEADER LOGOUT */}
               <button

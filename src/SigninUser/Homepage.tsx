@@ -25,7 +25,7 @@ const topServices = [
     title: "Clinics",
     subtitle: "Find health-care centers",
     iconType: "clinics",
-    path: "/clinics",
+    path: "/find-clinic",
   },
   {
     title: "Diagnostics",
@@ -52,7 +52,7 @@ const quickActions = [
     title: "Health Tips",
     subtitle: "Read health & wellness advice",
     iconType: "healthtips",
-    path: "/health-tips",
+    path: "/browse-health",
   },
 ];
 
@@ -61,7 +61,7 @@ const otherServices = [
     title: "Hospital Locator",
     subtitle: "Find a nearby health center",
     iconType: "hospital",
-    path: "/clinics",
+    path: "/find-clinic",
   },
   {
     title: "BMI Calculator",
@@ -98,6 +98,45 @@ const clinicMarkers = [
   },
 ];
 
+const siteSearchTargets = [
+  {
+    path: "/appointments",
+    keywords: ["appointment", "appointments", "booking", "book", "schedule"],
+  },
+  {
+    path: "/find-clinic",
+    keywords: ["clinic", "clinics", "doctor", "hospital", "locator", "nearby"],
+  },
+  {
+    path: "/browse-health",
+    keywords: ["health", "topics", "tips", "condition", "articles"],
+  },
+  {
+    path: "/symptom-checker",
+    keywords: ["symptom", "symptoms", "checker"],
+  },
+  {
+    path: "/bmi-calculator",
+    keywords: ["bmi", "weight", "height"],
+  },
+  {
+    path: "/stress-index",
+    keywords: ["stress", "burnout", "mental"],
+  },
+  {
+    path: "/voice-assistant",
+    keywords: ["voice", "assistant", "mic", "microphone"],
+  },
+  {
+    path: "/profile",
+    keywords: ["profile", "account", "settings"],
+  },
+  {
+    path: "/notifications",
+    keywords: ["notification", "notifications", "alerts"],
+  },
+];
+
 const DefaultIcon = L.icon({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -118,13 +157,43 @@ export default function Homepage() {
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [siteSearchQuery, setSiteSearchQuery] = useState("");
+  const [healthTopicSearchQuery, setHealthTopicSearchQuery] = useState("");
   const [articles, setArticles] = useState<Article[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
   const [articlesError, setArticlesError] = useState("");
 
   const handleNavigate = (path: string) => {
     navigate(path);
+  };
+
+  const handleSiteSearch = (value: string) => {
+    const keyword = value.trim().toLowerCase();
+
+    if (!keyword) return;
+
+    const target = siteSearchTargets.find((item) =>
+      item.keywords.some(
+        (targetKeyword) =>
+          targetKeyword.includes(keyword) || keyword.includes(targetKeyword)
+      )
+    );
+
+    navigate(
+      target
+        ? target.path
+        : `/browse-health?search=${encodeURIComponent(value.trim())}`
+    );
+  };
+
+  const handleHealthTopicSearch = () => {
+    const keyword = healthTopicSearchQuery.trim();
+
+    navigate(
+      keyword
+        ? `/browse-health?search=${encodeURIComponent(keyword)}`
+        : "/browse-health"
+    );
   };
 
   const loadArticles = async (query?: string) => {
@@ -157,7 +226,21 @@ export default function Homepage() {
   useEffect(() => {
     loadArticles("health");
   }, []);
+const [userName, setUserName] = useState("");
 
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+
+  if (storedUser) {
+    const user = JSON.parse(storedUser);
+
+    if (user?.full_name) {
+      setUserName(user.full_name);
+    } else if (user?.name) {
+      setUserName(user.name);
+    }
+  }
+}, []);
   return (
     <div className={`homepage ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
@@ -167,10 +250,10 @@ export default function Homepage() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Search health topics..."
-        onSearchSubmit={(value) => loadArticles(value || "health")}
+        searchValue={siteSearchQuery}
+        onSearchChange={setSiteSearchQuery}
+        searchPlaceholder="Search site..."
+        onSearchSubmit={handleSiteSearch}
       />
 
       <div className="homepage-content">
@@ -178,7 +261,7 @@ export default function Homepage() {
           <div className="homepage-layout">
             <section className="homepage-left">
               <div className="welcome-box">
-                <h1>Welcome back, Dr. John Smith!</h1>
+                <h1>Welcome back, {userName} </h1>
                 <p>What are you looking for?</p>
               </div>
 
@@ -186,11 +269,11 @@ export default function Homepage() {
   <input
     type="text"
     placeholder="Search health topics..."
-    value={searchQuery}
-    onChange={(e) => setSearchQuery(e.target.value)}
+    value={healthTopicSearchQuery}
+    onChange={(e) => setHealthTopicSearchQuery(e.target.value)}
     onKeyDown={(e) => {
       if (e.key === "Enter") {
-        loadArticles(searchQuery || "health");
+        handleHealthTopicSearch();
       }
     }}
   />
@@ -198,7 +281,7 @@ export default function Homepage() {
     aria-label="Search"
     type="button"
     className="main-search-btn"
-    onClick={() => loadArticles(searchQuery || "health")}
+    onClick={handleHealthTopicSearch}
   >
     Search
   </button>

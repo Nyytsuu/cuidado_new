@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Search,
   MapPin,
@@ -43,19 +43,55 @@ type Clinic = {
   address: string;
   specialization: string;
   services_offered: string;
-  opening_time: string;
-  closing_time: string;
+  opening_time: string | null;
+  closing_time: string | null;
   operating_days: string;
   created_at: string;
   status: string;
   account_status: string;
   latitude: string | number | null;
   longitude: string | number | null;
+  is_working_today?: number | boolean;
+  is_blocked_today?: number | boolean;
+  is_open_now?: number | boolean;
+  today_opening_time?: string | null;
+  today_closing_time?: string | null;
+  clinic_today?: string;
+  clinic_now_time?: string;
+  weekly_schedule?: WeeklyScheduleDay[];
+  blocked_dates?: BlockedDate[];
 };
 
 type ClinicWithDistance = Clinic & {
   distanceKm: number | null;
   isOpenNow: boolean;
+};
+
+type WeeklyScheduleDay = {
+  clinic_id?: number;
+  day_of_week: string;
+  is_working: number | boolean;
+  opening_time: string | null;
+  closing_time: string | null;
+};
+
+type BlockedDate = {
+  id?: number;
+  clinic_id?: number;
+  date: string;
+  reason?: string;
+};
+
+type ClinicScheduleApiDay = {
+  day: string;
+  working: number | boolean | string;
+  open: string | null;
+  close: string | null;
+};
+
+type ClinicScheduleApiResponse = {
+  schedule?: ClinicScheduleApiDay[];
+  blockedDates?: BlockedDate[];
 };
 
 function toDateInputValue(date: Date = new Date()): string {
@@ -78,6 +114,234 @@ function isPastAppointmentTime(date: string, time: string): boolean {
 
 function getMinimumTimeForDate(date: string): string | undefined {
   return date === toDateInputValue() ? toTimeInputValue() : undefined;
+}
+
+function normalizeDay(value: string): string {
+  return value.trim().toLowerCase().replace(/\./g, "");
+}
+
+function getDayName(date: Date, format: "long" | "short"): string {
+  return date.toLocaleDateString("en-US", { weekday: format }).toLowerCase();
+}
+
+function isEnabledFlag(value: number | boolean | string | null | undefined): boolean {
+  return value === true || Number(value) === 1;
+}
+
+async function loadClinicScheduleSnapshot(clinic: Clinic): Promise<Clinic> {
+  try {
+    const res = await fetch(
+      `http://localhost:5000/api/clinic/schedule?clinic_id=${clinic.id}`,
+      { cache: "no-store" }
+    );
+
+    if (!res.ok) return clinic;
+
+    const data = (await res.json()) as ClinicScheduleApiResponse;
+    const weeklySchedule = Array.isArray(data.schedule)
+      ? data.schedule.map((item) => ({
+          clinic_id: clinic.id,
+          day_of_week: item.day,
+          is_working: isEnabledFlag(item.working),
+          opening_time: item.open,
+          closing_time: item.close,
+        }))
+      : clinic.weekly_schedule;
+    const blockedDates = Array.isArray(data.blockedDates)
+      ? data.blockedDates
+      : clinic.blocked_dates;
+    const todayDate = clinic.clinic_today || toDateInputValue();
+    const isBlockedToday = blockedDates?.some(
+      (blockedDate) => blockedDate.date === todayDate
+    );
+
+    return {
+      ...clinic,
+      weekly_schedule: weeklySchedule,
+      blocked_dates: blockedDates,
+      is_blocked_today: isBlockedToday ? true : clinic.is_blocked_today,
+    };
+  } catch {
+    return clinic;
+  }
+}
+
+function findScheduleForDate(
+  clinic: Clinic,
+  date: Date
+): WeeklyScheduleDay | undefined {
+  const targetDay = getDayName(date, "long");
+  return clinic.weekly_schedule?.find(
+    (item) => item.day_of_week.toLowerCase() === targetDay
+  );
+}
+
+function isOperatingFromSummary(clinic: Clinic, date: Date): boolean {
+  const today = getDayName(date, "short");
+  const daysRaw = (clinic.operating_days || "").toLowerCase();
+
+  if (daysRaw.includes("mon-fri")) {
+    return ["mon", "tue", "wed", "thu", "fri"].includes(today);
+  }
+
+  if (daysRaw.includes("mon-sat")) {
+    return ["mon", "tue", "wed", "thu", "fri", "sat"].includes(today);
+  }
+
+  if (daysRaw.includes("daily")) {
+    return true;
+  }
+
+  const parts = daysRaw.split(",").map(normalizeDay).filter(Boolean);
+  return parts.some((day) => today.startsWith(day));
+}
+
+function parseClockTime(value: string | null | undefined): [number, number] | null {
+  const match = String(value || "").match(/^(\d{2}):(\d{2})/);
+  if (!match) return null;
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  return [hours, minutes];
+}
+
+function parseDateInputValue(value: string): Date | null {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+
+  if (Number.isNaN(date.getTime())) return null;
+  return date;
+}
+
+function formatClockTime(value: string | null | undefined): string {
+  const parts = parseClockTime(value);
+  if (!parts) return "";
+
+  const [hours, minutes] = parts;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+function getClosureMessageForDate(clinic: Clinic, date: Date): string | null {
+  const dateValue = toDateInputValue(date);
+
+  if (
+    (dateValue === toDateInputValue() && isEnabledFlag(clinic.is_blocked_today)) ||
+    clinic.blocked_dates?.some((blockedDate) => blockedDate.date === dateValue)
+  ) {
+    return "Clinic is unavailable on the selected date.";
+  }
+
+  const schedule = findScheduleForDate(clinic, date);
+  const dayName = date.toLocaleDateString("en-US", { weekday: "long" });
+
+  if (schedule) {
+    return isEnabledFlag(schedule.is_working)
+      ? null
+      : `Clinic is closed on ${dayName}.`;
+  }
+
+  return isOperatingFromSummary(clinic, date)
+    ? null
+    : `Clinic is closed on ${dayName}.`;
+}
+
+function getScheduleHoursForDate(
+  clinic: Clinic,
+  date: Date
+): { openTime: string | null | undefined; closeTime: string | null | undefined } {
+  const schedule = findScheduleForDate(clinic, date);
+  const isToday = toDateInputValue(date) === toDateInputValue();
+
+  return {
+    openTime:
+      schedule?.opening_time ||
+      (isToday ? clinic.today_opening_time : null) ||
+      clinic.opening_time,
+    closeTime:
+      schedule?.closing_time ||
+      (isToday ? clinic.today_closing_time : null) ||
+      clinic.closing_time,
+  };
+}
+
+function getAppointmentScheduleMessage(
+  clinic: Clinic,
+  dateValue: string,
+  timeValue: string
+): string | null {
+  const date = parseDateInputValue(dateValue);
+  if (!date) return "Please select a valid appointment date.";
+
+  const closureMessage = getClosureMessageForDate(clinic, date);
+  if (closureMessage) return closureMessage;
+
+  const { openTime, closeTime } = getScheduleHoursForDate(clinic, date);
+  const openParts = parseClockTime(openTime);
+  const closeParts = parseClockTime(closeTime);
+  const selectedParts = parseClockTime(timeValue);
+
+  if (!openParts || !closeParts || !selectedParts) {
+    return "Clinic hours are not available for the selected date.";
+  }
+
+  const selectedMinutes = selectedParts[0] * 60 + selectedParts[1];
+  const openMinutes = openParts[0] * 60 + openParts[1];
+  const closeMinutes = closeParts[0] * 60 + closeParts[1];
+
+  if (selectedMinutes < openMinutes || selectedMinutes >= closeMinutes) {
+    return `Please choose a time between ${formatClockTime(openTime)} and ${formatClockTime(closeTime)}.`;
+  }
+
+  return null;
+}
+
+function isClinicOpenNow(clinic: Clinic, now: Date = new Date()): boolean {
+  const todayDate = clinic.clinic_today || toDateInputValue(now);
+
+  if (
+    isEnabledFlag(clinic.is_blocked_today) ||
+    clinic.blocked_dates?.some((blockedDate) => blockedDate.date === todayDate)
+  ) {
+    return false;
+  }
+
+  if (getClosureMessageForDate(clinic, now)) {
+    return false;
+  }
+
+  const { openTime, closeTime } = getScheduleHoursForDate(clinic, now);
+  const openParts = parseClockTime(openTime);
+  const closeParts = parseClockTime(closeTime);
+
+  if (!openParts || !closeParts) return false;
+
+  const [openH, openM] = openParts;
+  const [closeH, closeM] = closeParts;
+
+  const openDate = new Date(now);
+  openDate.setHours(openH, openM, 0, 0);
+
+  const closeDate = new Date(now);
+  closeDate.setHours(closeH, closeM, 0, 0);
+
+  const localOpenNow = now >= openDate && now < closeDate;
+
+  if (clinic.weekly_schedule?.length || clinic.blocked_dates?.length) {
+    return localOpenNow;
+  }
+
+  if (clinic.is_open_now !== undefined && clinic.is_open_now !== null) {
+    return isEnabledFlag(clinic.is_open_now);
+  }
+
+  return localOpenNow;
 }
 
 function MapFlyTo({
@@ -110,6 +374,7 @@ export default function FindClinic() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [statusTick, setStatusTick] = useState(() => Date.now());
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locating, setLocating] = useState(false);
@@ -131,7 +396,7 @@ export default function FindClinic() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successPopupMessage, setSuccessPopupMessage] = useState("");
 
-  const fetchClinics = async (searchOverride = search) => {
+  const fetchClinics = useCallback(async (searchOverride = search) => {
     try {
       setLoading(true);
       setError("");
@@ -141,24 +406,58 @@ export default function FindClinic() {
       if (specialization !== "All") params.append("specialization", specialization);
       if (openNow) params.append("openNow", "true");
 
-      const res = await fetch(`http://localhost:5000/api/clinics?${params.toString()}`);
+      const res = await fetch(`http://localhost:5000/api/clinics?${params.toString()}`, {
+        cache: "no-store",
+      });
       const result = await res.json();
 
       if (!res.ok) {
         throw new Error("Failed to fetch clinics");
       }
 
-      setClinics(Array.isArray(result) ? result : []);
+      const clinicRows: Clinic[] = Array.isArray(result) ? result : [];
+      const clinicsWithSchedules = await Promise.all(
+        clinicRows.map(loadClinicScheduleSnapshot)
+      );
+      const statusNow = new Date();
+
+      setStatusTick(statusNow.getTime());
+      setClinics(
+        openNow
+          ? clinicsWithSchedules.filter((clinic) =>
+              isClinicOpenNow(clinic, statusNow)
+            )
+          : clinicsWithSchedules
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [openNow, search, specialization]);
 
   useEffect(() => {
-    fetchClinics();
-  }, []);
+    void fetchClinics();
+  }, [fetchClinics]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setStatusTick(Date.now());
+      void fetchClinics();
+    }, 30000);
+
+    return () => window.clearInterval(timer);
+  }, [fetchClinics]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      setStatusTick(Date.now());
+      void fetchClinics();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [fetchClinics]);
 
   const requestLocation = () => {
     if (!navigator.geolocation) {
@@ -229,45 +528,9 @@ export default function FindClinic() {
     return earthRadiusKm * c;
   };
 
-  const normalizeDay = (value: string) =>
-    value.trim().toLowerCase().replace(/\./g, "");
-
-  const getTodayName = () =>
-    new Date().toLocaleDateString("en-US", { weekday: "short" }).toLowerCase();
-
-  const isClinicOpenNow = (clinic: Clinic) => {
-    const today = getTodayName();
-    const daysRaw = (clinic.operating_days || "").toLowerCase();
-
-    let isOperatingToday = false;
-
-    if (daysRaw.includes("mon-fri")) {
-      isOperatingToday = ["mon", "tue", "wed", "thu", "fri"].includes(today);
-    } else if (daysRaw.includes("mon-sat")) {
-      isOperatingToday = ["mon", "tue", "wed", "thu", "fri", "sat"].includes(today);
-    } else if (daysRaw.includes("daily")) {
-      isOperatingToday = true;
-    } else {
-      const parts = daysRaw.split(",").map(normalizeDay);
-      isOperatingToday = parts.some((d) => today.startsWith(d));
-    }
-
-    if (!isOperatingToday) return false;
-
-    const now = new Date();
-    const [openH, openM] = clinic.opening_time.split(":").map(Number);
-    const [closeH, closeM] = clinic.closing_time.split(":").map(Number);
-
-    const openDate = new Date();
-    openDate.setHours(openH, openM, 0, 0);
-
-    const closeDate = new Date();
-    closeDate.setHours(closeH, closeM, 0, 0);
-
-    return now >= openDate && now <= closeDate;
-  };
-
   const clinicsWithDistance = useMemo<ClinicWithDistance[]>(() => {
+    const statusNow = new Date(statusTick);
+
     return clinics.map((clinic) => {
       const hasCoords =
         clinic.latitude !== null &&
@@ -286,10 +549,10 @@ export default function FindClinic() {
                 Number(clinic.longitude)
               )
             : null,
-        isOpenNow: isClinicOpenNow(clinic),
+        isOpenNow: isClinicOpenNow(clinic, statusNow),
       };
     });
-  }, [clinics, userLocation]);
+  }, [clinics, userLocation, statusTick]);
 
   const sortedClinics = useMemo(() => {
     const data = [...clinicsWithDistance];
@@ -357,6 +620,17 @@ export default function FindClinic() {
 
   if (isPastAppointmentTime(appointmentDate, appointmentTime)) {
     setBookingMessage("Please choose a future date and time.");
+    return;
+  }
+
+  const scheduleMessage = getAppointmentScheduleMessage(
+    selectedClinic,
+    appointmentDate,
+    appointmentTime
+  );
+
+  if (scheduleMessage) {
+    setBookingMessage(scheduleMessage);
     return;
   }
 

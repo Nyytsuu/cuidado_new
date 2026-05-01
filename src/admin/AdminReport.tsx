@@ -133,6 +133,31 @@ export default function AdminReport() {
     loadAppointments();
   }, []);
 
+  const handleExportCSV = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/reports/export/csv", {
+        method: "GET",
+      });
+
+      if (!res.ok) throw new Error("Failed to export CSV");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `reports-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Error exporting CSV");
+      console.error(err);
+    }
+  };
+
   const handleExportPDF = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/admin/reports/export/pdf", {
@@ -282,7 +307,7 @@ export default function AdminReport() {
                 <h3 className="reports-section-title">Actions</h3>
 
                 <div className="reports-actions">
-                  <button type="button" className="pill pill-view">
+                  <button type="button" className="pill pill-view" onClick={handleExportCSV}>
                     Export CSV
                   </button>
                   <button type="button" className="pill pill-danger" onClick={handleExportPDF}>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import "./UserProfile.css";
 import UserSidebar from "../Categories/UserSidebar";
 import { FiEye, FiEyeOff } from "react-icons/fi";
@@ -30,6 +30,7 @@ type ProfileData = {
   id: number;
   full_name: string | null;
   email: string | null;
+  profile_picture: string | null;
   phone: string | null;
   gender: string | null;
   date_of_birth: string | null;
@@ -63,6 +64,16 @@ type Barangay = {
   id: number;
   municipality_id: number;
   name: string;
+};
+
+const API_BASE = "http://localhost:5000";
+const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+
+const toUploadUrl = (value?: string | null) => {
+  const path = String(value || "").trim();
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
 };
 
 type SpeechRecognitionEventLike = Event & {
@@ -129,6 +140,9 @@ export default function UserProfile() {
   const [address, setAddress] = useState("");
   const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState<"active" | "disabled">("active");
+  const [profilePicture, setProfilePicture] = useState("");
+  const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+  const [profilePicturePreview, setProfilePicturePreview] = useState("");
 
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [municipalities, setMunicipalities] = useState<Municipality[]>([]);
@@ -144,15 +158,26 @@ export default function UserProfile() {
 
   const [loading, setLoading] = useState(true);
   const [profileSaving, setProfileSaving] = useState(false);
+  const [profilePictureSaving, setProfilePictureSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const displayProfilePicture =
+    profilePicturePreview || toUploadUrl(profilePicture) || profileImg;
 
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      if (profilePicturePreview) {
+        URL.revokeObjectURL(profilePicturePreview);
+      }
+    };
+  }, [profilePicturePreview]);
 
   const analyzeVoiceSymptoms = async (transcript: string) => {
     try {
@@ -284,14 +309,14 @@ export default function UserProfile() {
 
   const voiceContent = getVoiceContent();
 
-  const loadProvinces = async () => {
+  const loadProvinces = useCallback(async () => {
     const res = await fetch("http://localhost:5000/api/users/meta/provinces");
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to load provinces.");
     setProvinces(Array.isArray(data) ? data : []);
-  };
+  }, []);
 
-  const loadMunicipalities = async (selectedProvinceId: string | number) => {
+  const loadMunicipalities = useCallback(async (selectedProvinceId: string | number) => {
     if (!selectedProvinceId) {
       setMunicipalities([]);
       return;
@@ -303,9 +328,9 @@ export default function UserProfile() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to load municipalities.");
     setMunicipalities(Array.isArray(data) ? data : []);
-  };
+  }, []);
 
-  const loadBarangays = async (selectedMunicipalityId: string | number) => {
+  const loadBarangays = useCallback(async (selectedMunicipalityId: string | number) => {
     if (!selectedMunicipalityId) {
       setBarangays([]);
       return;
@@ -317,9 +342,9 @@ export default function UserProfile() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to load barangays.");
     setBarangays(Array.isArray(data) ? data : []);
-  };
+  }, []);
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       if (!userId) {
         setError("No logged-in user found.");
@@ -342,6 +367,7 @@ export default function UserProfile() {
 
       setFullName(data.full_name || "");
       setEmail(data.email || "");
+      setProfilePicture(data.profile_picture || "");
       setPhone(data.phone || "");
       setGender(data.gender || "");
       setDateOfBirth(data.date_of_birth ? data.date_of_birth.slice(0, 10) : "");
@@ -363,11 +389,11 @@ export default function UserProfile() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadBarangays, loadMunicipalities, loadProvinces, userId]);
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
   const handleProvinceChange = async (value: string) => {
     setProvinceId(value);
@@ -444,6 +470,85 @@ export default function UserProfile() {
     }
   };
 
+  const handleProfilePictureChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setMessage("");
+    setError("");
+
+    if (!ACCEPTED_PROFILE_IMAGE_TYPES.has(file.type)) {
+      setProfilePictureFile(null);
+      setProfilePicturePreview("");
+      setError("Profile picture must be a JPG, PNG, or WEBP image.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setProfilePictureFile(null);
+      setProfilePicturePreview("");
+      setError("Profile picture must be 5MB or smaller.");
+      return;
+    }
+
+    setProfilePictureFile(file);
+    setProfilePicturePreview(URL.createObjectURL(file));
+  };
+
+  const handleSaveProfilePicture = async () => {
+    try {
+      if (!userId) {
+        throw new Error("No logged-in user found.");
+      }
+
+      if (!profilePictureFile) {
+        throw new Error("Please choose a profile picture first.");
+      }
+
+      setProfilePictureSaving(true);
+      setError("");
+      setMessage("");
+
+      const formData = new FormData();
+      formData.append("profile_picture", profilePictureFile);
+
+      const res = await fetch(`${API_BASE}/api/users/${userId}/profile-picture`, {
+        method: "PUT",
+        body: formData,
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to update profile picture.");
+      }
+
+      setProfilePicture(data.profile_picture || "");
+      setProfilePictureFile(null);
+      setProfilePicturePreview("");
+
+      try {
+        if (currentUser) {
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...currentUser,
+              profile_picture: data.profile_picture || "",
+            })
+          );
+        }
+      } catch (storageError) {
+        console.error("Profile picture storage update error:", storageError);
+      }
+
+      setMessage("Profile picture updated successfully.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update profile picture.");
+    } finally {
+      setProfilePictureSaving(false);
+    }
+  };
+
   const handleUpdatePassword = async () => {
     try {
       if (!userId) {
@@ -506,7 +611,7 @@ export default function UserProfile() {
           <aside className="profilenav">
             <div className="profile-mini">
               <div className="avatar profile-mini-avatar">
-                <img src={profileImg} alt="Profile" className="profile-mini-img" />
+                <img src={displayProfilePicture} alt="Profile" className="profile-mini-img" />
               </div>
               <div>
                 <h3>{fullName || "Loading..."}</h3>
@@ -579,12 +684,35 @@ export default function UserProfile() {
                 <div className="account-top">
                   <div className="account-user">
                     <div className="avatar large profile-mini-avatar">
-                      <img src={profileImg} alt="Profile" className="profile-mini-img" />
+                      <img src={displayProfilePicture} alt="Profile" className="profile-mini-img" />
                     </div>
                     <div>
                       <h3>{fullName || "No name"}</h3>
                       <p>{email || "No email"}</p>
                     </div>
+                  </div>
+                  <div className="profile-picture-actions">
+                    <input
+                      id="user-profile-picture"
+                      className="profile-picture-input"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleProfilePictureChange}
+                    />
+                    <label className="profile-picture-upload" htmlFor="user-profile-picture">
+                      Choose Photo
+                    </label>
+                    <button
+                      className="profile-picture-save"
+                      type="button"
+                      onClick={handleSaveProfilePicture}
+                      disabled={!profilePictureFile || profilePictureSaving}
+                    >
+                      {profilePictureSaving ? "Saving..." : "Save Photo"}
+                    </button>
+                    <span className="profile-picture-hint">
+                      {profilePictureFile?.name || "JPG, PNG, or WEBP"}
+                    </span>
                   </div>
                 </div>
 

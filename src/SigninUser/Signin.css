@@ -99,7 +99,7 @@
   text-decoration: underline;
 }
 
-.login-card button {
+.login-card form > button {
   width: 100%;
   padding: 15px;
   background-color: #004d40;
@@ -233,7 +233,7 @@
 /* CAPTCHA */
 .captcha-wrap {
   width: 100%;
-  margin: 20px 0;
+  margin: 15px 0 20px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -241,11 +241,16 @@
 
 .captcha-box {
   width: 304px;
-  height: 78px;
+  min-height: 78px;
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.captcha-wrap > div {
+  transform: scale(0.95);
+  transform-origin: center;
 }
 
 /* force correct iframe size */

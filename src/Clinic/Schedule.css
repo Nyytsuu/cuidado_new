@@ -21,7 +21,9 @@ body {
 .Schedule.with-sidebar {
   display: flex;
   height: 100vh;
-  background: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(15, 143, 131, 0.08), transparent 260px),
+    #f5faf9;
   padding-left: var(--sidebar-width-collapsed);
   overflow: hidden;
 }
@@ -32,6 +34,7 @@ body {
   height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
+  background: transparent;
 }
 
 /* ================= SIDEBAR ================= */
@@ -184,14 +187,14 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .Schedule .admin-content {
-  padding: calc(var(--header-height) + 20px) 24px 40px;
+  padding: calc(var(--header-height) + 26px) 28px 42px;
 }
 
 .Schedule .admin-title h2 {
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0 0 18px;
-  color: #000;
+  color: #123432;
 }
 
 .Schedule .admin-title p {
@@ -230,9 +233,10 @@ body {
 }
 
 .Schedule .admin-card {
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #d9ebe8;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #dbe9e6;
+  box-shadow: 0 12px 28px rgba(20, 75, 70, 0.08);
 }
 
 .Schedule .admin-right {
@@ -242,23 +246,26 @@ body {
 }
 
 .Schedule .small-card {
-  height: 130px;
+  min-height: 140px;
+  background:
+    linear-gradient(135deg, rgba(15, 143, 131, 0.12), rgba(47, 111, 168, 0.08)),
+    #ffffff;
 }
 
 .Schedule .big-card {
-  height: 430px;
-  background: #8f8f8f;
+  min-height: 430px;
+  background: #ffffff;
 }
 
-.admin-table-card {
+.Schedule .admin-table-card {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
-  border-radius: 26px;
+  border-radius: 14px;
   background: linear-gradient(
-   rgb(16, 156, 133) 73px,
-    white 78px,
-    white 100%
+    #109c85 73px,
+    #ffffff 78px,
+    #ffffff 100%
   ) !important;
 }
 
@@ -274,8 +281,12 @@ body {
   align-items: center;
   gap: 0;
   padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(15, 66, 66, 0.12);
   background: transparent;
+}
+
+.Schedule .schedule-row:hover {
+  background: rgba(15, 143, 131, 0.045);
 }
 
 .Schedule .users-header {
@@ -301,14 +312,14 @@ body {
   transform: translateY(-50%);
   width: 1px;
   height: 28px;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(15, 66, 66, 0.18);
 }
 
 /* text style */
 .Schedule .users-name {
   font-size: 1rem;
-  font-weight: 600;
-  color: black;
+  font-weight: 700;
+  color: #123432;
 }
 
 /* time input */
@@ -317,12 +328,17 @@ body {
   max-width: 140px;
   height: 32px;
   border-radius: 999px;
-  border: none;
+  border: 1px solid #d7e8e5;
   padding: 0 12px;
   font-weight: 600;
-  background: #ffffff;
-  color: #000;
+  background: #fbfefd;
+  color: #123432;
   outline: none;
+}
+
+.Schedule .time-input:focus {
+  border-color: #109c85;
+  box-shadow: 0 0 0 3px rgba(16, 156, 133, 0.14);
 }
 
 .Schedule .time-input:disabled {
@@ -346,22 +362,22 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  background: #5b5b5b;
+  background: #637b78;
 }
 
 .Schedule .pill-view {
-  background: #1b8169;
+  background: #0f8f83;
   color: #fff;
   cursor: pointer;
 }
 
 .Schedule .pill-danger {
-  background: #c62828;
+  background: #b42318;
   cursor: pointer;
 }
 
 .Schedule .pill-success {
-  background: #2e7d32;
+  background: #28784e;
   cursor: pointer;
 }
 
@@ -369,9 +385,22 @@ body {
   background: #b7791f;
 }
 
+.Schedule .schedule-status-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.Schedule .schedule-status-stack .pill {
+  min-height: 24px;
+  font-size: 0.78rem;
+  padding: 0 10px;
+}
+
 /* ✅ closed day status */
 .Schedule .pill-gray {
-  background: #c62828;
+  background: #b42318;
   color: #fff;
 }
 
@@ -407,21 +436,22 @@ body {
   padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .Schedule .admin-right-card h3 {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0f4242;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #123432;
 }
 
 .Schedule .admin-right-card p {
   margin: 0;
   font-size: 0.95rem;
-  color: #1f2937;
+  color: #637b78;
   line-height: 1.35;
+  font-weight: 600;
 }
 
 /* blocked date button */
@@ -431,18 +461,25 @@ body {
 
 .Schedule .blocked-form {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .Schedule .blocked-form input {
   width: 100%;
-  height: 36px;
-  border: none;
-  border-radius: 8px;
-  padding: 0 10px;
+  min-height: 40px;
+  border: 1px solid #d7e8e5;
+  border-radius: 10px;
+  padding: 0 12px;
   font-size: 0.92rem;
-  color: #111827;
-  background: #ffffff;
+  color: #123432;
+  background: #fbfefd;
+  font-weight: 600;
+  outline: none;
+}
+
+.Schedule .blocked-form input:focus {
+  border-color: #109c85;
+  box-shadow: 0 0 0 3px rgba(16, 156, 133, 0.14);
 }
 
 .Schedule .blocked-form input:disabled {
@@ -451,28 +488,35 @@ body {
 
 /* blocked list */
 .Schedule .blocked-list {
-  margin-top: 10px;
+  margin-top: 4px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   overflow: auto;
   padding-right: 4px;
+  max-height: 245px;
 }
 
 .Schedule .blocked-empty {
-  color: #111827;
+  color: #637b78;
   font-size: 0.94rem;
-  opacity: 0.8;
+  font-weight: 700;
+  padding: 12px;
+  border: 1px dashed #bcd8d3;
+  border-radius: 10px;
+  background: #f5faf9;
 }
 
 .Schedule .blocked-item {
-  background: rgba(255, 255, 255, 0.35);
+  background: #f8fcfb;
+  border: 1px solid #dbe9e6;
   border-radius: 12px;
-  padding: 10px;
+  padding: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  box-shadow: 0 8px 18px rgba(20, 75, 70, 0.06);
 }
 
 .Schedule .blocked-left {
@@ -483,13 +527,13 @@ body {
 
 .Schedule .blocked-date {
   font-weight: 800;
-  color: #0f4242;
+  color: #0b5d56;
 }
 
 .Schedule .blocked-reason {
   font-size: 0.92rem;
-  color: #111827;
-  opacity: 0.9;
+  color: #637b78;
+  font-weight: 650;
 }
 
 .Schedule .blocked-remove {

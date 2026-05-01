@@ -43,6 +43,23 @@
   line-height: 1.35;
 }
 
+.clinic-current-status {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.clinic-current-status.open {
+  background: #28784e;
+}
+
+.clinic-current-status.closed {
+  background: #b42318;
+}
+
 .clinic-schedule-editor {
   display: flex;
   flex-direction: column;

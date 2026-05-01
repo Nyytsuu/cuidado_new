@@ -1,10 +1,90 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+const multer = require("multer");
+const path = require("path");
 const pool = require("../db/pool");
 
 const router = express.Router();
 
 const NOTIFICATION_CATEGORIES = new Set(["Appointments", "System", "Promotions"]);
+const PROFILE_UPLOAD_DIR = path.join("uploads", "profile-pictures");
+const PROFILE_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
+const PROFILE_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
+const PROFILE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+
+fs.mkdirSync(PROFILE_UPLOAD_DIR, { recursive: true });
+
+const profilePictureStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, PROFILE_UPLOAD_DIR),
+  filename: (_req, file, cb) => {
+    const extension = path.extname(file.originalname || "").toLowerCase();
+    const baseName = path
+      .basename(file.originalname || "profile", extension)
+      .replace(/[^a-zA-Z0-9_-]/g, "_")
+      .slice(0, 40);
+
+    cb(null, `user-${Date.now()}-${baseName || "profile"}${extension}`);
+  },
+});
+
+const profilePictureUpload = multer({
+  storage: profilePictureStorage,
+  limits: { fileSize: PROFILE_IMAGE_MAX_SIZE },
+});
+
+const uploadProfilePicture = (req, res, next) => {
+  profilePictureUpload.single("profile_picture")(req, res, (error) => {
+    if (!error) return next();
+
+    const message =
+      error.code === "LIMIT_FILE_SIZE"
+        ? "Profile picture must be 5MB or smaller."
+        : "Failed to upload profile picture.";
+
+    return res.status(400).json({ message });
+  });
+};
+
+const getProfilePictureValidationError = (file) => {
+  if (!file) return "Profile picture is required.";
+
+  const extension = path.extname(file.originalname || "").toLowerCase();
+  if (!PROFILE_IMAGE_EXTENSIONS.has(extension) || !PROFILE_IMAGE_MIME_TYPES.has(file.mimetype)) {
+    return "Profile picture must be a JPG, PNG, or WEBP image.";
+  }
+
+  if (file.size > PROFILE_IMAGE_MAX_SIZE) {
+    return "Profile picture must be 5MB or smaller.";
+  }
+
+  return "";
+};
+
+const removeUploadedFile = async (filePath) => {
+  if (!filePath) return;
+  await fs.promises.unlink(filePath).catch(() => {});
+};
+
+const ensureUserProfilePictureColumn = async () => {
+  const [columns] = await pool.query(
+    `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'users'
+      AND COLUMN_NAME = 'profile_picture'
+    LIMIT 1
+    `
+  );
+
+  if (columns.length === 0) {
+    await pool.query(`
+      ALTER TABLE users
+      ADD COLUMN profile_picture VARCHAR(255) DEFAULT NULL
+    `);
+  }
+};
 
 const ensureUserNotificationsTable = async () => {
   await pool.query(`
@@ -379,12 +459,15 @@ router.get("/:userId/profile", async (req, res) => {
   try {
     const { userId } = req.params;
 
+    await ensureUserProfilePictureColumn();
+
     const [rows] = await pool.query(
       `
       SELECT
         u.id,
         u.full_name,
         u.email,
+        u.profile_picture,
         u.phone,
         u.gender,
         u.date_of_birth,
@@ -500,6 +583,71 @@ router.put("/:userId/profile", async (req, res) => {
     res.status(500).json({ message: "Failed to update profile." });
   }
 });
+
+/**
+ * PUT /api/users/:userId/profile-picture
+ */
+router.put(
+  "/:userId/profile-picture",
+  uploadProfilePicture,
+  async (req, res) => {
+    try {
+      const userId = Number(req.params.userId);
+
+      if (!userId) {
+        await removeUploadedFile(req.file?.path);
+        return res.status(400).json({ message: "Valid userId is required." });
+      }
+
+      const validationError = getProfilePictureValidationError(req.file);
+      if (validationError) {
+        await removeUploadedFile(req.file?.path);
+        return res.status(400).json({ message: validationError });
+      }
+
+      await ensureUserProfilePictureColumn();
+
+      const [users] = await pool.query(
+        `
+        SELECT id
+        FROM users
+        WHERE id = ?
+        LIMIT 1
+        `,
+        [userId]
+      );
+
+      if (users.length === 0) {
+        await removeUploadedFile(req.file?.path);
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      const profilePicturePath = path.posix.join(
+        "uploads",
+        "profile-pictures",
+        req.file.filename
+      );
+
+      await pool.query(
+        `
+        UPDATE users
+        SET profile_picture = ?
+        WHERE id = ?
+        `,
+        [profilePicturePath, userId]
+      );
+
+      res.json({
+        message: "Profile picture updated successfully.",
+        profile_picture: profilePicturePath,
+      });
+    } catch (error) {
+      await removeUploadedFile(req.file?.path);
+      console.error("PUT /profile-picture error:", error);
+      res.status(500).json({ message: "Failed to update profile picture." });
+    }
+  }
+);
 
 /**
  * PUT /api/users/:userId/password

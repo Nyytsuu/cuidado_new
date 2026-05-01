@@ -52,14 +52,8 @@ export default function UserSidebar({
   const location = useLocation();
   const [internalSearch, setInternalSearch] = useState("");
   const currentSearch = searchValue ?? internalSearch;
- const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/Signin");
-  };
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 
   const isPathActive = (path: string) => location.pathname === path;
 
@@ -194,13 +188,6 @@ const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/settings") ? "active" : ""}`}>
-              <Link to="/admin/settings" className="sidebar-btn">
-                <Settings size={24} />
-                <span>Settings</span>
-              </Link>
-            </div>
-
             <div className={`sidebar-item ${isPathActive("/admin/notifications") ? "active" : ""}`}>
               <Link to="/notifications" className="sidebar-btn">
                 <Bell size={24} />
@@ -273,7 +260,7 @@ const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
               type="button"
               className={`nav-link profile-btn ${
                 location.pathname === "/profile" ||
-                location.pathname === "/admin/settings"
+                location.pathname === "/notification"
                   ? "active"
                   : ""
               }`}
@@ -284,7 +271,7 @@ const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 
             <div className="profile-dropdown">
               <Link to="/profile">My Profile</Link>
-              <Link to="/admin/settings">Settings</Link>
+              <Link to="/notifications">Notifications</Link>
               <button
                 type="button"
                 className="dropdown-logout"
