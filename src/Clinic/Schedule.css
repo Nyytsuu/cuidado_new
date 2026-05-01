@@ -55,14 +55,16 @@ body {
 /* ================= HEADER ================= */
 .Schedule .app-header {
   background: var(--sidebar-bg);
-  padding: 0 24px 0 calc(var(--sidebar-width-collapsed) + 24px);
+  padding: 0 24px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   position: fixed;
   top: 0;
   left: var(--sidebar-width-collapsed);
-  right: 0;
+  width: calc(100% - var(--sidebar-width-collapsed)); /* 🔥 IMPORTANT */
   height: var(--header-height);
   z-index: 999;
 }

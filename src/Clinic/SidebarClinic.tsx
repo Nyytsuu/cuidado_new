@@ -10,6 +10,7 @@ import logoutIcon from "../img/logout.png";
 import searchIcon from "../img/search.png";
 import appointmentIcon from "../img/appointment.png";
 import logo from "../img/logo.png";
+import calendar1 from "../img/calendar1.png";
 
 
 
@@ -99,27 +100,6 @@ export default function SidebarClinic({
           <div className="sidebar-item">
             <Link to="/clinic/appointments">
               <img src={appointmentIcon} alt="Appointments" />
-              <span>Appointments</span>
-            </Link>
-          </div>
-
-          <div className="sidebar-item">
-            <Link to="/clinic/appointments">
-              <img src={appointmentIcon} alt="Appointments" />
-              <span>Appointments</span>
-            </Link>
-          </div>
-
-          <div className="sidebar-item">
-            <Link to="/clinic/schedule">
-              <img src={appointmentIcon} />
-              <span>Schedule</span>
-            </Link>
-          </div>
-
-          <div className="sidebar-item">
-            <Link to="/clinic/appointments">
-              <img src={appointmentIcon} />
               <span>Appointments</span>
             </Link>
           </div>

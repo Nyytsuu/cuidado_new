@@ -285,8 +285,7 @@
 .SidebarClinic .header-search {
   position: relative;
   width: 360px;
-
-  right: 100px; /* ✅ from adminuser.css */
+  right: 250px !important; /* ✅ from adminuser.css */
   max-width: 42vw;
 }
 
@@ -305,7 +304,6 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -329,7 +327,7 @@
   align-items: center;
   gap: 70px; /* ✅ from adminuser.css */
   position: relative;
-  right: 60px;
+  right: 140px !important;
 }
 
 .SidebarClinic .nav-link {

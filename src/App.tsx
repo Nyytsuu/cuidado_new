@@ -34,7 +34,6 @@ import AdminConditionalManagement  from "./admin/AdminConditionManagement";
 import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
 import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
-import SidebarClinic from "./Clinic/SidebarClinic";
 import ClinicSignup from "./Clinic/ClinicSignup";
 import ClinicDashboard from "./Clinic/ClinicDashboard";
 import ClinicAppoint from "./Clinic/ClinicAppoint";
@@ -70,7 +69,6 @@ function App() {
         <Route path="/voice-assistant" element={<UserVoiceAssistant />} />
         
         {/* clinic */}
-        <Route path="/clinic/schedule-aside" element={<ClinicScheduleAside />} />
 <Route path="/clinic/signup" element={<ClinicSignup />} />
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
 <Route path="/clinic/appointments" element={<ClinicAppoint />} />

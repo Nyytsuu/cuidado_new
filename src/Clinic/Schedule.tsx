@@ -207,52 +207,6 @@ const navigate = useNavigate();
       setSaving(false);
     }
   };
-
-  const removeBlockedDate = async (id: number) => {
-    try {
-      setSaving(true);
-      setError("");
-      setMessage("");
-
-      if (!blockedDate) {
-        throw new Error("Please choose a date to block.");
-      }
-
-      const res = await fetch(`${API}/clinic/schedule/blocked-dates`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          clinic_id: clinicId,
-          date: blockedDate,
-          reason: blockedReason || "Blocked",
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to save blocked date.");
-      }
-
-      setBlockedDate("");
-      setBlockedReason("");
-   setToast({
-  type: "success",
-  message: data.message || "Blocked date added",
-});
-      await loadSchedule();
-    } catch (err) {
-      setToast({
-  type: "error",
-  message: err instanceof Error ? err.message : "Failed to add blocked date",
-});
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const removeBlockedDate = async (id: number) => {
     try {
       setSaving(true);
@@ -284,6 +238,45 @@ const navigate = useNavigate();
     }
   };
 
+  const addBlockedDate = async () => {
+    if (!blockedDate || !blockedReason.trim()) {
+      setToast({ type: "error", message: "Please provide both date and reason." });
+      return;
+    }
+    try {
+      setSaving(true);
+      const res = await fetch(`${API}/clinic/schedule/blocked-dates`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clinic_id: clinicId,
+          date: blockedDate,
+          reason: blockedReason,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to add blocked date.");
+      }
+      setBlockedDates((prev) => [...prev, data.blockedDate]);
+      setBlockedDate("");
+      setBlockedReason("");
+      setToast({
+        type: "success",
+        message: data.message || "Blocked date added",
+      });
+    } catch (err) {
+      setToast({
+        type: "error",
+        message: err instanceof Error ? err.message : "Failed to add blocked date.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const [message, setMessage] = useState("");
 const [error, setError] = useState("");
 
@@ -302,62 +295,10 @@ const [error, setError] = useState("");
       />
 
       <main className="preview-canvas">
-        <header className="app-header">
-          <div className="header-left">
-            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-
-            <form className="header-search" onSubmit={(event) => event.preventDefault()}>
-              <input
-                type="text"
-                placeholder="Search schedule..."
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-              />
-              <button aria-label="Search" type="submit" className="search-btn">
-                <img src={searchIcon} alt="Search" />
-              </button>
-            </form>
-          </div>
-
-          <nav className="header-nav">
-            <a className="nav-link" href="#">
-              Home
-            </a>
-            <a className="nav-link" href="#">
-              Schedule
-            </a>
-
-            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="nav-link profile-btn"
-                onClick={() => setHeaderProfileOpen((value) => !value)}
-              >
-                Profile <span className="caret">v</span>
-              </button>
-
-              <div className="profile-dropdown">
-                <a href="/clinic/profile">My Profile</a>
-                <a href="/clinic/schedule">Schedule</a>
-                <button
-  className="logout-btn"
-  onClick={() => {
-    setHeaderProfileOpen(false);
-    setShowLogoutConfirm(true);
-  }}
->
-  Logout
-</button>
-              </div>
-            </div>
-          </nav>
-        </header>
-
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title">
               <h2>Schedule</h2>
-              <p>Clinic #{clinicId}</p>
             </div>
 
             {loading && <div className="schedule-message">Loading schedule...</div>}

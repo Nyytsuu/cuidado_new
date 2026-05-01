@@ -341,56 +341,11 @@ const confirmDeleteService = async () => {
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search services..."
       />
-
       <main className="preview-canvas">
-        <header className="app-header">
-          <div className="header-left">
-            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-
-            <div className="header-search">
-              <input
-                type="text"
-                placeholder="Search keywords..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button aria-label="Search" type="button" className="search-btn">
-                <img src={searchIcon} alt="Search" />
-              </button>
-            </div>
-          </div>
-
-          <nav className="header-nav">
-            <a className="nav-link" href="#">
-              Home
-            </a>
-            <a className="nav-link" href="#">
-              Services
-            </a>
-
-            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="nav-link profile-btn"
-                onClick={() => setHeaderProfileOpen((v) => !v)}
-              >
-                Profile <span className="caret">▾</span>
-              </button>
-
-              <div className="profile-dropdown">
-                <a href="#">My Profile</a>
-                <a href="#">Settings</a>
-                 <button className="logout-btn" onClick={() => {setHeaderProfileOpen(false);setShowLogoutConfirm(true);}}>Logout</button>
-              </div>
-            </div>
-          </nav>
-        </header>
-
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title services-titlebar">
               <h2>Services</h2>
-
               <button
                 type="button"
                 className="pill pill-resched add-btn"
