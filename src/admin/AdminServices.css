@@ -77,14 +77,14 @@ body {
   align-items: center;
   gap: 50px;
   position: relative;
-  right: 30px;
+  right: 120px;
 }
 
 .admin-UserServices .brand-logo {
   width: 120px;
   max-height: 60px;
   position: relative;
-  right: 130px;
+  right: 10px;
 }
 
 .admin-UserServices .search-btn img {
@@ -112,6 +112,7 @@ body {
 /* dropdown */
 .admin-UserServices .profile-menu {
   position: relative;
+  right: 20px;
 }
 
 .admin-UserServices .profile-btn {

@@ -184,16 +184,14 @@ export default function Patients() {
   return (
     <div className={`Patient with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
       <SidebarClinic
-              sidebarExpanded={sidebarExpanded}
-              setSidebarExpanded={setSidebarExpanded}
-              profileOpen={profileOpen}
-              setProfileOpen={setProfileOpen}
-              headerProfileOpen={headerProfileOpen}
-              setHeaderProfileOpen={setHeaderProfileOpen}
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
-              searchPlaceholder="Search dashboard..."
-            />
+        sidebarExpanded={sidebarExpanded}
+        setSidebarExpanded={setSidebarExpanded}
+        profileOpen={profileOpen}
+        setProfileOpen={setProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search patients..."
+      />
 
       <main className="preview-canvas">
         
@@ -270,8 +268,9 @@ export default function Patients() {
                 </div>
               </section>
 
-              
+              <div className="patient-schedule-wrapper">
   <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
+</div>
             </div>
           </div>
         </section>

@@ -528,28 +528,24 @@ body {
 .modal-open {
   overflow: hidden;
 }
-.ClinicAppoint .admin-right-card {
-  background: #ffffff !important;
-  border: 1px solid #d9ebe8 !important;
-  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08) !important;
-  border-radius: 14px !important;
-  padding: 26px 24px !important;
-  min-height: 150px !important;
+.appoint-form .admin-right-card {
+  padding: 18px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 14px !important;
+  gap: 10px !important;
 }
 
-.ClinicAppoint .admin-right-card h3 {
+.appoint-form .admin-right-card h3 {
   margin: 0 !important;
   font-size: 1.1rem !important;
   font-weight: 700 !important;
   color: #0f4242 !important;
 }
 
-.ClinicAppoint .admin-right-card p {
+.appoint-form .admin-right-card p {
   margin: 0 !important;
-  color: #071327 !important;
-  font-size: 0.92rem !important;
+  font-size: 0.95rem !important;
+  color: #1f2937 !important;
   line-height: 1.35 !important;
+  font-weight: 700 !important;
 }

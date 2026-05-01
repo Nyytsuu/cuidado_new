@@ -103,6 +103,13 @@ export default function SidebarClinic({
           </div>
 
           <div className="sidebar-item">
+            <Link to="/clinic/appointments">
+              <img src={appointmentIcon} alt="Appointments" />
+              <span>Appointments</span>
+            </Link>
+          </div>
+
+          <div className="sidebar-item">
             <Link to="/clinic/services">
               <img src={serviceIcon} alt="Services icon" />
               <span>Services</span>

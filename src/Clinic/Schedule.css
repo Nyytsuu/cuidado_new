@@ -248,7 +248,7 @@ body {
   background: #8f8f8f;
 }
 
-.Schedule .admin-table-card {
+.admin-table-card {
   min-height: 520px;
   padding: 14px 12px;
   overflow: hidden;
@@ -257,7 +257,7 @@ body {
    rgb(16, 156, 133) 73px,
     white 78px,
     white 100%
-  );
+  ) !important;
 }
 
 /* ================= TABLE ================= */
@@ -304,7 +304,7 @@ body {
 
 /* text style */
 .Schedule .users-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: black;
 }

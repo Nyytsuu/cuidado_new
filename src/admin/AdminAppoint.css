@@ -3,7 +3,7 @@
   --sidebar-text: #0f4242;
   --sidebar-width-collapsed: 70px;
   --sidebar-width-expanded: 220px;
-  --header-height: 55px;
+  --header-height: 65px;
 }
 
 body {
@@ -69,17 +69,16 @@ body {
 
 .admin-UserAppoint .header-left {
   display: flex;
-  align-items: center;
   gap: 50px;
   position: relative;
-  right: 30px;
+  right: 120px;
 }
 
 .admin-UserAppoint .brand-logo {
   width: 120px;
   max-height: 60px;
   position: relative;
-  right: 130px;
+  right: 20px;
 }
 
 
@@ -109,6 +108,7 @@ body {
 /* dropdown */
 .admin-UserAppoint .profile-menu {
   position: relative;
+  right: 20px;
 }
 
 .admin-UserAppoint .profile-btn {
