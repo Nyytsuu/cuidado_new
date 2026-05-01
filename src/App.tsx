@@ -21,6 +21,7 @@ import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
 
 // admin
+import SidebarAdmin from "./admin/SidebarAdmin";
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 import AdminUser from "./admin/AdminUser";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -88,6 +89,7 @@ function App() {
       <Route path="/admin/conditional" element={<AdminConditionalManagement />} />
       <Route path="/admin/symptoms" element={ <AdminSymptomsManagement />} />
       <Route path="/admin/condition-symptom-mapping" element={<AdminConditionSymptomMapping />} />
+      <Route path="admin/Sidebar" element={<SidebarAdmin />} />
         </Route>
       
       </Routes>

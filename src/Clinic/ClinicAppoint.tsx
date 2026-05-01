@@ -6,6 +6,7 @@ import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
 import { FaCalendarAlt } from "react-icons/fa";
 import { FaEye } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
 
@@ -100,6 +101,10 @@ export default function ClinicAppoint() {
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [savingAction, setSavingAction] = useState(false);
+
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false); 
+  const navigate = useNavigate();
 
   const mapDbStatusToUi = (
     status: ApiAppointmentRow["status"]
@@ -357,65 +362,22 @@ export default function ClinicAppoint() {
       }`}
     >
       <SidebarClinic
-        sidebarExpanded={sidebarExpanded}
-        setSidebarExpanded={setSidebarExpanded}
-        profileOpen={profileOpen}
-        setProfileOpen={setProfileOpen}
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search appointments..."
-      />
-
+              sidebarExpanded={sidebarExpanded}
+              setSidebarExpanded={setSidebarExpanded}
+              profileOpen={profileOpen}
+              setProfileOpen={setProfileOpen}
+              headerProfileOpen={headerProfileOpen}
+              setHeaderProfileOpen={setHeaderProfileOpen}
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder="Search dashboard..."
+            />
       <main className="preview-canvas">
-        <header className="app-header">
-          <div className="header-left">
-            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-
-            <div className="header-search">
-              <input
-                type="text"
-                placeholder="Search keywords..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <button aria-label="Search" type="button" className="search-btn">
-                <img src={searchIcon} alt="Search" />
-              </button>
-            </div>
-          </div>
-
-          <nav className="header-nav">
-            <a className="nav-link" href="#">
-              Home
-            </a>
-            <a className="nav-link" href="#">
-              Appointments
-            </a>
-
-            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="nav-link profile-btn"
-                onClick={() => setHeaderProfileOpen((v) => !v)}
-              >
-                Profile <span className="caret">▾</span>
-              </button>
-
-              <div className="profile-dropdown">
-                <a href="#">My Profile</a>
-                <a href="#">Settings</a>
-                <a href="#">Logout</a>
-              </div>
-            </div>
-          </nav>
-        </header>
-
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title">
               <h2>Appointments</h2>
             </div>
-
             <div className="admin-grid">
               <section className="admin-card admin-table-card">
                 <div className="users-table">
@@ -733,6 +695,50 @@ export default function ClinicAppoint() {
           </div>
         </div>
       )}
+
+
+      // logout
+{showLogoutConfirm && (
+  <div className="logout-confirm-overlay">
+    <div className="logout-confirm-modal">
+      <h3>Log out?</h3>
+      <p>Are you sure you want to log out of your account?</p>
+
+      <div className="logout-actions">
+        <button
+          className="btn-cancel"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn-confirm"
+          onClick={() => {
+            setShowLogoutConfirm(false);
+            setShowLogoutSuccess(true);
+
+            setTimeout(() => {
+              navigate("/signin");
+            }, 1500);
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{showLogoutSuccess && (
+  <div className="logout-popup-overlay">
+    <div className="logout-popup">
+      <div className="logout-icon">✓</div>
+      <h3>Logged out successfully</h3>
+    </div>
+  </div>
+)}
     </div>
   );
 }

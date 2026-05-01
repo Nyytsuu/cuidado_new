@@ -415,7 +415,7 @@ export default function UserVoiceAssistant() {
 
             <button
               type="button"
-              className="voice-popup-retry"
+              className="voice-popup-retry'"
               onClick={startVoiceAssistant}
             >
               Try again
