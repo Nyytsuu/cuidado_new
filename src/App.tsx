@@ -19,8 +19,10 @@ import Profile from "./SigninUser/UserProfile";
 import BMICalculator from "./SigninUser/BMICalculator";
 import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
-
+import UserSidebar from "./Categories/UserSidebar";
+import ClinicScheduleAside from "./Clinic/ClinicScheduleAside";
 // admin
+import SidebarAdmin from "./admin/SidebarAdmin";
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 import AdminUser from "./admin/AdminUser";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -33,6 +35,7 @@ import AdminConditionalManagement  from "./admin/AdminConditionManagement";
 import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
 import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
+import SidebarClinic from "./Clinic/SidebarClinic";
 import ClinicSignup from "./Clinic/ClinicSignup";
 import ClinicDashboard from "./Clinic/ClinicDashboard";
 import ClinicAppoint from "./Clinic/ClinicAppoint";
@@ -66,8 +69,10 @@ function App() {
         <Route path="/bmi-calculator" element={<BMICalculator />} />
         <Route path="/stress-index" element={<StressIndex />} />
         <Route path="/voice-assistant" element={<UserVoiceAssistant />} />
+        <Route path="/sidebar" element={<UserSidebar />} />
         
         {/* clinic */}
+        <Route path="/clinic/schedule-aside" element={<ClinicScheduleAside />} />
 <Route path="/clinic/signup" element={<ClinicSignup />} />
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
 <Route path="/clinic/appointments" element={<ClinicAppoint />} />
@@ -75,7 +80,7 @@ function App() {
 <Route path="/clinic/services" element={<Services />} /> 
 <Route path="/clinic/profile" element={<ClinicProfile />} />
 <Route path="/clinic/schedule" element={<Schedule />} />
-
+<Route path="/clinic/sidebar" element={<SidebarClinic />} />
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
       <Route path="/admin/users" element={<AdminUser />} />
@@ -88,6 +93,7 @@ function App() {
       <Route path="/admin/conditional" element={<AdminConditionalManagement />} />
       <Route path="/admin/symptoms" element={ <AdminSymptomsManagement />} />
       <Route path="/admin/condition-symptom-mapping" element={<AdminConditionSymptomMapping />} />
+      <Route path="admin/Sidebar" element={<SidebarAdmin />} />
         </Route>
       
       </Routes>
