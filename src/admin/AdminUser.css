@@ -86,14 +86,14 @@ body {
   align-items: center;
   gap: 50px;
   position: relative;
-  right: 30px;
+  right: 90px;
 }
 
 .admin-Userpage .brand-logo {
   width: 120px;
   max-height: 60px;
   position: relative;
-  right: 130px;
+  right: 50px; 
 }
 
 /* SEARCH */
@@ -125,6 +125,7 @@ body {
 /* PROFILE DROPDOWN */
 .admin-Userpage .profile-menu {
   position: relative;
+  right: 20px;
 }
 
 .admin-Userpage .profile-btn {
