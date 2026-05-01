@@ -1,3 +1,5 @@
+
+
 import { useEffect, useMemo, useState } from "react";
 import "./UserAppointment.css";
 import UserSidebar from "../Categories/UserSidebar";
@@ -605,12 +607,18 @@ function BookingModal({
           <div className="booking-field">
             <label>Phone Number</label>
             <input
-              type="text"
-              value={patientPhone}
-              onChange={(e) => setPatientPhone(e.target.value)}
-              placeholder="Enter your phone number"
-              disabled={submitting}
-            />
+  type="text"
+  value={patientPhone}
+  onChange={(e) => {
+    const value = e.target.value.replace(/\D/g, ""); // allow digits only
+    if (value.length <= 11) {
+      setPatientPhone(value);
+    }
+  }}
+  maxLength={11}
+  placeholder="Enter your phone number"
+  disabled={submitting}
+/>
           </div>
 
           <div className="booking-field full-width">
@@ -713,6 +721,9 @@ function UserAppointmentsContent({
   );
   const [showAllAppointments, setShowAllAppointments] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  
+  const [logoutPopupOpen, setLogoutPopupOpen] = useState(false);
+
 
   const [statusFilter, setStatusFilter] = useState<
     "all" | "pending" | "confirmed" | "cancelled" | "completed" | "no_show"
@@ -1084,6 +1095,9 @@ function UserAppointmentsContent({
         (parseDateTime(a.start_at)?.getTime() ?? 0) -
         (parseDateTime(b.start_at)?.getTime() ?? 0)
     );
+
+
+    
 
   return (
     <>

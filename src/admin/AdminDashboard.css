@@ -47,8 +47,7 @@
   left: var(--admin-sidebar-collapsed);
   right: 0;
   z-index: 999;
-  height: 55px;
-  min-height: 35px;
+  min-height: var(--admin-header-height);
   padding: 0 28px;
   display: flex;
   align-items: center;
@@ -63,26 +62,19 @@
   left: var(--admin-sidebar-expanded);
 }
 
-.admin-dashboard-page .header-search {
-  margin-right: 40px;
-  position: relative;
-  right: 40px;
-}
-
 .admin-dashboard-page .header-left {
   min-width: 0;
   flex: 1 1 auto;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
 .admin-dashboard-page .brand-logo {
   width: 118px;
-  height: 96px !important;
-  font-size: 14px;
+  height: 46px;
+  object-fit: contain;
   flex: 0 0 auto;
-  margin-left: 65px;
 }
 
 .admin-dashboard-page .header-search {
@@ -106,7 +98,6 @@
   color: var(--admin-text);
   font: inherit;
   font-size: 14px;
-  box-shadow: none;
 }
 
 .admin-dashboard-page .header-search input::placeholder {
@@ -273,7 +264,6 @@
   line-height: 1;
 }
 
-
 .admin-dashboard-page .metric-card:nth-child(2) .metric-box {
   background: #2878bd;
 }
@@ -363,6 +353,7 @@
   min-width: 0;
   overflow: auto;
   background: #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 168, 146, 0.15);
 }
 
 .admin-dashboard-page .dash-panel-pad {
@@ -373,33 +364,12 @@
   max-height: 300px;
 }
 
-.admin-dashboard-page .dash-left > .dash-panel:first-child {
-  border: 3px solid #00a892; /* stronger than default */
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 8px 20px rgba(0, 168, 146, 0.15);
-}
-
 .admin-dashboard-page .dash-left > .dash-panel:last-child .dash-panel-body {
-  max-height: 380px;
-}
-
-.admin-dashboard-page .dash-left > .dash-panel:last-child {
-  border: 3px solid #00a892; /* same style as Pending */
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 8px 20px rgba(0, 168, 146, 0.15);
+  max-height: 280px;
 }
 
 .admin-dashboard-page .dash-center .dash-panel-body {
   max-height: 632px;
-}
-
-.admin-dashboard-page .dash-center .dash-panel {
-  border: 3px solid #00a892;
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 8px 20px rgba(0, 168, 146, 0.15);
 }
 
 .admin-dashboard-page .dash-aside > .dash-panel-title {
@@ -416,8 +386,6 @@
 .admin-dashboard-page .appointment-panel .dash-panel-body {
   max-height: 430px;
 }
-
-
 
 .admin-dashboard-page .dash-table {
   width: 100%;
@@ -553,7 +521,7 @@
 .admin-dashboard-page .badge-cancelled,
 .admin-dashboard-page .badge-canceled,
 .admin-dashboard-page .badge-declined {
-  background: #e74040;
+  background: #f8caca;
   color: #8a1f1f;
 }
 
@@ -650,8 +618,6 @@
 .admin-dashboard-page .activity-time {
   margin-top: 4px;
 }
-
-
 
 .admin-dashboard-page .popup-overlay {
   position: fixed;
@@ -778,4 +744,3 @@
     grid-template-columns: 1fr;
   }
 }
-

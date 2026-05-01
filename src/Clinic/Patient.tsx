@@ -4,6 +4,9 @@ import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
+// logout
+import { useNavigate } from "react-router-dom";
+
 
 
 type ApiPatientRow = {
@@ -56,6 +59,11 @@ export default function Patients() {
   const [searchTerm, setSearchTerm] = useState("");
   const [patients, setPatients] = useState<PatientRow[]>([]);
    const [profilePopup, setProfilePopup] = useState<PatientRow | null>(null);
+ 
+   // logout
+   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+   const navigate = useNavigate();
 
    const [historyPopup, setHistoryPopup] = useState<{
   patient: PatientRow;
@@ -184,17 +192,61 @@ export default function Patients() {
   return (
     <div className={`Patient with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
       <SidebarClinic
-        sidebarExpanded={sidebarExpanded}
-        setSidebarExpanded={setSidebarExpanded}
-        profileOpen={profileOpen}
-        setProfileOpen={setProfileOpen}
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search patients..."
-      />
+              sidebarExpanded={sidebarExpanded}
+              setSidebarExpanded={setSidebarExpanded}
+              profileOpen={profileOpen}
+              setProfileOpen={setProfileOpen}
+              headerProfileOpen={headerProfileOpen}
+              setHeaderProfileOpen={setHeaderProfileOpen}
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              searchPlaceholder="Search dashboard..."
+            />
 
       <main className="preview-canvas">
-        
+        <header className="app-header">
+          <div className="header-left">
+            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+
+            <div className="header-search">
+              <input
+                type="text"
+                placeholder="Search keywords..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <button aria-label="Search" type="button" className="search-btn">
+                <img src={searchIcon} alt="Search" />
+              </button>
+            </div>
+          </div>
+
+          <nav className="header-nav">
+            <a className="nav-link" href="#">
+              Home
+            </a>
+            <a className="nav-link" href="#">
+              Patients
+            </a>
+
+            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
+              <button
+                type="button"
+                className="nav-link profile-btn"
+                onClick={() => setHeaderProfileOpen((v) => !v)}
+              >
+                Profile <span className="caret">▾</span>
+              </button>
+
+              <div className="profile-dropdown">
+                <a href="#">My Profile</a>
+                <a href="#">Settings</a>
+                
+                <button className="logout-btn" onClick={() => {setHeaderProfileOpen(false);setShowLogoutConfirm(true);}}>Logout</button>
+              </div>
+            </div>
+          </nav>
+        </header>
 
         <section className="admin-content">
           <div className="admin-content-inner">
@@ -276,60 +328,67 @@ export default function Patients() {
         </section>
       </main>
    
-           {profilePopup && (
+          {profilePopup && (
   <div
     className="service-modal-overlay"
     onClick={() => setProfilePopup(null)}
   >
     <div
-      className="service-modal profile-popup-card"
+      className="profile-card-modal"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="service-modal-body">
+      {/* TOP HEADER STRIP */}
+      <div className="profile-card-header-bg" />
 
-        {/* HEADER */}
-        <div className="profile-popup-header">
-          <div className="profile-avatar">
+      <div className="profile-card-body">
+
+        {/* AVATAR */}
+        <div className="profile-avatar-wrapper">
+          <div className="profile-avatar-large">
             {profilePopup.name.charAt(0).toUpperCase()}
           </div>
-
-          <h3 className="profile-name">{profilePopup.name}</h3>
-          <p className="profile-subtext">Patient Profile</p>
         </div>
 
-        {/* DIVIDER */}
-        <div className="profile-divider" />
-
-        {/* DETAILS */}
-        <div className="profile-details">
-
-          <div className="profile-row">
-            <span className="profile-label">Age</span>
-            <span className="profile-value">
-              {profilePopup.age || "-"}
-            </span>
-          </div>
-
-          <div className="profile-row">
-            <span className="profile-label">Contact</span>
-            <span className="profile-value">
-              {profilePopup.contact}
-            </span>
-          </div>
-
-          <div className="profile-row">
-            <span className="profile-label">Last Visit</span>
-            <span className="profile-value">
-              {profilePopup.lastVisit}
-            </span>
-          </div>
-
+        {/* NAME + ROLE */}
+        <div className="profile-main-info">
+          <h2>{profilePopup.name}</h2>
+          <span className="profile-badge">Active Patient</span>
         </div>
 
-        {/* BUTTON */}
-        <div className="profile-footer">
+        {/* INFO GRID */}
+        <div className="profile-info-grid">
+          <div className="info-card">
+            <span>Age</span>
+            <strong>{profilePopup.age || "-"}</strong>
+          </div>
+
+          <div className="info-card">
+            <span>Contact</span>
+            <strong>{profilePopup.contact}</strong>
+          </div>
+
+          <div className="info-card">
+            <span>Last Visit</span>
+            <strong>{profilePopup.lastVisit}</strong>
+          </div>
+
+          <div className="info-card">
+            <span>Status</span>
+            <strong className="status-active">Active</strong>
+          </div>
+        </div>
+
+        {/* NOTES */}
+        <div className="profile-notes">
+          <p>
+            Regular patient with consistent visits and good medical compliance.
+          </p>
+        </div>
+
+        {/* ACTION */}
+        <div className="profile-actions">
           <button
-            className="pill profile-close-btn"
+            className="profile-close-btn"
             onClick={() => setProfilePopup(null)}
           >
             Close
@@ -347,51 +406,53 @@ export default function Patients() {
     onClick={() => setHistoryPopup(null)}
   >
     <div
-      className="service-modal profile-popup-card"
+      className="history-card-modal"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="service-modal-body">
+      {/* HEADER STRIP */}
+      <div className="history-header-bg" />
 
-        {/* HEADER */}
-        <div className="profile-popup-header">
-          <div className="profile-avatar">
+      <div className="history-card-body">
+
+        {/* AVATAR */}
+        <div className="history-avatar-wrapper">
+          <div className="history-avatar">
             {historyPopup.patient.name.charAt(0).toUpperCase()}
           </div>
-
-          <h3 className="profile-name">
-            {historyPopup.patient.name}
-          </h3>
-          <p className="profile-subtext">Appointment History</p>
         </div>
 
-        {/* DIVIDER */}
-        <div className="profile-divider" />
+        {/* NAME */}
+        <div className="history-main-info">
+          <h2>{historyPopup.patient.name}</h2>
+          <span className="history-badge">Appointment History</span>
+        </div>
 
-        {/* HISTORY LIST */}
-        <div className="history-list">
+        {/* TIMELINE LIST */}
+        <div className="history-timeline">
           {historyPopup.history.map((item, index) => (
-            <div className="history-item" key={index}>
-              
-              <div className="history-left">
-                <span className="history-service">{item.service}</span>
-                <span className="history-date">{item.date}</span>
-              </div>
+            <div className="timeline-item" key={index}>
 
-              <span
-                className={`history-status ${
-                  item.status.toLowerCase()
-                }`}
-              >
-                {item.status}
-              </span>
+              <div className="timeline-dot" />
+
+              <div className="timeline-content">
+                <div className="timeline-top">
+                  <span className="timeline-service">{item.service}</span>
+                  <span className={`timeline-status ${item.status.toLowerCase()}`}>
+                    {item.status}
+                  </span>
+                </div>
+
+                <span className="timeline-date">{item.date}</span>
+              </div>
 
             </div>
           ))}
         </div>
-        {/* BUTTON */}
-        <div className="profile-footer">
+
+        {/* ACTION */}
+        <div className="history-actions">
           <button
-            className="pill profile-close-btn"
+            className="profile-close-btn"
             onClick={() => setHistoryPopup(null)}
           >
             Close
@@ -399,6 +460,48 @@ export default function Patients() {
         </div>
 
       </div>
+    </div>
+  </div>
+)}
+// logout
+{showLogoutConfirm && (
+  <div className="logout-confirm-overlay">
+    <div className="logout-confirm-modal">
+      <h3>Log out?</h3>
+      <p>Are you sure you want to log out of your account?</p>
+
+      <div className="logout-actions">
+        <button
+          className="btn-cancel"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn-confirm"
+          onClick={() => {
+            setShowLogoutConfirm(false);
+            setShowLogoutSuccess(true);
+
+            setTimeout(() => {
+              navigate("/signin");
+            }, 1500);
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{showLogoutSuccess && (
+  <div className="logout-popup-overlay">
+    <div className="logout-popup">
+      <div className="logout-icon">✓</div>
+      <h3>Logged out successfully</h3>
     </div>
   </div>
 )}

@@ -55,6 +55,9 @@ export default function ClinicScheduleAside({ apiBase, clinicId }: Props) {
   const [scheduleMessage, setScheduleMessage] = useState("");
   const [scheduleError, setScheduleError] = useState("");
 
+
+const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const scheduleSummary = useMemo(() => {
     const openDays = schedule.filter((day) => day.working);
 
@@ -162,6 +165,15 @@ export default function ClinicScheduleAside({ apiBase, clinicId }: Props) {
     }
   };
 
+  const handleSaveClick = async () => {
+  await saveSchedule();
+  setShowSuccessModal(true);
+
+  setTimeout(() => {
+    setShowSuccessModal(false);
+  }, 2000);
+};
+
   return (
     <aside className="admin-right clinic-schedule-aside">
       <div className="admin-card admin-right-card small-card">
@@ -209,21 +221,38 @@ export default function ClinicScheduleAside({ apiBase, clinicId }: Props) {
           ))}
         </div>
 
-        {scheduleMessage && (
-          <div className="clinic-schedule-message schedule-success">
-            {scheduleMessage}
-          </div>
-        )}
+        
 
         <button
           type="button"
           className="pill pill-save-schedule"
-          onClick={saveSchedule}
+          onClick={handleSaveClick}
           disabled={loadingSchedule || savingSchedule}
         >
           {savingSchedule ? "Saving..." : "Save Schedule"}
         </button>
       </div>
+
+{showSuccessModal && (
+  <div className="service-modal-overlay">
+    <div className="schedule-success-card">
+      <div className="schedule-check">✓</div>
+      <h3>Saved Successfully</h3>
+      <p>Your clinic schedule has been updated.</p>
+    </div>
+  </div>
+)}
+
+{/* SUCCESS MODAL */}
+{showSuccessModal && (
+  <div className="service-modal-overlay">
+    <div className="schedule-success-card">
+      <div className="schedule-check">✓</div>
+      <h3>Saved Successfully</h3>
+      <p>Your clinic schedule has been updated.</p>
+    </div>
+  </div>
+)}
     </aside>
   );
 }
