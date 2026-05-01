@@ -313,8 +313,7 @@ export default function Schedule() {
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title">
-              <h2>Schedule</h2>
-              <p>Clinic #{clinicId}</p>
+              <h2>Schedules</h2>
             </div>
 
             {loading && <div className="schedule-message">Loading schedule...</div>}
@@ -329,7 +328,7 @@ export default function Schedule() {
                     <div className="users-cell">Working</div>
                     <div className="users-cell">Opening Time</div>
                     <div className="users-cell">Closing Time</div>
-                    <div className="users-cell">Actions</div>
+                    <div className="users-cell">Actions:</div>
                   </div>
 
                   {rows.length === 0 ? (

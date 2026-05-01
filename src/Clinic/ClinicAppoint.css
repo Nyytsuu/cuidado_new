@@ -209,7 +209,12 @@ body {
   flex-direction: column;
   gap: 18px;
 }
-
+.admin-content-inner {
+    background: transparent;
+    border-radius: 0 0 16px 16px;
+    padding: 26px 26px 30px;
+    min-height: calc(100vh - 120px);
+}
 .ClinicAppoint .small-card {
   height: 120px;
 }
@@ -225,7 +230,7 @@ body {
   overflow: hidden;
   border-radius: 26px;
   background: linear-gradient(
-   rgb(16, 156, 133) 75px,
+   rgb(16, 156, 133) 73px,
     white 78px,
     white 100%
   );
@@ -235,11 +240,30 @@ body {
 /* ================= TABLE ================= */
 .ClinicAppoint .users-row {
   display: grid;
-  grid-template-columns: 2.1fr 1.6fr 1.5fr 1.5fr 1fr 2fr;
+  grid-template-columns:
+    minmax(160px, 2fr)
+    minmax(140px, 1.6fr)
+    minmax(100px, 1fr)
+    minmax(100px, 1fr)
+    minmax(110px, 1fr)
+    minmax(190px, 1.7fr);
   align-items: center;
   gap: 12px;
   padding: 16px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+}
+.ClinicAppoint .users-cell,
+.ClinicAppoint .pills,
+.ClinicAppoint .users-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ClinicAppoint .pills,
+.ClinicAppoint .users-name {
+  white-space: normal;
+  word-break: break-word;
 }
 
 .ClinicAppoint .users-header {
@@ -390,6 +414,17 @@ body {
   color: #fff;
   cursor: pointer;
 }
+.ClinicAppoint .users-header .users-cell:nth-child(4) {
+  padding-left: 20px;   /* lower value = more left */
+}
+.ClinicAppoint .users-header .users-cell:nth-child(5) {
+  padding-left: 10px; 
+    /* lower value = more left */
+}
+.ClinicAppoint .users-header .users-cell:nth-child(6) {
+  padding-left: 10px; 
+
+}
 /* RESPONSIVE */
 @media screen and (max-width: 900px) {
   .ClinicAppoint .admin-grid {
@@ -493,24 +528,28 @@ body {
 .modal-open {
   overflow: hidden;
 }
-.appoint-form .admin-right-card {
-  padding: 18px !important;
+.ClinicAppoint .admin-right-card {
+  background: #ffffff !important;
+  border: 1px solid #d9ebe8 !important;
+  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 26px 24px !important;
+  min-height: 150px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 10px !important;
+  gap: 14px !important;
 }
 
-.appoint-form .admin-right-card h3 {
+.ClinicAppoint .admin-right-card h3 {
   margin: 0 !important;
   font-size: 1.1rem !important;
   font-weight: 700 !important;
   color: #0f4242 !important;
 }
 
-.appoint-form .admin-right-card p {
+.ClinicAppoint .admin-right-card p {
   margin: 0 !important;
-  font-size: 0.95rem !important;
-  color: #1f2937 !important;
+  color: #071327 !important;
+  font-size: 0.92rem !important;
   line-height: 1.35 !important;
-  font-weight: 700 !important;
 }

@@ -218,7 +218,7 @@ body {
 }
 
 .Patient .big-card {
-  min-height: 430px;
+  min-height: 550px !important;
   background: #f5fbfa;
 }
 .Patient .admin-table-card {
@@ -258,12 +258,25 @@ body {
 
 .Patient .users-row {
   display: grid;
-  grid-template-columns: 1.1fr 0.5fr 1.2fr 1fr 1.8fr;
+  grid-template-columns:
+    minmax(180px, 1.5fr)
+    minmax(60px, 0.5fr)
+    minmax(160px, 1.3fr)
+    minmax(130px, 1.1fr)
+    minmax(320px, 2fr);
   align-items: center;
-  gap: 0;
+  gap: 12px;
   padding: 16px 12px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   background: transparent;
+}
+.Patient .users-cell,
+.Patient .pills,
+.Patient .users-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .Patient .users-cell {
@@ -522,7 +535,6 @@ body {
   background: #109c85 !important;
   color: #ffffff;
   border-radius: 8px;
-  margin-top: auto;
 }
 
 .Patient .pill-save-schedule:disabled {
@@ -548,7 +560,27 @@ body {
 .Patient .pill-view {
   min-width: 110px;
 }
+/* 🔥 make LEFT table flexible */
+.Patient .admin-table-card {
+  height: auto !important;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
 
+/* para sumabay yung laman */
+.Patient .users-table {
+  flex: 1;
+}
+
+.Patient .pill-save-schedule {
+  width: 100% !important;
+  margin-top: 10px !important;
+  position: relative !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
+}
 
 /* RESPONSIVE */
 @media screen and (max-width: 900px) {

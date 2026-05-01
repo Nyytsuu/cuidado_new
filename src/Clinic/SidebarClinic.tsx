@@ -8,6 +8,7 @@ import settingIcon from "../img/setting.png";
 import logoutIcon from "../img/logout.png";
 import searchIcon from "../img/search.png";
 import appointmentIcon from "../img/appointment.png";
+import calendar1 from "../img/calendar1.png";
 import logo from "../img/logo.png";
 
 
@@ -89,15 +90,8 @@ export default function SidebarClinic({
           
           <div className="sidebar-item">
             <Link to="/clinic/schedule">
-              <img src={appointmentIcon} alt="Schedule" />
+              <img src={calendar1} alt="Schedule" />
               <span>Schedule</span>
-            </Link>
-          </div>
-
-          <div className="sidebar-item">
-            <Link to="/clinic/appointments">
-              <img src={appointmentIcon} alt="Appointments" />
-              <span>Appointments</span>
             </Link>
           </div>
 
