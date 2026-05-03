@@ -785,9 +785,11 @@ app.get("/api/health/topics", async (req, res) => {
       `
       SELECT
         CAST(c.condition_id AS CHAR) AS id,
+        c.slug,
+        bs.slug AS body_system_slug,
         COALESCE(bs.icon, '🩺') AS icon,
         c.condition_name AS title,
-        COALESCE(bs.name, 'Health Topic') AS subtitle,
+        COALESCE(NULLIF(c.description, ''), bs.name, 'Health Topic') AS subtitle,
         CASE
           WHEN rv.condition_id IS NOT NULL THEN 'Recently viewed'
           WHEN c.is_common = 1 THEN 'Popular'
@@ -996,56 +998,96 @@ app.get("/api/health/body-systems/:slug/facts", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+const getConditionIdentifierQuery = (slug) => {
+  if (/^\d+$/.test(slug)) {
+    return {
+      where: "c.condition_id = ?",
+      params: [Number(slug)],
+    };
+  }
+
+  return {
+    where: "c.slug = ?",
+    params: [slug],
+  };
+};
+
+const getConditionBySlugOrId = async (slug) => {
+  const { where, params } = getConditionIdentifierQuery(slug);
+
+  const [[condition]] = await pool.query(
+    `
+    SELECT
+      c.condition_id,
+      c.slug,
+      c.condition_name,
+      c.description,
+      c.advice_level,
+      c.when_to_seek_help,
+      c.disclaimer,
+      c.hero_image,
+      c.thumbnail_image,
+      c.body_system_id,
+      bs.name AS body_system_name,
+      bs.slug AS body_system_slug,
+      bs.icon AS body_system_icon,
+      bs.short_description AS body_system_description
+    FROM conditions c
+    LEFT JOIN body_systems bs
+      ON bs.id = c.body_system_id
+    WHERE ${where}
+    LIMIT 1
+    `,
+    params
+  );
+
+  return condition || null;
+};
+
+const loadConditionSymptoms = (conditionId) =>
+  pool.query(
+    `
+    SELECT
+      s.symptom_id,
+      s.symptom_name,
+      s.category,
+      s.is_red_flag
+    FROM condition_symptoms cs
+    INNER JOIN symptoms s
+      ON s.symptom_id = cs.symptom_id
+    WHERE cs.condition_id = ?
+    ORDER BY s.is_red_flag DESC, s.symptom_name ASC
+    `,
+    [conditionId]
+  );
+
 app.get("/api/health/condition/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
+    const userId = Number(req.query.user_id || 0);
 
-    let conditionQuery = "";
-    let params = [];
-
-    if (/^\d+$/.test(slug)) {
-      conditionQuery = `
-        SELECT
-          condition_id,
-          slug,
-          condition_name,
-          description
-        FROM conditions
-        WHERE condition_id = ?
-      `;
-      params = [Number(slug)];
-    } else {
-      conditionQuery = `
-        SELECT
-          condition_id,
-          slug,
-          condition_name,
-          description
-        FROM conditions
-        WHERE slug = ?
-      `;
-      params = [slug];
-    }
-
-    const [[condition]] = await pool.query(conditionQuery, params);
+    const condition = await getConditionBySlugOrId(slug);
 
     if (!condition) {
       return res.status(404).json({ message: "Condition not found" });
     }
 
-    const [symptoms] = await pool.query(
-      `
-      SELECT
-        s.symptom_id,
-        s.symptom_name
-      FROM condition_symptoms cs
-      INNER JOIN symptoms s
-        ON s.symptom_id = cs.symptom_id
-      WHERE cs.condition_id = ?
-      ORDER BY s.symptom_name ASC
-      `,
-      [condition.condition_id]
-    );
+    if (userId) {
+      await pool
+        .query(
+          `
+          INSERT INTO recently_viewed_health_topics (user_id, condition_id)
+          VALUES (?, ?)
+          ON DUPLICATE KEY UPDATE viewed_at = CURRENT_TIMESTAMP
+          `,
+          [userId, condition.condition_id]
+        )
+        .catch((viewErr) => {
+          console.error("Save recently viewed health topic error:", viewErr);
+        });
+    }
+
+    const [symptoms] = await loadConditionSymptoms(condition.condition_id);
 
     res.json({
       ...condition,
@@ -1053,6 +1095,123 @@ app.get("/api/health/condition/:slug", async (req, res) => {
     });
   } catch (err) {
     console.error("Load condition details error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/api/health/condition/:slug/symptoms", async (req, res) => {
+  try {
+    const condition = await getConditionBySlugOrId(req.params.slug);
+
+    if (!condition) {
+      return res.status(404).json({ message: "Condition not found" });
+    }
+
+    const [rows] = await loadConditionSymptoms(condition.condition_id);
+    res.json(rows);
+  } catch (err) {
+    console.error("Load condition symptoms error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/api/health/condition/:slug/articles", async (req, res) => {
+  try {
+    const condition = await getConditionBySlugOrId(req.params.slug);
+
+    if (!condition) {
+      return res.status(404).json({ message: "Condition not found" });
+    }
+
+    if (!condition.body_system_id) {
+      return res.json([]);
+    }
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        id,
+        title,
+        slug
+      FROM articles
+      WHERE body_system_id = ?
+        AND is_published = 1
+      ORDER BY is_featured DESC, sort_order ASC, title ASC
+      LIMIT 6
+      `,
+      [condition.body_system_id]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Load condition articles error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/api/health/condition/:slug/prevention-tips", async (req, res) => {
+  try {
+    const condition = await getConditionBySlugOrId(req.params.slug);
+
+    if (!condition) {
+      return res.status(404).json({ message: "Condition not found" });
+    }
+
+    if (!condition.body_system_id) {
+      return res.json([]);
+    }
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        id,
+        tip_text
+      FROM prevention_tips
+      WHERE body_system_id = ?
+        AND is_active = 1
+      ORDER BY sort_order ASC, id ASC
+      LIMIT 6
+      `,
+      [condition.body_system_id]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Load condition prevention tips error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.get("/api/health/condition/:slug/facts", async (req, res) => {
+  try {
+    const condition = await getConditionBySlugOrId(req.params.slug);
+
+    if (!condition) {
+      return res.status(404).json({ message: "Condition not found" });
+    }
+
+    if (!condition.body_system_id) {
+      return res.json([]);
+    }
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        id,
+        title,
+        fact_text
+      FROM health_facts
+      WHERE body_system_id = ?
+        AND is_active = 1
+      ORDER BY sort_order ASC, id ASC
+      LIMIT 4
+      `,
+      [condition.body_system_id]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Load condition health facts error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

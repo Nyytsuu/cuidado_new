@@ -278,6 +278,14 @@
   font-weight: 700;
 }
 
+.mapping-column-hint {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .mapping-table thead th:first-child {
   border-top-left-radius: 14px;
 }

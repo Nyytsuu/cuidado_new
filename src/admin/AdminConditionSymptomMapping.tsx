@@ -100,10 +100,6 @@ export default function AdminConditionSymptomMapping() {
     );
   }, [symptoms, q]);
 
-  const isSelected = (symptomId: number) => {
-    return selectedSymptoms.some((item) => item.symptom_id === symptomId);
-  };
-
   const toggleSymptom = (symptomId: number) => {
     setSelectedSymptoms((prev) => {
       const exists = prev.find((item) => item.symptom_id === symptomId);
@@ -124,10 +120,14 @@ export default function AdminConditionSymptomMapping() {
   };
 
   const updateWeight = (symptomId: number, weight: number) => {
+    const safeImportance = Number.isFinite(weight)
+      ? Math.min(5, Math.max(1, weight))
+      : 1;
+
     setSelectedSymptoms((prev) =>
       prev.map((item) =>
         item.symptom_id === symptomId
-          ? { ...item, weight: weight < 1 ? 1 : weight }
+          ? { ...item, weight: safeImportance }
           : item
       )
     );
@@ -302,8 +302,11 @@ setTimeout(() => setToast(null), 2500);
                           <th>Symptom</th>
                           <th>Category</th>
                           <th>Red Flag</th>
-                          <th>Weight</th>
-                          <th>Required</th>
+                          <th>
+                            Importance
+                            <span className="mapping-column-hint">1 low - 5 high</span>
+                          </th>
+                          <th>Required Symptom</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -345,6 +348,7 @@ setTimeout(() => setToast(null), 2500);
                                   <input
                                     type="number"
                                     min={1}
+                                    max={5}
                                     className="weight-input"
                                     disabled={!selected}
                                     value={selected ? selected.weight : 1}

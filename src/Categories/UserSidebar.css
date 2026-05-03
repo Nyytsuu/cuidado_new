@@ -382,9 +382,9 @@
   gap: 6px;
 }
 
-.user-layout .caret {
-  font-size: 0.6rem;
-  margin-top: 1px;
+.user-layout .profile-btn svg {
+  width: 14px;
+  height: 14px;
   color: #6b7280;
 }
 
@@ -392,9 +392,10 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 170px;
+  min-width: 244px;
   background: #ffffff;
-  border-radius: 10px;
+  border: 1px solid #e1ebec;
+  border-radius: 12px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
   padding: 8px;
   display: none;
@@ -427,26 +428,80 @@
   background: #f3f4f6;
 }
 
+.user-layout .profile-dropdown .profile-dropdown-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #edf2f3;
+}
+
+.user-layout .profile-dropdown-summary img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #e8eff8;
+  border: 2px solid #d8ecec;
+  flex-shrink: 0;
+}
+
+.user-layout .profile-dropdown-summary span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-layout .profile-dropdown-summary strong,
+.user-layout .profile-dropdown-summary small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-layout .profile-dropdown-summary strong {
+  color: #163b45;
+  font-size: 0.9rem;
+}
+
+.user-layout .profile-dropdown-summary small {
+  color: #6b7280;
+  font-size: 0.76rem;
+  margin-top: 2px;
+}
+
 /* avatar */
 .user-layout .header-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-left: 40px;
-  position: relative;
-  right: 55px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  text-decoration: none;
+  background: #e8eff8;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(31, 139, 132, 0.12);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.user-layout .header-avatar:hover,
+.user-layout .header-avatar.active {
+  border-color: #1f8b84;
+  transform: translateY(-1px);
 }
 
 .user-layout .header-avatar img {
-  width: 36px;
-  height: 36px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   object-fit: cover;
   background: #e8eff8;
-  padding: 20px;
   display: block;
-  margin-right: 100px;
 }
 
 .user-layout .page-content {
@@ -485,9 +540,9 @@
     font-size: 0.82rem;
   }
 
-  .user-layout .header-avatar img {
-    width: 34px;
-    height: 34px;
+  .user-layout .header-avatar {
+    width: 38px;
+    height: 38px;
   }
 }
 /* LOGOUT POPUP */

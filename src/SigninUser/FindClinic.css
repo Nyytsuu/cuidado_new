@@ -496,7 +496,7 @@
 .fc-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.52);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -506,51 +506,202 @@
 
 .fc-modal-card {
   width: 100%;
-  max-width: 520px;
+  max-width: 860px;
+  max-height: calc(100vh - 40px);
   background: #ffffff;
+  border: 1px solid #dce8e9;
   border-radius: 18px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
-  overflow: hidden;
+  overflow: auto;
 }
 
 .fc-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #e2ecee;
+  background: #f7fbfb;
+}
+
+.fc-modal-eyebrow {
+  margin: 0 0 4px;
+  color: #2f8b91;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .fc-modal-header h2 {
   margin: 0;
-  font-size: 22px;
-  color: #1f2937;
+  font-size: 24px;
+  color: #203241;
+  line-height: 1.2;
 }
 
 .fc-modal-close {
-  border: none;
-  background: transparent;
-  font-size: 28px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #d5e5e6;
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
   line-height: 1;
   cursor: pointer;
-  color: #64748b;
+  color: #516271;
+  display: grid;
+  place-items: center;
 }
 
 .fc-modal-body {
-  padding: 18px 20px;
+  padding: 20px 24px 0;
 }
 
-.fc-modal-clinic-name {
-  margin: 0 0 6px;
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
+.fc-modal-clinic-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: #f7fbfb;
+  border: 1px solid #dce8e9;
+  border-radius: 14px;
+  margin-bottom: 14px;
+}
+
+.fc-modal-clinic-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.fc-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+.fc-status-pill.open {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.fc-status-pill.closed {
+  color: #991b1b;
+  background: #fee2e2;
 }
 
 .fc-modal-address {
-  margin: 0 0 16px;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   font-size: 14px;
-  color: #64748b;
+  line-height: 1.45;
+  color: #526675;
+}
+
+.fc-modal-address svg {
+  color: #2f8b91;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.fc-modal-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.fc-modal-meta-grid span,
+.fc-patient-summary span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: #526675;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fc-modal-meta-grid svg,
+.fc-patient-summary svg {
+  color: #2f8b91;
+  flex-shrink: 0;
+}
+
+.fc-modal-service-tags {
+  display: flex;
+  align-content: flex-start;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 240px;
+}
+
+.fc-modal-service-tags span {
+  min-height: 28px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #e3f3f3;
+  color: #2a6f73;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.fc-modal-alert {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.fc-modal-alert.warning {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #9a3412;
+}
+
+.fc-modal-alert.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.fc-modal-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.fc-modal-panel {
+  border: 1px solid #dce8e9;
+  border-radius: 14px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.fc-modal-panel h3 {
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #203241;
+  font-size: 16px;
+}
+
+.fc-modal-panel h3 svg {
+  color: #2f8b91;
 }
 
 .fc-modal-grid {
@@ -563,7 +714,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .fc-modal-field label {
@@ -573,33 +724,141 @@
 }
 
 .fc-modal-field input,
+.fc-modal-field select,
 .fc-modal-field textarea {
   width: 100%;
-  border: 1px solid #d1d5db;
+  border: 1px solid #cfdfe1;
   border-radius: 10px;
   padding: 10px 12px;
   font-size: 14px;
   outline: none;
-  resize: vertical; 
-  color: black;
+  background: #ffffff;
+  color: #203241;
+  box-sizing: border-box;
+}
+
+.fc-modal-field select {
+  min-height: 42px;
+  cursor: pointer;
+}
+
+.fc-modal-field textarea {
+  min-height: 104px;
+  resize: vertical;
 }
 
 .fc-modal-field input:focus,
+.fc-modal-field select:focus,
 .fc-modal-field textarea:focus {
   border-color: #0f766e;
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
+.fc-modal-selected-slot,
+.fc-service-preview,
+.fc-patient-summary {
+  border: 1px solid #dce8e9;
+  border-radius: 12px;
+  background: #f9fcfc;
+}
+
+.fc-modal-selected-slot {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.fc-modal-selected-slot span,
+.fc-modal-selected-slot small {
+  color: #5d6f7b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fc-modal-selected-slot strong {
+  color: #203241;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.fc-service-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 11px 12px;
+  margin: -2px 0 12px;
+}
+
+.fc-service-preview svg {
+  margin-top: 2px;
+  color: #2f8b91;
+  flex-shrink: 0;
+}
+
+.fc-service-preview span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fc-service-preview strong {
+  color: #203241;
+  font-size: 13px;
+}
+
+.fc-service-preview small {
+  color: #60717d;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.fc-service-preview.muted {
+  background: #f5f8f8;
+}
+
+.fc-patient-summary {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.fc-patient-summary span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .fc-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 24px 22px;
+  border-top: 1px solid #e2ecee;
+  margin-top: 18px;
+  background: #f7fbfb;
+}
+
+.fc-modal-actions p {
+  margin: 0;
+  max-width: 430px;
+  color: #5d6f7b;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.fc-modal-action-buttons {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  padding: 0 20px 20px;
+  flex-shrink: 0;
 }
 
 .fc-modal-btn {
   min-height: 40px;
-  padding: 0 16px;
+  padding: 0 18px;
   border-radius: 10px;
   border: none;
   font-size: 14px;
@@ -608,13 +867,17 @@
 }
 
 .fc-modal-btn.secondary {
-  background: #e5e7eb;
-  color: #1f2937;
+  background: #e6eef0;
+  color: #203241;
 }
 
 .fc-modal-btn.primary {
-  background: #0f766e;
+  background: #2f8b91;
   color: #ffffff;
+}
+
+.fc-modal-btn.primary:hover {
+  background: #287c81;
 }
 
 .fc-modal-btn:disabled,
@@ -726,6 +989,10 @@
   .fc-book-btn {
     width: 100%;
   }
+
+  .fc-modal-columns {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
@@ -787,6 +1054,45 @@
   .fc-modal-grid {
     grid-template-columns: 1fr;
   }
+
+  .fc-modal-overlay {
+    padding: 12px;
+    align-items: flex-start;
+  }
+
+  .fc-modal-card {
+    max-height: calc(100vh - 24px);
+  }
+
+  .fc-modal-header,
+  .fc-modal-body,
+  .fc-modal-actions {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .fc-modal-clinic-card,
+  .fc-modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fc-modal-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fc-modal-service-tags {
+    max-width: none;
+    justify-content: flex-start;
+  }
+
+  .fc-modal-action-buttons {
+    width: 100%;
+  }
+
+  .fc-modal-btn {
+    flex: 1;
+  }
 }
 .fc-success-overlay {
   position: fixed;
@@ -813,6 +1119,10 @@
 .fc-success-icon {
   font-size: 52px;
   margin-bottom: 12px;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fc-success-card h3 {

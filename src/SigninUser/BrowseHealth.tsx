@@ -74,7 +74,16 @@ export default function BrowseHealth() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const userId = 1; // replace with logged-in user id
+  const userId = useMemo(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      return user?.id ? Number(user.id) : 0;
+    } catch (err) {
+      console.error("User parse error:", err);
+      return 0;
+    }
+  }, []);
   const querySearch = searchParams.get("search") || "";
 
   useEffect(() => {
@@ -214,7 +223,7 @@ export default function BrowseHealth() {
     }
 
     if (actionId === "clinics") {
-      navigate("/clinics");
+      navigate("/find-clinic");
       return;
     }
 

@@ -536,6 +536,7 @@ export default function UserProfile() {
               profile_picture: data.profile_picture || "",
             })
           );
+          window.dispatchEvent(new Event("user-profile-updated"));
         }
       } catch (storageError) {
         console.error("Profile picture storage update error:", storageError);

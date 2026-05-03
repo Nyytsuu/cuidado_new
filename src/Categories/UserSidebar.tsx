@@ -1,4 +1,11 @@
-import { useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type FormEvent,
+  type SetStateAction,
+} from "react";
 import "./UserSidebar.css";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -11,11 +18,11 @@ import {
   Smile,
   Mic,
   User,
-  Settings,
   Bell,
   TriangleAlert,
   CircleHelp,
   LogOut,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -23,6 +30,23 @@ import {
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
+
+type HeaderUser = {
+  id?: number;
+  full_name?: string | null;
+  name?: string | null;
+  email?: string | null;
+  profile_picture?: string | null;
+};
+
+const API_BASE = "http://localhost:5000";
+
+const toUploadUrl = (value?: string | null) => {
+  const path = String(value || "").trim();
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
+};
 
 interface SidebarProps {
   sidebarExpanded: boolean;
@@ -54,8 +78,79 @@ export default function UserSidebar({
   const currentSearch = searchValue ?? internalSearch;
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+  const [headerUser, setHeaderUser] = useState<HeaderUser | null>(null);
 
   const isPathActive = (path: string) => location.pathname === path;
+  const headerDisplayName =
+    headerUser?.full_name || headerUser?.name || "My Profile";
+  const headerDisplayEmail = headerUser?.email || "View account";
+  const headerProfileImage = toUploadUrl(headerUser?.profile_picture) || userIcon;
+
+  const storedHeaderUser = useMemo(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? (JSON.parse(storedUser) as HeaderUser) : null;
+    } catch (err) {
+      console.error("Header user parse error:", err);
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const readStoredHeaderUser = () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        return storedUser ? (JSON.parse(storedUser) as HeaderUser) : null;
+      } catch (err) {
+        console.error("Header user parse error:", err);
+        return storedHeaderUser;
+      }
+    };
+
+    const loadHeaderUser = async () => {
+      const latestStoredHeaderUser = readStoredHeaderUser();
+
+      setHeaderUser(latestStoredHeaderUser);
+
+      if (!latestStoredHeaderUser?.id) return;
+
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/users/${latestStoredHeaderUser.id}/profile`,
+          {
+            cache: "no-store",
+          }
+        );
+        const data = await res.json().catch(() => ({}));
+
+        if (!cancelled && res.ok) {
+          setHeaderUser({
+            ...latestStoredHeaderUser,
+            ...data,
+          });
+        }
+      } catch (err) {
+        console.error("Header profile load error:", err);
+      }
+    };
+
+    void loadHeaderUser();
+
+    const handleProfileUpdated = () => {
+      void loadHeaderUser();
+    };
+
+    window.addEventListener("user-profile-updated", handleProfileUpdated);
+    window.addEventListener("storage", handleProfileUpdated);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("user-profile-updated", handleProfileUpdated);
+      window.removeEventListener("storage", handleProfileUpdated);
+    };
+  }, [storedHeaderUser]);
 
   const handleSearchChange = (value: string) => {
     if (searchValue === undefined) {
@@ -266,12 +361,27 @@ export default function UserSidebar({
               }`}
               onClick={() => setHeaderProfileOpen((v) => !v)}
             >
-              Profile <span className="caret">▼</span>
+              Profile <ChevronDown size={14} strokeWidth={2.2} aria-hidden="true" />
             </button>
 
             <div className="profile-dropdown">
-              <Link to="/profile">My Profile</Link>
-              <Link to="/notifications">Notifications</Link>
+              <Link
+                className="profile-dropdown-summary"
+                to="/profile"
+                onClick={() => setHeaderProfileOpen(false)}
+              >
+                <img src={headerProfileImage} alt="Profile" />
+                <span>
+                  <strong>{headerDisplayName}</strong>
+                  <small>{headerDisplayEmail}</small>
+                </span>
+              </Link>
+              <Link to="/profile" onClick={() => setHeaderProfileOpen(false)}>
+                My Profile
+              </Link>
+              <Link to="/notifications" onClick={() => setHeaderProfileOpen(false)}>
+                Notifications
+              </Link>
               <button
                 type="button"
                 className="dropdown-logout"
@@ -285,9 +395,14 @@ export default function UserSidebar({
             </div>
           </div>
 
-          <div className="header-avatar">
-            <img src={userIcon} alt="Profile" />
-          </div>
+          <Link
+            to="/profile"
+            className={`header-avatar ${location.pathname === "/profile" ? "active" : ""}`}
+            aria-label="Open profile"
+            onClick={() => setHeaderProfileOpen(false)}
+          >
+            <img src={headerProfileImage} alt="Profile" />
+          </Link>
         </nav>
       </header>
 
