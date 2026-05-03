@@ -30,6 +30,7 @@ import {
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
+import VoiceAssistantPopup from "../SigninUser/VoiceAssistantPopup";
 
 type HeaderUser = {
   id?: number;
@@ -265,11 +266,14 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">SMART</p>
 
-            <div className={`sidebar-item ${isPathActive("/admin/voice-assistant") ? "active" : ""}`}>
-              <Link to="/voice-assistant" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/voice-assistant") ? "active" : ""}`}>
+              <VoiceAssistantPopup
+                userId={headerUser?.id ? Number(headerUser.id) : null}
+                className="sidebar-btn"
+              >
                 <Mic size={24} />
                 <span>Voice Assistant</span>
-              </Link>
+              </VoiceAssistantPopup>
             </div>
           </div>
 
@@ -294,15 +298,15 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">SUPPORT</p>
 
-            <div className={`sidebar-item ${isPathActive("/admin/emergency") ? "active" : ""}`}>
-              <Link to="/admin/emergency" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/emergency") || isPathActive("/emergency-guide") ? "active" : ""}`}>
+              <Link to="/emergency" className="sidebar-btn">
                 <TriangleAlert size={24} />
                 <span>Emergency</span>
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/help") ? "active" : ""}`}>
-              <Link to="/admin/help" className="sidebar-btn">
+            <div className={`sidebar-item ${isPathActive("/help") ? "active" : ""}`}>
+              <Link to="/help" className="sidebar-btn">
                 <CircleHelp size={24} />
                 <span>Help</span>
               </Link>

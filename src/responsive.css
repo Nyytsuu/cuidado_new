@@ -1,0 +1,937 @@
+/* Responsive safety layer for the user-facing app.
+   Loaded after page styles so older fixed-width layouts can still adapt. */
+
+:root {
+  color-scheme: light;
+  --user-mobile-nav-height: 68px;
+  --user-tablet-sidebar: 74px;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  display: block;
+  place-items: initial;
+  background: #f5f7f8;
+  color: #213547;
+}
+
+img,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+
+.user-layout .app-header {
+  left: var(--sidebar-width-collapsed);
+}
+
+.user-layout.sidebar-expanded .app-header {
+  left: var(--sidebar-width-expanded);
+}
+
+.user-layout.sidebar-expanded .page-content {
+  margin-left: var(--sidebar-width-expanded);
+}
+
+.homepage,
+.browse-page,
+.findclinic-page,
+.sympcheck-page,
+.bmi-page,
+.stress-page,
+.profile-page,
+.settings-page,
+.user-emergency-page,
+.user-help-page {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.homepage-content,
+.browse-page-content,
+.findclinic-content,
+.sympcheck-content,
+.bmi-content,
+.stress-content,
+.health-app,
+.settings-main,
+.emergency-main,
+.user-help-main {
+  min-width: 0;
+}
+
+@media (max-width: 1280px) {
+  .homepage-layout,
+  .health-browser-layout,
+  .overview-grid,
+  .details-main-grid,
+  .bottom-grid,
+  .settings-layout,
+  .help-layout,
+  .emergency-hero,
+  .emergency-layout,
+  .notifications-layout,
+  .stress-layout,
+  .bmi-top-section,
+  .fc-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .quick-map-other-layout {
+    grid-template-columns: 1fr !important;
+    bottom: 0 !important;
+  }
+
+  .topic-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)) !important;
+    padding-right: 0 !important;
+  }
+
+  .voice-search-card {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 18px !important;
+  }
+
+  .health-articles-aside,
+  .settings-side {
+    position: static !important;
+    width: 100%;
+  }
+}
+
+@media (max-width: 1024px) {
+  .user-layout {
+    --sidebar-width-collapsed: 64px;
+    --sidebar-width-expanded: 240px;
+  }
+
+  .user-layout .page-content {
+    margin-left: var(--sidebar-width-collapsed);
+    padding: 18px;
+  }
+
+  .homepage-content,
+  .browse-page-content,
+  .findclinic-content,
+  .sympcheck-content,
+  .bmi-content,
+  .stress-content {
+    margin-left: var(--user-tablet-sidebar) !important;
+    width: calc(100% - var(--user-tablet-sidebar)) !important;
+  }
+
+  .homepage.sidebar-expanded .homepage-content,
+  .browse-page.sidebar-expanded .browse-page-content,
+  .sympcheck-page.sidebar-expanded .sympcheck-content,
+  .bmi-page.sidebar-expanded .bmi-content,
+  .stress-page.sidebar-expanded .stress-content,
+  .profile-page.sidebar-expanded .health-app {
+    margin-left: var(--user-tablet-sidebar) !important;
+    width: calc(100% - var(--user-tablet-sidebar)) !important;
+  }
+
+  .settings-main,
+  .emergency-main,
+  .user-help-main,
+  .health-app {
+    margin-left: var(--user-tablet-sidebar) !important;
+  }
+
+  .homepage-left,
+  .browse-health-main,
+  .findclinic-main,
+  .sympcheck-main,
+  .bmi-main,
+  .stress-main,
+  .settings-main,
+  .emergency-main,
+  .user-help-main {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+
+  .section-header,
+  .see-all-btn,
+  .quick-grid,
+  .quick-map-other-layout,
+  .voice-main {
+    position: static !important;
+    bottom: auto !important;
+    top: auto !important;
+    margin-right: 0 !important;
+  }
+
+  .services-grid,
+  .quick-grid,
+  .other-grid,
+  .mini-services-grid,
+  .quick-help-grid,
+  .support-form,
+  .emergency-contact-grid,
+  .clinic-profile-grid,
+  .clinic-booking-grid,
+  .fc-modal-columns,
+  .appointments-filter-card .booking-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .account-top,
+  .settings-heading,
+  .help-hero,
+  .emergency-bottom-actions,
+  .clinic-item,
+  .notification-card {
+    flex-wrap: wrap;
+  }
+
+  .main-content {
+    padding-left: 22px !important;
+  }
+
+  .profilenav {
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    border-right: none !important;
+    border-bottom: 1px solid #dde5e8;
+  }
+
+  .content-grid,
+  .account-details,
+  .security-row1,
+  .security-row2,
+  .security-row3 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .user-layout {
+    --sidebar-width-collapsed: 58px;
+    --sidebar-width-expanded: min(82vw, 250px);
+  }
+
+  .user-layout .app-header {
+    left: var(--sidebar-width-collapsed);
+    padding: 0 12px;
+    gap: 10px;
+  }
+
+  .user-layout .brand-logo {
+    width: 108px;
+  }
+
+  .user-layout .header-left {
+    flex: 1 1 auto;
+    gap: 10px;
+  }
+
+  .user-layout .header-search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .user-layout .header-nav {
+    flex: 0 0 auto;
+    gap: 8px;
+    margin-left: 8px;
+  }
+
+  .user-layout .header-nav > .nav-link:not(.profile-btn),
+  .user-layout .header-avatar {
+    display: none;
+  }
+
+  .user-layout .profile-btn {
+    padding: 0 8px;
+  }
+
+  .user-layout .profile-dropdown {
+    right: -6px;
+    min-width: min(260px, calc(100vw - 90px));
+  }
+
+  .services-grid,
+  .quick-grid,
+  .other-grid,
+  .mini-services-grid,
+  .quick-help-grid,
+  .support-form,
+  .emergency-contact-grid,
+  .clinic-profile-grid,
+  .clinic-detail-list,
+  .clinic-booking-grid,
+  .fc-search-bar,
+  .fc-modal-grid,
+  .fc-modal-columns,
+  .fc-modal-meta-grid,
+  .settings-grid,
+  .booking-form-grid,
+  .appointments-filter-card .booking-form-grid,
+  .stress-quick-grid,
+  .common-symptoms-row,
+  .health-tools-grid,
+  .tool-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .homepage-left,
+  .browse-health-main,
+  .findclinic-main,
+  .sympcheck-main,
+  .bmi-main,
+  .stress-main,
+  .settings-main,
+  .emergency-main,
+  .user-help-main,
+  .user-layout .page-content {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .fc-card,
+  .fc-card-left,
+  .fc-card-right,
+  .notification-card,
+  .appointment-actions,
+  .stress-action-row,
+  .clinic-booking-actions,
+  .booking-modal-actions,
+  .settings-heading,
+  .help-panel-head,
+  .emergency-bottom-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .fc-card-right,
+  .clinic-right,
+  .notification-right,
+  .top-actions,
+  .profile-picture-actions {
+    width: 100% !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+  }
+
+  .fc-book-btn,
+  .fc-modal-btn,
+  .clinic-book-btn,
+  .clinic-secondary-btn,
+  .stress-btn-primary,
+  .settings-primary-btn,
+  .settings-secondary-btn,
+  .bmi-primary-btn,
+  .sympcheck-btn-primary,
+  .tool-btn,
+  .mini-action-btn,
+  .book-btn,
+  .filter-btn {
+    width: 100% !important;
+  }
+
+  .sympcheck-bottom-row,
+  .stress-options-row,
+  .tabs,
+  .tabs-header,
+  .faq-tabs,
+  .fc-filters {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 6px;
+  }
+
+  .sympcheck-select,
+  .sympcheck-btn-primary {
+    flex: 0 0 190px;
+  }
+
+  .article-modal,
+  .booking-modal,
+  .fc-modal-card,
+  .clinic-profile-modal,
+  .stress-popup-card,
+  .bmi-popup-card,
+  .voice-result-modal {
+    width: min(100%, calc(100vw - 24px)) !important;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    min-width: 320px;
+  }
+
+  .user-layout .sidebar {
+    top: 0;
+    bottom: auto;
+    left: 0;
+    width: var(--sidebar-width-collapsed) !important;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-top: none;
+  }
+
+  .user-layout .sidebar-top {
+    display: flex;
+    height: 42px;
+  }
+
+  .user-layout .sidebar-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    width: 100%;
+    min-width: 0;
+    padding: 0 0 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .user-layout .sidebar-section {
+    display: block;
+  }
+
+  .user-layout .sidebar-section-title {
+    display: none !important;
+  }
+
+  .user-layout .sidebar-item {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
+  .user-layout .sidebar-item a,
+  .user-layout .sidebar-btn,
+  .user-layout .sidebar.collapsed .sidebar-item a,
+  .user-layout .sidebar.collapsed .sidebar-btn,
+  .user-layout .sidebar.expanded .sidebar-item a,
+  .user-layout .sidebar.expanded .sidebar-btn {
+    width: 52px;
+    min-height: 52px;
+    padding: 0;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .user-layout .sidebar-item span,
+  .user-layout .sidebar.expanded .sidebar-item span {
+    display: none;
+  }
+
+  .user-layout .sidebar-item.active::before {
+    left: 0;
+    right: auto;
+    top: 10px;
+    bottom: 10px;
+    width: 4px;
+    height: auto;
+  }
+
+  .user-layout .app-header {
+    left: var(--sidebar-width-collapsed) !important;
+    height: 58px;
+    background: #f7f7f7 !important;
+    border-bottom: 1px solid #dfe7e8;
+  }
+
+  .user-layout .brand-logo {
+    display: none;
+  }
+
+  .user-layout .page-content,
+  .homepage-content,
+  .browse-page-content,
+  .findclinic-content,
+  .sympcheck-content,
+  .bmi-content,
+  .stress-content,
+  .profile-page.sidebar-expanded .health-app,
+  .health-app,
+  .settings-main,
+  .emergency-main,
+  .user-help-main {
+    margin-left: 58px !important;
+    width: calc(100% - 58px) !important;
+  }
+
+  .homepage-main,
+  .browse-health-main,
+  .findclinic-main,
+  .sympcheck-main,
+  .bmi-main,
+  .stress-main,
+  .settings-main,
+  .emergency-main,
+  .user-help-main,
+  .user-layout .page-content,
+  .health-app {
+    padding-bottom: 18px !important;
+  }
+
+  .homepage-main {
+    padding-top: 76px !important;
+  }
+
+  .browse-health-main,
+  .findclinic-main,
+  .settings-main,
+  .emergency-main,
+  .user-help-main {
+    padding-top: 76px !important;
+  }
+
+  .sympcheck-content,
+  .bmi-content,
+  .stress-content,
+  .health-app {
+    margin-top: 58px !important;
+  }
+
+  .sympcheck-main,
+  .bmi-main,
+  .stress-main {
+    min-height: auto !important;
+  }
+
+  .welcome-box h1,
+  .fc-title,
+  .sympcheck-title-wrap h1,
+  .bmi-title-wrap h1,
+  .stress-title-wrap h1,
+  .settings-heading h1,
+  .help-hero h1,
+  .emergency-hero h1,
+  .voice-main h1,
+  .page-title {
+    font-size: clamp(24px, 7vw, 32px) !important;
+    line-height: 1.12 !important;
+  }
+
+  .welcome-box p,
+  .fc-sub,
+  .sympcheck-title-wrap p,
+  .bmi-title-wrap p,
+  .stress-title-wrap p,
+  .help-hero p,
+  .emergency-hero p {
+    font-size: 14px !important;
+  }
+
+  .fc-map {
+    min-height: 320px !important;
+  }
+
+  .leaflet-map,
+  .leaflet-map-wrap {
+    min-height: 260px;
+  }
+
+  .fc-card-thumb {
+    height: 150px !important;
+  }
+
+  .account-top,
+  .account-user,
+  .profile-mini,
+  .clinic-profile-head,
+  .clinic-profile-title,
+  .booking-modal-actions,
+  .fc-modal-actions,
+  .fc-modal-action-buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .profile-mini,
+  .account-user,
+  .clinic-profile-title {
+    align-items: flex-start !important;
+  }
+
+  .floating-mic {
+    right: 12px !important;
+    bottom: 12px !important;
+    margin-right: 0 !important;
+  }
+
+  .homepage-main {
+    background: #f6f8fa !important;
+    min-height: auto !important;
+  }
+
+  .homepage-layout {
+    display: block !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .homepage-left {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    background: #f6f8fa !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .welcome-box {
+    margin-bottom: 0 !important;
+  }
+
+  .main-search {
+    margin: 0 !important;
+    max-width: none !important;
+  }
+
+  .services-grid {
+    gap: 12px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .service-card {
+    min-height: 142px !important;
+    border-radius: 14px !important;
+    padding: 18px !important;
+  }
+
+  .service-icon-circle {
+    width: 48px !important;
+    height: 48px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .section {
+    margin-bottom: 0 !important;
+  }
+
+  .quick-other-section {
+    display: block !important;
+  }
+
+  .section-header {
+    width: 100%;
+    margin: 4px 0 12px !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+
+  .section-header h2,
+  .other-services-wrap h2,
+  .health-articles-aside h3 {
+    font-size: 20px !important;
+    line-height: 1.2 !important;
+  }
+
+  .see-all-btn {
+    position: static !important;
+    margin: 0 !important;
+    white-space: nowrap;
+  }
+
+  .quick-map-other-layout,
+  .quick-other-left {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .quick-grid,
+  .other-grid,
+  .mini-services-grid {
+    gap: 12px !important;
+  }
+
+  .quick-card,
+  .other-card {
+    min-height: auto !important;
+    padding: 14px !important;
+    align-items: center !important;
+  }
+
+  .homepage .other-services-wrap,
+  .homepage .mini-services-panel,
+  .homepage .map-card,
+  .homepage .footer-links {
+    display: none !important;
+  }
+
+  .quick-icon,
+  .other-icon {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .quick-text h3,
+  .other-text h3 {
+    font-size: 15px !important;
+  }
+
+  .quick-text p,
+  .other-text p {
+    font-size: 12px !important;
+  }
+
+  .map-card {
+    min-height: auto !important;
+  }
+
+  .leaflet-map-wrap {
+    height: 230px !important;
+  }
+
+  .homepage-voice-box {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 76px !important;
+    margin: 0 !important;
+    transform: none !important;
+    left: auto !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+    flex: 0 0 auto !important;
+  }
+
+  .voice-left {
+    min-width: 0;
+  }
+
+  .voice-left span {
+    font-size: 14px !important;
+    line-height: 1.25;
+  }
+
+  .voice-search-icon {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  .voice-btn {
+    width: 48px !important;
+    height: 48px !important;
+    margin-left: 0 !important;
+  }
+
+  .footer-links {
+    position: static !important;
+    bottom: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 12px !important;
+  }
+
+  .health-articles-aside {
+    margin: 0 !important;
+    padding: 14px !important;
+    background: #eef8fa !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  .articles-list {
+    gap: 12px !important;
+  }
+
+  .article-item {
+    width: 100%;
+    min-width: 0;
+    display: grid !important;
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: start !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    background: #ffffff;
+    border: 1px solid #e5eef0;
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .article-item:nth-child(n + 4) {
+    display: none !important;
+  }
+
+  .article-img {
+    width: 72px !important;
+    height: 58px !important;
+    border-radius: 10px !important;
+  }
+
+  .article-text {
+    min-width: 0;
+  }
+
+  .article-text h4 {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 13px !important;
+    line-height: 1.3 !important;
+  }
+
+  .article-text p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+  }
+
+  .article-text small {
+    font-size: 11px !important;
+    margin-top: 4px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-layout .app-header {
+    padding: 0 10px;
+  }
+
+  .user-layout .profile-btn {
+    font-size: 0;
+    width: 42px;
+    min-width: 42px;
+    height: 38px;
+    justify-content: center;
+  }
+
+  .user-layout .profile-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .homepage-left,
+  .browse-health-main,
+  .findclinic-main,
+  .sympcheck-main,
+  .bmi-main,
+  .stress-main,
+  .settings-main,
+  .emergency-main,
+  .user-help-main,
+  .user-layout .page-content,
+  .main-content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .service-card,
+  .quick-card,
+  .other-card,
+  .topic-card,
+  .category-section-box,
+  .fc-card,
+  .appointments-card,
+  .summary-card,
+  .quick-card,
+  .health-card,
+  .calendar-card,
+  .settings-panel,
+  .settings-side,
+  .help-panel,
+  .emergency-panel,
+  .account-card,
+  .setting-box,
+  .security-card,
+  .side-widget {
+    border-radius: 12px !important;
+  }
+
+  .main-search {
+    height: auto;
+    min-height: 44px;
+  }
+
+  .main-search-btn {
+    width: 76px;
+    min-width: 76px;
+    font-size: 14px;
+  }
+
+  .signup-container,
+  .login-card,
+  .fp-modal-card,
+  .error-popup {
+    width: min(100%, calc(100vw - 24px)) !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .signin-container {
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .right-side {
+    display: none;
+  }
+
+  .left-side {
+    width: 100%;
+    min-height: 100vh;
+    padding: 24px 14px;
+  }
+
+  .login-card {
+    width: min(100%, 480px);
+    padding: 36px 24px;
+    border-radius: 24px;
+  }
+
+  .bgimg {
+    min-height: 100vh;
+    padding: 18px 12px;
+    justify-content: flex-start;
+  }
+
+  .wrapper {
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
+    display: block;
+  }
+
+  .left-bg {
+    display: none;
+  }
+
+  .signup-container {
+    position: static;
+    transform: none;
+    width: min(100%, 680px);
+    height: auto;
+    max-height: none;
+    min-height: auto;
+    margin: 0 auto;
+    justify-content: flex-start;
+  }
+
+  .signup-form {
+    max-height: none;
+    overflow: visible;
+  }
+}

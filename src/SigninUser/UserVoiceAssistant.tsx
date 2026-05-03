@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import "./UserVoiceAssistant.css";
 import UserSidebar from "../Categories/UserSidebar";
 import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
+import VoiceAssistantResult from "./VoiceAssistantResult";
+import { useNavigate } from "react-router-dom";
 import {
   Mic,
   CalendarDays,
@@ -64,6 +66,7 @@ interface SpeechRecognition extends EventTarget {
 }
 
 export default function UserVoiceAssistant() {
+  const navigate = useNavigate();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
@@ -167,7 +170,7 @@ export default function UserVoiceAssistant() {
       case "processing":
         return ["Analyzing symptoms...", "Checking possible conditions based on your symptoms."];
       case "result":
-        return ["Analysis complete", "Result opened in popup."];
+        return ["Analysis complete", "Review the summary and next steps below."];
       case "retry":
         return ["Could not process", voiceError || "Please try again."];
       case "unsupported":
@@ -360,36 +363,20 @@ export default function UserVoiceAssistant() {
               ×
             </button>
 
-            <h2>Analysis complete</h2>
-            <p className="voice-result-subtitle">
-              Here are the ranked possible conditions.
-            </p>
-
-            <div className="voice-result-section">
-              <strong>Heard:</strong>
-              <p>{symptomResult.transcript}</p>
-            </div>
-
-            <div className="voice-result-section">
-              <strong>Detected symptoms:</strong>
-              {symptomResult.symptoms.length > 0 ? (
-                <ul>
-                  {symptomResult.symptoms.map((symptom) => (
-                    <li key={symptom}>{symptom}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No symptoms detected.</p>
-              )}
-            </div>
-
+            <VoiceAssistantResult result={symptomResult} showTranscript />
             <div className="voice-result-section">
               <strong>Possible conditions:</strong>
               {symptomResult.possible_conditions.length > 0 ? (
                 <ol>
                   {symptomResult.possible_conditions.map((condition) => (
-                    <li key={condition.name}>
+                    <li className="voice-condition-match" key={condition.name}>
                       {condition.name} — {(condition.score * 100).toFixed(0)}% match
+                      {condition.recognizedByName && <em>recognized by name</em>}
+                      {condition.matchedSymptoms.length > 0 && (
+                        <small>
+                          Related symptoms: {condition.matchedSymptoms.join(", ")}
+                        </small>
+                      )}
                     </li>
                   ))}
                 </ol>
@@ -415,11 +402,31 @@ export default function UserVoiceAssistant() {
 
             <button
               type="button"
-              className="voice-popup-retry'"
+              className="voice-popup-retry"
               onClick={startVoiceAssistant}
             >
               Try again
             </button>
+
+            <div className="voice-result-actions">
+              <button
+                type="button"
+                className="voice-result-secondary"
+                onClick={startVoiceAssistant}
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                className="voice-result-primary"
+                onClick={() => {
+                  resetVoiceAssistant();
+                  navigate("/find-clinic");
+                }}
+              >
+                Find clinics
+              </button>
+            </div>
           </div>
         </div>
       )}

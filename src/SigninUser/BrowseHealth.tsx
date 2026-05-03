@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
+import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./BrowseHealth.css";
 import searchIcon from "../img/search.png";
 
@@ -378,13 +379,9 @@ export default function BrowseHealth() {
                 >
                   Describe your symptoms <span className="system-arrow">›</span>
                 </button>
-                <button
-                  type="button"
-                  className="voice-start-btn"
-                  onClick={() => navigate("/symptom-checker")}
-                >
+                <VoiceAssistantPopup userId={userId || null} className="voice-start-btn">
                   Start Voice Search
-                </button>
+                </VoiceAssistantPopup>
               </div>
 
               <p className="health-note">

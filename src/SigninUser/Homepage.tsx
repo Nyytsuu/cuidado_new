@@ -7,6 +7,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import UserSidebar from "../Categories/UserSidebar";
+import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./Homepage.css";
 
 type Article = {
@@ -134,6 +135,14 @@ const siteSearchTargets = [
   {
     path: "/notifications",
     keywords: ["notification", "notifications", "alerts"],
+  },
+  {
+    path: "/emergency",
+    keywords: ["emergency", "hotline", "urgent", "911", "red cross"],
+  },
+  {
+    path: "/help",
+    keywords: ["help", "support", "faq", "contact support", "issue"],
   },
 ];
 
@@ -525,15 +534,11 @@ useEffect(() => {
                   <span>Your health, just a voice away</span>
                 </div>
 
-                <button
-                  type="button"
-                  className="voice-btn"
-                  onClick={() => handleNavigate("/voice-assistant")}
-                >
+                <VoiceAssistantPopup className="voice-btn">
                   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
                   </svg>
-                </button>
+                </VoiceAssistantPopup>
               </div>
 
               <div className="footer-links">

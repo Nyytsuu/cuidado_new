@@ -254,6 +254,29 @@
   color: #1f2937;
 }
 
+.voice-condition-match {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voice-condition-match em {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.voice-condition-match small {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .voice-result-section p {
   margin: 6px 0;
   font-size: 14px;
@@ -491,21 +514,24 @@
 .voice-result-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(15, 23, 42, 0.46);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 30000;
+  padding: 18px;
 }
 
 .voice-result-modal {
-  background: #fff;
-  padding: 24px;
-  border-radius: 16px;
-  width: 400px;
-  max-height: 80vh;
+  background: #f6fafb;
+  padding: 22px;
+  border-radius: 22px;
+  width: min(760px, 100%);
+  max-height: calc(100vh - 36px);
   overflow-y: auto;
   position: relative;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.26);
+  border: 1px solid rgba(210, 229, 232, 0.95);
 }
 
 .voice-result-close {
@@ -514,6 +540,60 @@
   right: 14px;
   border: none;
   background: transparent;
-  font-size: 24px;
+  color: #62717d;
+  font-size: 0;
+  line-height: 1;
   cursor: pointer;
+  z-index: 2;
+}
+
+.voice-result-close::before {
+  content: "x";
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.voice-result-modal > .voice-result-section,
+.voice-result-modal > .voice-popup-retry {
+  display: none;
+}
+
+.voice-result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.voice-result-primary,
+.voice-result-secondary {
+  min-height: 42px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.voice-result-primary {
+  background: #087f78;
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(8, 127, 120, 0.18);
+}
+
+.voice-result-secondary {
+  background: #ffffff;
+  color: #087f78;
+  border: 1px solid #badfdb;
+}
+
+@media (max-width: 560px) {
+  .voice-result-actions {
+    flex-direction: column;
+  }
+
+  .voice-result-primary,
+  .voice-result-secondary {
+    width: 100%;
+  }
 }

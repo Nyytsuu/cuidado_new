@@ -23,6 +23,18 @@ const includesPhrase = (text, phrase) => {
   return new RegExp(`(^|\\s)${escaped}(\\s|$)`, "i").test(text);
 };
 
+const compactText = (value) => normalizeText(value).replace(/\s/g, "");
+
+const matchesConditionName = (text, conditionName) => {
+  const normalizedCondition = normalizeText(conditionName);
+  if (!normalizedCondition) return false;
+
+  return (
+    includesPhrase(text, normalizedCondition) ||
+    compactText(text).includes(compactText(normalizedCondition))
+  );
+};
+
 const getAdvice = (adviceLevel, topCondition) => {
   if (adviceLevel === "urgent") {
     return (
@@ -64,8 +76,37 @@ router.post("/analyze", async (req, res) => {
       ORDER BY CHAR_LENGTH(symptom_name) DESC, symptom_name ASC
     `);
 
+    const [conditionNameRows] = await pool.query(`
+      SELECT
+        c.condition_id,
+        c.condition_name,
+        c.advice_level,
+        c.when_to_seek_help,
+        COALESCE(SUM(cs.weight), 0) AS total_weight,
+        GROUP_CONCAT(
+          DISTINCT s.symptom_name
+          ORDER BY cs.required_symptom DESC, cs.weight DESC, s.symptom_name ASC
+          SEPARATOR '||'
+        ) AS mapped_symptoms,
+        MAX(COALESCE(s.is_red_flag, 0)) AS has_red_flag
+      FROM conditions c
+      LEFT JOIN condition_symptoms cs
+        ON cs.condition_id = c.condition_id
+      LEFT JOIN symptoms s
+        ON s.symptom_id = cs.symptom_id
+      GROUP BY
+        c.condition_id,
+        c.condition_name,
+        c.advice_level,
+        c.when_to_seek_help
+      ORDER BY CHAR_LENGTH(c.condition_name) DESC, c.condition_name ASC
+    `);
+
     const matchedSymptoms = symptomRows.filter((symptom) =>
       includesPhrase(normalizedTranscript, symptom.symptom_name)
+    );
+    const recognizedConditions = conditionNameRows.filter((condition) =>
+      matchesConditionName(normalizedTranscript, condition.condition_name)
     );
 
     const matchedSymptomIds = matchedSymptoms.map((symptom) => symptom.symptom_id);
@@ -75,6 +116,28 @@ router.post("/analyze", async (req, res) => {
 
     let possibleConditions = [];
     let adviceLevel = "self-care";
+
+    if (recognizedConditions.length > 0) {
+      possibleConditions = recognizedConditions.map((condition) => ({
+        name: condition.condition_name,
+        score: 1,
+        matchedSymptoms: condition.mapped_symptoms
+          ? String(condition.mapped_symptoms).split("||")
+          : [],
+        adviceLevel: condition.advice_level,
+        when_to_seek_help: condition.when_to_seek_help,
+        recognizedByName: true,
+        hasRedFlagSymptom: Number(condition.has_red_flag) === 1,
+      }));
+
+      if (recognizedConditions.some((condition) => condition.advice_level === "urgent")) {
+        adviceLevel = "urgent";
+      } else if (
+        recognizedConditions.some((condition) => condition.advice_level === "consult")
+      ) {
+        adviceLevel = "consult";
+      }
+    }
 
     if (matchedSymptomIds.length > 0) {
       const placeholders = matchedSymptomIds.map(() => "?").join(",");
@@ -113,7 +176,7 @@ router.post("/analyze", async (req, res) => {
         matchedSymptomIds
       );
 
-      possibleConditions = conditionRows.map((condition) => ({
+      const symptomMatchedConditions = conditionRows.map((condition) => ({
         name: condition.condition_name,
         score:
           Number(condition.total_weight) > 0
@@ -126,6 +189,21 @@ router.post("/analyze", async (req, res) => {
         when_to_seek_help: condition.when_to_seek_help,
       }));
 
+      const existingConditionNames = new Set(
+        possibleConditions.map((condition) => normalizeText(condition.name))
+      );
+
+      possibleConditions = [
+        ...possibleConditions,
+        ...symptomMatchedConditions.filter(
+          (condition) => !existingConditionNames.has(normalizeText(condition.name))
+        ),
+      ].sort(
+        (a, b) =>
+          Number(b.score) - Number(a.score) ||
+          String(a.name).localeCompare(String(b.name))
+      );
+
       if (conditionRows.some((condition) => condition.advice_level === "urgent")) {
         adviceLevel = "urgent";
       } else if (
@@ -135,9 +213,9 @@ router.post("/analyze", async (req, res) => {
       }
     }
 
-    const emergency = matchedSymptoms.some(
-      (symptom) => Number(symptom.is_red_flag) === 1
-    );
+    const emergency =
+      matchedSymptoms.some((symptom) => Number(symptom.is_red_flag) === 1) ||
+      possibleConditions.some((condition) => condition.hasRedFlagSymptom);
 
     if (emergency) {
       adviceLevel = "urgent";
@@ -166,10 +244,14 @@ router.post("/analyze", async (req, res) => {
         logId: insertResult.insertId,
         transcript: cleanTranscript,
         symptoms: matchedSymptomNames,
+        recognized_conditions: recognizedConditions.map(
+          (condition) => condition.condition_name
+        ),
         possible_conditions: possibleConditions.map((condition) => ({
           name: condition.name,
           score: condition.score,
           matchedSymptoms: condition.matchedSymptoms,
+          recognizedByName: Boolean(condition.recognizedByName),
         })),
         adviceLevel,
         urgency: ADVICE_TO_URGENCY[adviceLevel] || "low",

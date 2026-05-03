@@ -8,6 +8,16 @@ const pool = require("../db/pool");
 const router = express.Router();
 
 const NOTIFICATION_CATEGORIES = new Set(["Appointments", "System", "Promotions"]);
+const SUPPORT_TOPICS = new Set([
+  "Account",
+  "Appointments",
+  "Clinic Search",
+  "Voice Assistant",
+  "Emergency Page",
+  "Technical Issue",
+  "Other",
+]);
+const SUPPORT_PRIORITIES = new Set(["low", "normal", "urgent"]);
 const PROFILE_UPLOAD_DIR = path.join("uploads", "profile-pictures");
 const PROFILE_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
@@ -104,6 +114,27 @@ const ensureUserNotificationsTable = async () => {
       PRIMARY KEY (id),
       UNIQUE KEY unique_user_notification (user_id, unique_key),
       INDEX idx_user_notifications_user (user_id, is_read, created_at)
+    )
+  `);
+};
+
+const ensureUserSupportRequestsTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_support_requests (
+      id INT NOT NULL AUTO_INCREMENT,
+      user_id INT NOT NULL,
+      topic VARCHAR(80) NOT NULL,
+      priority VARCHAR(20) NOT NULL DEFAULT 'normal',
+      subject VARCHAR(180) NOT NULL,
+      message TEXT NOT NULL,
+      contact_email VARCHAR(255) DEFAULT NULL,
+      contact_phone VARCHAR(40) DEFAULT NULL,
+      status VARCHAR(40) NOT NULL DEFAULT 'open',
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      INDEX idx_user_support_requests_user (user_id, created_at),
+      INDEX idx_user_support_requests_status (status)
     )
   `);
 };
@@ -373,6 +404,150 @@ router.patch("/:userId/notifications/:notificationId/read", async (req, res) => 
   } catch (error) {
     console.error("PATCH /notifications/:id/read error:", error);
     res.status(500).json({ message: "Failed to update notification." });
+  }
+});
+
+/**
+ * GET /api/users/:userId/support-requests
+ */
+router.get("/:userId/support-requests", async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    if (!userId) {
+      return res.status(400).json({ message: "Valid userId is required." });
+    }
+
+    await ensureUserSupportRequestsTable();
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        id,
+        user_id,
+        topic,
+        priority,
+        subject,
+        message,
+        contact_email,
+        contact_phone,
+        status,
+        created_at,
+        updated_at
+      FROM user_support_requests
+      WHERE user_id = ?
+      ORDER BY created_at DESC, id DESC
+      LIMIT 10
+      `,
+      [userId]
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error("GET /support-requests error:", error);
+    res.status(500).json({ message: "Failed to load support requests." });
+  }
+});
+
+/**
+ * POST /api/users/:userId/support-requests
+ */
+router.post("/:userId/support-requests", async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    const topic = String(req.body.topic || "").trim();
+    const priority = String(req.body.priority || "normal").trim().toLowerCase();
+    const subject = String(req.body.subject || "").trim();
+    const message = String(req.body.message || "").trim();
+    const contactEmail = String(req.body.contact_email || "").trim();
+    const contactPhone = String(req.body.contact_phone || "").trim();
+
+    if (!userId) {
+      return res.status(400).json({ message: "Valid userId is required." });
+    }
+
+    if (!SUPPORT_TOPICS.has(topic)) {
+      return res.status(400).json({ message: "Please choose a valid support topic." });
+    }
+
+    if (!SUPPORT_PRIORITIES.has(priority)) {
+      return res.status(400).json({ message: "Please choose a valid priority." });
+    }
+
+    if (subject.length < 5 || subject.length > 180) {
+      return res.status(400).json({
+        message: "Subject must be between 5 and 180 characters.",
+      });
+    }
+
+    if (message.length < 15 || message.length > 2000) {
+      return res.status(400).json({
+        message: "Message must be between 15 and 2000 characters.",
+      });
+    }
+
+    const [users] = await pool.query(
+      `
+      SELECT id
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    await ensureUserSupportRequestsTable();
+
+    const [result] = await pool.query(
+      `
+      INSERT INTO user_support_requests (
+        user_id,
+        topic,
+        priority,
+        subject,
+        message,
+        contact_email,
+        contact_phone,
+        status,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'open', NOW(), NOW())
+      `,
+      [
+        userId,
+        topic,
+        priority,
+        subject,
+        message,
+        contactEmail || null,
+        contactPhone || null,
+      ]
+    );
+
+    await ensureUserNotificationsTable();
+    await insertNotification({
+      userId,
+      uniqueKey: `support:${result.insertId}:created`,
+      title: "Support Request Received",
+      message: `Your support request "${subject}" was submitted.`,
+      category: "System",
+      icon: "info",
+      createdAt: new Date(),
+    });
+
+    res.status(201).json({
+      message: "Support request submitted successfully.",
+      request_id: result.insertId,
+      status: "open",
+    });
+  } catch (error) {
+    console.error("POST /support-requests error:", error);
+    res.status(500).json({ message: "Failed to submit support request." });
   }
 });
 

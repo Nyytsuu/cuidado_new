@@ -262,6 +262,50 @@ function formatServiceDuration(value: string | number | null | undefined): strin
   return minutes > 0 ? `${minutes} min` : "Duration varies";
 }
 
+function formatClinicLabel(value: string | null | undefined): string {
+  const cleaned = String(value || "")
+    .replace(/[_-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned) return "";
+
+  return cleaned
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function getClinicDescription(clinic: Clinic): string {
+  const specialization = formatClinicLabel(clinic.specialization);
+  const services = formatClinicLabel(clinic.services_offered);
+
+  if (specialization && services && specialization.toLowerCase() !== services.toLowerCase()) {
+    return `${specialization} clinic offering ${services} services.`;
+  }
+
+  if (specialization) {
+    return `${specialization} clinic available for appointment requests.`;
+  }
+
+  if (services) {
+    return `Clinic offering ${services} services.`;
+  }
+
+  return "Approved clinic available for appointment requests.";
+}
+
+function getClinicDistanceLabel(
+  clinic: ClinicWithDistance,
+  hasUserLocation: boolean
+): string {
+  if (clinic.distanceKm !== null) {
+    return `${clinic.distanceKm.toFixed(1)} km away`;
+  }
+
+  return hasUserLocation ? "Calculating distance" : "Use My Location";
+}
+
 function getClosureMessageForDate(clinic: Clinic, date: Date): string | null {
   const dateValue = toDateInputValue(date);
 
@@ -1016,11 +1060,9 @@ export default function FindClinic() {
                           {isNearest && <span className="fc-nearest-badge">Nearest</span>}
                         </h3>
 
-                        <div className="fc-card-pricing">
-                          <span>$ -PPP</span>
-                          <span>₱PP</span>
-                          <span>₱₱20.00</span>
-                        </div>
+                        <p className="fc-card-description">
+                          {getClinicDescription(clinic)}
+                        </p>
 
                         <div className="fc-card-address">
                           <MapPin size={15} />
@@ -1033,9 +1075,7 @@ export default function FindClinic() {
                       <div className="fc-card-rating">{renderStars()}</div>
 
                       <div className="fc-card-distance">
-                        {clinic.distanceKm !== null
-                          ? `${clinic.distanceKm.toFixed(1)} km`
-                          : "2.5 km"}
+                        {getClinicDistanceLabel(clinic, Boolean(userLocation))}
                       </div>
 
                      <button
@@ -1165,6 +1205,10 @@ export default function FindClinic() {
                     <span>{selectedClinic.address}</span>
                   </p>
 
+                  <p className="fc-modal-description">
+                    {getClinicDescription(selectedClinic)}
+                  </p>
+
                   <div className="fc-modal-meta-grid">
                     <span>
                       <Clock3 size={15} />
@@ -1172,9 +1216,7 @@ export default function FindClinic() {
                     </span>
                     <span>
                       <MapPin size={15} />
-                      {selectedClinic.distanceKm !== null
-                        ? `${selectedClinic.distanceKm.toFixed(1)} km away`
-                        : "Distance unavailable"}
+                      {getClinicDistanceLabel(selectedClinic, Boolean(userLocation))}
                     </span>
                   </div>
                 </div>

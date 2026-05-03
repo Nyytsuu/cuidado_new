@@ -2,11 +2,13 @@ export type PossibleCondition = {
   name: string;
   score: number;
   matchedSymptoms: string[];
+  recognizedByName?: boolean;
 };
 
 export type SymptomResult = {
   transcript: string;
   symptoms: string[];
+  recognized_conditions: string[];
   possible_conditions: PossibleCondition[];
   urgency: "low" | "medium" | "high";
   advice: string;
@@ -20,6 +22,8 @@ type VoiceAssistantApiResponse = {
     transcript?: string;
     symptoms?: string[];
     matchedSymptoms?: string[];
+    recognized_conditions?: string[];
+    recognizedConditions?: string[];
     possible_conditions?: PossibleCondition[];
     possibleConditions?: string[];
     adviceLevel?: "self-care" | "consult" | "urgent";
@@ -88,6 +92,8 @@ export const analyzeVoiceTranscript = async (
   return {
     transcript: data.transcript || cleanTranscript,
     symptoms: data.symptoms || data.matchedSymptoms || [],
+    recognized_conditions:
+      data.recognized_conditions || data.recognizedConditions || [],
     possible_conditions: possibleConditions,
     urgency: data.urgency || adviceLevelToUrgency(data.adviceLevel),
     advice:

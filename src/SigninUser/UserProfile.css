@@ -538,6 +538,31 @@ textarea {
   text-align: center;
 }
 
+.voice-popup-card.has-result {
+  width: min(560px, calc(100vw - 28px));
+  max-height: calc(100vh - 32px);
+  min-height: auto;
+  overflow-y: auto;
+  align-items: stretch;
+  background: #f6fafb;
+  padding: 26px 22px 22px;
+  text-align: left;
+}
+
+.voice-popup-card.has-result .voice-popup-mic {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 14px;
+}
+
+.voice-popup-card.has-result .voice-popup-text {
+  text-align: center;
+}
+
+.voice-popup-card.has-result > .voice-result-card {
+  display: none;
+}
+
 .voice-popup-close {
   position: absolute;
   top: 12px;
@@ -548,6 +573,10 @@ textarea {
   font-size: 24px;
   line-height: 1;
   cursor: pointer;
+}
+
+.voice-popup-card.has-result .voice-popup-close {
+  right: 14px;
 }
 
 .voice-popup-mic {
@@ -641,6 +670,29 @@ textarea {
 .voice-result-section ol {
   margin: 8px 0 0 20px;
   padding: 0;
+}
+
+.voice-condition-match {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voice-condition-match em {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.voice-condition-match small {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .voice-emergency-text,

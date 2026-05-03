@@ -5,6 +5,7 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import micIcon from "../img/mic.png";
 import profileImg from "../img/profile1.jpg";
 import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
+import VoiceAssistantResult from "./VoiceAssistantResult";
 
 const menuItems = [
   { label: "Home", icon: "⌂" },
@@ -963,7 +964,10 @@ export default function UserProfile() {
 
         {voicePopupOpen && (
           <div className="voice-popup-overlay" onClick={closeVoicePopup}>
-            <div className="voice-popup-card" onClick={(e) => e.stopPropagation()}>
+            <div
+              className={`voice-popup-card ${voiceStep === "result" ? "has-result" : ""}`}
+              onClick={(e) => e.stopPropagation()}
+            >
               <button className="voice-popup-close" type="button" onClick={closeVoicePopup}>
                 ×
               </button>
@@ -988,6 +992,10 @@ export default function UserProfile() {
               )}
 
               {voiceStep === "result" && symptomResult && (
+                <VoiceAssistantResult result={symptomResult} compact />
+              )}
+
+              {voiceStep === "result" && symptomResult && (
                 <div className="voice-result-card">
                   <div className="voice-result-section">
                     <strong>Detected symptoms:</strong>
@@ -1002,12 +1010,23 @@ export default function UserProfile() {
                     )}
                   </div>
 
+                  {symptomResult.recognized_conditions.length > 0 && (
+                    <div className="voice-result-section">
+                      <strong>Recognized condition:</strong>
+                      <ul>
+                        {symptomResult.recognized_conditions.map((condition) => (
+                          <li key={condition}>{condition}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   <div className="voice-result-section">
                     <strong>Possible conditions (ranked):</strong>
                     {symptomResult.possible_conditions.length > 0 ? (
                       <ol>
                         {symptomResult.possible_conditions.map((condition, index) => (
-                          <li key={`${condition.name}-${index}`}>
+                          <li className="voice-condition-match" key={`${condition.name}-${index}`}>
                             {condition.name} — {(condition.score * 100).toFixed(0)}% match
                           </li>
                         ))}

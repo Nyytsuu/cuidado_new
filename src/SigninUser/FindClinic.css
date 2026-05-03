@@ -351,6 +351,18 @@
   font-weight: 600;
 }
 
+.fc-card-description {
+  margin: 0 0 10px;
+  color: #506372;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 .fc-card-address {
   display: flex;
   align-items: center;
@@ -396,10 +408,12 @@
 }
 
 .fc-card-distance {
-  font-size: 16px;
+  max-width: 128px;
+  font-size: 13px;
   font-weight: 700;
   color: #4c5e6c;
-  line-height: 1;
+  line-height: 1.2;
+  text-align: right;
 }
 
 .fc-book-btn {
@@ -611,6 +625,14 @@
   color: #2f8b91;
   flex-shrink: 0;
   margin-top: 2px;
+}
+
+.fc-modal-description {
+  margin: 10px 0 0;
+  color: #354b5d;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .fc-modal-meta-grid {

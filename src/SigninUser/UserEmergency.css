@@ -1,0 +1,457 @@
+.emergency-page {
+  min-height: 100vh;
+  background: #f5faf9;
+  color: #17363f;
+  font-family: "Poppins", Arial, sans-serif;
+}
+
+.emergency-main {
+  min-height: 100vh;
+  margin-left: 70px;
+  padding: 88px 30px 30px;
+  transition: margin-left 0.25s ease;
+}
+
+.emergency-page.sidebar-expanded .emergency-main {
+  margin-left: 270px;
+}
+
+.emergency-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  border: 1px solid #fad4d4;
+  border-radius: 8px;
+  padding: 24px;
+  background:
+    linear-gradient(90deg, rgba(255, 245, 245, 0.96), rgba(236, 253, 245, 0.92)),
+    #ffffff;
+  box-shadow: 0 18px 40px rgba(127, 29, 29, 0.1);
+}
+
+.emergency-kicker,
+.emergency-panel-title,
+.emergency-hero-actions,
+.location-actions,
+.emergency-bottom-actions {
+  display: flex;
+  align-items: center;
+}
+
+.emergency-kicker {
+  gap: 8px;
+  width: fit-content;
+  margin-bottom: 10px;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.emergency-hero h1 {
+  margin: 0;
+  color: #17363f;
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.emergency-hero p {
+  max-width: 620px;
+  margin: 8px 0 0;
+  color: #5d7076;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 600;
+}
+
+.emergency-hero-actions {
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.emergency-call-primary,
+.emergency-outline-btn,
+.emergency-card-btn,
+.location-actions button,
+.emergency-wide-link,
+.emergency-bottom-actions button {
+  min-height: 42px;
+  border-radius: 8px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.emergency-call-primary {
+  padding: 0 20px;
+  background: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(220, 38, 38, 0.24);
+}
+
+.emergency-outline-btn {
+  padding: 0 16px;
+  background: #ffffff;
+  color: #0f766e;
+  border: 1px solid #cfe2df;
+}
+
+.emergency-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.emergency-contact-card,
+.emergency-panel {
+  border: 1px solid #dbe9e6;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(20, 75, 70, 0.08);
+}
+
+.emergency-contact-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.emergency-contact-card.critical {
+  border-color: #fecaca;
+}
+
+.emergency-contact-card.red {
+  border-color: #fed7aa;
+}
+
+.emergency-contact-card.clinic {
+  border-color: #bfe7e3;
+}
+
+.emergency-contact-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: #dc2626;
+}
+
+.emergency-contact-card.red .emergency-contact-icon {
+  background: #c2410c;
+}
+
+.emergency-contact-card.clinic .emergency-contact-icon {
+  background: #0f8f83;
+}
+
+.emergency-contact-card h2,
+.emergency-panel h2,
+.nearby-clinic-card h3 {
+  margin: 0;
+  color: #17363f;
+  font-weight: 900;
+}
+
+.emergency-contact-card h2 {
+  font-size: 17px;
+}
+
+.emergency-contact-card p {
+  margin: 6px 0 8px;
+  color: #62777c;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.emergency-contact-card strong {
+  color: #b91c1c;
+  font-size: 22px;
+}
+
+.emergency-card-btn {
+  grid-column: 1 / -1;
+  background: #17363f;
+  color: #ffffff;
+}
+
+.emergency-contact-card.critical .emergency-card-btn {
+  background: #dc2626;
+}
+
+.emergency-contact-card.red .emergency-card-btn {
+  background: #c2410c;
+}
+
+.emergency-contact-card.clinic .emergency-card-btn {
+  background: #0f8f83;
+}
+
+.emergency-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 18px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.emergency-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.emergency-panel {
+  padding: 18px;
+}
+
+.emergency-panel-title {
+  gap: 10px;
+  margin-bottom: 14px;
+  color: #0f8f83;
+}
+
+.emergency-panel-title h2 {
+  font-size: 18px;
+}
+
+.red-flag-list {
+  display: grid;
+  gap: 10px;
+}
+
+.red-flag-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #fee2e2;
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.red-flag-item span {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: #dc2626;
+  flex-shrink: 0;
+}
+
+.red-flag-item p,
+.emergency-checklist li,
+.emergency-muted,
+.emergency-note p {
+  margin: 0;
+  color: #4f666b;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 650;
+}
+
+.emergency-checklist {
+  margin: 0;
+  padding-left: 24px;
+  display: grid;
+  gap: 10px;
+}
+
+.emergency-side {
+  display: grid;
+  gap: 18px;
+  position: sticky;
+  top: 82px;
+}
+
+.location-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #cfe2df;
+  border-radius: 8px;
+  background: #f7fcfb;
+  color: #17363f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.location-card svg {
+  color: #0f8f83;
+}
+
+.location-actions {
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.location-actions button {
+  flex: 1;
+  background: #e8f3f1;
+  color: #0b5d56;
+}
+
+.emergency-alert {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.emergency-alert.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.emergency-alert.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.nearby-clinic-list {
+  display: grid;
+  gap: 10px;
+}
+
+.nearby-clinic-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e0ece9;
+  border-radius: 8px;
+  background: #fbfefd;
+}
+
+.nearby-clinic-card h3 {
+  font-size: 14px;
+}
+
+.nearby-clinic-card p {
+  margin: 4px 0 8px;
+  color: #63777c;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.nearby-clinic-card span,
+.nearby-clinic-card strong {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.nearby-clinic-card span.open {
+  color: #166534;
+}
+
+.nearby-clinic-card span.closed {
+  color: #991b1b;
+}
+
+.nearby-clinic-card strong {
+  white-space: nowrap;
+  color: #0f8f83;
+}
+
+.emergency-wide-link {
+  width: 100%;
+  margin-top: 12px;
+  background: #0f8f83;
+  color: #ffffff;
+}
+
+.emergency-note {
+  display: grid;
+  gap: 10px;
+}
+
+.emergency-note svg {
+  color: #dc2626;
+}
+
+.emergency-note a {
+  color: #0f766e;
+  font-size: 13px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.emergency-bottom-actions {
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.emergency-bottom-actions button {
+  padding: 0 16px;
+  background: #ffffff;
+  color: #17363f;
+  border: 1px solid #dbe9e6;
+  box-shadow: 0 8px 18px rgba(20, 75, 70, 0.06);
+}
+
+.emergency-bottom-actions button svg {
+  color: #0f8f83;
+}
+
+@media (max-width: 1120px) {
+  .emergency-hero,
+  .emergency-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .emergency-contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .emergency-side {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .emergency-main,
+  .emergency-page.sidebar-expanded .emergency-main {
+    margin-left: 70px;
+    padding: 84px 14px 20px;
+  }
+
+  .emergency-hero h1 {
+    font-size: 27px;
+  }
+
+  .emergency-hero-actions,
+  .location-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .emergency-call-primary,
+  .emergency-outline-btn,
+  .location-actions button {
+    width: 100%;
+  }
+}

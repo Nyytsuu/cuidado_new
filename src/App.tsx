@@ -20,6 +20,8 @@ import UserSettings from "./SigninUser/UserSettings";
 import BMICalculator from "./SigninUser/BMICalculator";
 import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
+import UserEmergency from "./SigninUser/UserEmergency";
+import UserHelp from "./SigninUser/UserHelp";
 
 // admin
 import SidebarAdmin from "./admin/SidebarAdmin";
@@ -71,6 +73,9 @@ function App() {
         <Route path="/bmi-calculator" element={<BMICalculator />} />
         <Route path="/stress-index" element={<StressIndex />} />
         <Route path="/voice-assistant" element={<UserVoiceAssistant />} />
+        <Route path="/emergency" element={<UserEmergency />} />
+        <Route path="/emergency-guide" element={<UserEmergency />} />
+        <Route path="/help" element={<UserHelp />} />
         
         {/* clinic */}
 <Route path="/clinic/signup" element={<ClinicSignup />} />
