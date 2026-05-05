@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cuidado</string>
+    <string name="title_activity_main">Cuidado</string>
+    <string name="package_name">com.cuidado.app</string>
+    <string name="custom_url_scheme">com.cuidado.app</string>
+</resources>

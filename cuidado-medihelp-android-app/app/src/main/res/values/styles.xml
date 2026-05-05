@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.CuidadoMedihelp" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/cuidado_teal_dark</item>
+        <item name="android:navigationBarColor">@color/cuidado_teal_dark</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+</resources>

@@ -1,0 +1,157 @@
+.clinic-schedule-aside .admin-card {
+  background: #ffffff;
+  border: 1px solid #d9ebe8;
+  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
+}
+
+.Patient .clinic-schedule-aside .admin-card,
+.ClinicAppoint .clinic-schedule-aside .admin-card,
+.services .clinic-schedule-aside .admin-card {
+  background: #ffffff;
+  border: 1px solid #d9ebe8;
+  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
+}
+
+.clinic-schedule-aside .small-card {
+  min-height: 120px;
+}
+
+.Patient .clinic-schedule-aside .small-card,
+.ClinicAppoint .clinic-schedule-aside .small-card,
+.services .clinic-schedule-aside .small-card {
+  min-height: 120px;
+  height: auto;
+}
+
+.clinic-schedule-aside .big-card {
+  min-height: 430px;
+  background: #f5fbfa;
+}
+
+.Patient .clinic-schedule-aside .big-card,
+.ClinicAppoint .clinic-schedule-aside .big-card,
+.services .clinic-schedule-aside .big-card {
+  min-height: 430px;
+  height: auto;
+  background: #f5fbfa;
+}
+
+.clinic-schedule-aside .admin-right-card p {
+  margin: 0;
+  color: #31514d;
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.clinic-current-status {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.clinic-current-status.open {
+  background: #28784e;
+}
+
+.clinic-current-status.closed {
+  background: #b42318;
+}
+
+.clinic-schedule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.clinic-schedule-row {
+  display: grid;
+  grid-template-columns: 74px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border: 1px solid #d9ebe8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.clinic-schedule-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #0f4242;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.clinic-schedule-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #109c85;
+}
+
+.clinic-schedule-row input[type="time"] {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  border: 1px solid #c9e2df;
+  border-radius: 8px;
+  padding: 0 6px;
+  color: #0f4242;
+  background: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.clinic-schedule-row input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.clinic-schedule-message {
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.clinic-schedule-message.schedule-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.clinic-schedule-message.schedule-success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.clinic-schedule-aside .pill-save-schedule {
+  width: 100%;
+  background: #109c85 !important;
+  color: #ffffff;
+  border-radius: 8px;
+  margin-top: auto;
+}
+
+.Patient .clinic-schedule-aside .pill-save-schedule,
+.ClinicAppoint .clinic-schedule-aside .pill-save-schedule,
+.services .clinic-schedule-aside .pill-save-schedule {
+  width: 100%;
+  background: #109c85 !important;
+  color: #ffffff;
+  border-radius: 8px;
+  margin-top: auto;
+}
+
+.clinic-schedule-aside .pill-save-schedule:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+
+
+  

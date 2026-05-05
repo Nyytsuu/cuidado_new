@@ -1,0 +1,28 @@
+.splash-screen {
+  width: 100vw;
+  height: 100vh;
+  background: #18b3a5; /* teal */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Skip button (top-right) */
+.skip-btn {
+  position: absolute;
+  top: 60px;
+  right: 30px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Logo center */
+.splash-logo {
+  width: 260px;
+  max-width: 70%;
+  object-fit: contain;
+}

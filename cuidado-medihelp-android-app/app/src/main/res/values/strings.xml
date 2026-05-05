@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Cuidado Medihelp</string>
+    <string name="webview_unavailable_title">Cannot open Cuidado Medihelp</string>
+    <string name="webview_unavailable_message">Make sure the frontend and backend are running, then try again.</string>
+</resources>

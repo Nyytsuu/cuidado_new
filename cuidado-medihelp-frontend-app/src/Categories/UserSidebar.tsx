@@ -267,10 +267,13 @@ export default function UserSidebar({
             <p className="sidebar-section-title">SMART</p>
 
             <div className={`sidebar-item ${isPathActive("/voice-assistant") ? "active" : ""}`}>
-                <Link to="/voice-assistant" className="sidebar-btn">
+              <VoiceAssistantPopup
+                userId={headerUser?.id ? Number(headerUser.id) : null}
+                className="sidebar-btn"
+              >
                 <Mic size={24} />
                 <span>Voice Assistant</span>
-              </Link>
+              </VoiceAssistantPopup>
             </div>
           </div>
 

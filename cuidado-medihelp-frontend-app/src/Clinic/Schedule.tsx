@@ -1,0 +1,602 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import "./Schedule.css";
+import SidebarClinic from "./SidebarClinic";
+import { useNavigate } from "react-router-dom";
+
+type DayKey =
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Sunday";
+
+type DaySchedule = {
+  day: DayKey;
+  working: boolean;
+  open: string;
+  close: string;
+};
+
+type BlockedDate = {
+  id: number;
+  date: string;
+  reason: string;
+};
+
+type ScheduleResponse = {
+  schedule?: DaySchedule[];
+  blockedDates?: BlockedDate[];
+  message?: string;
+};
+
+const API = "http://localhost:5000/api";
+
+const defaultSchedule: DaySchedule[] = [
+  { day: "Monday", working: true, open: "08:00", close: "17:00" },
+  { day: "Tuesday", working: true, open: "08:00", close: "17:00" },
+  { day: "Wednesday", working: true, open: "08:00", close: "17:00" },
+  { day: "Thursday", working: true, open: "08:00", close: "17:00" },
+  { day: "Friday", working: true, open: "08:00", close: "17:00" },
+  { day: "Saturday", working: false, open: "08:00", close: "12:00" },
+  { day: "Sunday", working: false, open: "08:00", close: "12:00" },
+];
+
+const getStoredClinicId = () => {
+  try {
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+
+    if (user?.role === "clinic" && user?.id) {
+      return Number(user.id);
+    }
+
+    const role = localStorage.getItem("role");
+    const userId = localStorage.getItem("userId");
+
+    if (role === "clinic" && userId) {
+      return Number(userId);
+    }
+  } catch {
+    return 1;
+  }
+
+  return 1;
+};
+
+const toDateInputValue = (date: Date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getCurrentDay = (date: Date = new Date()) =>
+  date.toLocaleDateString("en-US", { weekday: "long" }) as DayKey;
+
+const timeToMinutes = (value: string) => {
+  const [hours, minutes] = value.split(":").map(Number);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+};
+
+const isBlockedDate = (items: BlockedDate[], date: Date) =>
+  items.some((item) => item.date === toDateInputValue(date));
+
+const isScheduleOpenNow = (
+  item: DaySchedule,
+  now: Date,
+  blockedDates: BlockedDate[] = []
+) => {
+  if (isBlockedDate(blockedDates, now)) return false;
+  if (!item.working || item.day !== getCurrentDay(now)) return false;
+
+  const openMinutes = timeToMinutes(item.open);
+  const closeMinutes = timeToMinutes(item.close);
+
+  if (openMinutes === null || closeMinutes === null) return false;
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  return currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+};
+
+const getCurrentStatusLabel = (
+  item: DaySchedule,
+  now: Date,
+  blockedDates: BlockedDate[]
+) => {
+  if (item.day !== getCurrentDay(now)) return "Currently Closed";
+  if (isBlockedDate(blockedDates, now)) return "Blocked Today";
+  return isScheduleOpenNow(item, now, blockedDates)
+    ? "Currently Open"
+    : "Currently Closed";
+};
+
+export default function Schedule() {
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const clinicId = useMemo(() => getStoredClinicId(), []);
+
+  const [schedule, setSchedule] = useState<DaySchedule[]>(defaultSchedule);
+  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
+  const [blockedDate, setBlockedDate] = useState("");
+  const [blockedReason, setBlockedReason] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [statusNow, setStatusNow] = useState(() => new Date());
+  const [toast, setToast] = useState<{
+  type: "success" | "error" | "warning";
+  message: string;
+} | null>(null);
+useEffect(() => {
+  if (!toast) return;
+
+  const timer = setTimeout(() => setToast(null), 2500);
+  return () => clearTimeout(timer);
+}, [toast]);
+
+useEffect(() => {
+  const timer = window.setInterval(() => {
+    setStatusNow(new Date());
+  }, 1000);
+
+  return () => window.clearInterval(timer);
+}, []);
+  const [searchTerm, setSearchTerm] = useState("");
+   
+
+   // logout
+   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+const navigate = useNavigate();
+const todayDate = toDateInputValue();
+
+
+
+  const rows = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+
+    if (!keyword) return schedule;
+
+    return schedule.filter((item) =>
+      [
+        item.day,
+        item.working ? "open" : "closed",
+        item.open,
+        item.close,
+      ].some((value) => value.toLowerCase().includes(keyword))
+    );
+  }, [schedule, searchTerm]);
+
+  const visibleBlockedDates = useMemo(() => {
+    const keyword = searchTerm.trim().toLowerCase();
+
+    if (!keyword) return blockedDates;
+
+    return blockedDates.filter((item) =>
+      [item.date, item.reason].some((value) =>
+        value.toLowerCase().includes(keyword)
+      )
+    );
+  }, [blockedDates, searchTerm]);
+
+  const loadSchedule = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await fetch(`${API}/clinic/schedule?clinic_id=${clinicId}`);
+      const data: ScheduleResponse = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to load clinic schedule.");
+      }
+
+      setSchedule(Array.isArray(data.schedule) ? data.schedule : defaultSchedule);
+      setBlockedDates(Array.isArray(data.blockedDates) ? data.blockedDates : []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load clinic schedule.");
+    } finally {
+      setLoading(false);
+    }
+  }, [clinicId]);
+
+  useEffect(() => {
+    loadSchedule();
+  }, [loadSchedule]);
+
+  const changeHours = (day: DayKey, field: "open" | "close", value: string) => {
+  setMessage("");
+
+  setSchedule((prev) =>
+    prev.map((item) =>
+      item.day === day ? { ...item, [field]: value } : item
+    )
+  );
+
+  // ✅ force current open/closed status to recalculate immediately
+  setStatusNow(new Date());
+};
+
+  const saveSchedule = async (
+    nextSchedule: DaySchedule[] = schedule,
+    successMessage = "Schedule saved successfully"
+  ) => {
+    try {
+      setSaving(true);
+      setError("");
+      setMessage("");
+
+      const res = await fetch(`${API}/clinic/schedule`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clinic_id: clinicId,
+          schedule: nextSchedule,
+        }),
+      });
+
+      const data: ScheduleResponse = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to save clinic schedule.");
+      }
+
+      if (Array.isArray(data.schedule)) {
+        setSchedule(data.schedule);
+      }
+      setStatusNow(new Date());
+
+     setToast({
+  type: "success",
+  message: data.message || successMessage,
+});
+    } catch (err) {
+     setToast({
+  type: "error",
+  message: err instanceof Error ? err.message : "Failed to save schedule",
+});
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleWorkingDay = (day: DayKey) => {
+    setMessage("");
+    const nextSchedule = schedule.map((item) =>
+      item.day === day ? { ...item, working: !item.working } : item
+    );
+
+    setSchedule(nextSchedule);
+    void saveSchedule(nextSchedule, "Schedule updated.");
+  };
+  const removeBlockedDate = async (id: number) => {
+    try {
+      setSaving(true);
+      setError("");
+      setMessage("");
+
+      const res = await fetch(
+        `${API}/clinic/schedule/blocked-dates/${id}?clinic_id=${clinicId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to remove blocked date.");
+      }
+
+      setBlockedDates((prev) => prev.filter((item) => item.id !== id));
+     setToast({
+  type: "success",
+  message: data.message || "Blocked date removed",
+});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove blocked date.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const addBlockedDate = async () => {
+    if (!blockedDate || !blockedReason.trim()) {
+      setToast({ type: "error", message: "Please provide both date and reason." });
+      return;
+    }
+
+    if (blockedDate < todayDate) {
+      setToast({ type: "error", message: "Please choose today or a future date." });
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const res = await fetch(`${API}/clinic/schedule/blocked-dates`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clinic_id: clinicId,
+          date: blockedDate,
+          reason: blockedReason,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to add blocked date.");
+      }
+      setBlockedDates((prev) => {
+        const next = prev.filter((item) => item.date !== data.blockedDate.date);
+        return [...next, data.blockedDate];
+      });
+      setStatusNow(new Date());
+      setBlockedDate("");
+      setBlockedReason("");
+      setToast({
+        type: "success",
+        message: data.message || "Blocked date added",
+      });
+    } catch (err) {
+      setToast({
+        type: "error",
+        message: err instanceof Error ? err.message : "Failed to add blocked date.",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const [, setMessage] = useState("");
+const [, setError] = useState("");
+
+  return (
+    <div className="Schedule with-sidebar">
+      <SidebarClinic
+        sidebarExpanded={sidebarExpanded}
+        setSidebarExpanded={setSidebarExpanded}
+        profileOpen={profileOpen}
+        setProfileOpen={setProfileOpen}
+        headerProfileOpen={headerProfileOpen}
+        setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search schedule..."
+      />
+
+      <main className="preview-canvas">
+        <section className="admin-content">
+          <div className="admin-content-inner">
+            <div className="admin-title">
+              <h2>Schedule</h2>
+            </div>
+
+            {loading && <div className="schedule-message">Loading schedule...</div>}
+           
+
+            <div className="admin-grid">
+              <section className="admin-card admin-table-card">
+                <div className="users-table">
+                  <div className="users-row users-header schedule-header">
+                    <div className="users-cell">Day</div>
+                    <div className="users-cell">Status</div>
+                    <div className="users-cell">Opening Time</div>
+                    <div className="users-cell">Closing Time</div>
+                    <div className="users-cell">Actions:</div>
+                  </div>
+
+                  {rows.length === 0 ? (
+                    <div className="users-row schedule-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        No schedule days match your search.
+                      </div>
+                    </div>
+                  ) : (
+                    rows.map((row) => (
+                      <div className="users-row schedule-row" key={row.day}>
+                        <div className="users-cell users-name">{row.day}</div>
+
+                        <div className="users-cell">
+                          <div className="schedule-status-stack">
+                            <span
+                              className={`pill ${
+                                isScheduleOpenNow(row, statusNow, blockedDates)
+                                  ? "pill-success"
+                                  : "pill-gray"
+                              }`}
+                            >
+                              {getCurrentStatusLabel(row, statusNow, blockedDates)}
+                            </span>
+                            <span className={`pill ${row.working ? "pill-success" : "pill-gray"}`}>
+                              {row.working ? "Working Day" : "Day Off"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="users-cell">
+                          <input
+                            className="time-input"
+                            type="time"
+                            value={row.open}
+                            disabled={!row.working || loading || saving}
+                            onChange={(event) =>
+                              changeHours(row.day, "open", event.target.value)
+                            }
+                          />
+                        </div>
+
+                        <div className="users-cell">
+                          <input
+                            className="time-input"
+                            type="time"
+                            value={row.close}
+                            disabled={!row.working || loading || saving}
+                            onChange={(event) =>
+                              changeHours(row.day, "close", event.target.value)
+                            }
+                          />
+                        </div>
+
+                        <div className="users-cell">
+                          <div className="users-actions">
+                            <button
+                              type="button"
+                              className="pill pill-view"
+                              disabled={loading || saving}
+                              onClick={() => toggleWorkingDay(row.day)}
+                            >
+                              {row.working ? "Set Closed" : "Set Open"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <aside className="admin-right">
+                <div className="admin-card admin-right-card small-card">
+                  <h3>Schedule Options</h3>
+                  <p>Edit working days and clinic hours.</p>
+                  <button
+                    type="button"
+                    className="pill pill-success block-btn"
+                    onClick={() => saveSchedule()}
+                    disabled={loading || saving}
+                  >
+                    {saving ? "Saving..." : "Save Schedule"}
+                  </button>
+                </div>
+
+                <div className="admin-card admin-right-card big-card">
+                  <h3>Blocked Dates</h3>
+
+                  <div className="blocked-form">
+                    <input
+                      type="date"
+                      value={blockedDate}
+                      min={todayDate}
+                      onChange={(event) => setBlockedDate(event.target.value)}
+                      disabled={saving}
+                    />
+                    <input
+                      type="text"
+                      value={blockedReason}
+                      placeholder="Reason"
+                      onChange={(event) => setBlockedReason(event.target.value)}
+                      disabled={saving}
+                    />
+                    <button
+                      type="button"
+                      className="pill pill-danger block-btn"
+                      onClick={addBlockedDate}
+                      disabled={saving}
+                    >
+                      Block Date
+                    </button>
+                  </div>
+
+                  <div className="blocked-list">
+                    {visibleBlockedDates.length === 0 && (
+                      <div className="blocked-empty">No blocked dates.</div>
+                    )}
+
+                    {visibleBlockedDates.map((item) => (
+                      <div className="blocked-item" key={item.id}>
+                        <div className="blocked-left">
+                          <div className="blocked-date">{item.date}</div>
+                          <div className="blocked-reason">{item.reason}</div>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="pill pill-view blocked-remove"
+                          disabled={saving}
+                          onClick={() => removeBlockedDate(item.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {toast && (
+  <div className={`symptom-toast ${toast.type}`}>
+    <div className="symptom-toast-content">
+      <span className="toast-icon">
+        {toast.type === "success"
+          ? "✔"
+          : toast.type === "error"
+          ? "✖"
+          : "⚠"}
+      </span>
+      <span>{toast.message}</span>
+    </div>
+  </div>
+)}
+
+
+{showLogoutConfirm && (
+  <div className="logout-confirm-overlay">
+    <div className="logout-confirm-modal">
+      <h3>Log out?</h3>
+      <p>Are you sure you want to log out of your account?</p>
+
+      <div className="logout-actions">
+        <button
+          className="btn-cancel"
+          onClick={() => setShowLogoutConfirm(false)}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn-confirm"
+          onClick={() => {
+            setShowLogoutConfirm(false);
+            setShowLogoutSuccess(true);
+
+            setTimeout(() => {
+              navigate("/signin");
+            }, 1500);
+          }}
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+{showLogoutSuccess && (
+  <div className="logout-popup-overlay">
+    <div className="logout-popup">
+      <div className="logout-icon">✓</div>
+      <h3>Logged out successfully</h3>
+    </div>
+  </div>
+)}
+
+    </div>
+  );
+}

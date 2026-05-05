@@ -1,0 +1,306 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* MAIN CONTAINER */
+.signin-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  overflow: hidden;
+}
+
+/* LEFT SIDE */
+.left-side {
+  flex: 1;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* LOGIN CARD */
+.login-card {
+  width: 500px;
+  padding: 60px 50px;
+  border-radius: 40px;
+  background: white;
+  color: black;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card h1 {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.login-card label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #000;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid #004d40;
+  background-color: #f0f0f0;
+  outline: none;
+}
+
+/* PASSWORD FIELD WRAPPER */
+.password-field {
+  position: relative;
+}
+
+/* INPUT INSIDE PASSWORD FIELD */
+.password-field input {
+  width: 100%;
+  padding: 12px;
+  padding-right: 45px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  border: 1px solid #004d40;
+  background-color: #f0f0f0;
+  outline: none;
+}
+
+/* EYE ICON */
+.eye-icon {
+  position: absolute;
+  right: 15px;
+  top: 40%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #004d40;
+  font-size: 20px;
+}
+
+.forgot {
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+/* ✅ forgot link to open modal */
+.forgot-link {
+  color: #004d40;
+  cursor: pointer;
+  font-weight: 600;
+}
+.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.login-card form > button {
+  width: 100%;
+  padding: 15px;
+  background-color: #004d40;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.left-side,
+.right-side {
+  position: relative;
+  z-index: 1;
+}
+.logsides {
+  display: none;
+}
+/* RIGHT SIDE */
+.right-side {
+  flex: 1;
+  background-image: url("../img/Loginbg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.right-side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: rgba(177, 247, 235, 0.5);
+}
+
+.right-content {
+  position: relative;
+  color: black;
+  text-align: right;
+  max-width: 450px;
+  font-family: poppins, sans-serif;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  padding: 60px;
+  box-sizing: border-box;
+}
+
+.brand {
+  position: absolute;
+  top: 60px;
+  left: -250px;
+  margin: 0;
+  z-index: 3;
+}
+
+.brand img {
+  width: 80%;
+  height: 50%;
+  display: block;
+  object-fit: contain;
+}
+
+.right-content h2 {
+  position: relative;
+  font-size: 36px;
+  font-weight: bold;
+  font-style: italic;
+  margin-bottom: 20px;
+  right: 10px;
+}
+
+.right-content p {
+  position: relative;
+  font-size: 18px;
+  text-align: justify;
+  right: 23px;
+}
+
+.bottom-text {
+  align-self: flex-end;
+}
+
+/* =========================
+   ✅ MODAL STYLES (Forgot)
+   ========================= */
+.fp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: grid;
+  place-items: center;
+  z-index: 99999;
+  padding: 16px;
+}
+
+.fp-modal-card {
+  position: relative;
+  width: 720px;
+  height: 520px;
+  max-width: 95vw;
+  background: #fff;
+  border-radius: 28px;
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.fp-modal-close {
+  all: unset;                
+  position: absolute;
+  top: 16px;
+  right: 18px;                
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 999px;
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.06);
+  z-index: 10;
+}
+/* CAPTCHA */
+.captcha-wrap {
+  width: 100%;
+  margin: 15px 0 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.captcha-box {
+  width: 304px;
+  min-height: 78px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+}
+
+.captcha-wrap > div {
+  transform: scale(0.95);
+  transform-origin: center;
+}
+
+/* force correct iframe size */
+.captcha-box iframe {
+  width: 304px !important;
+  height: 78px !important;
+  border: none;
+}
+
+/* error text */
+.captcha-error {
+  color: red;
+  font-size: 14px;
+  text-align: center;
+}
+
+.error-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999999;
+}
+
+.error-popup {
+  background: white;
+  width: 380px;
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+}
+
+.error-popup h2 {
+  color: #b00020;
+  margin-bottom: 15px;
+}
+
+.error-popup p {
+  margin: 8px 0;
+}
+
+.error-popup button {
+  margin-top: 20px;
+  padding: 12px 25px;
+  border: none;
+  background: #004d40;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+}

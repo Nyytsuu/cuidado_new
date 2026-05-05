@@ -1,0 +1,840 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #d5dbe0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.bmi-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #e6eaec 0%, #dfe8ef 100%);
+  overflow-y: auto;
+}
+
+.bmi-content {
+  min-width: 0;
+  margin-left: 74px;
+  margin-top: 58px;
+  width: calc(100% - 74px);
+  transition: margin-left 0.25s ease, width 0.25s ease;
+}
+
+.bmi-page.sidebar-expanded .bmi-content {
+  margin-left: 270px;
+  width: calc(100% - 270px);
+}
+
+.bmi-main {
+  padding: 24px 16px 10px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.bmi-top-section {
+  display: grid;
+  grid-template-columns: 1fr 1.08fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.bmi-title-wrap h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #2a3b45;
+  font-weight: 700;
+}
+
+.bmi-title-wrap p {
+  margin: 6px 0 18px;
+  font-size: 16px;
+  color: #566873;
+}
+
+.bmi-card,
+.bmi-result-card,
+.bmi-tip-card,
+.near-clinic-card {
+  border: 1px solid #d9e2e8;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.bmi-card {
+  padding: 16px;
+  min-height: 350px;
+    display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bmi-unit-toggle {
+  display: inline-flex;
+  background: #edf1f4;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.bmi-unit-toggle button {
+  border: none;
+  background: transparent;
+  color: #667985;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bmi-unit-toggle button.active {
+  background: linear-gradient(180deg, #48aabd 0%, #358ea4 100%);
+  color: #ffffff;
+}
+
+.bmi-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bmi-input-row {
+  height: 40px;
+  border: 1px solid #d9e1e6;
+  border-radius: 10px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 10px;
+}
+
+.bmi-input-row input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+  color: #44535d;
+}
+
+.input-icon {
+  font-size: 16px;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.input-arrow {
+  font-size: 11px;
+  color: #7a8b95;
+  flex-shrink: 0;
+}
+
+.bmi-input-row.split {
+  justify-content: space-between;
+}
+
+.split-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 180px;
+}
+
+.label-text {
+  font-size: 15px;
+  color: #5d6f79;
+}
+
+.bmi-input-row.split input {
+  text-align: center;
+  max-width: 100px;
+  font-size: 15px;
+  color: #44535d;
+}
+
+.unit-text {
+  min-width: 34px;
+  text-align: right;
+  font-size: 15px;
+  color: #7a8b95;
+}
+
+.bmi-primary-btn {
+  width: 100%;
+  margin-top: 10px;
+  height: 42px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #46a8bb 0%, #348aa0 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.bmi-result-card {
+  margin-top: 10px;
+  padding: 16px;
+  min-height: 200px;
+    display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.bmi-result-card h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #4a5c67;
+  font-weight: 700;
+}
+
+.bmi-result-card h2 span {
+  color: #48aabd;
+}
+
+.bmi-scale-wrap {
+  margin-bottom: 12px;
+}
+
+.bmi-scale-bar {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.seg.blue {
+  background: #77acd2;
+}
+
+.seg.teal {
+  background: #6bd7d7;
+}
+
+.seg.green {
+  background: #83c95a;
+}
+
+.seg.orange {
+  background: #d8a747;
+}
+
+.seg.red {
+  background: #d67972;
+}
+
+.bmi-indicator {
+  position: absolute;
+  left: 63%;
+  top: -3px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 11px solid #bf9b3d;
+  transform: translateX(-50%);
+}
+
+.bmi-scale-labels,
+.bmi-scale-categories {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #73858f;
+}
+
+.bmi-scale-categories {
+  margin-top: 6px;
+}
+
+.bmi-result-desc {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #566873;
+  font-weight: 600;
+}
+
+.bmi-tip-card {
+  margin-top: 10px;
+  padding: 14px 16px;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.bmi-primary-btn {
+  height: 48px;
+}
+.tip-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  background: #d9f0f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.bmi-tip-card p {
+  margin: 0;
+  color: #5a6b76;
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.bmi-right-panel {
+  display: flex;
+  flex-direction: column;
+  margin-top: 80px;
+}
+
+.near-clinic-card.only-card {
+  padding: 14px;
+}
+
+.near-clinic-card h3 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  color: #3d505b;
+  font-weight: 700;
+}
+
+.clinic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.clinic-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #d9e2e8;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 12px 14px;
+  min-height: 82px;
+}
+
+.clinic-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.clinic-avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 10px;
+  background: #d9f0f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.clinic-info {
+  min-width: 0;
+}
+
+.clinic-info h4 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #4b5d68;
+  font-weight: 700;
+}
+
+.clinic-info p {
+  margin: 0 0 6px;
+  font-size: 13px;
+  color: #7a8b95;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.clinic-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: #6e828d;
+}
+
+.clinic-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.clinic-distance {
+  font-size: 14px;
+  color: #6e828d;
+  white-space: nowrap;
+}
+
+.near-btn {
+  height: 40px;
+  min-width: 90px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #48aabd 0%, #358ea4 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  align-items: center;
+}
+
+.bmi-footer {
+  margin-top: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #677983;
+  font-size: 14px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.22);
+  border-top: 1px solid rgba(214, 224, 229, 0.85);
+}
+
+@media (max-width: 1280px) {
+  .bmi-top-section {
+    grid-template-columns: 1fr;
+  }
+
+  .bmi-right-panel {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  body {
+    overflow-y: auto;
+  }
+
+  .bmi-content {
+    margin-left: 74px;
+    width: calc(100% - 74px);
+  }
+
+  .bmi-page.sidebar-expanded .bmi-content {
+    margin-left: 74px;
+    width: calc(100% - 74px);
+  }
+
+  .clinic-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .clinic-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+.bmi-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.bmi-popup-card {
+  width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.bmi-popup-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.bmi-popup-card h2 {
+  margin: 0 0 14px;
+  font-size: 24px;
+  color: #172033;
+}
+
+.bmi-popup-value {
+  font-size: 42px;
+  font-weight: 800;
+  color: #0b8a84;
+  margin-bottom: 12px;
+}
+
+.bmi-popup-category {
+  font-size: 16px;
+  color: #1f2937;
+  margin-bottom: 10px;
+}
+
+.bmi-popup-message {
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.bmi-popup-checkup {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.bmi-popup-checkup.warning {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fdba74;
+}
+
+.bmi-popup-checkup.ok {
+  background: #ecfdf3;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.bmi-popup-btn {
+  border: none;
+  background: #0b8a84;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.clinic-profile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 34px 18px;
+  background: rgba(15, 23, 42, 0.5);
+  overflow-y: auto;
+}
+
+.clinic-profile-modal {
+  width: min(980px, 100%);
+  background: #f8fbfc;
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+  padding: 22px;
+  color: #273842;
+}
+
+.clinic-profile-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #dce7ed;
+}
+
+.clinic-profile-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.clinic-profile-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: #d9f0f4;
+  color: #177f91;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.clinic-profile-title h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #233642;
+}
+
+.clinic-profile-title p {
+  margin: 5px 0 0;
+  color: #667985;
+  font-weight: 700;
+}
+
+.clinic-profile-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #e8eef2;
+  color: #30444f;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clinic-profile-loading {
+  padding: 28px;
+  text-align: center;
+  color: #566873;
+  font-weight: 700;
+}
+
+.clinic-profile-grid {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.clinic-profile-panel,
+.clinic-booking-panel {
+  border: 1px solid #dce7ed;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.clinic-profile-panel h3,
+.clinic-booking-panel h3 {
+  margin: 0 0 12px;
+  color: #2d434f;
+  font-size: 18px;
+}
+
+.clinic-detail-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.clinic-detail-list div {
+  min-width: 0;
+}
+
+.clinic-detail-list span {
+  display: block;
+  margin-bottom: 4px;
+  color: #7a8b95;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.clinic-detail-list strong {
+  display: block;
+  color: #3d505b;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.clinic-service-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 9px;
+  color: #445865;
+  font-weight: 700;
+}
+
+.clinic-empty {
+  margin: 0;
+  color: #778993;
+  font-weight: 700;
+}
+
+.clinic-booking-panel {
+  margin-top: 14px;
+}
+
+.clinic-booking-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.clinic-booking-head p {
+  margin: 4px 0 0;
+  color: #697d88;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.clinic-profile-alert {
+  border-radius: 12px;
+  padding: 11px 12px;
+  margin: 12px 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.clinic-profile-alert.success {
+  background: #e8f8ef;
+  border: 1px solid #9adeb8;
+  color: #146c3f;
+}
+
+.clinic-profile-alert.error {
+  background: #fff1f0;
+  border: 1px solid #f3b4ad;
+  color: #b42318;
+}
+
+.clinic-booking-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.clinic-booking-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #586d78;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.clinic-booking-grid label.wide {
+  grid-column: span 3;
+}
+
+.clinic-booking-grid input,
+.clinic-booking-grid select,
+.clinic-booking-grid textarea {
+  width: 100%;
+  border: 1px solid #d5e1e7;
+  border-radius: 10px;
+  background: #fbfdfe;
+  color: #314650;
+  font: inherit;
+  font-weight: 600;
+  padding: 11px 12px;
+  outline: none;
+}
+
+.clinic-booking-grid textarea {
+  resize: vertical;
+  min-height: 78px;
+}
+
+.clinic-booking-grid input:focus,
+.clinic-booking-grid select:focus,
+.clinic-booking-grid textarea:focus {
+  border-color: #48aabd;
+  box-shadow: 0 0 0 3px rgba(72, 170, 189, 0.16);
+}
+
+.clinic-booking-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.clinic-secondary-btn,
+.clinic-book-btn {
+  min-height: 42px;
+  border: none;
+  border-radius: 10px;
+  padding: 0 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.clinic-secondary-btn {
+  background: #e9eff3;
+  color: #425762;
+}
+
+.clinic-book-btn {
+  background: linear-gradient(180deg, #48aabd 0%, #358ea4 100%);
+  color: #ffffff;
+}
+
+.clinic-secondary-btn:disabled,
+.clinic-book-btn:disabled,
+.clinic-profile-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+@media (max-width: 760px) {
+  .clinic-profile-modal {
+    padding: 16px;
+  }
+
+  .clinic-profile-grid,
+  .clinic-detail-list,
+  .clinic-booking-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinic-booking-grid label.wide {
+    grid-column: span 1;
+  }
+
+  .clinic-booking-actions {
+    flex-direction: column;
+  }
+}

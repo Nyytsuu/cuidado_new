@@ -1,0 +1,19 @@
+{
+  "name": "Cuidado Medihelp",
+  "short_name": "Cuidado",
+  "description": "Health topics, clinic booking, symptom checking, and voice assistant application.",
+  "start_url": "/homepage",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6fafb",
+  "theme_color": "#0b8a84",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

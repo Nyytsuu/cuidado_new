@@ -1,0 +1,968 @@
+:root {
+  --sidebar-bg: #399a91;
+  --sidebar-text: #0f4242;
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+  --header-height: 55px;
+
+  /* ✅ appoint-like box */
+  --accent: #00bfa6;
+  --table-head: #eef2f2;
+  --line: rgba(0, 0, 0, 0.10);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== ONLY ADMIN PAGE AFFECTED ===== */
+.admin-UserServices * {
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* WRAPPER */
+.admin-UserServices.with-sidebar {
+  display: flex;
+  height: 100vh;
+  background: #ffffff;
+  padding-left: var(--sidebar-width-collapsed);
+  overflow: hidden;
+}
+
+/* MAIN scroll area */
+.admin-UserServices .preview-canvas {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ================= SIDEBAR ================= */
+.admin-UserServices .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width-collapsed);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: width 0.25s ease;
+}
+
+.admin-UserServices .sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+/* ================= HEADER ================= */
+.admin-UserServices .app-header {
+  background: var(--sidebar-bg);
+  padding: 0 24px 0 calc(var(--sidebar-width-collapsed) + 24px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width-collapsed);
+  right: 0;
+  height: var(--header-height);
+  z-index: 999;
+}
+
+.admin-UserServices .header-left {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  position: relative;
+  right: 120px;
+}
+
+.admin-UserServices .brand-logo {
+  width: 120px;
+  max-height: 60px;
+  position: relative;
+  right: 10px;
+}
+
+.admin-UserServices .search-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.admin-UserServices .header-nav {
+  display: flex;
+  align-items: center;
+  gap: 70px;
+  position: relative;
+  right: 60px;
+}
+
+.admin-UserServices .nav-link {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* dropdown */
+.admin-UserServices .profile-menu {
+  position: relative;
+  right: 20px;
+}
+
+.admin-UserServices .profile-btn {
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.admin-UserServices .caret {
+  font-size: 0.95rem;
+}
+
+.admin-UserServices .profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  display: none;
+  z-index: 99999;
+}
+
+.admin-UserServices .profile-menu.open .profile-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-UserServices .profile-dropdown a {
+  text-decoration: none;
+  color: #0f4242;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.admin-UserServices .profile-dropdown a:hover {
+  background: rgba(15, 66, 66, 0.08);
+}
+
+.profile-dropdown a,
+.profile-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: #0f0f0f;
+  cursor: pointer;
+}
+
+.profile-dropdown a:hover,
+.profile-dropdown button:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* ================= ADMIN CONTENT ================= */
+.admin-UserServices .admin-content {
+  padding: calc(var(--header-height) + 20px) 24px 40px;
+}
+
+.admin-UserServices .admin-title h2 {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 18px;
+  color: #000;
+}
+
+.admin-UserServices .admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 26px;
+  align-items: start;
+}
+
+/* =========================================================
+   ✅ SERVICES BOX DESIGN - same style as previous tables
+   ========================================================= */
+.admin-UserServices .admin-card {
+  background: transparent;
+  border-radius: 14px;
+}
+
+.admin-UserServices .admin-table-card {
+  min-height: 520px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(
+    to bottom,
+    #bfbfbf 0,
+    #bfbfbf 78px,
+    #ffffff 78px,
+    #ffffff 100%
+  );
+}
+
+/* table/list area */
+.admin-UserServices .users-table {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* all rows */
+.admin-UserServices .users-row.services-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  align-items: center;
+  gap: 0;
+  background: #ffffff;
+}
+
+/* header row */
+.admin-UserServices .users-row.users-header.services-row {
+  background: #bfbfbf;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.10);
+}
+
+/* body row */
+.admin-UserServices .users-row.services-row:not(.users-header) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+/* cells */
+.admin-UserServices .users-cell {
+  min-width: 0;
+  padding: 18px 20px;
+}
+/* SERVICES TABLE HEADER - same design as Appointment page */
+.admin-UserServices .admin-table-card {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+/* green header row */
+.admin-UserServices .users-row.users-header.services-row {
+  background: rgb(16, 156, 133) !important;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.10) !important;
+}
+
+/* white header text */
+.admin-UserServices .users-header.services-row .users-cell {
+  color: #ffffff !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  padding: 24px 18px !important;
+  border: none !important;
+  white-space: nowrap !important;
+}
+
+/* rounded top corners */
+.admin-UserServices .users-row.users-header.services-row {
+  border-top-left-radius: 16px !important;
+  border-top-right-radius: 16px !important;
+}
+
+
+/* header text */
+.admin-UserServices .users-header.services-row .users-cell {
+  font-size: 15px;
+  font-weight: 900;
+  color: #000;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  padding: 14px 20px;
+}
+
+/* service name */
+.admin-UserServices .users-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+}
+
+/* actions (right aligned like your screenshot) */
+.admin-UserServices .users-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+/* pill buttons */
+.admin-UserServices .pill {
+  border: none;
+  border-radius: 999px;
+  padding: 0 16px;
+  min-height: 34px;
+  line-height: 34px;
+  font-size: 13px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  cursor: pointer;
+  color: #fff;
+}
+
+.admin-UserServices .pill-view { background: #0B7A68; }
+.admin-UserServices .pill-danger { background: #c62828; }
+.admin-UserServices .pill-success { background: #2e7d32; }
+
+/* inactive badge */
+.admin-UserServices .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.admin-UserServices .badge-cancelled {
+  background: #e95c5c;
+  color: #8d1d1d;
+}
+
+/* ✅ ADD BUTTON AT BOTTOM (VISIBLE) */
+.admin-UserServices .admin-table-header {
+  margin-top: auto; /* push to bottom */
+  padding: 14px 16px 16px;
+  background: #ffffff;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.admin-UserServices .btn-add {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-weight: 900;
+  cursor: pointer;
+  background: #c9edab;
+  color: #ffffff;
+
+  width: min(620px, calc(100% - 10px));
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+
+  box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 900px) {
+  .admin-UserServices .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserServices .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .admin-UserServices .users-row.services-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .admin-UserServices .users-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+/* make the services card a column layout */
+.admin-UserServices .admin-table-card{
+  display: flex;
+  flex-direction: column;
+}
+
+/* table takes the remaining space */
+.admin-UserServices .users-table{
+  flex: 1;
+}
+
+/* push +Add service to the bottom */
+.admin-UserServices .admin-table-header{
+  margin-top: auto;
+  padding: 16px;
+}
+
+/* ======================================================
+   ✅ SERVICES ONLY: Move "+ Add service" to BOTTOM
+   (NO TOUCH sa appointment section)
+   ====================================================== */
+
+/* make card flex column */
+.admin-UserServices .admin-table-card{
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* put table FIRST */
+.admin-UserServices .users-table{
+  order: 1 !important;
+  flex: 1 1 auto !important;
+}
+
+/* put add button LAST (bottom) */
+.admin-UserServices .admin-table-header{
+  order: 2 !important;
+  margin-top: auto !important;
+  padding: 14px 16px 16px !important;
+  background: #ffffff !important;
+  border-top: 1px solid rgba(0,0,0,0.06) !important;
+}
+
+/* button style */
+.admin-UserServices .btn-add{
+  width: min(620px, calc(100% - 10px)) !important;
+  display: block !important;
+  margin: 0 auto !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 12px 16px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  background: #004D40 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 18px rgba(0,0,0,0.08) !important;
+}
+
+.admin-UserServices .service-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+  padding: 20px;
+}
+
+.admin-UserServices .service-modal {
+  width: 100%;
+  max-width: 460px;
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px 24px 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  animation: modalPopIn 0.2s ease;
+}
+
+.admin-UserServices .service-modal h3 {
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f4242;
+}
+
+.admin-UserServices .service-modal-input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 20px;
+}
+
+.admin-UserServices .service-modal-input:focus {
+  border-color: #399a91;
+  box-shadow: 0 0 0 3px rgba(57, 154, 145, 0.12);
+}
+
+.admin-UserServices .service-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.admin-UserServices .service-btn {
+  min-width: 120px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-UserServices .service-btn.cancel {
+  background: #e8e8e8;
+  color: #333;
+}
+
+.admin-UserServices .service-btn.save {
+  background: #399a91;
+  color: #fff;
+}
+
+.admin-UserServices .service-btn.danger {
+  background: #c62828;
+  color: #fff;
+}
+
+.admin-UserServices .confirm-text {
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.admin-UserServices .confirm-service-name {
+  color: #0f4242;
+  font-weight: 700;
+}
+
+@keyframes modalPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== APPOINTMENT BADGE (SERVICES PAGE) ===== */
+
+.admin-UserServices .dash-table .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: lowercase;
+  border: none;
+  white-space: nowrap;
+}
+
+/* STATUS COLORS */
+.admin-UserServices .badge-cancelled {
+  background: #ea6666;
+  color: #000;
+}
+
+.admin-UserServices .badge-pending {
+  background: #e2c457;
+  color: #000;
+}
+
+.admin-UserServices .badge-approved,
+.admin-UserServices .badge-confirmed,
+.admin-UserServices .badge-completed {
+  background: #7ed36d;
+  color: #000;
+}
+
+/* ACTION */
+.admin-UserServices .badge-view {
+  background: #58b6f3;
+  color: #000;
+  cursor: pointer;
+}
+
+/* ===== APPOINTMENT SECTION LIKE ADMIN USER ===== */
+
+.admin-UserServices .appointment-panel .dash-table {
+  width: 100%;
+  table-layout: fixed !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table th:nth-child(1),
+.admin-UserServices .appointment-panel .dash-table td:nth-child(1) {
+  width: 35% !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table th:nth-child(2)  {
+  width: 30% !important;
+  text-align: center !important;
+  padding-left: 25px !important;
+}
+
+
+.admin-UserServices .appointment-panel .dash-table td:nth-child(2) {
+  width: 30% !important;
+  text-align: center !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table th:nth-child(3),
+.admin-UserServices .appointment-panel .dash-table td:nth-child(3) {
+  width: 35% !important;
+  text-align: left !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table .th-action,
+.admin-UserServices .appointment-panel .dash-table .td-action {
+  text-align: left !important;
+  white-space: nowrap;
+  padding-left: 20px !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table tbody td {
+  vertical-align: middle !important;
+}
+
+.admin-UserServices .appointment-panel .appt-status-cell {
+  text-align: center !important;
+}
+
+.admin-UserServices .appointment-panel .appt-status-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 76px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  white-space: nowrap !important;
+  margin: 0 auto !important;
+  text-transform: lowercase !important;
+  margin-left: 22px !important;
+}
+
+.admin-UserServices .appointment-panel .appt-action-cell {
+  text-align: left !important;
+  padding-left: 20px !important;
+}
+
+.admin-UserServices .appointment-panel .appt-action-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 96px !important;
+  width: 96px !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  text-transform: none !important;
+}
+
+.admin-UserServices .appointment-panel .appt-badge.badge-cancelled,
+.admin-UserServices .appointment-panel .appt-badge.badge-canceled,
+.admin-UserServices .appointment-panel .appt-badge.badge-rejected,
+.admin-UserServices .appointment-panel .appt-badge.badge-declined {
+  background: #ea6666 !important;
+  color: #000 !important;
+}
+
+.admin-UserServices .appointment-panel .appt-badge.badge-pending {
+  background: #e2c457 !important;
+  color: #000 !important;
+}
+
+.admin-UserServices .appointment-panel .appt-badge.badge-approved,
+.admin-UserServices .appointment-panel .appt-badge.badge-confirmed,
+.admin-UserServices .appointment-panel .appt-badge.badge-completed {
+  background: #7ed36d !important;
+  color: #000 !important;
+}
+
+.admin-UserServices .appointment-panel .appt-badge.badge-view {
+  background: #58b6f3 !important;
+  color: #000 !important;
+  cursor: pointer !important;
+}
+
+.admin-UserServices .appointment-panel .dash-panel-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.admin-UserServices .appointment-panel .dash-panel-title {
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  position: relative;
+  top: 10px;
+}
+
+.admin-UserServices .dash-right-top .dash-panel-title {
+  font-size: 16px !important;
+  font-weight: 900 !important;
+}
+.admin-UserServices .users-header.services-row .users-cell:nth-child(2) {
+  padding-left: 25px !important;
+}
+/* ================================
+   RECENT ACTIVITY ONLY - SERVICES PAGE
+   ================================ */
+
+.admin-UserServices .dash-right-top .dash-panel-title {
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #000 !important;
+  margin: 0 0 6px !important;
+}
+
+.admin-UserServices .dash-right-top .dash-panel-body {
+  background: #ffffff !important;
+  border: 3px solid #00bfa6 !important;
+  border-radius: 16px !important;
+  padding: 12px !important;
+  max-height: 430px !important;
+  overflow-y: auto !important;
+}
+
+.admin-UserServices .dash-right-top .activity-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  background: transparent !important;
+}
+
+.admin-UserServices .dash-right-top .activity-item {
+  background: #ffffff !important;
+  border-radius: 14px !important;
+  width: 100% !important;
+  padding: 14px 14px !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  cursor: pointer !important;
+  transition: transform 0.12s ease, box-shadow 0.12s ease !important;
+}
+
+.admin-UserServices .dash-right-top .activity-item:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12) !important;
+}
+
+.admin-UserServices .dash-right-top .activity-icon {
+  width: 25px !important;
+  height: 25px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: transparent !important;
+  font-size: 20px !important;
+  margin-bottom: 1px !important;
+}
+
+.admin-UserServices .dash-right-top .activity-text {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #000 !important;
+  line-height: 1.35 !important;
+}
+
+.admin-UserServices .dash-right-top .activity-time {
+  margin-top: 4px !important;
+  font-size: 14px !important;
+  color: #666 !important;
+}
+
+
+/* ================================
+   APPOINTMENT SECTION ONLY - SERVICES PAGE
+   ================================ */
+
+.admin-UserServices .appointment-panel {
+  margin-top: 10px !important;
+}
+
+.admin-UserServices .appointment-panel .dash-panel-title {
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  color: #000 !important;
+  margin: 0 0 8px !important;
+  position: static !important;
+  top: auto !important;
+}
+
+.admin-UserServices .appointment-panel .dash-panel-body {
+  background: #ffffff !important;
+  border: 3px solid #00bfa6 !important;
+  border-radius: 22px !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  max-height: 320px !important;
+  overflow-y: auto !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  background: #ffffff !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table thead th {
+  background: #eef2f2 !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  font-size: 13px !important;
+  text-align: left !important;
+  padding: 14px 16px !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table tbody td {
+  padding: 12px 16px !important;
+  vertical-align: middle !important;
+  border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+  background: #ffffff !important;
+}
+
+/* column spacing same as AdminUser */
+.admin-UserServices .appointment-panel .dash-table th:nth-child(1),
+.admin-UserServices .appointment-panel .dash-table td:nth-child(1) {
+  width: 40% !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table th:nth-child(2),
+.admin-UserServices .appointment-panel .dash-table td:nth-child(2) {
+  width: 32% !important;
+  text-align: left !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table th:nth-child(3),
+.admin-UserServices .appointment-panel .dash-table td:nth-child(3) {
+  width: 50% !important;
+  text-align: left !important;
+}
+
+/* header spacing */
+.admin-UserServices .appointment-panel .dash-table thead th:nth-child(2) {
+  padding-left: 20px !important;
+}
+
+.admin-UserServices .appointment-panel .dash-table thead th:nth-child(3) {
+  padding-left: 25px !important;
+}
+
+.admin-UserServices .appointment-panel .t-main {
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1.15 !important;
+  color: #000 !important;
+}
+
+.admin-UserServices .appointment-panel .t-sub {
+  font-size: 10px !important;
+  color: rgba(0, 0, 0, 0.45) !important;
+  margin-top: 2px !important;
+  line-height: 1.1 !important;
+}
+
+/* status cell */
+.admin-UserServices .appointment-panel .appt-status-cell {
+  padding-left: 12px !important;
+  text-align: left !important;
+}
+
+.admin-UserServices .appointment-panel .appt-status-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 76px !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  border: none !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  position: static !important;
+  transform: none !important;
+  text-transform: lowercase !important;
+}
+
+/* action cell */
+.admin-UserServices .appointment-panel .appt-action-cell {
+  padding-left: 14px !important;
+  text-align: left !important;
+  display: table-cell !important;
+}
+
+.admin-UserServices .appointment-panel .appt-action-cell .appt-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 110px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: #58b6f3 !important;
+  color: #000 !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  position: static !important;
+  transform: none !important;
+  text-transform: none !important;
+}
+
+/* status colors */
+.admin-UserServices .appointment-panel .appt-badge.badge-cancelled,
+.admin-UserServices .appointment-panel .appt-badge.badge-canceled,
+.admin-UserServices .appointment-panel .appt-badge.badge-rejected,
+.admin-UserServices .appointment-panel .appt-badge.badge-declined {
+  background: #ea6666 !important;
+  color: #000 !important;
+}
+
+.admin-UserServices .appointment-panel .appt-badge.badge-pending {
+  background: #e2c457 !important;
+  color: #000 !important;
+}
+
+.admin-UserServices .appointment-panel .appt-badge.badge-approved,
+.admin-UserServices .appointment-panel .appt-badge.badge-confirmed,
+.admin-UserServices .appointment-panel .appt-badge.badge-completed {
+  background: #7ed36d !important;
+  color: #000 !important;
+}
+
+.admin-UserServices .appointment-panel .appt-badge.badge-view {
+  background: #58b6f3 !important;
+  color: #000 !important;
+  cursor: pointer !important;
+}

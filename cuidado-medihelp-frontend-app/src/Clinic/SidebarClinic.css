@@ -1,0 +1,514 @@
+/* ✅ Same design as adminuser.css, but kept SidebarClinic.css structure intact */
+
+.SidebarClinic {
+  --sidebar-bg: #399a91;
+  --sidebar-text: #0f4242;
+
+  --sidebar-width-collapsed: 70px;
+  --sidebar-width-expanded: 220px;
+
+  --header-height: 55px;
+}
+
+/* ================= SIDEBAR ================= */
+.SidebarClinic .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+
+  width: var(--sidebar-width-collapsed);
+  height: 100vh;
+
+  box-shadow: none;
+  background: var(--sidebar-bg);
+
+  display: flex;
+  flex-direction: column;
+
+  padding-top: 0;
+
+  z-index: 1000;
+  transition: width 0.25s ease;
+}
+
+.SidebarClinic .sidebar.expanded {
+  width: var(--sidebar-width-expanded);
+}
+
+/* top bar */
+.SidebarClinic .sidebar-top {
+  height: var(--header-height);
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* kept from SidebarClinic structure */
+  padding: 0 12px;
+}
+
+/* move ☰ left when expanded (match adminuser.css behavior) */
+.SidebarClinic .sidebar.expanded .sidebar-top {
+  justify-content: flex-start;
+  position: relative;
+  padding-right: 100px;
+}
+
+/* toggle */
+.SidebarClinic .sidebar-toggle {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  cursor: pointer;
+  color: var(--sidebar-text);
+  font-size: 30px;
+  line-height: 1;
+  padding: 0;
+
+  border-radius: 0;
+}
+
+.SidebarClinic .sidebar-toggle:focus,
+.SidebarClinic .sidebar-toggle:active {
+  outline: none;
+  box-shadow: none;
+}
+
+/* content */
+.SidebarClinic .sidebar-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  gap: 22px;            /* ✅ from adminuser.css */
+  padding-top: 18px;    /* ✅ from adminuser.css */
+  padding-left: 0;
+  padding-right: 0;
+
+  align-items: center;
+}
+
+/* when expanded, align left + padding (match adminuser.css) */
+.SidebarClinic .sidebar.expanded .sidebar-content {
+  align-items: flex-start;
+  padding-left: 10px;
+  padding-right: 20px;
+}
+
+/* items */
+.SidebarClinic .sidebar-item {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+}
+
+.SidebarClinic .sidebar-item a,
+.SidebarClinic .sidebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+
+  text-decoration: none;
+  color: var(--sidebar-text);
+  font-weight: 600;
+  letter-spacing: 0.1em; /* ✅ from adminuser.css */
+
+  width: 100%;
+  padding: 6px 1px;      /* ✅ from adminuser.css */
+
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  cursor: pointer;
+
+  /* remove SidebarClinic rounded hover-card look */
+  border-radius: 0;
+}
+
+.SidebarClinic .sidebar-item a:focus,
+.SidebarClinic .sidebar-item a:active,
+.SidebarClinic .sidebar-btn:focus,
+.SidebarClinic .sidebar-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+/* remove hover background (adminuser.css has none) */
+.SidebarClinic .sidebar-item a:hover,
+.SidebarClinic .sidebar-btn:hover {
+  background: transparent;
+}
+
+.SidebarClinic .sidebar-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+/* push logout to bottom */
+.SidebarClinic .sidebar-item.logout {
+  margin-top: auto;
+}
+
+/* hide text when collapsed (match adminuser.css) */
+.SidebarClinic .sidebar-item span {
+  font-size: 0.80rem;
+  display: inline-flex;
+
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+
+  white-space: nowrap;
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+
+  transition: 0.2s ease;
+}
+
+/* show text when expanded */
+.SidebarClinic .sidebar.expanded .sidebar-item span {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  max-height: 60px;
+  max-width: 200px;
+}
+
+/* collapsed spacing (match adminuser.css) */
+.SidebarClinic .sidebar:not(.expanded) .sidebar-item a,
+.SidebarClinic .sidebar:not(.expanded) .sidebar-btn {
+  justify-content: flex-start;
+  gap: 0;
+  padding: 4px 0 4px 16px;
+}
+
+/* submenu (optional) */
+.SidebarClinic .submenu {
+  display: none;
+  flex-direction: column;
+
+  margin-left: 35px; /* ✅ from adminuser.css */
+  gap: 6px;
+  width: 100%;
+}
+
+.SidebarClinic .sidebar-item.open .submenu {
+  display: flex;
+}
+
+/* submenu links (match adminuser.css style) */
+.SidebarClinic .submenu a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  text-decoration: none;
+  color: var(--sidebar-text);
+}
+
+.SidebarClinic .submenu img {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+}
+
+.SidebarClinic .submenu .sub {
+  font-size: 0.7rem;
+  font-weight: 300;
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* ================= HEADER ================= */
+.SidebarClinic .app-header {
+  background: var(--sidebar-bg);
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  box-shadow: none;
+
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: var(--header-height);
+
+  z-index: 999;
+
+  left: var(--sidebar-width-collapsed);
+}
+
+/* shift header when sidebar expanded */
+.admin-Userpage.sidebar-expanded .SidebarClinic .app-header {
+  left: var(--sidebar-width-expanded);
+}
+
+/* left group */
+.SidebarClinic .header-left {
+  display: flex;
+  align-items: center;
+  gap: 50px; 
+  position: relative;
+  left: 40px;
+}
+
+.SidebarClinic .brand-logo {
+  width: 120px;
+  max-height: 60px;
+  object-fit: contain;
+
+  position: relative;
+  right: 130px; /* ✅ from adminuser.css */
+}
+
+/* search */
+.SidebarClinic .header-search {
+  position: relative;
+  width: 360px;
+  right: 250px !important; /* ✅ from adminuser.css */
+  max-width: 42vw;
+}
+
+.SidebarClinic .header-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 46px 0 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.9rem;
+  background: white;
+}
+
+.SidebarClinic .search-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+}
+
+.SidebarClinic .search-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+/* right nav */
+.SidebarClinic .header-nav {
+  display: flex;
+  align-items: center;
+  gap: 70px; /* ✅ from adminuser.css */
+  position: relative;
+  right: 140px !important;
+}
+
+.SidebarClinic .nav-link {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.02rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* dropdown */
+.SidebarClinic .profile-menu {
+  position: relative;
+}
+
+.SidebarClinic .profile-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.SidebarClinic .profile-btn:focus,
+.SidebarClinic .profile-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.SidebarClinic .caret {
+  margin-left: 4px;
+  font-size: 0.9rem;
+}
+
+.SidebarClinic .profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+
+  min-width: 160px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.15);
+
+  padding: 10px;
+  display: none;
+  z-index: 99999;
+}
+
+.SidebarClinic .profile-menu.open .profile-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.SidebarClinic .profile-dropdown a {
+  text-decoration: none;
+  color: var(--sidebar-text);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+
+.SidebarClinic .profile-dropdown a:hover {
+  background: rgba(15, 66, 66, 0.08);
+}
+
+/* RESPONSIVE */
+@media screen and (max-width: 900px) {
+  .SidebarClinic .header-search {
+    width: 100%;
+    max-width: 360px;
+  }
+}
+
+
+/* ===== LOGOUT BUTTON ===== */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: transparent;
+  border: none;
+  gap: 10px;
+  color: #0f4242;
+  padding: 6px 12px 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+/* ===== CONFIRM MODAL ===== */
+.logout-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.logout-confirm-modal {
+  background: #ffffff;
+  padding: 26px 30px;
+  border-radius: 16px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+}
+
+.logout-confirm-modal h3 {
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+  color: #0f2f2f;
+}
+
+.logout-confirm-modal p {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.logout-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.logout-actions button {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-cancel {
+  background: #f3f4f6;
+}
+
+.btn-confirm {
+  background: #58aea8;
+  color: white;
+}
+
+/* ===== SUCCESS POPUP ===== */
+.logout-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.logout-popup {
+  background: #ffffff;
+  padding: 22px 28px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #58aea8;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}

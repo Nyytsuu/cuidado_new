@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Cuidado Medihelp">
+  <rect width="512" height="512" rx="116" fill="#0b8a84"/>
+  <circle cx="256" cy="256" r="172" fill="#e8faf8"/>
+  <path fill="#0b8a84" d="M238 138h36v92h92v36h-92v108h-36V266h-92v-36h92z"/>
+  <path fill="#35c9c1" d="M374 132c26 0 47 21 47 47s-21 47-47 47-47-21-47-47 21-47 47-47z"/>
+  <path fill="#35c9c1" d="M138 286c26 0 47 21 47 47s-21 47-47 47-47-21-47-47 21-47 47-47z"/>
+</svg>

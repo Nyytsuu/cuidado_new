@@ -1,0 +1,357 @@
+.voice-analysis-result {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #12313b;
+}
+
+.voice-analysis-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #e7fbf8, #f7fffd);
+  border: 1px solid #cdece8;
+}
+
+.voice-analysis-hero.medium {
+  background: linear-gradient(135deg, #fff7e6, #fffdf7);
+  border-color: #f4d9a6;
+}
+
+.voice-analysis-hero.high {
+  background: linear-gradient(135deg, #fff0f0, #fffafa);
+  border-color: #f4b8b8;
+}
+
+.voice-analysis-hero-copy {
+  min-width: 0;
+}
+
+.voice-analysis-hero h4 {
+  margin: 10px 0 5px;
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 850;
+  color: #102b44;
+}
+
+.voice-analysis-hero p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5b6874;
+}
+
+.voice-urgency-pill {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+  color: #087a72;
+  background: #d9f7f4;
+}
+
+.voice-urgency-pill.medium {
+  color: #9a5b00;
+  background: #fff0c9;
+}
+
+.voice-urgency-pill.high {
+  color: #b42318;
+  background: #ffe0df;
+}
+
+.voice-analysis-score {
+  width: 78px;
+  height: 78px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  background: #ffffff;
+  border: 1px solid #dcefed;
+  box-shadow: 0 10px 24px rgba(6, 95, 88, 0.08);
+}
+
+.voice-analysis-score strong {
+  display: block;
+  font-size: 22px;
+  line-height: 1;
+  color: #078b84;
+}
+
+.voice-analysis-score span {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #72808a;
+  text-transform: uppercase;
+}
+
+.voice-analysis-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.voice-analysis-stats div {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid #e2ecef;
+}
+
+.voice-analysis-stats span,
+.voice-analysis-stats small {
+  display: block;
+}
+
+.voice-analysis-stats span {
+  overflow: hidden;
+  color: #102b44;
+  font-size: 17px;
+  line-height: 1.2;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.voice-analysis-stats small {
+  margin-top: 2px;
+  color: #71808b;
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.voice-analysis-panel,
+.voice-analysis-advice {
+  padding: 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e2ecef;
+}
+
+.voice-analysis-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: #0b706b;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.voice-analysis-panel-title svg {
+  flex: 0 0 auto;
+}
+
+.voice-analysis-transcript {
+  margin: 0;
+  color: #35444f;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.voice-analysis-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.voice-analysis-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef8f7;
+  color: #0c6662;
+  border: 1px solid #cce9e6;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.voice-analysis-chip.emphasized {
+  background: #e6f0ff;
+  color: #1d4ed8;
+  border-color: #c8dafc;
+}
+
+.voice-analysis-empty {
+  margin: 0;
+  color: #667684;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.voice-analysis-condition-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.voice-analysis-condition {
+  padding: 12px;
+  border-radius: 14px;
+  background: #f8fbfc;
+  border: 1px solid #e4eef1;
+}
+
+.voice-analysis-condition-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.voice-analysis-condition-top strong {
+  min-width: 0;
+  color: #142e3a;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.voice-analysis-condition-top span {
+  flex: 0 0 auto;
+  color: #0b7f78;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.voice-analysis-match-bar {
+  height: 7px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dfeaec;
+}
+
+.voice-analysis-match-bar span {
+  display: block;
+  height: 100%;
+  min-width: 6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #42c5bd, #087f78);
+}
+
+.voice-analysis-condition-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.voice-analysis-condition-meta em,
+.voice-analysis-condition-meta small {
+  border-radius: 999px;
+  padding: 5px 8px;
+  font-size: 11px;
+  line-height: 1.25;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.voice-analysis-condition-meta em {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.voice-analysis-condition-meta small {
+  background: #eef2f7;
+  color: #4d5d69;
+}
+
+.voice-analysis-advice {
+  background: #f0fbf8;
+  border-color: #bde9e1;
+}
+
+.voice-analysis-advice.medium {
+  background: #fff8eb;
+  border-color: #f0d59d;
+}
+
+.voice-analysis-advice.high {
+  background: #fff1f1;
+  border-color: #f0b6b6;
+}
+
+.voice-analysis-advice p {
+  margin: 0;
+  color: #223641;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.voice-analysis-advice strong {
+  display: block;
+  margin-top: 10px;
+  color: #b42318;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.voice-analysis-note {
+  margin: 0;
+  color: #7b8892;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.voice-analysis-result.compact {
+  gap: 10px;
+}
+
+.voice-analysis-result.compact .voice-analysis-hero {
+  padding: 14px;
+  border-radius: 16px;
+}
+
+.voice-analysis-result.compact .voice-analysis-hero h4 {
+  font-size: 18px;
+}
+
+.voice-analysis-result.compact .voice-analysis-score {
+  width: 68px;
+  height: 68px;
+  border-radius: 18px;
+}
+
+.voice-analysis-result.compact .voice-analysis-score strong {
+  font-size: 19px;
+}
+
+.voice-analysis-result.compact .voice-analysis-panel,
+.voice-analysis-result.compact .voice-analysis-advice {
+  padding: 12px;
+}
+
+@media (max-width: 560px) {
+  .voice-analysis-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-analysis-score {
+    width: 100%;
+    height: auto;
+    min-height: 58px;
+    grid-template-columns: auto auto;
+    gap: 6px;
+  }
+
+  .voice-analysis-stats {
+    grid-template-columns: 1fr;
+  }
+}
