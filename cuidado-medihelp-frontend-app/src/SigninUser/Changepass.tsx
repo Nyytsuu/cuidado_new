@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./Changedpass.css";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
 type Props = {
   onClose?: () => void;
@@ -38,7 +39,7 @@ export default function Changepass({ onClose, onSuccess }: Props) {
     }, 3000);
   };
 
-  const apiBase = "http://localhost:5000";
+  const apiBase = getConfiguredBackendUrl();
 
   const hasMinLen = newPassword.length >= 8;
   const hasUpper = /[A-Z]/.test(newPassword);

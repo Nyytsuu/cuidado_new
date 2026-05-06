@@ -74,9 +74,8 @@ mailer.verify((err) => {
   if (err) console.error("MAILER ERROR:", err);
   else console.log("✅ Mailer ready");
 });
-// LOGIN
 // LOGIN (admin + clinic + user)
-router.post("/login", (req, res) => {
+const handleLogin = (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -145,7 +144,10 @@ router.post("/login", (req, res) => {
       return res.status(500).json({ message: "Server error" });
     }
   })();
-});
+};
+
+router.post("/login", handleLogin);
+router.post("/mobile/login", handleLogin);
 
 // Signup route (single source of truth)
 router.post("/signup", async (req, res) => {

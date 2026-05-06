@@ -1,9 +1,13 @@
+import { apiUrl, isNativeMobileRuntime } from "../sharedBackendFetch";
+
 export async function login(
   email: string,
   password: string,
   captchaToken?: string
 ) {
-  const res = await fetch("http://localhost:5000/api/login", {
+  const loginPath = isNativeMobileRuntime() ? "/api/mobile/login" : "/api/login";
+
+  const res = await fetch(apiUrl(loginPath), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

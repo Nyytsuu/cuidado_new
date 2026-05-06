@@ -1,4 +1,6 @@
 // src/components/handleSubmit.ts
+import { apiUrl } from "../sharedBackendFetch";
+
 export type SignupPayload = {
   fullname: string;
   email: string;
@@ -13,7 +15,7 @@ export type SignupPayload = {
 };
 
 export async function handleSubmit(payload: SignupPayload) {
-  const res = await fetch("http://localhost:5000/api/signup", {
+  const res = await fetch(apiUrl("/api/signup"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

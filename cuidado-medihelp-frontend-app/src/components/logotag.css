@@ -1,5 +1,6 @@
 
-*{
+.logotag,
+.logotag * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -39,14 +40,15 @@
    margin-right: 180px;
 }
 
-@media (max-width: 700px), (max-height: 760px) {
+@media (max-width: 700px) {
     .logotag {
         position: relative;
         inset: auto;
         z-index: 1;
         width: 100%;
         align-items: center;
-        padding: 10px 0 0;
+        min-height: 166px;
+        padding: 70px 0 24px;
         pointer-events: none;
     }
 
@@ -55,9 +57,9 @@
     }
 
     .logotag img {
-        width: 118px;
+        width: 154px;
         height: auto;
-        max-height: 52px;
+        max-height: 64px;
         object-fit: contain;
         margin: 0 auto;
         display: block;

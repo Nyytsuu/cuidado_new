@@ -7,7 +7,7 @@ import {
   type SetStateAction,
 } from "react";
 import "./UserSidebar.css";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   House,
   CalendarDays,
@@ -15,6 +15,7 @@ import {
   Brain,
   MapPin,
   Scale,
+  Calculator,
   Smile,
   Mic,
   User,
@@ -409,6 +410,49 @@ export default function UserSidebar({
           </Link>
         </nav>
       </header>
+
+      <nav className="user-bottom-nav" aria-label="Mobile navigation">
+        <NavLink to="/homepage" className={({ isActive }) => (isActive ? "active" : "")}>
+          <House size={19} />
+          <span>Home</span>
+        </NavLink>
+
+        <NavLink to="/appointments" className={({ isActive }) => (isActive ? "active" : "")}>
+          <CalendarDays size={19} />
+          <span>Appointments</span>
+        </NavLink>
+
+        <NavLink to="/browse-health" className={({ isActive }) => (isActive ? "active" : "")}>
+          <Stethoscope size={19} />
+          <span>Health</span>
+        </NavLink>
+
+        <VoiceAssistantPopup
+          userId={headerUser?.id ? Number(headerUser.id) : null}
+          className={`user-bottom-nav-voice ${
+            isPathActive("/voice-assistant") ? "active" : ""
+          }`}
+          ariaLabel="Voice Assistant"
+        >
+          <Mic size={32} />
+          <span>Voice Assistant</span>
+        </VoiceAssistantPopup>
+
+        <NavLink to="/bmi-calculator" className={({ isActive }) => (isActive ? "active" : "")}>
+          <Calculator size={19} />
+          <span>BMI</span>
+        </NavLink>
+
+        <NavLink to="/find-clinic" className={({ isActive }) => (isActive ? "active" : "")}>
+          <MapPin size={19} />
+          <span>Clinics</span>
+        </NavLink>
+
+        <NavLink to="/profile" className={({ isActive }) => (isActive ? "active" : "")}>
+          <User size={19} />
+          <span>Profile</span>
+        </NavLink>
+      </nav>
 
       {/* CONFIRM LOGOUT */}
 {showLogoutConfirm && (

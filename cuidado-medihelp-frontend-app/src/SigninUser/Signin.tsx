@@ -4,6 +4,8 @@ import { login } from "../api/api";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import ReCAPTCHA from "react-google-recaptcha";
+import logo from "../img/logo.png";
+import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
 import ForgotPassword from "./Forgetpass";
 import OtpPopup from "../SigninUser/OtpPopup";
@@ -39,7 +41,7 @@ function Signin() {
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingResend, setLoadingResend] = useState(false);
 
-  const apiBase = "http://localhost:5000";
+  const apiBase = getConfiguredBackendUrl();
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
   const showCaptcha = failedAttempts >= 5;
@@ -200,9 +202,14 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 console.log("CAPTCHA KEY:", siteKey);
   return (
     <div className="signin-container">
+      <div className="signin-mobile-hero">
+        <img src={logo} alt="CUIDADO logo" />
+      </div>
+
       <div className="left-side">
         <div className="login-card">
-          <h1>LOGIN</h1>
+          <h1>Sign In</h1>
+          <p className="signin-intro">Welcome back to Cuidado</p>
 
           <form onSubmit={onLogin}>
             <label>Email</label>
@@ -288,7 +295,7 @@ console.log("CAPTCHA KEY:", siteKey);
       <div className="right-side">
         <div className="right-content">
           <div className="brand">
-            <img src="/src/img/logo.png" alt="logo" />
+            <img src={logo} alt="logo" />
           </div>
 
           <div className="bottom-text">

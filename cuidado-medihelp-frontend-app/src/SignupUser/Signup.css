@@ -271,7 +271,7 @@ p {
 
 /* ================= BUTTON ================= */
 
-button {
+.signup-form button {
   display: flex;
   width: 70%;
 
@@ -291,7 +291,7 @@ button {
   padding: 10px 0;
 }
 
-button:disabled {
+.signup-form button:disabled {
   opacity: 0.7;
 }
 
@@ -410,7 +410,7 @@ button:disabled {
 .toast-success { background: #16a34a; }
 .toast-error { background: #dc2626; }
 
-@media (max-width: 700px), (max-height: 760px) {
+@media (max-width: 700px) {
   html,
   body,
   #root {
@@ -424,10 +424,13 @@ button:disabled {
     height: auto;
     justify-content: flex-start;
     align-items: stretch;
-    padding: max(12px, env(safe-area-inset-top)) 12px max(22px, env(safe-area-inset-bottom));
-    background-color: #eaf6f7;
+    padding: 0 12px max(18px, env(safe-area-inset-bottom));
+    background-color: #eef8f8;
+    background-image:
+      linear-gradient(180deg, rgba(238, 249, 249, 0.88) 0%, rgba(238, 249, 249, 0.88) 48%, rgba(255, 255, 255, 0.96) 100%),
+      url('../img/userloginbg.png');
     background-size: cover;
-    background-position: center;
+    background-position: center top;
     overflow-y: auto;
   }
 
@@ -447,14 +450,14 @@ button:disabled {
     right: auto;
     top: auto;
     transform: none;
-    width: min(100%, 390px);
+    width: min(100%, 392px);
     height: auto;
     max-height: none;
-    margin: 12px auto 0;
-    padding: 18px 16px;
-    border-radius: 18px;
+    margin: -8px auto 0;
+    padding: 18px 18px 20px;
+    border-radius: 20px 20px 12px 12px;
     background: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 16px 38px rgba(0, 77, 64, 0.18);
+    box-shadow: 0 18px 40px rgba(0, 77, 64, 0.14);
     justify-content: flex-start;
     text-align: left;
   }
@@ -463,33 +466,49 @@ button:disabled {
     flex: none;
     overflow: visible;
     padding-right: 0;
-    gap: 12px;
+    gap: 8px;
     background: transparent;
   }
 
   .Sign {
     margin: 0;
-    color: #073b35;
-    font-size: 26px;
+    color: #111827;
+    font-size: 18px;
     line-height: 1.1;
-    text-align: left;
+    text-align: center;
     font-family: "Poppins", sans-serif;
     font-weight: 800;
   }
 
   .signup-form > p:not(.Sign):not(.terms-privacy):not(.login-link) {
-    margin: -6px 0 2px;
-    color: #5f6f73;
-    font-size: 13px;
+    margin: 3px 0 2px;
+    color: #006052;
+    font-size: 12px;
     line-height: 1.35;
     text-align: left;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   .row {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 8px;
+  }
+
+  .row:nth-of-type(1) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .row:nth-of-type(2) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .row:nth-of-type(2) .input-group:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .row:nth-of-type(3) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .input-group,
@@ -501,8 +520,8 @@ button:disabled {
   .input-group label,
   .last-group label {
     margin: 0;
-    color: #173d3b;
-    font-size: 12px;
+    color: #172033;
+    font-size: 9px;
     line-height: 1.15;
     font-weight: 700;
   }
@@ -513,13 +532,13 @@ button:disabled {
   input[type="date"],
   select,
   input[type="tel"] {
-    min-height: 44px;
-    padding: 10px 12px;
-    border: 1px solid #b9d7d3;
-    border-radius: 12px;
+    min-height: 34px;
+    padding: 8px 10px;
+    border: 1px solid #a9ccc8;
+    border-radius: 8px;
     color: #102b2d;
     background: #ffffff;
-    font-size: 14px;
+    font-size: 11px;
     line-height: 1.2;
     outline: none;
   }
@@ -535,13 +554,13 @@ button:disabled {
   }
 
   .field-with-icon input {
-    padding-right: 42px;
+    padding-right: 36px;
   }
 
   .eye-btn {
-    right: 10px;
-    width: 34px;
-    height: 34px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     color: #00695c;
   }
@@ -549,12 +568,12 @@ button:disabled {
   .checkbox-label {
     justify-content: flex-start;
     align-items: flex-start;
-    gap: 9px;
+    gap: 8px;
     color: #5f6f73;
-    font-size: 12px;
+    font-size: 10px;
     line-height: 1.35;
     text-align: left;
-    padding: 2px 0;
+    padding: 1px 0;
   }
 
   .checkbox-label input[type="checkbox"] {
@@ -572,26 +591,26 @@ button:disabled {
 
   .terms-privacy {
     color: #758285;
-    font-size: 10px;
+    font-size: 8px;
     line-height: 1.4;
     text-align: center;
   }
 
-  button[type="submit"] {
+  .signup-form button[type="submit"] {
     width: 100%;
-    min-height: 46px;
+    min-height: 40px;
     margin-top: 2px;
     padding: 0 18px;
-    border-radius: 999px;
+    border-radius: 12px;
     background: #006052;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 700;
   }
 
   .login-link {
     margin: 0;
     color: #6d787b;
-    font-size: 12px;
+    font-size: 10px;
     line-height: 1.35;
     text-align: center;
     font-weight: 700;
@@ -599,7 +618,7 @@ button:disabled {
 
   .error-text {
     margin-top: 0;
-    font-size: 11px;
+    font-size: 9px;
     line-height: 1.35;
   }
 
@@ -636,14 +655,14 @@ button:disabled {
   }
 }
 
-@media (min-width: 430px) and (max-width: 700px) and (min-height: 780px) {
+@media (max-width: 350px) {
+  .row:nth-of-type(1),
   .row:nth-of-type(2),
   .row:nth-of-type(3) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
-  .row:nth-of-type(2) .date-wrap,
-  .row:nth-of-type(3) .input-group:last-child {
-    grid-column: 1 / -1;
+  .row:nth-of-type(2) .input-group:first-child {
+    grid-column: auto;
   }
 }

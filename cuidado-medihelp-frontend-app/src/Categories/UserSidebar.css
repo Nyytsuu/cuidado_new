@@ -513,6 +513,10 @@
   transition: margin-left 0.25s ease;
 }
 
+.user-layout .user-bottom-nav {
+  display: none;
+}
+
 /* responsive */
 @media screen and (max-width: 1024px) {
   .user-layout .header-search {
@@ -543,6 +547,111 @@
   .user-layout .header-avatar {
     width: 38px;
     height: 38px;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  .user-layout .user-bottom-nav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 12000;
+    height: 74px;
+    display: grid;
+    grid-template-columns: 0.9fr 1.45fr 0.95fr 74px 0.72fr 0.95fr 0.95fr;
+    align-items: center;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 12px;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(229, 236, 241, 0.9);
+    border-radius: 34px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+    backdrop-filter: blur(18px);
+  }
+
+  .user-layout .user-bottom-nav a,
+  .user-layout .user-bottom-nav button {
+    min-width: 0;
+    height: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: none;
+    border-radius: 18px;
+    background: transparent;
+    color: #596579;
+    text-decoration: none;
+    font: inherit;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  }
+
+  .user-layout .user-bottom-nav a svg,
+  .user-layout .user-bottom-nav button svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.45;
+  }
+
+  .user-layout .user-bottom-nav a.active,
+  .user-layout .user-bottom-nav button.active {
+    color: #0b8a84;
+  }
+
+  .user-layout .user-bottom-nav a:not(.user-bottom-nav-voice):active,
+  .user-layout .user-bottom-nav button:not(.user-bottom-nav-voice):active {
+    transform: translateY(1px);
+  }
+
+  .user-layout .user-bottom-nav .user-bottom-nav-voice {
+    position: relative;
+    place-self: center;
+    width: 68px;
+    height: 68px;
+    margin-top: -34px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #30bdb6 0%, #0b8a84 100%);
+    color: #ffffff;
+    box-shadow:
+      0 12px 22px rgba(11, 138, 132, 0.28),
+      0 0 0 8px rgba(219, 242, 241, 0.96),
+      0 0 0 18px rgba(219, 242, 241, 0.58);
+    isolation: isolate;
+  }
+
+  .user-layout .user-bottom-nav .user-bottom-nav-voice::before {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border-radius: inherit;
+    border: 4px solid rgba(255, 255, 255, 0.95);
+    pointer-events: none;
+  }
+
+  .user-layout .user-bottom-nav .user-bottom-nav-voice svg {
+    width: 32px;
+    height: 32px;
+    stroke-width: 2.1;
+  }
+
+  .user-layout .user-bottom-nav .user-bottom-nav-voice span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 }
 /* LOGOUT POPUP */

@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import zxcvbn from "zxcvbn";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import OtpPopup from "../SigninUser/OtpPopup";
+import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
 interface Province {
   id: number;
@@ -85,7 +86,7 @@ function Signup() {
   const [loadingResend, setLoadingResend] = useState(false);
   const [pendingSignupData, setPendingSignupData] = useState<SignupPayload | null>(null);
 
-  const apiBase = "http://localhost:5000";
+  const apiBase = getConfiguredBackendUrl();
 
   const showToast = (message: string, type: ToastState["type"] = "info") => {
     setToast({ open: true, message, type });
@@ -117,7 +118,7 @@ function Signup() {
   const passwordsMatch = password === confirmPassword;
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/provinces")
+    fetch(`${apiBase}/api/provinces`)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         return res.json();
@@ -128,11 +129,11 @@ function Signup() {
       .catch((err) => {
         console.error("Failed to fetch provinces:", err);
       });
-  }, []);
+  }, [apiBase]);
 
   useEffect(() => {
     if (!provinceId) return;
-    fetch(`http://localhost:5000/api/municipalities/${provinceId}`)
+    fetch(`${apiBase}/api/municipalities/${provinceId}`)
       .then((res) => res.json())
       .then((data: Municipality[]) => {
         setMunicipalities(data);
@@ -141,18 +142,18 @@ function Signup() {
         setBarangayId("");
       })
       .catch(console.error);
-  }, [provinceId]);
+  }, [apiBase, provinceId]);
 
   useEffect(() => {
     if (!municipalityId) return;
-    fetch(`http://localhost:5000/api/barangays/${municipalityId}`)
+    fetch(`${apiBase}/api/barangays/${municipalityId}`)
       .then((res) => res.json())
       .then((data: Barangay[]) => {
         setBarangays(data);
         setBarangayId("");
       })
       .catch(console.error);
-  }, [municipalityId]);
+  }, [apiBase, municipalityId]);
 
   const sendSignupOtp = async (emailToSend: string) => {
     const res = await fetch(`${apiBase}/api/auth/otp/send`, {

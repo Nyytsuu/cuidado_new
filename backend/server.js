@@ -1235,4 +1235,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
-app.listen(5000, () => console.log("Backend running on http://localhost:5000"));
+app.listen(5000, "0.0.0.0", () =>
+  console.log("Backend running on http://0.0.0.0:5000")
+);

@@ -1,12 +1,16 @@
 
 
 import { useEffect, useMemo, useState } from "react";
+import { Link, NavLink } from "react-router-dom";
 import "./UserAppointment.css";
 import UserSidebar from "../Categories/UserSidebar";
+import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import {
   Filter,
   Plus,
   CalendarDays,
+  House,
+  Stethoscope,
   MapPin,
   Video,
   Lightbulb,
@@ -14,6 +18,12 @@ import {
   ChevronLeft,
   ChevronRight,
   MoreVertical,
+  Search,
+  Menu,
+  Bell,
+  Mic,
+  Calculator,
+  UserRound,
 } from "lucide-react";
 
 type AppointmentService = {
@@ -80,6 +90,7 @@ type BookingModalProps = {
 type UserAppointmentsContentProps = {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
+  openSidebar: () => void;
 };
 
 type ApiErrorResponse = {
@@ -694,6 +705,7 @@ function BookingModal({
 function UserAppointmentsContent({
   searchTerm,
   setSearchTerm,
+  openSidebar,
 }: UserAppointmentsContentProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -875,6 +887,18 @@ function UserAppointmentsContent({
   const confirmedCount = appointments.filter((a) => a.status === "confirmed").length;
   const pendingCount = appointments.filter((a) => a.status === "pending").length;
   const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
+  const displayedAppointmentCount =
+    activeTab === "past"
+      ? pastAppointments.length
+      : activeTab === "calendar"
+      ? allAppointments.length
+      : upcomingAppointments.length;
+  const displayedAppointmentLabel =
+    activeTab === "past"
+      ? "Past Appointments"
+      : activeTab === "calendar"
+      ? "Total Appointments"
+      : "Upcoming Appointments";
 
   const nextAppointment =
     upcomingAppointments.length > 0 ? upcomingAppointments[0] : null;
@@ -1102,6 +1126,41 @@ function UserAppointmentsContent({
   return (
     <>
       <div className="appointments-page">
+        <div className="appointments-mobile-header">
+          <div className="appointments-mobile-bar">
+            <button
+              type="button"
+              className="appointments-icon-button"
+              aria-label="Open sidebar"
+              onClick={openSidebar}
+            >
+              <Menu size={20} />
+            </button>
+
+            <Link className="appointments-mobile-brand" to="/homepage">
+              CUIDADO
+            </Link>
+
+            <Link
+              to="/notifications"
+              className="appointments-icon-button"
+              aria-label="Open notifications"
+            >
+              <Bell size={19} />
+            </Link>
+          </div>
+
+          <label className="appointments-mobile-search">
+            <Search size={16} />
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search appointments..."
+            />
+          </label>
+        </div>
+
         <div className="appointments-topbar">
           <div className="appointments-heading">
             <h1 className="page-title">Appointments</h1>
@@ -1376,7 +1435,7 @@ function UserAppointmentsContent({
                       setShowAllAppointments(true);
                     }}
                   >
-                    View All Appointments →
+                    View All
                   </button>
                 )}
               </div>
@@ -1471,8 +1530,8 @@ function UserAppointmentsContent({
                 </div>
                 <div>
                   <h3>Appointment Summary</h3>
-                  <h1>{appointments.length}</h1>
-                  <p>Upcoming Appointments</p>
+                  <h1>{displayedAppointmentCount}</h1>
+                  <p>{displayedAppointmentLabel}</p>
                 </div>
               </div>
 
@@ -1495,7 +1554,11 @@ function UserAppointmentsContent({
             <div className="card quick-card">
               <h3>Quick Actions</h3>
 
-              <div className="quick-action" onClick={() => setBookingOpen(true)}>
+              <button
+                type="button"
+                className="quick-action"
+                onClick={() => setBookingOpen(true)}
+              >
                 <div className="quick-icon">
                   <CalendarDays size={20} />
                 </div>
@@ -1503,9 +1566,10 @@ function UserAppointmentsContent({
                   <h4>Book Appointment</h4>
                   <p>Find a doctor and time</p>
                 </div>
-              </div>
+                <ChevronRight className="quick-chevron" size={18} />
+              </button>
 
-              <div className="quick-action">
+              <Link className="quick-action" to="/find-clinic">
                 <div className="quick-icon">
                   <MapPin size={20} />
                 </div>
@@ -1513,9 +1577,10 @@ function UserAppointmentsContent({
                   <h4>Find Clinic</h4>
                   <p>Search nearby clinics</p>
                 </div>
-              </div>
+                <ChevronRight className="quick-chevron" size={18} />
+              </Link>
 
-              <div className="quick-action">
+              <button type="button" className="quick-action">
                 <div className="quick-icon">
                   <Video size={20} />
                 </div>
@@ -1523,7 +1588,8 @@ function UserAppointmentsContent({
                   <h4>Telehealth Visit</h4>
                   <p>Consult from home</p>
                 </div>
-              </div>
+                <ChevronRight className="quick-chevron" size={18} />
+              </button>
             </div>
 
             <div className="card health-card">
@@ -1539,6 +1605,48 @@ function UserAppointmentsContent({
             </div>
           </div>
         </div>
+
+        <nav className="appointments-bottom-nav" aria-label="Mobile navigation">
+          <NavLink to="/homepage" className={({ isActive }) => (isActive ? "active" : "")}>
+            <House size={19} />
+            <span>Home</span>
+          </NavLink>
+
+          <NavLink to="/appointments" className={({ isActive }) => (isActive ? "active" : "")}>
+            <CalendarDays size={19} />
+            <span>Appointments</span>
+          </NavLink>
+
+          <NavLink to="/browse-health" className={({ isActive }) => (isActive ? "active" : "")}>
+            <Stethoscope size={19} />
+            <span>Health</span>
+          </NavLink>
+
+          <VoiceAssistantPopup
+            userId={userId ? Number(userId) : null}
+            className="bottom-nav-voice"
+            ariaLabel="Voice Assistant"
+          >
+            <Mic size={32} />
+            <span>Voice Assistant</span>
+          </VoiceAssistantPopup>
+
+          <NavLink to="/bmi-calculator" className={({ isActive }) => (isActive ? "active" : "")}>
+            <Calculator size={19} />
+            <span>BMI</span>
+          </NavLink>
+
+          <NavLink to="/find-clinic" className={({ isActive }) => (isActive ? "active" : "")}>
+            <MapPin size={19} />
+            <span>Clinics</span>
+          </NavLink>
+
+          <NavLink to="/profile" className={({ isActive }) => (isActive ? "active" : "")}>
+            <UserRound size={19} />
+            <span>Profile</span>
+          </NavLink>
+        </nav>
+
       </div>
 
       <BookingModal
@@ -1781,7 +1889,11 @@ export default function UserAppointments() {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
-    <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div
+      className={`user-layout appointments-shell ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -1798,6 +1910,7 @@ export default function UserAppointments() {
         <UserAppointmentsContent
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
+          openSidebar={() => setSidebarExpanded(true)}
         />
       </main>
     </div>

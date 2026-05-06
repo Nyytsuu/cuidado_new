@@ -19,9 +19,15 @@ android {
         buildConfigField(
             "String",
             "WEB_APP_URL",
+<<<<<<< HEAD
+            "\"http://10.0.2.2:5173?apiBase=http%3A%2F%2F10.0.2.2%3A5173\""
+        )
+        buildConfigField("String", "BACKEND_URL", "\"http://10.0.2.2:5173\"")
+=======
             "\"http://10.0.2.2:5173?apiBase=http%3A%2F%2F10.0.2.2%3A5000\""
         )
         buildConfigField("String", "BACKEND_URL", "\"http://10.0.2.2:5000\"")
+>>>>>>> d6a085bb3f1cbf70c5b11462d8f27d8d03797bcb
     }
 
     buildFeatures {
