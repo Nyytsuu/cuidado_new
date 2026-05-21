@@ -7,15 +7,6 @@ const multer = require("multer");
 const path = require("path");
 const pool = require("../db/pool");
 
-/* ================= DB CONNECTION ================= */
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "Cuidado_2026-cp1!",
-  database: "Cuidado_medihelp",
-  port: 3306,
-});
-
 /* ================= MULTER SETUP ================= */
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
