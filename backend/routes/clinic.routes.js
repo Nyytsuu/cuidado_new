@@ -97,6 +97,163 @@ const hasValidOperatingDays = (value) =>
     cleanText(value)
   );
 
+const ensureClinicFeedbackTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clinic_feedback (
+      id INT NOT NULL AUTO_INCREMENT,
+      appointment_id INT NOT NULL,
+      clinic_id INT NOT NULL,
+      user_id INT NOT NULL,
+      rating TINYINT NOT NULL,
+      feedback TEXT NULL,
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY unique_feedback_appointment_user (appointment_id, user_id),
+      KEY idx_clinic_feedback_clinic (clinic_id),
+      KEY idx_clinic_feedback_user (user_id)
+    )
+  `);
+};
+
+const ensureClinicNotificationsTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clinic_notifications (
+      id INT NOT NULL AUTO_INCREMENT,
+      clinic_id INT NOT NULL,
+      unique_key VARCHAR(160) NOT NULL,
+      title VARCHAR(180) NOT NULL,
+      message TEXT NOT NULL,
+      category VARCHAR(80) NOT NULL DEFAULT 'Appointments',
+      icon VARCHAR(40) NOT NULL DEFAULT 'calendar',
+      is_read TINYINT(1) NOT NULL DEFAULT 0,
+      appointment_id INT DEFAULT NULL,
+      read_at DATETIME DEFAULT NULL,
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY unique_clinic_notification (clinic_id, unique_key),
+      INDEX idx_clinic_notifications_clinic (clinic_id, is_read, created_at)
+    )
+  `);
+};
+
+const toDisplayDate = (value) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "the selected schedule";
+  }
+
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+const insertClinicNotification = async ({
+  clinicId,
+  uniqueKey,
+  title,
+  message,
+  category = "Appointments",
+  icon = "calendar",
+  appointmentId = null,
+  createdAt = new Date(),
+}) => {
+  await pool.query(
+    `
+    INSERT INTO clinic_notifications (
+      clinic_id,
+      unique_key,
+      title,
+      message,
+      category,
+      icon,
+      appointment_id,
+      created_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      title = VALUES(title),
+      message = VALUES(message),
+      category = VALUES(category),
+      icon = VALUES(icon),
+      appointment_id = VALUES(appointment_id),
+      updated_at = NOW()
+    `,
+    [clinicId, uniqueKey, title, message, category, icon, appointmentId, createdAt]
+  );
+};
+
+const syncClinicAppointmentNotifications = async (clinicId) => {
+  await ensureClinicNotificationsTable();
+
+  const [appointments] = await pool.query(
+    `
+    SELECT
+      a.id,
+      a.status,
+      a.start_at,
+      a.created_at,
+      a.updated_at,
+      COALESCE(a.patient_name_snapshot, u.full_name, 'A patient') AS patient_name,
+      COALESCE(a.purpose, 'consultation') AS purpose
+    FROM appointments a
+    LEFT JOIN users u ON u.id = a.user_id
+    WHERE a.clinic_id = ?
+    ORDER BY a.created_at DESC
+    LIMIT 100
+    `,
+    [clinicId]
+  );
+
+  const now = Date.now();
+  const twoDaysMs = 48 * 60 * 60 * 1000;
+
+  for (const appointment of appointments) {
+    const status = String(appointment.status || "").toLowerCase();
+    const appointmentDate = toDisplayDate(appointment.start_at);
+    const patientName = appointment.patient_name || "A patient";
+    const purpose = appointment.purpose || "consultation";
+
+    if (["pending", "reschedule_requested"].includes(status)) {
+      await insertClinicNotification({
+        clinicId,
+        uniqueKey: `appointment:${appointment.id}:new`,
+        title: "New appointment request",
+        message: `${patientName} requested ${purpose} for ${appointmentDate}.`,
+        category: "Appointments",
+        icon: "calendar",
+        appointmentId: appointment.id,
+        createdAt: appointment.created_at || new Date(),
+      });
+    }
+
+    const startAt = new Date(appointment.start_at).getTime();
+    if (
+      !Number.isNaN(startAt) &&
+      startAt > now &&
+      startAt - now <= twoDaysMs &&
+      ["pending", "confirmed", "reschedule_requested"].includes(status)
+    ) {
+      await insertClinicNotification({
+        clinicId,
+        uniqueKey: `appointment:${appointment.id}:upcoming`,
+        title: "Upcoming appointment",
+        message: `${patientName} has an appointment coming up on ${appointmentDate}.`,
+        category: "Appointments",
+        icon: "clock",
+        appointmentId: appointment.id,
+        createdAt: new Date(),
+      });
+    }
+  }
+};
+
 const getUploadValidationError = (file, label) => {
   if (!file) return `${label} is required.`;
 
@@ -644,6 +801,119 @@ router.patch("/clinics/:id", (req, res) => {
 });
 
 /* =================================================
+   CLINIC NOTIFICATIONS
+   Final routes:
+   GET   /api/clinic/notifications?clinic_id=1
+   PATCH /api/clinic/notifications/:id/read
+   PATCH /api/clinic/notifications/mark-all-read
+================================================= */
+
+router.get("/clinic/notifications", async (req, res) => {
+  try {
+    const clinicId = Number(req.query.clinic_id);
+
+    if (!clinicId) {
+      return res.status(400).json({ message: "clinic_id is required." });
+    }
+
+    await syncClinicAppointmentNotifications(clinicId);
+
+    const [notifications] = await pool.query(
+      `
+      SELECT
+        id,
+        clinic_id,
+        title,
+        message,
+        category,
+        icon,
+        is_read,
+        appointment_id,
+        DATE_FORMAT(read_at, '%Y-%m-%d %H:%i:%s') AS read_at,
+        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+        DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at
+      FROM clinic_notifications
+      WHERE clinic_id = ?
+      ORDER BY is_read ASC, created_at DESC, id DESC
+      LIMIT 80
+      `,
+      [clinicId]
+    );
+
+    return res.json({
+      unread_count: notifications.filter((item) => Number(item.is_read) === 0)
+        .length,
+      notifications: notifications.map((item) => ({
+        ...item,
+        unread: Number(item.is_read) === 0,
+      })),
+    });
+  } catch (err) {
+    console.error("Load clinic notifications error:", err);
+    return res.status(500).json({ message: "Failed to load clinic notifications." });
+  }
+});
+
+router.patch("/clinic/notifications/mark-all-read", async (req, res) => {
+  try {
+    const clinicId = Number(req.body.clinic_id || req.query.clinic_id);
+
+    if (!clinicId) {
+      return res.status(400).json({ message: "clinic_id is required." });
+    }
+
+    await ensureClinicNotificationsTable();
+
+    await pool.query(
+      `
+      UPDATE clinic_notifications
+      SET is_read = 1, read_at = COALESCE(read_at, NOW())
+      WHERE clinic_id = ?
+      `,
+      [clinicId]
+    );
+
+    return res.json({ message: "Notifications marked as read." });
+  } catch (err) {
+    console.error("Mark clinic notifications read error:", err);
+    return res.status(500).json({ message: "Failed to update notifications." });
+  }
+});
+
+router.patch("/clinic/notifications/:id/read", async (req, res) => {
+  try {
+    const clinicId = Number(req.body.clinic_id || req.query.clinic_id);
+    const notificationId = Number(req.params.id);
+
+    if (!clinicId || !notificationId) {
+      return res
+        .status(400)
+        .json({ message: "clinic_id and notification id are required." });
+    }
+
+    await ensureClinicNotificationsTable();
+
+    const [result] = await pool.query(
+      `
+      UPDATE clinic_notifications
+      SET is_read = 1, read_at = COALESCE(read_at, NOW())
+      WHERE clinic_id = ? AND id = ?
+      `,
+      [clinicId, notificationId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Notification not found." });
+    }
+
+    return res.json({ message: "Notification marked as read." });
+  } catch (err) {
+    console.error("Mark clinic notification read error:", err);
+    return res.status(500).json({ message: "Failed to update notification." });
+  }
+});
+
+/* =================================================
    CLINIC PROFILE
    Final routes:
    GET /api/clinic/profile?clinic_id=1
@@ -751,6 +1021,19 @@ router.get("/clinic/profile", async (req, res) => {
       [clinicId]
     );
 
+    await ensureClinicFeedbackTable();
+
+    const [[ratingSummary]] = await pool.query(
+      `
+      SELECT
+        ROUND(AVG(rating), 1) AS average_rating,
+        COUNT(*) AS rating_count
+      FROM clinic_feedback
+      WHERE clinic_id = ?
+      `,
+      [clinicId]
+    );
+
     const locationParts = [
       clinic.address,
       clinic.barangay_name,
@@ -760,6 +1043,10 @@ router.get("/clinic/profile", async (req, res) => {
 
     return res.json({
       ...clinic,
+      average_rating: ratingSummary?.average_rating
+        ? Number(ratingSummary.average_rating)
+        : null,
+      rating_count: ratingSummary ? Number(ratingSummary.rating_count || 0) : 0,
       location_text: locationParts.join(", "),
       services,
       weekly_schedule: weeklySchedule,

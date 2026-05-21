@@ -13,7 +13,7 @@ body,
 .homepage {
   min-height: 100vh;
   display: flex;
-  background: #eef2f1;
+  background: #ffffff;
   font-family: Arial, sans-serif;
   overflow-x: hidden;
 }
@@ -34,20 +34,29 @@ body,
 
 .homepage-main {
   width: 100%;
-  min-height: 100vh;
+  min-height: auto;
   padding: 94px 0 0;
-  background: #f4f5f7;
+  background: #ffffff;
+  overflow: visible;
 }
 
 .homepage-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 290px;
-  min-height: calc(100vh - 94px);
+  align-items: start;
+  min-height: auto;
+  position: relative;
 }
 
 .homepage-left {
   padding: 30px 24px 16px;
-  background: #f7f7f9;
+  background: #ffffff;
+  position: relative;
+  z-index: 1;
+  align-self: start;
+  height: fit-content;
+  min-height: 0;
+  overflow: visible;
 }
 
 /* welcome */
@@ -204,9 +213,9 @@ body,
   cursor: pointer;
   padding: 0;
   margin-left: auto;
-  margin-right: -360px;
+  margin-right: -355px;
   position: relative;
-  bottom: 55px;
+  bottom: 22px;
 }
 
 /* quick actions + map + other services */
@@ -216,7 +225,7 @@ body,
 
 .quick-map-other-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 16px;
   align-items: start;
   position: relative;
@@ -232,12 +241,28 @@ body,
 
 .quick-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3,365px);
   gap: 14px;
   position: relative;
   top: 20px;
 }
+.quick-card,
+.other-card {
+  justify-content: center;
+}
 
+.quick-text,
+.other-text {
+  flex: 1;
+  text-align: center;
+}
+
+.quick-text h3,
+.quick-text p,
+.other-text h3,
+.other-text p {
+  text-align: center;
+}
 .quick-card {
   background: #ffffff;
   border-radius: 18px;
@@ -304,10 +329,19 @@ body,
   min-height: 410px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
   border: 1px solid #eef1f2;
+  margin-top: -117%;
+
+  position: relative;
+  right: 115px;
+
+  min-height: 100px;
+  width: 450px;
+  justify-self: start;
 }
 
 .find-clinic-btn {
   margin: 14px;
+  width: calc(100% - 28px);
   border: none;
   border-radius: 12px;
   background: #18817d;
@@ -333,7 +367,7 @@ body,
 /* other services */
 .other-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, 365px);
   gap: 14px;
 }
 
@@ -514,7 +548,7 @@ body,
 .homepage-voice-box {
  background: #ffffff;
   border-radius: 24px;
-  min-height: 88px;
+  min-height: 95px;
   padding: 12px 18px 12px 20px;
   display: flex;
   align-items: center;
@@ -522,11 +556,12 @@ body,
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
   border: 1px solid #eef1f2;
   width: 68%;
-  max-width: 630px;
+  max-width: 650px;
   margin: 8px auto 18px;
   transform: translateY(-110px);
   position: relative;
-  left: 90px;
+  top: -100px;
+  left: 170px;
 }
 
 .voice-left {
@@ -590,8 +625,8 @@ body,
   color: #687781;
   padding: 4px 2px 0;
   flex-wrap: wrap;
-  position: relative;
-  bottom: 80px;
+  margin-top: -160px !important;
+  margin-bottom: 0;
 }
 
 .footer-links span {
@@ -600,9 +635,18 @@ body,
 
 /* right aside */
 .health-articles-aside {
-  background: linear-gradient(180deg, #eff7f9 0%, #e5eef4 100%);
+  background: #ffffff;
   border-left: 1px solid #dbe6eb;
   padding: 18px 16px;
+  position: fixed !important;
+  top: 94px !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 290px;
+  z-index: 2;
+  height: auto !important;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .health-articles-aside h3 {
@@ -651,7 +695,7 @@ body,
 /* map */
 .leaflet-map-wrap {
   width: 100%;
-  height: 320px;
+  height: 280px;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid #dbe7e6;
@@ -695,6 +739,12 @@ body,
 
 /* responsive */
 @media (max-width: 1250px) {
+  .homepage-main {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
   .services-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 100%;
@@ -710,11 +760,24 @@ body,
 
   .homepage-layout {
     grid-template-columns: 1fr;
+    height: auto;
+    min-height: calc(100vh - 94px);
+  }
+
+  .homepage-left,
+  .health-articles-aside {
+    overflow: visible;
   }
 
   .health-articles-aside {
     border-left: none;
     border-top: 1px solid #dbe6eb;
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: auto !important;
+    height: auto !important;
   }
 
   .see-all-btn {

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Cuidado">
+  <rect width="64" height="64" rx="16" fill="#0b8f88"/>
+  <path
+    d="M32 14c-7.73 0-14 6.27-14 14 0 12 14 22 14 22s14-10 14-22c0-7.73-6.27-14-14-14Z"
+    fill="#e8fbf9"
+  />
+  <path d="M29 22h6v7h7v6h-7v7h-6v-7h-7v-6h7v-7Z" fill="#0b8f88"/>
+  <circle cx="46" cy="18" r="4" fill="#74d7d2"/>
+  <circle cx="18" cy="46" r="3" fill="#74d7d2"/>
+</svg>

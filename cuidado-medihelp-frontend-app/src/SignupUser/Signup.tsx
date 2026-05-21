@@ -1,12 +1,31 @@
-import Logotag from "../components/Logotag";
 import "./Signup.css";
 import React, { useState, useEffect, useMemo } from "react";
 import { handleSubmit, type SignupPayload } from "../components/handleSubmit";
 import { Link, useNavigate } from "react-router-dom";
-import zxcvbn from "zxcvbn";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
+import {
+  ArrowLeft,
+  Building2,
+  CalendarDays,
+  ClipboardList,
+  Dna,
+  Home,
+  Lock,
+  Mail,
+  MapPin,
+  Phone,
+  Pill,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
+  Syringe,
+  UserPlus,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
 import OtpPopup from "../SigninUser/OtpPopup";
 import { getConfiguredBackendUrl } from "../sharedBackendFetch";
+import logo from "../img/logo.png";
 
 interface Province {
   id: number;
@@ -46,6 +65,19 @@ type ToastState = {
   type: "success" | "error" | "info";
 };
 
+const getPasswordScore = (value: string) => {
+  if (!value) return 0;
+
+  let score = 0;
+  if (value.length >= 8) score += 1;
+  if (value.length >= 12) score += 1;
+  if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score += 1;
+  if (/\d/.test(value)) score += 1;
+  if (/[^A-Za-z0-9]/.test(value)) score += 1;
+
+  return Math.min(score, 4);
+};
+
 function Signup() {
   const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
@@ -69,6 +101,7 @@ function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [consent, setConsent] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [errors, setErrors] = useState<Errors>({});
@@ -99,8 +132,7 @@ function Signup() {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  const result = useMemo(() => zxcvbn(password), [password]);
-  const score = result.score;
+  const score = useMemo(() => getPasswordScore(password), [password]);
   const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
 
   const today = new Date();
@@ -197,7 +229,7 @@ function Signup() {
       newErrors.password = "8+ chars with uppercase, lowercase, number, and symbol.";
     }
     if (!passwordsMatch) newErrors.confirmPassword = "Passwords do not match.";
-    if (!consent) newErrors.consent = "Consent is required.";
+    if (!consent) newErrors.consent = "Please accept the terms and data consent.";
 
     setErrors(newErrors);
 
@@ -298,347 +330,441 @@ function Signup() {
     }
   };
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/signin");
+  };
+
   return (
-    <div>
-      <div className="bgimg">
-        <Logotag />
+    <div className="signup-screen">
+      <div className="signup-pattern" aria-hidden="true">
+        <ClipboardList className="pattern-icon pattern-clipboard" />
+        <Pill className="pattern-icon pattern-pill" />
+        <Syringe className="pattern-icon pattern-syringe-a" />
+        <Syringe className="pattern-icon pattern-syringe-b" />
+        <Dna className="pattern-icon pattern-dna" />
+        <Sparkles className="pattern-icon pattern-sparkle-a" />
+        <Sparkles className="pattern-icon pattern-sparkle-b" />
+      </div>
 
-        <div className="wrapper">
-          <div className="left-bg"></div>
+      <button
+        type="button"
+        className="signup-back-button"
+        onClick={handleBack}
+        aria-label="Go back"
+      >
+        <ArrowLeft size={24} />
+      </button>
 
-          <div className="signup-container">
-            <form onSubmit={onSubmit} className="signup-form">
-              <p className="Sign">Sign Up</p>
-              <p>Create an Account</p>
+      <section className="signup-hero" aria-label="Cuidado signup introduction">
+        <div className="signup-hero-copy">
+          <h1>
+            <span>Join us</span>
+            <strong>Today!</strong>
+          </h1>
+          <div className="signup-hero-rule" />
+          <p>
+            Sign up to check your symptoms, book appointments, and manage your health
+            with ease.
+          </p>
+        </div>
 
-              <div className="row">
-                <div className="input-group">
-                  <label htmlFor="fullname">Full Name:</label>
-                  <input
-                    type="text"
-                    id="fullname"
-                    name="fullname"
-                    value={fullname}
-                    className={errors.fullname ? "error-input" : ""}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/[^a-zA-Z\s.'-]/g, "");
-                      setFullname(v);
-                      clearError("fullname");
-                    }}
-                    autoComplete="name"
-                    minLength={2}
-                    maxLength={150}
-                    placeholder="Juan Dela Cruz"
-                    required
-                  />
-                  {errors.fullname && <div className="error-text">{errors.fullname}</div>}
-                </div>
+        <img src={logo} alt="Cuidado" className="signup-hero-logo" />
+      </section>
 
-                <div className="input-group">
-                  <label htmlFor="email">Email:</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={email}
-                    className={errors.email ? "error-input" : ""}
-                    onChange={(e) => {
-                      setEmail(e.target.value.trim());
-                      clearError("email");
-                    }}
-                    autoComplete="email"
-                    placeholder="@gmail.com"
-                    required
-                  />
-                  {errors.email && <div className="error-text">{errors.email}</div>}
-                </div>
-              </div>
+      <main className="signup-card">
+        <form onSubmit={onSubmit} className="signup-form" noValidate>
+          <header className="signup-form-header">
+            <span aria-hidden="true" />
+            <h2>Sign Up</h2>
+            <span aria-hidden="true" />
+          </header>
 
-              <div className="row">
-                <div className="input-group">
-                  <label htmlFor="phone">Phone Number:</label>
-                  <input
-                          type="tel"
-                          id="phone"
-                          name="phone"
-                          value={phone}
-                          className={errors.phone ? "error-input" : ""}
-                          onChange={(e) => {
-                            let v = e.target.value.replace(/[^\d+]/g, "");
-                            v = v.replace(/(?!^)\+/g, "");
+          <section className="signup-section-intro">
+            <div className="signup-section-icon">
+              <UsersRound size={26} />
+            </div>
+            <div>
+              <h3>Create an Account</h3>
+              <p>Fill in your information to get started.</p>
+            </div>
+          </section>
 
-                            if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
-                            if (v.startsWith("0") && !v.startsWith("09")) v = "09";
-
-                            if (v.startsWith("+639")) {
-                              v = v.slice(0, 13);
-                            } else if (v.startsWith("09")) {
-                              v = v.slice(0, 11);
-                            }
-
-                            setPhone(v);
-                            clearError("phone");
-                          }}
-                          inputMode="numeric"
-                          placeholder="+639 or 09"
-                          pattern="^(\+639|09)\d{9}$"
-                          autoComplete="tel"
-                          required
-                        />
-                  {errors.phone && <div className="error-text">{errors.phone}</div>}
-                </div>
-
-                <div className="input-group">
-                  <label htmlFor="gender">Gender:</label>
-                  <select
-                    id="gender"
-                    name="gender"
-                    value={gender}
-                    className={errors.gender ? "error-input" : ""}
-                    onChange={(e) => {
-                      setGender(e.target.value);
-                      clearError("gender");
-                    }}
-                    required
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                  {errors.gender && <div className="error-text">{errors.gender}</div>}
-                </div>
-
-                <div className="input-group date-wrap">
-                  <label htmlFor="dob">Date of Birth:</label>
-                  <input
-                    type="date"
-                    id="dob"
-                    name="dob"
-                    value={dob}
-                    className={errors.dob ? "error-input" : ""}
-                    onChange={(e) => {
-                      setDob(e.target.value);
-                      clearError("dob");
-                    }}
-                    min="1900-01-01"
-                    max={maxDob}
-                    required
-                  />
-                  {errors.dob && <div className="error-text">{errors.dob}</div>}
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="input-group">
-                  <label htmlFor="province">Province:</label>
-                  <select
-                    id="province"
-                    name="province_id"
-                    value={provinceId}
-                    className={errors.provinceId ? "error-input" : ""}
-                    onChange={(e) => {
-                      setProvinceId(e.target.value);
-                      clearError("provinceId");
-                    }}
-                    required
-                  >
-                    <option value="">Select Province</option>
-                    {provinces.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.province_name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.provinceId && <div className="error-text">{errors.provinceId}</div>}
-                </div>
-
-                <div className="input-group">
-                  <label htmlFor="municipality">Municipality</label>
-                  <select
-                    id="municipality"
-                    name="municipality_id"
-                    value={municipalityId}
-                    className={errors.municipalityId ? "error-input" : ""}
-                    onChange={(e) => {
-                      setMunicipalityId(e.target.value);
-                      clearError("municipalityId");
-                    }}
-                    disabled={!provinceId}
-                    required
-                  >
-                    <option value="">Select Municipality</option>
-                    {municipalities.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.municipalityId && (
-                    <div className="error-text">{errors.municipalityId}</div>
-                  )}
-                </div>
-
-                <div className="input-group">
-                  <label htmlFor="barangay">Barangay</label>
-                  <select
-                    id="barangay"
-                    name="barangay_id"
-                    value={barangayId}
-                    className={errors.barangayId ? "error-input" : ""}
-                    onChange={(e) => {
-                      setBarangayId(e.target.value);
-                      clearError("barangayId");
-                    }}
-                    disabled={!municipalityId}
-                    required
-                  >
-                    <option value="">Select Barangay</option>
-                    {barangays.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.barangayId && <div className="error-text">{errors.barangayId}</div>}
-                </div>
-              </div>
-
-              <div className="last-group">
-                <label htmlFor="address">Address:</label>
+          <div className="signup-grid signup-grid-two">
+            <div className="input-group">
+              <label htmlFor="fullname">Full Name</label>
+              <div className={`signup-control ${errors.fullname ? "has-error" : ""}`}>
+                <UserRound size={21} />
                 <input
                   type="text"
-                  id="address"
-                  name="address"
-                  value={address}
-                  className={errors.address ? "error-input" : ""}
+                  id="fullname"
+                  name="fullname"
+                  value={fullname}
                   onChange={(e) => {
-                    setAddress(e.target.value);
-                    clearError("address");
+                    const v = e.target.value.replace(/[^a-zA-Z\s.'-]/g, "");
+                    setFullname(v);
+                    clearError("fullname");
                   }}
-                  minLength={5}
-                  maxLength={255}
-                  autoComplete="street-address"
-                  placeholder="Blk L St. Subd. Barangay"
+                  autoComplete="name"
+                  minLength={2}
+                  maxLength={150}
+                  placeholder="Juan Dela Cruz"
                   required
                 />
-                {errors.address && <div className="error-text">{errors.address}</div>}
-
-                <label htmlFor="password">Password:</label>
-                <div className="field-with-icon">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    name="password"
-                    value={password}
-                    className={errors.password ? "error-input" : ""}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      clearError("password");
-                    }}
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="eye-btn"
-                    onClick={() => setShowPassword((s) => !s)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-                {errors.password && <div className="error-text">{errors.password}</div>}
-
-                {password.length > 0 && (
-                  <div className="pw-meter-wrap">
-                    <div className="pw-meter">
-                      <div
-                        className={`pw-meter-fill score-${score}`}
-                        style={{ width: `${((score + 1) / 5) * 100}%` }}
-                      />
-                    </div>
-                    <small className="pw-label">{labels[score]}</small>
-
-                    <ul className="pw-criteria">
-                      <li className={password.length >= 8 ? "ok" : ""}>8+ characters</li>
-                      <li className={/[A-Z]/.test(password) ? "ok" : ""}>Uppercase letter</li>
-                      <li className={/[a-z]/.test(password) ? "ok" : ""}>Lowercase letter</li>
-                      <li className={/\d/.test(password) ? "ok" : ""}>Number</li>
-                      <li className={/[^A-Za-z0-9]/.test(password) ? "ok" : ""}>Symbol</li>
-                    </ul>
-                  </div>
-                )}
-
-                <label htmlFor="confirm-password">Confirm Password:</label>
-                <div className="field-with-icon">
-                  <input
-                    type={showConfirmPassword ? "text" : "password"}
-                    id="confirm-password"
-                    name="confirmPassword"
-                    value={confirmPassword}
-                    className={errors.confirmPassword ? "error-input" : ""}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value);
-                      clearError("confirmPassword");
-                    }}
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="eye-btn"
-                    onClick={() => setShowConfirmPassword((s) => !s)}
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                  >
-                    {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <div className="error-text">{errors.confirmPassword}</div>
-                )}
               </div>
+              {errors.fullname && <div className="error-text">{errors.fullname}</div>}
+            </div>
 
-              <label className="checkbox-label">
+            <div className="input-group">
+              <label htmlFor="email">Email</label>
+              <div className={`signup-control ${errors.email ? "has-error" : ""}`}>
+                <Mail size={21} />
                 <input
-                  type="checkbox"
-                  checked={consent}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={email}
                   onChange={(e) => {
-                    setConsent(e.target.checked);
-                    clearError("consent");
+                    setEmail(e.target.value.trim());
+                    clearError("email");
                   }}
+                  autoComplete="email"
+                  placeholder="@gmail.com"
+                  required
                 />
-                <span className="custom-box"></span>
-                I consent to processing of my personal data.
-              </label>
-              {errors.consent && <div className="error-text">{errors.consent}</div>}
-
-              <p className="terms-privacy">
-                By signing up, you agree to our Terms of Service and Privacy Policy.
-              </p>
-
-              <button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Sending OTP..." : "Sign Up"}
-              </button>
-
-              <p className="login-link">
-                Already have an account?{" "}
-                <Link to="/signin" style={{ color: "#004D40" }}>
-                  Login here
-                </Link>
-                .
-              </p>
-              <p className="login-link">
-                Have A Clinic?{" "}
-                <Link to="/clinic/signup" style={{ color: "#004D40" }}>
-                  Sign Up Here
-                </Link>
-                .
-              </p>
-            </form>
+              </div>
+              {errors.email && <div className="error-text">{errors.email}</div>}
+            </div>
           </div>
-        </div>
-      </div>
+
+          <div className="signup-grid signup-grid-three">
+            <div className="input-group">
+              <label htmlFor="phone">Phone Number</label>
+              <div className={`signup-control ${errors.phone ? "has-error" : ""}`}>
+                <Phone size={21} />
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={phone}
+                  onChange={(e) => {
+                    let v = e.target.value.replace(/[^\d+]/g, "");
+                    v = v.replace(/(?!^)\+/g, "");
+
+                    if (v.startsWith("+") && !v.startsWith("+639")) v = "+639";
+                    if (v.startsWith("0") && !v.startsWith("09")) v = "09";
+
+                    if (v.startsWith("+639")) {
+                      v = v.slice(0, 13);
+                    } else if (v.startsWith("09")) {
+                      v = v.slice(0, 11);
+                    }
+
+                    setPhone(v);
+                    clearError("phone");
+                  }}
+                  inputMode="numeric"
+                  placeholder="+639 or 09"
+                  pattern="^(\+639|09)\d{9}$"
+                  autoComplete="tel"
+                  required
+                />
+              </div>
+              {errors.phone && <div className="error-text">{errors.phone}</div>}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="gender">Gender</label>
+              <div className={`signup-control signup-select ${errors.gender ? "has-error" : ""}`}>
+                <UserRound size={21} />
+                <select
+                  id="gender"
+                  name="gender"
+                  value={gender}
+                  onChange={(e) => {
+                    setGender(e.target.value);
+                    clearError("gender");
+                  }}
+                  required
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              {errors.gender && <div className="error-text">{errors.gender}</div>}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="dob">Date of Birth</label>
+              <div className={`signup-control ${errors.dob ? "has-error" : ""}`}>
+                <CalendarDays size={21} />
+                <input
+                  type="date"
+                  id="dob"
+                  name="dob"
+                  value={dob}
+                  onChange={(e) => {
+                    setDob(e.target.value);
+                    clearError("dob");
+                  }}
+                  min="1900-01-01"
+                  max={maxDob}
+                  required
+                />
+              </div>
+              {errors.dob && <div className="error-text">{errors.dob}</div>}
+            </div>
+          </div>
+
+          <div className="signup-grid signup-grid-three">
+            <div className="input-group">
+              <label htmlFor="province">Province</label>
+              <div className={`signup-control signup-select ${errors.provinceId ? "has-error" : ""}`}>
+                <MapPin size={21} />
+                <select
+                  id="province"
+                  name="province_id"
+                  value={provinceId}
+                  onChange={(e) => {
+                    setProvinceId(e.target.value);
+                    clearError("provinceId");
+                  }}
+                  required
+                >
+                  <option value="">Select Province</option>
+                  {provinces.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.province_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.provinceId && <div className="error-text">{errors.provinceId}</div>}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="municipality">Municipality</label>
+              <div
+                className={`signup-control signup-select ${
+                  errors.municipalityId ? "has-error" : ""
+                }`}
+              >
+                <Building2 size={21} />
+                <select
+                  id="municipality"
+                  name="municipality_id"
+                  value={municipalityId}
+                  onChange={(e) => {
+                    setMunicipalityId(e.target.value);
+                    clearError("municipalityId");
+                  }}
+                  disabled={!provinceId}
+                  required
+                >
+                  <option value="">Select Municipality</option>
+                  {municipalities.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.municipalityId && (
+                <div className="error-text">{errors.municipalityId}</div>
+              )}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="barangay">Barangay</label>
+              <div className={`signup-control signup-select ${errors.barangayId ? "has-error" : ""}`}>
+                <Home size={21} />
+                <select
+                  id="barangay"
+                  name="barangay_id"
+                  value={barangayId}
+                  onChange={(e) => {
+                    setBarangayId(e.target.value);
+                    clearError("barangayId");
+                  }}
+                  disabled={!municipalityId}
+                  required
+                >
+                  <option value="">Select Barangay</option>
+                  {barangays.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.barangayId && <div className="error-text">{errors.barangayId}</div>}
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="address">Address</label>
+            <div className={`signup-control ${errors.address ? "has-error" : ""}`}>
+              <MapPin size={21} />
+              <input
+                type="text"
+                id="address"
+                name="address"
+                value={address}
+                onChange={(e) => {
+                  setAddress(e.target.value);
+                  clearError("address");
+                }}
+                minLength={5}
+                maxLength={255}
+                autoComplete="street-address"
+                placeholder="Blk L St. Subd. Barangay"
+                required
+              />
+            </div>
+            {errors.address && <div className="error-text">{errors.address}</div>}
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="password">Password</label>
+            <div className={`signup-control signup-password ${errors.password ? "has-error" : ""}`}>
+              <Lock size={21} />
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  clearError("password");
+                }}
+                autoComplete="new-password"
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.password && <div className="error-text">{errors.password}</div>}
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="confirm-password">Confirm Password</label>
+            <div
+              className={`signup-control signup-password ${
+                errors.confirmPassword ? "has-error" : ""
+              }`}
+            >
+              <Lock size={21} />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                id="confirm-password"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  clearError("confirmPassword");
+                }}
+                autoComplete="new-password"
+                placeholder="Confirm your password"
+                required
+              />
+              <button
+                type="button"
+                className="eye-btn"
+                onClick={() => setShowConfirmPassword((s) => !s)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
+            </div>
+            {errors.confirmPassword && (
+              <div className="error-text">{errors.confirmPassword}</div>
+            )}
+          </div>
+
+          <section className="signup-security-card">
+            <div className="security-icon">
+              <ShieldCheck size={29} />
+            </div>
+            <div>
+              <h3>Keep your account secure</h3>
+              <p>Use at least 8 characters with a mix of letters, numbers, and symbols.</p>
+              {password.length > 0 && (
+                <div className="pw-meter-wrap">
+                  <div className="pw-meter">
+                    <div
+                      className={`pw-meter-fill score-${score}`}
+                      style={{ width: `${((score + 1) / 5) * 100}%` }}
+                    />
+                  </div>
+                  <small className="pw-label">{labels[score]}</small>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => {
+                setConsent(e.target.checked);
+                clearError("consent");
+              }}
+            />
+            <span className="custom-box"></span>
+            <span>I consent to processing of my personal data.</span>
+          </label>
+          {errors.consent && <div className="error-text consent-error">{errors.consent}</div>}
+
+          <p className="terms-privacy">
+            By signing up, you agree to our{" "}
+            <button
+              type="button"
+              className="terms-link-button"
+              onClick={() => setTermsOpen(true)}
+            >
+              Terms of Service
+            </button>{" "}
+            and{" "}
+            <button
+              type="button"
+              className="terms-link-button"
+              onClick={() => setTermsOpen(true)}
+            >
+              Privacy Policy
+            </button>
+            .
+          </p>
+
+          <button className="signup-submit-button" type="submit" disabled={isSubmitting}>
+            <UserPlus size={24} />
+            {isSubmitting ? "Sending OTP..." : "Sign Up"}
+          </button>
+
+          <div className="signup-divider">
+            <span />
+            <p>OR</p>
+            <span />
+          </div>
+
+          <p className="login-link">
+            Already have an account? <Link to="/signin">Log in</Link>
+          </p>
+        </form>
+      </main>
 
       {otpOpen && (
         <div className="fp-modal-overlay" onClick={closeOtpModal}>
@@ -658,6 +784,85 @@ function Signup() {
               onResend={handleResendSignupOtp}
             />
           </div>
+        </div>
+      )}
+
+      {termsOpen && (
+        <div className="terms-modal-overlay" onClick={() => setTermsOpen(false)}>
+          <section
+            className="terms-modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="patient-terms-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="terms-modal-close"
+              type="button"
+              aria-label="Close terms and conditions"
+              onClick={() => setTermsOpen(false)}
+            >
+              <FiX />
+            </button>
+
+            <div className="terms-modal-header">
+              <p className="terms-kicker">Cuidado Patient Account</p>
+              <h2 id="patient-terms-title">Terms and Conditions</h2>
+              <p>
+                Please review these terms before creating your Cuidado patient account.
+              </p>
+            </div>
+
+            <div className="terms-modal-content">
+              <section>
+                <h3>1. Account Information</h3>
+                <p>
+                  You agree to provide accurate personal, contact, and location details and to
+                  keep your login credentials secure.
+                </p>
+              </section>
+
+              <section>
+                <h3>2. Health Information</h3>
+                <p>
+                  Cuidado may show health topics, symptom guidance, clinic listings, and
+                  appointment tools. This information supports your care decisions but does not
+                  replace advice from licensed medical professionals.
+                </p>
+              </section>
+
+              <section>
+                <h3>3. Appointments and Clinics</h3>
+                <p>
+                  Appointment availability, clinic services, schedules, and responses depend on
+                  the participating clinic. You are responsible for attending, rescheduling, or
+                  cancelling appointments when needed.
+                </p>
+              </section>
+
+              <section>
+                <h3>4. Privacy and Data Use</h3>
+                <p>
+                  By signing up, you allow Cuidado to process your personal data for account
+                  creation, verification, appointment handling, notifications, and support.
+                </p>
+              </section>
+
+              <section>
+                <h3>5. Emergency Use</h3>
+                <p>
+                  Cuidado is not an emergency response service. For urgent or life-threatening
+                  situations, contact local emergency services or go to the nearest hospital.
+                </p>
+              </section>
+            </div>
+
+            <div className="terms-modal-actions">
+              <button type="button" onClick={() => setTermsOpen(false)}>
+                I Understand
+              </button>
+            </div>
+          </section>
         </div>
       )}
 

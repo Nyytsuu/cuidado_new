@@ -1,28 +1,140 @@
 .splash-screen {
   width: 100vw;
-  height: 100vh;
-  background: #18b3a5; /* teal */
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.16), transparent 20%),
+    linear-gradient(180deg, #12c2b0 0%, #08aa9a 100%);
+  color: #061f3b;
+  position: relative;
+  overflow: hidden;
+}
+
+.splash-intro {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
-/* Skip button (top-right) */
 .skip-btn {
   position: absolute;
-  top: 60px;
-  right: 30px;
-  border: none;
+  top: calc(env(safe-area-inset-top, 0px) + 28px);
+  right: 22px;
+  z-index: 5;
+  border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 22px;
+  color: rgba(255, 255, 255, 0.8);
+  font: 700 14px/1 "Poppins", system-ui, sans-serif;
   cursor: pointer;
 }
 
-/* Logo center */
 .splash-logo {
-  width: 260px;
-  max-width: 70%;
+  width: min(260px, 66vw);
   object-fit: contain;
+}
+
+.onboarding-screen {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 44px) 22px
+    calc(env(safe-area-inset-bottom, 0px) + 22px);
+  box-sizing: border-box;
+}
+
+.onboarding-content {
+  width: min(100%, 430px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+
+.onboarding-image-wrap {
+  width: 100%;
+  height: clamp(300px, 52vh, 470px);
+  display: flex;
+  align-items: end;
+  justify-content: center;
+}
+
+.onboarding-image {
+  width: min(100%, 370px);
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 18px 30px rgba(0, 69, 91, 0.18));
+}
+
+.onboarding-copy {
+  width: 100%;
+  text-align: center;
+  color: #071f3b;
+}
+
+.onboarding-copy h1 {
+  margin: 0;
+  font-size: clamp(23px, 7vw, 30px);
+  line-height: 1.05;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.onboarding-copy p {
+  width: min(260px, 90%);
+  margin: 8px auto 0;
+  color: rgba(4, 38, 69, 0.72);
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 16px;
+}
+
+.onboarding-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  padding: 0;
+  border: 0;
+  background: rgba(5, 45, 72, 0.35);
+  cursor: pointer;
+}
+
+.onboarding-dot.is-active {
+  width: 13px;
+  background: #062e4c;
+}
+
+.onboarding-primary {
+  width: min(100%, 390px);
+  min-height: 48px;
+  margin: 18px auto 0;
+  border: 0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #00796f;
+  box-shadow: 0 12px 28px rgba(0, 62, 76, 0.16);
+  font: 900 14px/1 "Poppins", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+@media (max-height: 720px) {
+  .onboarding-screen {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 34px);
+  }
+
+  .onboarding-image-wrap {
+    height: clamp(250px, 48vh, 380px);
+  }
+
+  .onboarding-content {
+    gap: 12px;
+  }
 }

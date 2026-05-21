@@ -1,12 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 import L from "leaflet";
+import {
+  Activity,
+  Ambulance,
+  Bell,
+  Calculator,
+  CalendarDays,
+  CircleHelp,
+  ClipboardCheck,
+  Hospital,
+  Lightbulb,
+  MapPin,
+  Mic,
+  Search,
+  Stethoscope,
+  User,
+  type LucideIcon,
+} from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./Homepage.css";
 
@@ -21,60 +39,100 @@ type Article = {
   publishedAt?: string | null;
 };
 
-const topServices = [
+type HomepageItem = {
+  title: string;
+  subtitle: string;
+  path: string;
+  icon: LucideIcon;
+  tone: string;
+};
+
+const primaryServices: HomepageItem[] = [
   {
     title: "Clinics",
-    subtitle: "Find health-care centers",
-    iconType: "clinics",
+    subtitle: "Find health-care centers near you",
+    icon: Hospital,
     path: "/find-clinic",
+    tone: "clinic",
   },
   {
-    title: "Diagnostics",
-    subtitle: "Book visits & screenings",
-    iconType: "diagnostics",
+    title: "Appointments",
+    subtitle: "Book visits and manage requests",
+    icon: CalendarDays,
     path: "/appointments",
+    tone: "appointment",
   },
 ];
 
-const quickActions = [
+const quickActions: HomepageItem[] = [
   {
     title: "Book Appointment",
     subtitle: "Schedule a visit with a doctor",
-    iconType: "calendar",
+    icon: CalendarDays,
     path: "/appointments",
+    tone: "calendar",
   },
   {
     title: "Symptom Checker",
-    subtitle: "Assess your symptoms online",
-    iconType: "symptom",
+    subtitle: "Assess symptoms online",
+    icon: ClipboardCheck,
     path: "/symptom-checker",
+    tone: "symptom",
   },
   {
-    title: "Health Tips",
-    subtitle: "Read health & wellness advice",
-    iconType: "healthtips",
+    title: "Health Topics",
+    subtitle: "Browse common conditions",
+    icon: Stethoscope,
     path: "/browse-health",
+    tone: "health",
   },
 ];
 
-const otherServices = [
-  {
-    title: "Hospital Locator",
-    subtitle: "Find a nearby health center",
-    iconType: "hospital",
-    path: "/find-clinic",
-  },
+const careTools: HomepageItem[] = [
   {
     title: "BMI Calculator",
     subtitle: "Check your body mass index",
-    iconType: "bmi",
+    icon: Calculator,
     path: "/bmi-calculator",
+    tone: "bmi",
   },
   {
     title: "Stress Index",
-    subtitle: "Check your stress and burnout",
-    iconType: "stress",
+    subtitle: "Review your current stress level",
+    icon: Activity,
     path: "/stress-index",
+    tone: "stress",
+  },
+  {
+    title: "Emergency Guide",
+    subtitle: "Hotlines, nearby help, and safety steps",
+    icon: Ambulance,
+    path: "/emergency",
+    tone: "emergency",
+  },
+];
+
+const supportLinks: HomepageItem[] = [
+  {
+    title: "Notifications",
+    subtitle: "Latest appointment updates",
+    icon: Bell,
+    path: "/notifications",
+    tone: "notification",
+  },
+  {
+    title: "My Profile",
+    subtitle: "Personal details and account",
+    icon: User,
+    path: "/profile",
+    tone: "profile",
+  },
+  {
+    title: "Help Center",
+    subtitle: "FAQs and support options",
+    icon: CircleHelp,
+    path: "/help",
+    tone: "help",
   },
 ];
 
@@ -164,13 +222,13 @@ export default function Homepage() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [siteSearchQuery, setSiteSearchQuery] = useState("");
   const [healthTopicSearchQuery, setHealthTopicSearchQuery] = useState("");
   const [articles, setArticles] = useState<Article[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
   const [articlesError, setArticlesError] = useState("");
+  const [userName, setUserName] = useState("");
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -205,15 +263,24 @@ export default function Homepage() {
     );
   };
 
+  const handleArticleKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    article: Article
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setSelectedArticle(article);
+    }
+  };
+
   const loadArticles = async (query?: string) => {
     try {
       setArticlesLoading(true);
       setArticlesError("");
 
       const finalQuery = (query || "health").trim();
-
       const res = await fetch(
-        `http://localhost:5000/api/articles?q=${encodeURIComponent(finalQuery)}`
+        apiUrl(`/api/articles?q=${encodeURIComponent(finalQuery)}`)
       );
       const data = await res.json();
 
@@ -233,25 +300,23 @@ export default function Homepage() {
   };
 
   useEffect(() => {
-    loadArticles("health");
+    void loadArticles("health");
   }, []);
-const [userName, setUserName] = useState("");
 
-useEffect(() => {
-  const storedUser = localStorage.getItem("user");
-
-  if (storedUser) {
-    const user = JSON.parse(storedUser);
-
-    if (user?.full_name) {
-      setUserName(user.full_name);
-    } else if (user?.name) {
-      setUserName(user.name);
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? JSON.parse(storedUser) : null;
+      setUserName(user?.full_name || user?.name || "");
+    } catch {
+      setUserName("");
     }
-  }
-}, []);
+  }, []);
+
   return (
-    <div className={`homepage ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div
+      className={`homepage user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}
+    >
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -268,337 +333,277 @@ useEffect(() => {
       <div className="homepage-content">
         <main className="homepage-main">
           <div className="homepage-layout">
-            <section className="homepage-left">
-              <div className="welcome-box">
-                <h1>Welcome back, {userName} </h1>
-                <p>What are you looking for?</p>
+            <section className="homepage-primary">
+              <div className="homepage-welcome">
+                <div>
+                  <p className="homepage-eyebrow">Home</p>
+                  <h1>
+                    {userName ? `Hi ${userName.split(" ")[0]}` : "Welcome back"}
+                  </h1>
+                  <p>Find care, check symptoms, and manage your health tools.</p>
+                </div>
               </div>
 
-            <div className="main-search">
-  <input
-    type="text"
-    placeholder="Search health topics..."
-    value={healthTopicSearchQuery}
-    onChange={(e) => setHealthTopicSearchQuery(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === "Enter") {
-        handleHealthTopicSearch();
-      }
-    }}
-  />
-  <button
-    aria-label="Search"
-    type="button"
-    className="main-search-btn"
-    onClick={handleHealthTopicSearch}
-  >
-    Search
-  </button>
-</div>
+              <form
+                className="homepage-health-search"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleHealthTopicSearch();
+                }}
+              >
+                <Search size={17} />
+                <input
+                  type="search"
+                  placeholder="Search health topics..."
+                  value={healthTopicSearchQuery}
+                  onChange={(event) => setHealthTopicSearchQuery(event.target.value)}
+                />
+                <button type="submit">Search</button>
+              </form>
 
-              <div className="services-grid">
-                {topServices.map((item) => (
+              <div className="homepage-services-grid">
+                {primaryServices.map(({ icon: Icon, ...item }) => (
                   <button
                     key={item.title}
                     type="button"
-                    className="service-card clickable-card"
+                    className={`homepage-service-card ${item.tone}`}
                     onClick={() => handleNavigate(item.path)}
                   >
-                    <div className={`service-icon-circle ${item.iconType}-service-icon`}>
-                      {item.iconType === "clinics" && (
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zM13 19h-2v-4H7v-2h4V9h2v4h4v2h-4v4z" />
-                        </svg>
-                      )}
-
-                      {item.iconType === "diagnostics" && (
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M9 2v2H5v16h14V4h-4V2h6v20H3V2zm2 7h2v6h-2zm-4 2h2v4H7zm8-3h2v7h-2z" />
-                        </svg>
-                      )}
-                    </div>
-
-                    <div className="service-text">
-                      <h3>{item.title}</h3>
-                      <p>{item.subtitle}</p>
-                    </div>
+                    <span className="homepage-service-icon">
+                      <Icon size={25} />
+                    </span>
+                    <span>
+                      <strong>{item.title}</strong>
+                      <small>{item.subtitle}</small>
+                    </span>
                   </button>
                 ))}
               </div>
 
-              <div className="section quick-other-section">
-                <div className="section-header">
-                  <h2>Quick Actions</h2>
-                  <button
-                    type="button"
-                    className="see-all-btn"
-                    onClick={() => handleNavigate("/appointments")}
-                  >
+              <section className="homepage-panel">
+                <div className="homepage-section-header">
+                  <div>
+                    <h2>Quick Actions</h2>
+                    <p>Fast paths for common tasks</p>
+                  </div>
+                  <button type="button" onClick={() => handleNavigate("/appointments")}>
                     See All
                   </button>
                 </div>
 
-                <div className="quick-map-other-layout">
-                  <div className="quick-other-left">
-                    <div className="quick-grid">
-                      {quickActions.map((item) => (
-                        <button
-                          key={item.title}
-                          type="button"
-                          className="quick-card clickable-card"
-                          onClick={() => handleNavigate(item.path)}
-                        >
-                          <div className={`quick-icon ${item.iconType}-icon`}>
-                            {item.iconType === "calendar" && (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M5 20V8h14V6v14z"></path>
-                                <path d="M7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm-8 4h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"></path>
-                              </svg>
-                            )}
-
-                            {item.iconType === "symptom" && (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M4 19V5h16v14z"></path>
-                                <path d="M13 8h5v2h-5zm-5 .59L6.96 7.54 5.54 8.96 8 11.41l3.46-3.45-1.42-1.42zM13 14h5v2h-5zm-5 .59-1.04-1.05-1.42 1.42L8 17.41l3.46-3.45-1.42-1.42z"></path>
-                              </svg>
-                            )}
-
-                            {item.iconType === "healthtips" && (
-                              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M9 21h6v-1H9zM12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.89 11.32-.89.63V16h-4v-2.05l-.89-.63A4.98 4.98 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.17-2.11 4.32z"></path>
-                              </svg>
-                            )}
-                          </div>
-
-                          <div className="quick-text">
-                            <h3>{item.title}</h3>
-                            <p>{item.subtitle}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="other-services-wrap">
-                      <h2>Other Services</h2>
-
-                      <div className="other-grid">
-                        {otherServices.map((item) => (
-                          <button
-                            key={item.title}
-                            type="button"
-                            className="other-card clickable-card"
-                            onClick={() => handleNavigate(item.path)}
-                          >
-                            <div className={`other-icon ${item.iconType}-other-icon`}>
-                              {item.iconType === "hospital" && (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zM13 19h-2v-4H7v-2h4V9h2v4h4v2h-4v4z"></path>
-                                </svg>
-                              )}
-
-                              {item.iconType === "bmi" && (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zm-7 14c-2.76 0-5-2.24-5-5 0-.7.15-1.36.41-1.95L12 12l4.59-1.95c.26.59.41 1.25.41 1.95 0 2.76-2.24 5-5 5zm0-7L8.5 8.5 12 6l3.5 2.5L12 10z"></path>
-                                </svg>
-                              )}
-
-                              {item.iconType === "stress" && (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M9 21h6v-1H9zM12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.89 11.32-.89.63V16h-4v-2.05l-.89-.63A4.98 4.98 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.17-2.11 4.32z"></path>
-                                </svg>
-                              )}
-                            </div>
-
-                            <div className="other-text">
-                              <h3>{item.title}</h3>
-                              <p>{item.subtitle}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mini-services-panel">
-                      <div className="mini-services-title-row">
-                        <div className="mini-services-title-icon"></div>
-                        <h3>Mini Services</h3>
-                      </div>
-
-                      <div className="mini-services-grid">
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/emergency")}
-                        >
-                          <div className="mini-service-icon emergency-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M12 2 1 21h22L12 2zm1 14h-2v2h2zm0-6h-2v5h2z"></path>
-                            </svg>
-                          </div>
-                          <span>Emergency</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/help")}
-                        >
-                          <div className="mini-service-icon help-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 17h-2v-2h2zm1.07-7.75-.9.92c-.72.73-1.17 1.33-1.17 2.83h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26a2 2 0 1 0-3.41-1.41H6a4 4 0 1 1 8 0c0 .88-.36 1.68-.93 2.25z"></path>
-                            </svg>
-                          </div>
-                          <span>Help</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/logout")}
-                        >
-                          <div className="mini-service-icon logout-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M13 3h-2v10h2zm-1 19C6.48 22 2 17.52 2 12c0-3.53 1.84-6.63 4.61-8.4l1.01 1.73A7.96 7.96 0 0 0 4 12c0 4.41 3.59 8 8 8s8-3.59 8-8c0-2.8-1.45-5.27-3.64-6.69l1.01-1.73A9.96 9.96 0 0 1 22 12c0 5.52-4.48 10-10 10z"></path>
-                            </svg>
-                          </div>
-                          <span>Logout</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/logout")}
-                        >
-                          <div className="mini-service-icon logout-lock-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M17 8h-1V6a4 4 0 1 0-8 0v2H7c-1.1 0-2 .9-2 2v10h14V10c0-1.1-.9-2-2-2zm-7-2a2 2 0 1 1 4 0v2h-4z"></path>
-                            </svg>
-                          </div>
-                          <span>Logout</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="map-card">
-                    <div className="leaflet-map-wrap">
-                      <MapContainer
-                        center={[14.4591, 120.9398]}
-                        zoom={13}
-                        scrollWheelZoom={false}
-                        className="leaflet-map"
-                      >
-                        <TileLayer
-                          attribution="&copy; OpenStreetMap contributors"
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-
-                        {clinicMarkers.map((clinic) => (
-                          <Marker key={clinic.id} position={clinic.position}>
-                            <Popup>
-                              <strong>{clinic.name}</strong>
-                              <br />
-                              {clinic.address}
-                              <br />
-                              <button
-                                type="button"
-                                className="popup-route-btn"
-                                onClick={() => handleNavigate("/find-clinic")}
-                              >
-                                View clinics
-                              </button>
-                            </Popup>
-                          </Marker>
-                        ))}
-                      </MapContainer>
-                    </div>
-
+                <div className="homepage-action-list">
+                  {quickActions.map(({ icon: Icon, ...item }) => (
                     <button
+                      key={item.title}
                       type="button"
-                      className="find-clinic-btn"
-                      onClick={() => handleNavigate("/find-clinic")}
+                      className={`homepage-action-card ${item.tone}`}
+                      onClick={() => handleNavigate(item.path)}
                     >
-                      Find Clinics Nearby
+                      <span className="homepage-action-icon">
+                        <Icon size={21} />
+                      </span>
+                      <span>
+                        <strong>{item.title}</strong>
+                        <small>{item.subtitle}</small>
+                      </span>
                     </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="homepage-voice-card">
+                <div className="homepage-voice-copy">
+                  <span className="homepage-voice-icon">
+                    <Mic size={22} />
+                  </span>
+                  <div>
+                    <h2>Your health, just a voice away</h2>
+                    <p>Describe symptoms or ask for care guidance.</p>
                   </div>
                 </div>
-              </div>
 
-              <div className="homepage-voice-box">
-                <div className="voice-left">
-                  <div className="voice-search-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M10 2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm-.5 3h2v3.59l2.7 2.7-1.4 1.41L9.5 11.4z"></path>
-                    </svg>
-                  </div>
-                  <span>Your health, just a voice away</span>
-                </div>
-
-                <VoiceAssistantPopup className="voice-btn">
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
-                  </svg>
+                <VoiceAssistantPopup className="homepage-voice-button">
+                  <Mic size={26} />
                 </VoiceAssistantPopup>
-              </div>
+              </section>
 
-              <div className="footer-links">
-                <span onClick={() => handleNavigate("/about")}>About Us</span>
-                <span>|</span>
-                <span onClick={() => handleNavigate("/contact")}>Contact</span>
-                <span>|</span>
-                <span onClick={() => handleNavigate("/privacy-policy")}>Privacy Policy</span>
-                <span>|</span>
-                <span onClick={() => handleNavigate("/terms-of-service")}>
-                  Terms of Service
-                </span>
-              </div>
+              <section className="homepage-panel">
+                <div className="homepage-section-header">
+                  <div>
+                    <h2>Care Tools</h2>
+                    <p>Self-checks and urgent support</p>
+                  </div>
+                </div>
+
+                <div className="homepage-tool-grid">
+                  {careTools.map(({ icon: Icon, ...item }) => (
+                    <button
+                      key={item.title}
+                      type="button"
+                      className={`homepage-tool-card ${item.tone}`}
+                      onClick={() => handleNavigate(item.path)}
+                    >
+                      <span className="homepage-tool-icon">
+                        <Icon size={21} />
+                      </span>
+                      <strong>{item.title}</strong>
+                      <small>{item.subtitle}</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              <section className="homepage-map-panel">
+                <div className="homepage-section-header">
+                  <div>
+                    <h2>Near You</h2>
+                    <p>Clinics around Bacoor, Cavite</p>
+                  </div>
+                  <button type="button" onClick={() => handleNavigate("/find-clinic")}>
+                    View Clinics
+                  </button>
+                </div>
+
+                <div className="homepage-map-wrap">
+                  <MapContainer
+                    center={[14.4591, 120.9398]}
+                    zoom={13}
+                    scrollWheelZoom={false}
+                    className="homepage-map"
+                  >
+                    <TileLayer
+                      attribution="&copy; OpenStreetMap contributors"
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+
+                    {clinicMarkers.map((clinic) => (
+                      <Marker key={clinic.id} position={clinic.position}>
+                        <Popup>
+                          <strong>{clinic.name}</strong>
+                          <br />
+                          {clinic.address}
+                          <br />
+                          <button
+                            type="button"
+                            className="popup-route-btn"
+                            onClick={() => handleNavigate("/find-clinic")}
+                          >
+                            View clinics
+                          </button>
+                        </Popup>
+                      </Marker>
+                    ))}
+                  </MapContainer>
+                </div>
+              </section>
             </section>
 
-            <aside className="health-articles-aside">
-              <h3>Health Articles</h3>
+            <aside className="homepage-secondary">
+              <section className="homepage-panel homepage-support-panel">
+                <div className="homepage-section-header">
+                  <div>
+                    <h2>Account & Support</h2>
+                    <p>Useful shortcuts</p>
+                  </div>
+                </div>
 
-              <div className="articles-list">
-                {articlesLoading ? (
-                  <p>Loading articles...</p>
-                ) : articlesError ? (
-                  <p>{articlesError}</p>
-                ) : articles.length === 0 ? (
-                  <p>No articles found.</p>
-                ) : (
-                  articles.slice(0, 5).map((article) => (
-                    <div
-                      key={article.id}
-                      className="article-item"
-                      onClick={() => setSelectedArticle(article)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          setSelectedArticle(article);
-                        }
-                      }}
+                <div className="homepage-support-list">
+                  {supportLinks.map(({ icon: Icon, ...item }) => (
+                    <button
+                      key={item.title}
+                      type="button"
+                      className={`homepage-support-card ${item.tone}`}
+                      onClick={() => handleNavigate(item.path)}
                     >
-                      <div
-                        className="article-img"
-                        style={
-                          article.image
-                            ? {
-                                backgroundImage: `url(${article.image})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                              }
-                            : undefined
-                        }
-                      ></div>
+                      <span>
+                        <Icon size={19} />
+                      </span>
+                      <strong>{item.title}</strong>
+                      <small>{item.subtitle}</small>
+                    </button>
+                  ))}
+                </div>
+              </section>
 
-                      <div className="article-text">
-                        <h4>{article.title}</h4>
-                        <p>{article.subtitle}</p>
-                        <small>{article.source || "Unknown source"}</small>
-                      </div>
-                    </div>
-                  ))
-                )}
+              <section className="homepage-panel homepage-tip-panel">
+                <div className="homepage-tip-icon">
+                  <Lightbulb size={21} />
+                </div>
+                <h2>Did you know?</h2>
+                <p>
+                  Tracking appointments and symptoms regularly can help your clinic
+                  give more accurate care recommendations.
+                </p>
+              </section>
+
+              <section className="homepage-panel homepage-articles-panel">
+                <div className="homepage-section-header">
+                  <div>
+                    <h2>Health Articles</h2>
+                    <p>Fresh reads from your database</p>
+                  </div>
+                  <button type="button" onClick={() => handleNavigate("/browse-health")}>
+                    Browse
+                  </button>
+                </div>
+
+                <div className="homepage-articles-list">
+                  {articlesLoading ? (
+                    <p className="homepage-empty-state">Loading articles...</p>
+                  ) : articlesError ? (
+                    <p className="homepage-empty-state">{articlesError}</p>
+                  ) : articles.length === 0 ? (
+                    <p className="homepage-empty-state">No articles found.</p>
+                  ) : (
+                    articles.slice(0, 5).map((article) => (
+                      <button
+                        key={article.id}
+                        type="button"
+                        className="homepage-article-card"
+                        onClick={() => setSelectedArticle(article)}
+                        onKeyDown={(event) => handleArticleKeyDown(event, article)}
+                      >
+                        <span
+                          className="homepage-article-image"
+                          style={
+                            article.image
+                              ? {
+                                  backgroundImage: `url(${article.image})`,
+                                }
+                              : undefined
+                          }
+                        />
+
+                        <span className="homepage-article-copy">
+                          <strong>{article.title}</strong>
+                          <small>{article.subtitle}</small>
+                          <em>{article.source || "Unknown source"}</em>
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <div className="homepage-footer-links">
+                <button type="button" onClick={() => handleNavigate("/about")}>
+                  About Us
+                </button>
+                <button type="button" onClick={() => handleNavigate("/contact")}>
+                  Contact
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("/privacy-policy")}
+                >
+                  Privacy Policy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleNavigate("/terms-of-service")}
+                >
+                  Terms of Service
+                </button>
               </div>
             </aside>
           </div>
@@ -607,63 +612,55 @@ useEffect(() => {
 
       {selectedArticle && (
         <div
-          className="article-modal-overlay"
+          className="homepage-article-modal-overlay"
           onClick={() => setSelectedArticle(null)}
         >
-          <div
-            className="article-modal"
-            onClick={(e) => e.stopPropagation()}
+          <article
+            className="homepage-article-modal"
+            onClick={(event) => event.stopPropagation()}
           >
             <div
-              className="article-modal-hero"
+              className="homepage-article-modal-hero"
               style={
                 selectedArticle.image
                   ? {
-                      backgroundImage: `linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url(${selectedArticle.image})`,
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
+                      backgroundImage: `linear-gradient(rgba(6, 65, 62, 0.6), rgba(6, 65, 62, 0.6)), url(${selectedArticle.image})`,
                     }
                   : undefined
               }
             >
-              <div className="article-hero-content">
-                <h2>{selectedArticle.title}</h2>
-                <p>{selectedArticle.subtitle}</p>
-                <small>
-                  {selectedArticle.source || "Unknown source"}
-                  {selectedArticle.publishedAt
-                    ? ` • ${new Date(selectedArticle.publishedAt).toLocaleDateString()}`
-                    : ""}
-                </small>
-              </div>
-
               <button
-                className="article-close-btn"
+                type="button"
+                className="homepage-article-close"
                 onClick={() => setSelectedArticle(null)}
               >
-                ✕
+                x
               </button>
+              <h2>{selectedArticle.title}</h2>
+              <p>{selectedArticle.subtitle}</p>
+              <small>
+                {selectedArticle.source || "Unknown source"}
+                {selectedArticle.publishedAt
+                  ? ` - ${new Date(selectedArticle.publishedAt).toLocaleDateString()}`
+                  : ""}
+              </small>
             </div>
 
-            <div className="article-modal-body">
-              <div className="article-section">
-                <h4>Article Summary</h4>
-                <p>{selectedArticle.content}</p>
-              </div>
+            <div className="homepage-article-modal-body">
+              <h3>Article Summary</h3>
+              <p>{selectedArticle.content}</p>
 
               {selectedArticle.url && (
-                <div className="article-tip-box">
-                  <a
-                    href={selectedArticle.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Read full article from {selectedArticle.source || "source"} →
-                  </a>
-                </div>
+                <a
+                  href={selectedArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Read full article from {selectedArticle.source || "source"}
+                </a>
               )}
             </div>
-          </div>
+          </article>
         </div>
       )}
     </div>

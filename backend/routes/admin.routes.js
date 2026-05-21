@@ -54,9 +54,40 @@ router.get("/users/:id", async (req, res) => {
     const userId = req.params.id;
 
     const [rows] = await pool.query(
-      `SELECT id, full_name, email, phone, gender, date_of_birth, address, created_at, status
-       FROM users WHERE id = ?`,
-      [userId]
+      `
+      SELECT
+        u.id,
+        u.full_name,
+        u.email,
+        u.phone,
+        u.gender,
+        u.date_of_birth,
+        u.address,
+        u.created_at,
+        u.status,
+        COALESCE(ap.appointment_count, 0) AS appointment_count,
+        ap.last_appointment_request_at,
+        ap.last_appointment_at,
+        ap.next_appointment_at,
+        GREATEST(
+          COALESCE(u.created_at, '1970-01-01'),
+          COALESCE(ap.last_appointment_request_at, '1970-01-01')
+        ) AS last_activity_at
+      FROM users u
+      LEFT JOIN (
+        SELECT
+          user_id,
+          COUNT(*) AS appointment_count,
+          MAX(created_at) AS last_appointment_request_at,
+          MAX(CASE WHEN start_at < NOW() THEN start_at END) AS last_appointment_at,
+          MIN(CASE WHEN start_at >= NOW() THEN start_at END) AS next_appointment_at
+        FROM appointments
+        WHERE user_id = ?
+        GROUP BY user_id
+      ) ap ON ap.user_id = u.id
+      WHERE u.id = ?
+      `,
+      [userId, userId]
     );
 
     if (!rows.length) return res.status(404).json({ message: "User not found" });
@@ -112,6 +143,72 @@ router.get("/clinics", async (req, res) => {
   }
 });
 // ✅ APPROVE: PATCH /api/admin/clinics/:id/approve
+// GET single clinic: GET /api/admin/clinics/:id
+router.get("/clinics/:id", async (req, res) => {
+  try {
+    const clinicId = req.params.id;
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.clinic_name,
+        c.email,
+        c.phone,
+        c.address,
+        c.specialization,
+        c.license_number,
+        c.years_operation,
+        c.rep_full_name,
+        c.rep_position,
+        c.rep_phone,
+        c.services_offered,
+        TIME_FORMAT(c.opening_time, '%H:%i') AS opening_time,
+        TIME_FORMAT(c.closing_time, '%H:%i') AS closing_time,
+        c.operating_days,
+        c.created_at,
+        c.status,
+        c.account_status,
+        COALESCE(ap.appointment_count, 0) AS appointment_count,
+        COALESCE(ap.pending_appointments, 0) AS pending_appointments,
+        COALESCE(ap.completed_appointments, 0) AS completed_appointments,
+        COALESCE(ap.cancelled_appointments, 0) AS cancelled_appointments,
+        ap.last_appointment_request_at,
+        ap.last_appointment_at,
+        ap.next_appointment_at,
+        GREATEST(
+          COALESCE(c.created_at, '1970-01-01'),
+          COALESCE(ap.last_appointment_request_at, '1970-01-01')
+        ) AS last_activity_at
+      FROM clinics c
+      LEFT JOIN (
+        SELECT
+          clinic_id,
+          COUNT(*) AS appointment_count,
+          SUM(status = 'pending') AS pending_appointments,
+          SUM(status = 'completed') AS completed_appointments,
+          SUM(status IN ('cancelled', 'canceled', 'declined')) AS cancelled_appointments,
+          MAX(created_at) AS last_appointment_request_at,
+          MAX(CASE WHEN start_at < NOW() THEN start_at END) AS last_appointment_at,
+          MIN(CASE WHEN start_at >= NOW() THEN start_at END) AS next_appointment_at
+        FROM appointments
+        WHERE clinic_id = ?
+        GROUP BY clinic_id
+      ) ap ON ap.clinic_id = c.id
+      WHERE c.id = ?
+      LIMIT 1
+      `,
+      [clinicId, clinicId]
+    );
+
+    if (!rows.length) return res.status(404).json({ message: "Clinic not found" });
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Fetch clinic error:", err);
+    res.status(500).json({ message: "Failed to fetch clinic" });
+  }
+});
+
 router.patch("/clinics/:id/approve", async (req, res) => {
   try {
     const { id } = req.params;
@@ -346,6 +443,11 @@ router.post("/services", async (req, res) => {
     });
   } catch (err) {
     console.error("Create service error:", err);
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        message: "That service already exists. Edit the existing service or reactivate it if it is inactive.",
+      });
+    }
     res.status(500).json({ message: "Failed to create service" });
   }
 });
@@ -369,6 +471,11 @@ router.patch("/services/:id", async (req, res) => {
     res.json({ id: Number(id), name });
   } catch (err) {
     console.error("Update service error:", err);
+    if (err.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({
+        message: "Another service already uses that name. Please choose a different service name.",
+      });
+    }
     res.status(500).json({ message: "Failed to update service" });
   }
 });

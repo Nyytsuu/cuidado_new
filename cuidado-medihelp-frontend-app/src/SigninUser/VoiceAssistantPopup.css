@@ -1,18 +1,25 @@
 .voice-assistant-popup {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(40, 53, 60, 0.22);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   z-index: 20000;
-  padding: 18px;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .voice-assistant-popup .voice-popup-card {
   position: relative;
-  width: min(420px, 100%);
+  width: min(420px, calc(100vw - 36px));
   max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
+  margin: auto;
   overflow-y: auto;
   background: #eef2f2;
   border-radius: 22px;
@@ -25,7 +32,7 @@
 }
 
 .voice-assistant-popup .voice-popup-card.has-result {
-  width: min(560px, 100%);
+  width: min(560px, calc(100vw - 36px));
   align-items: stretch;
   text-align: left;
   background: #f6fafb;
@@ -208,6 +215,60 @@
   color: #c62828;
   font-weight: 700;
   line-height: 1.4;
+}
+
+.voice-assistant-popup .voice-manual-entry {
+  width: 100%;
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+  text-align: left;
+}
+
+.voice-assistant-popup .voice-manual-entry label {
+  color: #20313f;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.voice-assistant-popup .voice-manual-entry textarea {
+  width: 100%;
+  min-height: 86px;
+  resize: vertical;
+  border: 1px solid rgba(10, 125, 115, 0.22);
+  border-radius: 14px;
+  background: #ffffff;
+  color: #172232;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.35;
+  padding: 12px 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.voice-assistant-popup .voice-manual-entry textarea:focus {
+  border-color: #0c9b8f;
+  box-shadow: 0 0 0 3px rgba(12, 155, 143, 0.14);
+}
+
+.voice-assistant-popup .voice-manual-submit {
+  width: 100%;
+  min-height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: #08766b;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(8, 118, 107, 0.16);
+}
+
+.voice-assistant-popup .voice-manual-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  box-shadow: none;
 }
 
 @keyframes micPulse {

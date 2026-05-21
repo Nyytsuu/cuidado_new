@@ -2,8 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./services.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
-import searchIcon from "../img/search.png";
-import logo from "../img/logo.png";
 import { useNavigate } from "react-router-dom";
 
 type ApiServiceRow = {
@@ -82,6 +80,10 @@ export default function Services() {
   const [form, setForm] = useState<ServiceForm>(emptyForm);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [statusTarget, setStatusTarget] = useState<ServiceRow | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [statusToast, setStatusToast] = useState<string | null>(null);
    const [showSuccess, setShowSuccess] = useState(false);
 
    const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
@@ -142,6 +144,11 @@ export default function Services() {
         row.description.toLowerCase().includes(keyword)
     );
   }, [services, searchTerm]);
+
+  const selectedDeleteService = useMemo(
+    () => services.find((service) => service.id === deleteTargetId) || null,
+    [deleteTargetId, services]
+  );
 
   const openAddModal = () => {
     setModalMode("add");
@@ -262,15 +269,22 @@ setTimeout(() => {
     }
   };
 
-  const toggleService = async (id: string) => {
-  const target = services.find((service) => service.id === id);
+  const closeStatusModal = () => {
+    if (updatingStatus) return;
+    setStatusTarget(null);
+  };
+
+  const confirmToggleService = async () => {
+  const target = statusTarget;
   if (!target) return;
 
   const nextEnabled = !target.enabled;
   const nextIsActive = nextEnabled ? 1 : 0;
 
   try {
-    const res = await fetch(`${API}/clinic/services/${id}/status`, {
+    setUpdatingStatus(true);
+
+    const res = await fetch(`${API}/clinic/services/${target.id}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -289,12 +303,20 @@ setTimeout(() => {
 
     setServices((prev) =>
       prev.map((service) =>
-        service.id === id ? { ...service, enabled: nextEnabled } : service
+        service.id === target.id ? { ...service, enabled: nextEnabled } : service
       )
     );
+
+    setStatusTarget(null);
+    setStatusToast(
+      `"${target.name}" has been ${nextEnabled ? "enabled" : "disabled"}.`
+    );
+    window.setTimeout(() => setStatusToast(null), 2500);
   } catch (error) {
     console.error("Toggle service error:", error);
     alert(`Failed to update service status: ${String(error)}`);
+  } finally {
+    setUpdatingStatus(false);
   }
 };
 
@@ -302,6 +324,8 @@ const confirmDeleteService = async () => {
   if (!deleteTargetId) return;
 
   try {
+    setIsDeleting(true);
+
     const res = await fetch(`${API}/clinic/services/${deleteTargetId}`, {
       method: "DELETE",
     });
@@ -327,16 +351,30 @@ const confirmDeleteService = async () => {
   } catch (error) {
     console.error("Delete service error:", error);
     alert(`Failed to delete service: ${String(error)}`);
+  } finally {
+    setIsDeleting(false);
   }
 };
 
+const closeDeleteModal = () => {
+  if (isDeleting) return;
+  setIsDeleteModalOpen(false);
+  setDeleteTargetId(null);
+};
+
   return (
-    <div className={`services with-sidebar ${isModalOpen ? "modal-open" : ""}`}>
+    <div
+      className={`services with-sidebar ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      } ${isModalOpen || isDeleteModalOpen || statusTarget ? "modal-open" : ""}`}
+    >
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
+        headerProfileOpen={headerProfileOpen}
+        setHeaderProfileOpen={setHeaderProfileOpen}
         searchValue={searchTerm}
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search services..."
@@ -436,7 +474,7 @@ const confirmDeleteService = async () => {
                               className={`pill ${
                                 row.enabled ? "pill-gray" : "pill-success"
                               }`}
-                              onClick={() => toggleService(row.id)}
+                              onClick={() => setStatusTarget(row)}
                             >
                               {row.enabled ? "Disable" : "Enable"}
                             </button>
@@ -455,37 +493,132 @@ const confirmDeleteService = async () => {
       </main>
          
             {isDeleteModalOpen && (
-  <div
-    className="delete-modal-overlay"
-    onClick={() => setIsDeleteModalOpen(false)}
-  >
+  <div className="service-modal-overlay" onClick={closeDeleteModal}>
     <div
-      className="delete-modal"
+      className="service-modal service-delete-modal"
       onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-service-title"
     >
-      <div className="delete-modal-header">
-        <h3>Delete Service</h3>
+      <div className="service-modal-header">
+        <div className="service-modal-title">
+          <span className="service-modal-mark danger">!</span>
+          <div>
+            <p className="service-modal-kicker">Permanent action</p>
+            <h3 id="delete-service-title">Delete Service</h3>
+            <p>This removes the service from your clinic services list.</p>
+          </div>
+        </div>
       </div>
 
-      <div className="delete-modal-body">
-        <p>Are you sure you want to delete this service?</p>
+      <div className="service-modal-body">
+        <div className="delete-service-card">
+          <span>Service</span>
+          <strong>{selectedDeleteService?.name || "Selected service"}</strong>
+          <p>{selectedDeleteService?.description || "No description available."}</p>
+        </div>
+
+        <p className="delete-modal-warning">
+          If this service is only temporarily unavailable, use Disable instead.
+        </p>
       </div>
 
-      <div className="delete-modal-footer">
+      <div className="service-modal-footer">
         <button
+          type="button"
           className="pill pill-gray"
-          onClick={() => setIsDeleteModalOpen(false)}
+          onClick={closeDeleteModal}
+          disabled={isDeleting}
         >
           Cancel
         </button>
 
         <button
+          type="button"
           className="pill pill-danger"
           onClick={confirmDeleteService}
+          disabled={isDeleting}
         >
-          Delete
+          {isDeleting ? "Deleting..." : "Delete Service"}
         </button>
       </div>
+    </div>
+  </div>
+)}
+
+
+            {statusTarget && (
+  <div className="service-modal-overlay" onClick={closeStatusModal}>
+    <div
+      className="service-modal service-status-modal"
+      onClick={(e) => e.stopPropagation()}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="service-status-title"
+    >
+      <div className="service-modal-header">
+        <h3 id="service-status-title">
+          {statusTarget.enabled ? "Disable Service" : "Enable Service"}
+        </h3>
+        <button
+          type="button"
+          className="service-modal-close"
+          onClick={closeStatusModal}
+          disabled={updatingStatus}
+        >
+          ×
+        </button>
+      </div>
+
+      <div className="service-modal-body">
+        <div className="service-status-summary">
+          <span className="service-status-label">Service</span>
+          <strong>{statusTarget.name}</strong>
+          <span className={statusTarget.enabled ? "status-active-copy" : "status-inactive-copy"}>
+            Currently {statusTarget.enabled ? "enabled" : "disabled"}
+          </span>
+        </div>
+
+        <p className="service-status-message">
+          {statusTarget.enabled
+            ? "Disabling this service will hide it from active booking choices. Existing appointment records will stay unchanged."
+            : "Enabling this service will make it available again for patients when they book with your clinic."}
+        </p>
+      </div>
+
+      <div className="service-modal-footer">
+        <button
+          type="button"
+          className="pill pill-gray"
+          onClick={closeStatusModal}
+          disabled={updatingStatus}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          className={`pill ${statusTarget.enabled ? "pill-danger" : "pill-success"}`}
+          onClick={confirmToggleService}
+          disabled={updatingStatus}
+        >
+          {updatingStatus
+            ? "Saving..."
+            : statusTarget.enabled
+            ? "Yes, Disable"
+            : "Yes, Enable"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{statusToast && (
+  <div className="success-toast">
+    <div className="success-toast-content">
+      <span className="success-icon">✓</span>
+      <span>{statusToast}</span>
     </div>
   </div>
 )}
@@ -513,19 +646,32 @@ const confirmDeleteService = async () => {
 
       {isModalOpen && (
         <div className="service-modal-overlay" onClick={closeModal}>
-          <div className="service-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="service-modal service-edit-modal" onClick={(e) => e.stopPropagation()}>
             <div className="service-modal-header">
-              <h3>{modalMode === "add" ? "Add Service" : "Edit Service"}</h3>
+              <div className="service-modal-title">
+                <span className="service-modal-mark">S</span>
+                <div>
+                  <p className="service-modal-kicker">Clinic service</p>
+                  <h3>{modalMode === "add" ? "Add Service" : "Edit Service"}</h3>
+                  <p>
+                    {modalMode === "add"
+                      ? "Create a service patients can choose when booking."
+                      : "Update the service details shown to patients."}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 className="service-modal-close"
                 onClick={closeModal}
+                disabled={isSaving}
               >
                 ×
               </button>
             </div>
 
             <div className="service-modal-body">
+              <div className="service-form-card">
               <div className="form-group">
                 <label>Service Name</label>
                 <input
@@ -574,16 +720,23 @@ const confirmDeleteService = async () => {
                 </div>
               </div>
 
-              <div className="form-group checkbox-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    name="enabled"
-                    checked={form.enabled}
-                    onChange={handleChange}
-                  />
-                  Enabled
-                </label>
+              <label className="service-toggle-card">
+                <input
+                  type="checkbox"
+                  name="enabled"
+                  checked={form.enabled}
+                  onChange={handleChange}
+                />
+                <span className="service-toggle-ui" aria-hidden="true" />
+                <span>
+                  <strong>{form.enabled ? "Service is enabled" : "Service is disabled"}</strong>
+                  <small>
+                    {form.enabled
+                      ? "Patients can select this service when booking."
+                      : "This service stays saved but hidden from active booking choices."}
+                  </small>
+                </span>
+              </label>
               </div>
             </div>
 

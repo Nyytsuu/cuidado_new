@@ -245,48 +245,63 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: clamp(18px, 2vw, 30px);
+  box-sizing: border-box;
 
   box-shadow: none;
 
   position: fixed;
   top: 0;
   right: 0;
+  left: var(--sidebar-width-collapsed) !important;
+  width: auto !important;
+  max-width: none !important;
   height: var(--header-height);
 
   z-index: 999;
-
-  left: var(--sidebar-width-collapsed);
 }
 
 /* shift header when sidebar expanded */
-.admin-Userpage.sidebar-expanded .SidebarClinic .app-header {
-  left: var(--sidebar-width-expanded);
+.clinic-dashboard-page.sidebar-expanded .SidebarClinic .app-header,
+.ClinicAppoint.sidebar-expanded .SidebarClinic .app-header,
+.Patient.sidebar-expanded .SidebarClinic .app-header,
+.services.sidebar-expanded .SidebarClinic .app-header,
+.Schedule.sidebar-expanded .SidebarClinic .app-header,
+.ClinicProfile.sidebar-expanded .SidebarClinic .app-header,
+.clinic-settings-page.sidebar-expanded .SidebarClinic .app-header {
+  left: var(--sidebar-width-expanded) !important;
 }
 
 /* left group */
 .SidebarClinic .header-left {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 50px; 
-  position: relative;
-  left: 40px;
+  justify-content: space-between;
+  gap: clamp(22px, 4vw, 64px);
+  position: static;
+  left: auto;
 }
 
 .SidebarClinic .brand-logo {
-  width: 120px;
+  width: clamp(118px, 10vw, 150px);
   max-height: 60px;
   object-fit: contain;
 
-  position: relative;
-  right: 130px; /* ✅ from adminuser.css */
+  flex: 0 0 auto;
+  position: static !important;
+  right: auto !important;
 }
 
 /* search */
 .SidebarClinic .header-search {
   position: relative;
-  width: 360px;
-  right: 250px !important; /* ✅ from adminuser.css */
-  max-width: 42vw;
+  flex: 1 1 420px;
+  width: 100%;
+  min-width: 240px;
+  max-width: min(520px, 44vw);
+  right: auto !important;
 }
 
 .SidebarClinic .header-search input {
@@ -323,11 +338,12 @@
 
 /* right nav */
 .SidebarClinic .header-nav {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 70px; /* ✅ from adminuser.css */
-  position: relative;
-  right: 140px !important;
+  gap: clamp(18px, 2.4vw, 38px);
+  position: static !important;
+  right: auto !important;
 }
 
 .SidebarClinic .nav-link {
@@ -337,6 +353,192 @@
   font-size: 1.02rem;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.SidebarClinic .clinic-notification-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.SidebarClinic .clinic-notification-btn {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.44);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82);
+  color: #0f4242;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(15, 66, 66, 0.12);
+}
+
+.SidebarClinic .clinic-notification-btn.has-unread {
+  background: #ffffff;
+  color: #006f68;
+  box-shadow: 0 0 0 4px rgba(0, 150, 136, 0.15),
+    0 10px 24px rgba(15, 66, 66, 0.16);
+}
+
+.SidebarClinic .clinic-notification-dot {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #ef4444;
+  color: #ffffff;
+  border: 2px solid var(--sidebar-bg);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.SidebarClinic .clinic-notification-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: -16px;
+  width: 360px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 14px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #cfe4e4;
+  box-shadow: 0 24px 54px rgba(15, 66, 66, 0.22);
+  display: none;
+  z-index: 100000;
+}
+
+.SidebarClinic .clinic-notification-menu.open .clinic-notification-dropdown {
+  display: grid;
+  gap: 12px;
+}
+
+.SidebarClinic .clinic-notification-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e3eeee;
+}
+
+.SidebarClinic .clinic-notification-head div {
+  display: grid;
+  gap: 2px;
+}
+
+.SidebarClinic .clinic-notification-head strong {
+  color: #0f2f2f;
+  font-size: 1rem;
+}
+
+.SidebarClinic .clinic-notification-head span {
+  color: #6b7d7d;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.SidebarClinic .clinic-notification-head button {
+  border: none;
+  background: #e4f4f3;
+  color: #00796f;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.SidebarClinic .clinic-notification-list {
+  display: grid;
+  gap: 8px;
+  max-height: 330px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.SidebarClinic .clinic-notification-empty {
+  margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f3f8f8;
+  color: #667878;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.SidebarClinic .clinic-notification-item {
+  width: 100%;
+  border: 1px solid #dceaea;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 11px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.SidebarClinic .clinic-notification-item.unread {
+  border-color: #8bd6cf;
+  background: #f0fbfa;
+}
+
+.SidebarClinic .clinic-notification-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #e0f5f3;
+  color: #07847d;
+  display: grid;
+  place-items: center;
+}
+
+.SidebarClinic .clinic-notification-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.SidebarClinic .clinic-notification-copy strong {
+  color: #163235;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.SidebarClinic .clinic-notification-copy small {
+  color: #4f6469;
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.SidebarClinic .clinic-notification-copy em {
+  color: #7c9093;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.SidebarClinic .clinic-notification-link {
+  min-height: 38px;
+  border-radius: 11px;
+  background: #0f8f86;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+  font-size: 0.84rem;
+  font-weight: 800;
 }
 
 /* dropdown */
@@ -405,6 +607,50 @@
     width: 100%;
     max-width: 360px;
   }
+}
+
+/* Keep the clinic header immune from older global admin header offsets. */
+.SidebarClinic .app-header {
+  gap: clamp(18px, 2vw, 30px) !important;
+}
+
+.SidebarClinic .app-header .header-left {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: clamp(22px, 4vw, 64px) !important;
+  grid-template-columns: none !important;
+}
+
+.SidebarClinic .app-header .brand-logo {
+  flex: 0 0 auto !important;
+  position: static !important;
+  right: auto !important;
+  width: clamp(118px, 10vw, 150px) !important;
+  height: auto !important;
+}
+
+.SidebarClinic .app-header .header-search {
+  flex: 1 1 360px !important;
+  width: 100% !important;
+  min-width: 240px !important;
+  max-width: min(500px, 40vw) !important;
+  height: 38px !important;
+  position: relative !important;
+  right: auto !important;
+  grid-column: auto !important;
+  justify-self: auto !important;
+}
+
+.SidebarClinic .app-header .header-nav {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: clamp(18px, 2.2vw, 36px) !important;
+  position: static !important;
+  right: auto !important;
 }
 
 

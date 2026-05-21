@@ -33,6 +33,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   min-width: 100%;
+  scroll-padding-bottom: 110px;
 }
 
 /* ================= SIDEBAR ================= */
@@ -183,7 +184,7 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .ClinicAppoint .admin-content {
-  padding: calc(var(--header-height) + 20px) 24px 40px;
+  padding: calc(var(--header-height) + 20px) 24px 110px;
 }
 
 .ClinicAppoint .admin-title h2 {
@@ -227,14 +228,23 @@ body {
 
 .ClinicAppoint .admin-table-card {
   min-height: 520px;
-  padding: 14px 12px;
-  overflow: hidden;
+  height: min(680px, calc(100vh - 150px));
+  padding: 0 18px 28px;
+  overflow-y: auto;
+  overflow-x: hidden;
   border-radius: 26px;
-  background: linear-gradient(
-   rgb(16, 156, 133) 73px,
-    white 78px,
-    white 100%
-  );
+  background: #ffffff;
+  border: 1px solid #d8ece8;
+  box-shadow: 0 18px 40px rgba(15, 66, 66, 0.08);
+  scrollbar-gutter: stable;
+}
+
+.ClinicAppoint .users-table {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: visible;
+  padding-bottom: 24px;
 }
 
 
@@ -242,15 +252,16 @@ body {
 .ClinicAppoint .users-row {
   display: grid;
   grid-template-columns:
-    minmax(160px, 2fr)
-    minmax(140px, 1.6fr)
-    minmax(100px, 1fr)
-    minmax(100px, 1fr)
-    minmax(110px, 1fr)
-    minmax(190px, 1.7fr);
+    minmax(130px, 1.3fr)
+    minmax(120px, 1.15fr)
+    minmax(78px, 0.55fr)
+    minmax(78px, 0.55fr)
+    minmax(132px, 0.85fr)
+    minmax(170px, 0.9fr);
   align-items: center;
-  gap: 12px;
-  padding: 16px 12px;
+  gap: 8px;
+  min-width: 0;
+  padding: 14px 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
 }
 .ClinicAppoint .users-cell,
@@ -269,12 +280,21 @@ body {
 
 .ClinicAppoint .users-header {
   font-weight: 800;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 72px;
+  margin: 0 -18px;
+  padding-inline: 30px;
+  background: #109c85;
+  border-bottom: 1px solid rgba(7, 59, 54, 0.28);
+  box-shadow: 0 8px 16px rgba(15, 66, 66, 0.16);
 }
 
 .ClinicAppoint .users-header .users-cell {
   color: white;
   font-size: 1.2rem;
-  padding-left: 14px;
+  padding-left: 0;
 }
 
 .ClinicAppoint .users-cell {
@@ -283,6 +303,14 @@ body {
 }
 .ClinicAppoint .users-row:not(.users-header) .users-cell {
   padding-left: 6px;
+}
+
+.ClinicAppoint .users-row:not(.users-header) {
+  min-height: 82px;
+}
+
+.ClinicAppoint .users-row:last-child {
+  margin-bottom: 18px;
 }
 
 /* first column no line + no padding */
@@ -355,34 +383,10 @@ body {
 .ClinicAppoint .pill-warning {
   background: #b7791f;
 }
-.ClinicAppoint .mark-done-btn {
-  transform: translateX(12px);
-}
-.ClinicAppoint .mark-done-btn {
-  margin-left: 20px;
-  margin-top: 10px;
-}
-/* actions */
-.ClinicAppoint .users-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 .ClinicAppoint .pill:focus,
 .ClinicAppoint .pill:active {
   outline: none;
   box-shadow: none;
-}
-/* Actions layout (side-by-side) */
-.ClinicAppoint .users-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;
 }
 
 /* View button style */
@@ -405,10 +409,93 @@ body {
 }
 
 /* ✅ Reschedule button */
+.ClinicAppoint .pill-done {
+  background: #177245 !important;
+  color: #fff;
+  cursor: pointer;
+}
+
 .ClinicAppoint .pill-resched {
   background: rgb(18, 151, 129) !important;
   color: #fff;
   cursor: pointer;
+}
+
+.ClinicAppoint .users-row .users-cell:last-child {
+  display: flex;
+  justify-content: center;
+  overflow: visible;
+  padding-left: 0;
+}
+
+.ClinicAppoint .users-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  max-width: 170px;
+  min-width: 0;
+  margin-inline: auto;
+  flex-wrap: nowrap;
+}
+
+.ClinicAppoint .icon-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+.ClinicAppoint .icon-btn svg {
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
+  flex: 0 0 auto;
+}
+
+.ClinicAppoint .icon-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+.ClinicAppoint .users-row .users-cell:nth-child(5) .pill {
+  width: 100%;
+  max-width: 132px;
+  min-height: 34px;
+  padding: 0 9px;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+}
+
+.ClinicAppoint .users-header .users-cell:nth-child(6) {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  padding-left: 0;
+}
+
+.ClinicAppoint .users-cell:nth-child(3),
+.ClinicAppoint .users-cell:nth-child(4) {
+  text-align: center;
+}
+
+.ClinicAppoint .users-cell:nth-child(3) .pills,
+.ClinicAppoint .users-cell:nth-child(4) .pills {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
 }
 .ClinicAppoint .pill.pill-gray.and-danger {
   background: #c62828 !important;
@@ -452,9 +539,14 @@ body {
   width: 100%;
   max-width: 560px;
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  border: 1px solid #d7ebe8;
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(15, 66, 66, 0.24);
   overflow: hidden;
+}
+
+.appoint-view-modal {
+  max-width: 700px;
 }
 
 .appoint-modal-header,
@@ -466,26 +558,207 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #eee;
+  gap: 16px;
+  border-bottom: 1px solid #dcefeb;
+  background:
+    radial-gradient(circle at top right, rgba(16, 156, 133, 0.14), transparent 36%),
+    #ffffff;
 }
 
 .appoint-modal-body {
   padding: 20px;
+  max-height: min(72vh, 680px);
+  overflow-y: auto;
 }
 
 .appoint-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #dcefeb;
+  background: #fbffff;
 }
 
 .appoint-modal-close {
   border: none;
-  background: transparent;
-  font-size: 28px;
+  background: #eef6f5;
+  color: #506b68;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 26px;
   line-height: 1;
   cursor: pointer;
+}
+
+.appoint-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.appoint-modal-title p {
+  margin: 0 0 4px;
+  color: #0f9b7d;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.appoint-modal-title h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.appoint-modal-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  background: #e3f7f3;
+  color: #087a67;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 1px #c6e9e3;
+}
+
+.appoint-details-polished {
+  display: grid;
+  gap: 14px;
+}
+
+.appoint-patient-hero {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #cfe8e4;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eefbf9 0%, #ffffff 100%);
+}
+
+.appoint-patient-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: #109c85;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 1.35rem;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(16, 156, 133, 0.22);
+}
+
+.appoint-patient-copy {
+  min-width: 0;
+}
+
+.appoint-patient-copy span,
+.appoint-info-card span,
+.appoint-note-card span,
+.appoint-reschedule-card span {
+  display: block;
+  color: #607d7a;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.appoint-patient-copy h4 {
+  margin: 3px 0;
+  color: #0f172a;
+  font-size: 1.25rem;
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.appoint-patient-copy p {
+  margin: 0;
+  color: #51626f;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.appoint-detail-grid,
+.appoint-notes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.appoint-info-card,
+.appoint-note-card,
+.appoint-reschedule-card {
+  border: 1px solid #d7ece9;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(15, 66, 66, 0.06);
+}
+
+.appoint-info-card {
+  padding: 14px;
+  min-height: 88px;
+}
+
+.appoint-info-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.appoint-reschedule-card {
+  padding: 16px;
+  border-color: #ffd19a;
+  background: linear-gradient(135deg, #fff8ed 0%, #ffffff 100%);
+}
+
+.appoint-reschedule-card span {
+  color: #a65300;
+}
+
+.appoint-reschedule-card strong {
+  display: block;
+  margin-top: 8px;
+  color: #8a3b00;
+  font-size: 1rem;
+}
+
+.appoint-reschedule-card p,
+.appoint-note-card p {
+  margin: 8px 0 0;
+  color: #425d5a;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.appoint-note-card {
+  padding: 14px;
+  min-height: 112px;
+}
+
+@media screen and (max-width: 720px) {
+  .appoint-patient-hero,
+  .appoint-detail-grid,
+  .appoint-notes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .appoint-patient-hero {
+    align-items: start;
+  }
 }
 
 .appoint-detail-row {
@@ -511,13 +784,66 @@ body {
   font-weight: 600;
 }
 
-.appoint-form .form-group input {
+.appoint-form .form-group input,
+.appoint-form .form-group textarea {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #d9d9d9;
   border-radius: 10px;
   font-size: 14px;
   outline: none;
+  font-family: inherit;
+}
+
+.appoint-form .form-group textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.appoint-form-note {
+  margin: 0;
+  color: #51626f;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.appoint-success-modal {
+  width: min(420px, 100%);
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 28px;
+  text-align: center;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+  border: 1px solid #d9ebe8;
+}
+
+.appoint-success-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: #0f9b8e;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  box-shadow: 0 10px 26px rgba(15, 155, 142, 0.28);
+}
+
+.appoint-success-modal h3 {
+  margin: 0 0 10px;
+  color: #0f2433;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.appoint-success-modal p {
+  margin: 0 0 20px;
+  color: #506273;
+  font-size: 0.96rem;
+  line-height: 1.5;
 }
 
 .appoint-form .form-row {

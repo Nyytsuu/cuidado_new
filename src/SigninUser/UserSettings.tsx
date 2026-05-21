@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Bell,
   Lock,
@@ -35,6 +36,10 @@ type UserSettingsForm = {
   date_of_birth: string;
   address: string;
   consent: boolean;
+};
+
+type SettingsRouteState = {
+  focusNotifications?: boolean;
 };
 
 const API = "http://localhost:5000/api";
@@ -76,6 +81,7 @@ function toForm(profile: UserProfile): UserSettingsForm {
 }
 
 export default function UserSettings() {
+  const location = useLocation();
   const userId = getStoredUserId();
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -94,6 +100,8 @@ export default function UserSettings() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [highlightNotifications, setHighlightNotifications] = useState(false);
+  const notificationPreferenceRef = useRef<HTMLLabelElement | null>(null);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -125,6 +133,23 @@ export default function UserSettings() {
   useEffect(() => {
     void loadProfile();
   }, [loadProfile]);
+
+  useEffect(() => {
+    const state = location.state as SettingsRouteState | null;
+    if (loading || !state?.focusNotifications) return;
+
+    setHighlightNotifications(true);
+    notificationPreferenceRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    const timer = window.setTimeout(() => {
+      setHighlightNotifications(false);
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
+  }, [loading, location.state]);
 
   const updateForm = (
     field: keyof UserSettingsForm,
@@ -413,7 +438,13 @@ export default function UserSettings() {
                 </div>
               </div>
 
-              <label className="settings-toggle-row">
+              <label
+                className={`settings-toggle-row ${
+                  highlightNotifications ? "settings-toggle-highlight" : ""
+                }`}
+                id="notification-preferences"
+                ref={notificationPreferenceRef}
+              >
                 <input
                   type="checkbox"
                   checked={form.consent}

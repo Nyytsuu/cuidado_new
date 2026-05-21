@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import profile from "../img/profile1.jpg";
 import "./AdminProfile.css";
+import "./AdminHeader.css";
 import SidebarAdmin from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";

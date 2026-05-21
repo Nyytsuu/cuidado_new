@@ -10,4 +10,13 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    watch: {
+      ignored: [
+        '**/android/**',
+        '**/dist/**',
+        '**/node_modules/**',
+      ],
+    },
+  },
 })

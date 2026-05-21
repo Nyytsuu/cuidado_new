@@ -18,6 +18,187 @@ const DAYS_BY_INDEX = [
   "Saturday",
 ];
 
+let appointmentRescheduleSchemaPromise = null;
+let clinicFeedbackSchemaPromise = null;
+let clinicNotificationsSchemaPromise = null;
+
+const ensureAppointmentRescheduleColumns = async () => {
+  if (!appointmentRescheduleSchemaPromise) {
+    appointmentRescheduleSchemaPromise = (async () => {
+      const [columns] = await pool.query(
+        `
+        SELECT COLUMN_NAME, COLUMN_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'appointments'
+          AND COLUMN_NAME IN (
+            'status',
+            'proposed_start_at',
+            'proposed_end_at',
+            'reschedule_reason',
+            'reschedule_requested_by',
+            'reschedule_requested_at'
+          )
+        `
+      );
+
+      const existing = new Map(
+        columns.map((column) => [column.COLUMN_NAME, column.COLUMN_TYPE])
+      );
+
+      if (!existing.has("proposed_start_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN proposed_start_at DATETIME NULL AFTER end_at
+        `);
+      }
+
+      if (!existing.has("proposed_end_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN proposed_end_at DATETIME NULL AFTER proposed_start_at
+        `);
+      }
+
+      if (!existing.has("reschedule_reason")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_reason TEXT NULL AFTER cancel_reason
+        `);
+      }
+
+      if (!existing.has("reschedule_requested_by")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_requested_by VARCHAR(20) NULL AFTER reschedule_reason
+        `);
+      }
+
+      if (!existing.has("reschedule_requested_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_requested_at DATETIME NULL AFTER reschedule_requested_by
+        `);
+      }
+
+      const statusType = String(existing.get("status") || "");
+      if (
+        statusType.toLowerCase().startsWith("enum(") &&
+        !statusType.includes("'reschedule_requested'")
+      ) {
+        await pool.query(`
+          ALTER TABLE appointments
+          MODIFY COLUMN status ENUM(
+            'pending',
+            'confirmed',
+            'reschedule_requested',
+            'cancelled',
+            'completed',
+            'no_show'
+          ) NOT NULL DEFAULT 'pending'
+        `);
+      }
+
+      const [historyColumns] = await pool.query(
+        `
+        SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'appointment_status_history'
+          AND COLUMN_NAME IN ('old_status', 'new_status')
+        `
+      );
+
+      for (const column of historyColumns) {
+        const columnType = String(column.COLUMN_TYPE || "");
+        if (
+          columnType.toLowerCase().startsWith("enum(") &&
+          !columnType.includes("'reschedule_requested'")
+        ) {
+          const nullability =
+            column.IS_NULLABLE === "NO" ? "NOT NULL" : "NULL";
+
+          await pool.query(`
+            ALTER TABLE appointment_status_history
+            MODIFY COLUMN ${column.COLUMN_NAME} ENUM(
+              'pending',
+              'confirmed',
+              'reschedule_requested',
+              'cancelled',
+              'completed',
+              'no_show'
+            ) ${nullability}
+          `);
+        }
+      }
+    })().catch((error) => {
+      appointmentRescheduleSchemaPromise = null;
+      throw error;
+    });
+  }
+
+  return appointmentRescheduleSchemaPromise;
+};
+
+const ensureClinicFeedbackTable = async () => {
+  if (!clinicFeedbackSchemaPromise) {
+    clinicFeedbackSchemaPromise = pool
+      .query(`
+        CREATE TABLE IF NOT EXISTS clinic_feedback (
+          id INT NOT NULL AUTO_INCREMENT,
+          appointment_id INT NOT NULL,
+          clinic_id INT NOT NULL,
+          user_id INT NOT NULL,
+          rating TINYINT NOT NULL,
+          feedback TEXT NULL,
+          created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (id),
+          UNIQUE KEY unique_feedback_appointment_user (appointment_id, user_id),
+          KEY idx_clinic_feedback_clinic (clinic_id),
+          KEY idx_clinic_feedback_user (user_id)
+        )
+      `)
+      .catch((error) => {
+        clinicFeedbackSchemaPromise = null;
+        throw error;
+      });
+  }
+
+  return clinicFeedbackSchemaPromise;
+};
+
+const ensureClinicNotificationsTable = async () => {
+  if (!clinicNotificationsSchemaPromise) {
+    clinicNotificationsSchemaPromise = pool
+      .query(`
+        CREATE TABLE IF NOT EXISTS clinic_notifications (
+          id INT NOT NULL AUTO_INCREMENT,
+          clinic_id INT NOT NULL,
+          unique_key VARCHAR(160) NOT NULL,
+          title VARCHAR(180) NOT NULL,
+          message TEXT NOT NULL,
+          category VARCHAR(80) NOT NULL DEFAULT 'Appointments',
+          icon VARCHAR(40) NOT NULL DEFAULT 'calendar',
+          is_read TINYINT(1) NOT NULL DEFAULT 0,
+          appointment_id INT DEFAULT NULL,
+          read_at DATETIME DEFAULT NULL,
+          created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (id),
+          UNIQUE KEY unique_clinic_notification (clinic_id, unique_key),
+          INDEX idx_clinic_notifications_clinic (clinic_id, is_read, created_at)
+        )
+      `)
+      .catch((error) => {
+        clinicNotificationsSchemaPromise = null;
+        throw error;
+      });
+  }
+
+  return clinicNotificationsSchemaPromise;
+};
+
 const ensureScheduleTables = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_weekly_schedules (
@@ -61,6 +242,46 @@ const toClockTime = (value) => {
 const timeToMinutes = (value) => {
   const [hours, minutes] = String(value).split(":").map(Number);
   return hours * 60 + minutes;
+};
+
+const normalizeDayToken = (value) =>
+  String(value || "").trim().toLowerCase().replace(/\./g, "");
+
+const isOperatingFromSummary = (operatingDays, dayName) => {
+  const daysRaw = normalizeDayToken(operatingDays);
+  const dayShort = normalizeDayToken(dayName).slice(0, 3);
+
+  if (!daysRaw) return true;
+
+  if (daysRaw.includes("daily") || daysRaw.includes("everyday")) {
+    return true;
+  }
+
+  if (daysRaw.includes("mon-fri") || daysRaw.includes("monday-friday")) {
+    return ["mon", "tue", "wed", "thu", "fri"].includes(dayShort);
+  }
+
+  if (daysRaw.includes("mon-sat") || daysRaw.includes("monday-saturday")) {
+    return ["mon", "tue", "wed", "thu", "fri", "sat"].includes(dayShort);
+  }
+
+  const dayAliases = {
+    monday: "mon",
+    tuesday: "tue",
+    wednesday: "wed",
+    thursday: "thu",
+    friday: "fri",
+    saturday: "sat",
+    sunday: "sun",
+  };
+
+  const tokens = daysRaw
+    .split(/[,/|]+/)
+    .map((item) => normalizeDayToken(item))
+    .filter(Boolean)
+    .map((item) => dayAliases[item] || item.slice(0, 3));
+
+  return tokens.includes(dayShort);
 };
 
 const parseLocalDateTime = (value) => {
@@ -128,7 +349,7 @@ const getScheduleConflict = async (
 
   const isWorking = daySchedule
     ? Number(daySchedule.is_working) === 1
-    : true;
+    : isOperatingFromSummary(clinic?.operating_days, dayName);
   const openingTime =
     toClockTime(daySchedule?.opening_time) || toClockTime(clinic?.opening_time);
   const closingTime =
@@ -152,6 +373,9 @@ const getScheduleConflict = async (
 
 router.get("/by-user/:userId", async (req, res) => {
   try {
+    await ensureAppointmentRescheduleColumns();
+    await ensureClinicFeedbackTable();
+
     const { userId } = req.params;
 
     const [rows] = await pool.query(
@@ -160,29 +384,41 @@ router.get("/by-user/:userId", async (req, res) => {
         a.id,
         a.user_id,
         a.clinic_id,
-        a.start_at,
-        a.end_at,
+        DATE_FORMAT(a.start_at, '%Y-%m-%d %H:%i:%s') AS start_at,
+        DATE_FORMAT(a.end_at, '%Y-%m-%d %H:%i:%s') AS end_at,
+        DATE_FORMAT(a.proposed_start_at, '%Y-%m-%d %H:%i:%s') AS proposed_start_at,
+        DATE_FORMAT(a.proposed_end_at, '%Y-%m-%d %H:%i:%s') AS proposed_end_at,
         a.purpose,
         a.symptoms,
         a.patient_note,
         a.clinic_note,
         a.status,
-        a.cancelled_at,
+        DATE_FORMAT(a.cancelled_at, '%Y-%m-%d %H:%i:%s') AS cancelled_at,
         a.cancelled_by,
         a.cancel_reason,
-        a.completed_at,
+        a.reschedule_reason,
+        a.reschedule_requested_by,
+        DATE_FORMAT(a.reschedule_requested_at, '%Y-%m-%d %H:%i:%s') AS reschedule_requested_at,
+        DATE_FORMAT(a.completed_at, '%Y-%m-%d %H:%i:%s') AS completed_at,
         a.patient_name_snapshot,
         a.patient_phone_snapshot,
         a.clinic_name_snapshot,
-        a.created_at,
-        a.updated_at,
+        DATE_FORMAT(a.created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
+        DATE_FORMAT(a.updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at,
         c.clinic_name,
         c.specialization,
         c.address,
         c.opening_time,
-        c.closing_time
+        c.closing_time,
+        cf.id AS feedback_id,
+        cf.rating AS clinic_feedback_rating,
+        cf.feedback AS clinic_feedback_text,
+        DATE_FORMAT(cf.updated_at, '%Y-%m-%d %H:%i:%s') AS clinic_feedback_updated_at
       FROM appointments a
       JOIN clinics c ON c.id = a.clinic_id
+      LEFT JOIN clinic_feedback cf
+        ON cf.appointment_id = a.id
+        AND cf.user_id = a.user_id
       WHERE a.user_id = ?
       ORDER BY a.start_at ASC
       `,
@@ -227,6 +463,8 @@ router.post("/book", async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
+    await ensureClinicNotificationsTable();
+
     const {
       user_id,
       clinic_id,
@@ -249,7 +487,7 @@ router.post("/book", async (req, res) => {
 
     const [[clinic]] = await connection.query(
       `
-      SELECT id, clinic_name, status, account_status, opening_time, closing_time
+      SELECT id, clinic_name, status, account_status, opening_time, closing_time, operating_days
       FROM clinics
       WHERE id = ?
       `,
@@ -359,6 +597,49 @@ router.post("/book", async (req, res) => {
       [appointmentId, user_id]
     );
 
+    const appointmentDate = new Date(String(start_at).replace(" ", "T"));
+    const appointmentLabel = Number.isNaN(appointmentDate.getTime())
+      ? "the selected schedule"
+      : appointmentDate.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        });
+    const patientLabel = patient_name_snapshot || "A patient";
+    const purposeLabel = purpose || "consultation";
+
+    await connection.query(
+      `
+      INSERT INTO clinic_notifications (
+        clinic_id,
+        unique_key,
+        title,
+        message,
+        category,
+        icon,
+        appointment_id,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, 'Appointments', 'calendar', ?, NOW())
+      ON DUPLICATE KEY UPDATE
+        title = VALUES(title),
+        message = VALUES(message),
+        category = VALUES(category),
+        icon = VALUES(icon),
+        appointment_id = VALUES(appointment_id),
+        updated_at = NOW()
+      `,
+      [
+        clinic_id,
+        `appointment:${appointmentId}:new`,
+        "New appointment request",
+        `${patientLabel} requested ${purposeLabel} for ${appointmentLabel}.`,
+        appointmentId,
+      ]
+    );
+
     await connection.commit();
 
     res.status(201).json({
@@ -390,6 +671,8 @@ router.patch("/:id/cancel", async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
+    await ensureAppointmentRescheduleColumns();
+
     const { id } = req.params;
     const { user_id, reason } = req.body;
 
@@ -406,9 +689,10 @@ router.patch("/:id/cancel", async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
-    if (!["pending", "confirmed"].includes(appointment.status)) {
+    if (!["pending", "confirmed", "reschedule_requested"].includes(appointment.status)) {
       return res.status(400).json({
-        message: "Only pending or confirmed appointments can be cancelled",
+        message:
+          "Only pending, confirmed, or reschedule-requested appointments can be cancelled",
       });
     }
 
@@ -422,6 +706,11 @@ router.patch("/:id/cancel", async (req, res) => {
         cancelled_at = NOW(),
         cancelled_by = 'patient',
         cancel_reason = ?,
+        proposed_start_at = NULL,
+        proposed_end_at = NULL,
+        reschedule_reason = NULL,
+        reschedule_requested_by = NULL,
+        reschedule_requested_at = NULL,
         updated_at = NOW()
       WHERE id = ?
       `,
@@ -455,6 +744,172 @@ router.patch("/:id/cancel", async (req, res) => {
     connection.release();
   }
 });
+
+router.patch("/:id/reschedule-response", async (req, res) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await ensureAppointmentRescheduleColumns();
+
+    const { id } = req.params;
+    const { user_id, action } = req.body;
+
+    if (!["accept", "cancel"].includes(action)) {
+      return res.status(400).json({ message: "Action must be accept or cancel." });
+    }
+
+    const [[appointment]] = await connection.query(
+      `
+      SELECT
+        id,
+        status,
+        user_id,
+        clinic_id,
+        start_at,
+        end_at,
+        proposed_start_at,
+        proposed_end_at
+      FROM appointments
+      WHERE id = ?
+      `,
+      [id]
+    );
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    if (Number(appointment.user_id) !== Number(user_id)) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (appointment.status !== "reschedule_requested") {
+      return res.status(400).json({
+        message: "This appointment does not have a pending reschedule request.",
+      });
+    }
+
+    if (!appointment.proposed_start_at || !appointment.proposed_end_at) {
+      return res.status(400).json({
+        message: "The clinic has not provided a valid proposed schedule.",
+      });
+    }
+
+    await connection.beginTransaction();
+
+    if (action === "accept") {
+      const [[clinic]] = await connection.query(
+        `
+        SELECT id, opening_time, closing_time
+        FROM clinics
+        WHERE id = ?
+        `,
+        [appointment.clinic_id]
+      );
+
+      const scheduleConflict = await getScheduleConflict(
+        connection,
+        appointment.clinic_id,
+        appointment.proposed_start_at,
+        appointment.proposed_end_at,
+        clinic
+      );
+
+      if (scheduleConflict) {
+        await connection.rollback();
+        return res.status(400).json({ message: scheduleConflict });
+      }
+
+      await connection.query(
+        `
+        UPDATE appointments
+        SET
+          start_at = proposed_start_at,
+          end_at = proposed_end_at,
+          proposed_start_at = NULL,
+          proposed_end_at = NULL,
+          reschedule_reason = NULL,
+          reschedule_requested_by = NULL,
+          reschedule_requested_at = NULL,
+          status = 'confirmed',
+          updated_at = NOW()
+        WHERE id = ?
+        `,
+        [id]
+      );
+
+      await connection.query(
+        `
+        INSERT INTO appointment_status_history (
+          appointment_id,
+          old_status,
+          new_status,
+          changed_by,
+          changed_by_id,
+          note,
+          changed_at
+        )
+        VALUES (?, 'reschedule_requested', 'confirmed', 'patient', ?, ?, NOW())
+        `,
+        [id, user_id, "Patient accepted the clinic's proposed reschedule"]
+      );
+
+      await connection.commit();
+
+      return res.json({
+        message: "Reschedule accepted. Your appointment was updated.",
+      });
+    }
+
+    await connection.query(
+      `
+      UPDATE appointments
+      SET
+        status = 'cancelled',
+        cancelled_at = NOW(),
+        cancelled_by = 'patient',
+        cancel_reason = 'Patient declined clinic reschedule request',
+        proposed_start_at = NULL,
+        proposed_end_at = NULL,
+        reschedule_reason = NULL,
+        reschedule_requested_by = NULL,
+        reschedule_requested_at = NULL,
+        updated_at = NOW()
+      WHERE id = ?
+      `,
+      [id]
+    );
+
+    await connection.query(
+      `
+      INSERT INTO appointment_status_history (
+        appointment_id,
+        old_status,
+        new_status,
+        changed_by,
+        changed_by_id,
+        note,
+        changed_at
+      )
+      VALUES (?, 'reschedule_requested', 'cancelled', 'patient', ?, ?, NOW())
+      `,
+      [id, user_id, "Patient declined the clinic's proposed reschedule"]
+    );
+
+    await connection.commit();
+
+    res.json({
+      message: "Reschedule declined. The appointment was cancelled.",
+    });
+  } catch (err) {
+    await connection.rollback();
+    console.error("Reschedule response error:", err);
+    res.status(500).json({ message: "Failed to update reschedule response" });
+  } finally {
+    connection.release();
+  }
+});
+
 router.patch("/:id/reschedule", async (req, res) => {
   const connection = await pool.getConnection();
 

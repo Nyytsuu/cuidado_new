@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AdminConditional.css";
+import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
@@ -14,9 +15,17 @@ type ConditionItem = {
   advice_level: AdviceLevel;
   when_to_seek_help: string;
   disclaimer: string;
+  body_system_id?: number | null;
+  body_system_name?: string | null;
   symptoms_count: number;
 };
 
+type BodySystemOption = {
+  id: number;
+  name: string;
+  slug?: string | null;
+  icon?: string | null;
+};
 
 const API_BASE = "http://localhost:5000/api/admin/conditions";
 
@@ -29,12 +38,14 @@ export default function AdminConditionalManagement() {
   const [q, setQ] = useState("");
 
   const [conditions, setConditions] = useState<ConditionItem[]>([]);
+  const [bodySystems, setBodySystems] = useState<BodySystemOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   const [conditionName, setConditionName] = useState("");
   const [description, setDescription] = useState("");
   const [adviceLevel, setAdviceLevel] = useState<AdviceLevel | "">("");
+  const [bodySystemId, setBodySystemId] = useState("");
   const [whenToSeekHelp, setWhenToSeekHelp] = useState("");
   const [disclaimer, setDisclaimer] = useState("For informational purposes only.");
 
@@ -76,20 +87,34 @@ export default function AdminConditionalManagement() {
     }
   };
 
+  const fetchBodySystems = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/body-systems/options`);
+      const data = await res.json();
+      setBodySystems(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch body systems:", err);
+      setBodySystems([]);
+    }
+  };
+
   const filteredConditions = useMemo(() => {
     return conditions.filter((item) =>
-      item.condition_name.toLowerCase().includes(q.toLowerCase())
+      item.condition_name.toLowerCase().includes(q.toLowerCase()) ||
+      (item.body_system_name || "").toLowerCase().includes(q.toLowerCase())
     );
   }, [conditions, q]);
 
   useEffect(() => {
     fetchConditions();
+    fetchBodySystems();
   }, []);
 
   const resetForm = () => {
     setConditionName("");
     setDescription("");
     setAdviceLevel("");
+    setBodySystemId("");
     setWhenToSeekHelp("");
     setDisclaimer("For informational purposes only.");
     setEditingId(null);
@@ -112,6 +137,7 @@ return;
         condition_name: conditionName,
         description,
         advice_level: adviceLevel,
+        body_system_id: bodySystemId ? Number(bodySystemId) : null,
         when_to_seek_help: whenToSeekHelp,
         disclaimer,
       };
@@ -171,6 +197,7 @@ setTimeout(() => setToast(null), 2500);
     setConditionName(item.condition_name);
     setDescription(item.description || "");
     setAdviceLevel(item.advice_level);
+    setBodySystemId(item.body_system_id ? String(item.body_system_id) : "");
     setWhenToSeekHelp(item.when_to_seek_help || "");
     setDisclaimer(item.disclaimer || "For informational purposes only.");
   };
@@ -322,6 +349,22 @@ setTimeout(() => setToast(null), 2500);
                   </div>
 
                   <div className="form-group">
+                    <label>Body System</label>
+                    <select
+                      value={bodySystemId}
+                      onChange={(e) => setBodySystemId(e.target.value)}
+                    >
+                      <option value="">Not linked</option>
+                      {bodySystems.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.icon ? `${item.icon} ` : ""}
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
                     <label>Description</label>
                     <textarea
                       rows={3}
@@ -381,6 +424,7 @@ setTimeout(() => setToast(null), 2500);
                   <thead>
                     <tr>
                       <th>Condition</th>
+                      <th>Body System</th>
                       <th>Advice Level</th>
                       <th>Symptoms</th>
                       <th>Actions</th>
@@ -389,16 +433,17 @@ setTimeout(() => setToast(null), 2500);
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={4} className="empty-cell">Loading...</td>
+                        <td colSpan={5} className="empty-cell">Loading...</td>
                       </tr>
                     ) : filteredConditions.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="empty-cell">No conditions found.</td>
+                        <td colSpan={5} className="empty-cell">No conditions found.</td>
                       </tr>
                     ) : (
                      filteredConditions.map((item) => (
   <tr key={item.condition_id}>
     <td>{item.condition_name}</td>
+    <td>{item.body_system_name || "--"}</td>
     <td>
       <span className={badgeClass(item.advice_level)}>
         {adviceLabel(item.advice_level)}

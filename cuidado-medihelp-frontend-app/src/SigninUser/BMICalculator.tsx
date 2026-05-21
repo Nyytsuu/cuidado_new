@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import "./BMICalculator.css";
 
 type WeeklyScheduleDay = {
@@ -33,6 +34,7 @@ type Clinic = {
   account_status?: string | null;
   latitude?: string | number | null;
   longitude?: string | number | null;
+  distanceKm?: string | number | null;
   is_blocked_today?: number | boolean;
   today_opening_time?: string | null;
   today_closing_time?: string | null;
@@ -61,8 +63,6 @@ type CurrentUser = {
   name?: string;
   phone?: string;
 };
-
-const API = "http://localhost:5000/api";
 
 function getStoredCurrentUser(): CurrentUser | null {
   try {
@@ -271,6 +271,30 @@ function toTitle(value?: string | null): string {
     .join(" ");
 }
 
+function getClinicSummary(clinic: Clinic): string {
+  const specialization = toTitle(clinic.specialization);
+  const services = toTitle(clinic.services_offered);
+
+  if (specialization !== "Not provided" && services !== "Not provided") {
+    return `${specialization} offering ${services} services.`;
+  }
+
+  if (specialization !== "Not provided") {
+    return `${specialization} clinic available for appointment requests.`;
+  }
+
+  if (services !== "Not provided") {
+    return `Clinic offering ${services} services.`;
+  }
+
+  return "Approved clinic available for appointments.";
+}
+
+function getClinicDistanceLabel(clinic: Clinic): string {
+  const distance = Number(clinic.distanceKm);
+  return Number.isFinite(distance) ? `${distance.toFixed(1)} km away` : "Nearby";
+}
+
 function splitServices(value?: string | null): string[] {
   return String(value || "")
     .split(",")
@@ -287,6 +311,7 @@ export default function BMICalculator() {
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
+  const [clinicSearch, setClinicSearch] = useState("");
 
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [clinicsLoading, setClinicsLoading] = useState(true);
@@ -313,7 +338,7 @@ export default function BMICalculator() {
         setClinicsLoading(true);
         setClinicsError("");
 
-        const res = await fetch(`${API}/clinics`);
+        const res = await fetch(apiUrl("/api/clinics"));
         const data = await res.json();
 
         if (!res.ok) {
@@ -445,7 +470,23 @@ const bmiCheckupAdvice = useMemo(() => {
   };
 }, [bmiData]);
 
-  const displayedClinics = useMemo(() => clinics.slice(0, 4), [clinics]);
+  const displayedClinics = useMemo(() => {
+    const keyword = clinicSearch.trim().toLowerCase();
+    const filteredClinics = keyword
+      ? clinics.filter((clinic) =>
+          [
+            clinic.clinic_name,
+            clinic.address,
+            clinic.specialization,
+            clinic.services_offered,
+          ]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(keyword))
+        )
+      : clinics;
+
+    return filteredClinics.slice(0, 3);
+  }, [clinics, clinicSearch]);
   const profileClinic = clinicProfile || selectedClinic;
   const activeServices = useMemo(
     () =>
@@ -493,7 +534,7 @@ const bmiCheckupAdvice = useMemo(() => {
     try {
       setClinicProfileLoading(true);
 
-      const res = await fetch(`${API}/clinic/profile?clinic_id=${clinic.id}`);
+      const res = await fetch(apiUrl(`/api/clinic/profile?clinic_id=${clinic.id}`));
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -595,7 +636,7 @@ const bmiCheckupAdvice = useMemo(() => {
       const startAt = `${appointmentDate} ${appointmentTime}:00`;
       const endAt = addMinutes(appointmentDate, appointmentTime, durationMinutes);
 
-      const res = await fetch(`${API}/appointments/book`, {
+      const res = await fetch(apiUrl("/api/appointments/book"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -653,6 +694,10 @@ const bmiCheckupAdvice = useMemo(() => {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={clinicSearch}
+        onSearchChange={setClinicSearch}
+        searchPlaceholder="Search clinics..."
+        onSearchSubmit={setClinicSearch}
       />
 
       <div className="bmi-content">
@@ -803,7 +848,8 @@ const bmiCheckupAdvice = useMemo(() => {
 
                           <div className="clinic-info">
                             <h4>{clinic.clinic_name}</h4>
-                            <p>{clinic.address || "Address unavailable"}</p>
+                            <p className="clinic-summary">{getClinicSummary(clinic)}</p>
+                            <p className="clinic-address">{clinic.address || "Address unavailable"}</p>
 
                             <div className="clinic-meta">
                               <span>📞 {clinic.phone || "No phone available"}</span>
@@ -812,6 +858,7 @@ const bmiCheckupAdvice = useMemo(() => {
                         </div>
 
                         <div className="clinic-right">
+                          <span className="clinic-distance">{getClinicDistanceLabel(clinic)}</span>
                           <button
                             type="button"
                             className="near-btn"

@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
+import { apiUrl, getConfiguredBackendUrl } from "../sharedBackendFetch";
 import "./Cardio.css";
 import searchIcon from "../img/search.png";
 
@@ -50,6 +51,7 @@ type HealthFact = {
 type SymptomItem = {
   symptom_id: number;
   symptom_name: string;
+  description?: string | null;
   category?: string | null;
   is_red_flag?: number | boolean | null;
 };
@@ -59,8 +61,6 @@ const quickActions = [
   { id: "clinics", icon: "📍", label: "Find Clinics" },
   { id: "emergency", icon: "🧰", label: "Emergency Guide" },
 ];
-
-const API_BASE = "http://localhost:5000";
 
 const toTitle = (value?: string | null) => {
   const text = String(value || "").trim();
@@ -76,7 +76,7 @@ const toAssetUrl = (value?: string | null) => {
   const path = String(value || "").trim();
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
+  return `${getConfiguredBackendUrl()}/${path.replace(/^\/+/, "")}`;
 };
 
 export default function ConditionDetails() {
@@ -96,6 +96,7 @@ export default function ConditionDetails() {
   const [healthFacts, setHealthFacts] = useState<HealthFact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeSupportIndex, setActiveSupportIndex] = useState<number | null>(null);
 
   const selectedSlug = slug || "";
   const currentUser = useMemo(() => {
@@ -109,10 +110,38 @@ export default function ConditionDetails() {
   }, []);
   const userId = currentUser?.id ? Number(currentUser.id) : 0;
 
+  useLayoutEffect(() => {
+    const resetScroll = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      document
+        .querySelectorAll<HTMLElement>(
+          ".condition-details-page, .condition-details-page .browse-page-content, .condition-details-page .browse-health-main, .condition-details-page .main-panel"
+        )
+        .forEach((element) => {
+          element.scrollTop = 0;
+        });
+    };
+
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    resetScroll();
+
+    const frame = window.requestAnimationFrame(resetScroll);
+    const timer = window.setTimeout(resetScroll, 150);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, [selectedSlug, condition?.condition_id, loading]);
+
   useEffect(() => {
     const loadBodySystems = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/health/body-systems");
+        const res = await fetch(apiUrl("/api/health/body-systems"));
         if (!res.ok) throw new Error("Failed to load body systems");
         const data = await res.json();
         setBodySystems(Array.isArray(data) ? data : []);
@@ -131,11 +160,11 @@ export default function ConditionDetails() {
         setError("");
 
         const urls = {
-          details: `http://localhost:5000/api/health/condition/${selectedSlug}?user_id=${userId}`,
-          symptoms: `http://localhost:5000/api/health/condition/${selectedSlug}/symptoms`,
-          articles: `http://localhost:5000/api/health/condition/${selectedSlug}/articles`,
-          prevention: `http://localhost:5000/api/health/condition/${selectedSlug}/prevention-tips`,
-          facts: `http://localhost:5000/api/health/condition/${selectedSlug}/facts`,
+          details: apiUrl(`/api/health/condition/${selectedSlug}?user_id=${userId}`),
+          symptoms: apiUrl(`/api/health/condition/${selectedSlug}/symptoms`),
+          articles: apiUrl(`/api/health/condition/${selectedSlug}/articles`),
+          prevention: apiUrl(`/api/health/condition/${selectedSlug}/prevention-tips`),
+          facts: apiUrl(`/api/health/condition/${selectedSlug}/facts`),
         };
 
         const [detailsRes, symptomsRes, articlesRes, preventionRes, factsRes] =
@@ -224,6 +253,12 @@ export default function ConditionDetails() {
   const supportCards = [
     {
       title: "Care Guidance",
+      shortLabel: "Care",
+      tone: "care",
+      summary:
+        condition?.advice_level && condition.advice_level !== "general"
+          ? `Advice level: ${adviceLabel}`
+          : "General care guidance",
       value:
         condition?.advice_level && condition.advice_level !== "general"
           ? `Advice level: ${adviceLabel}`
@@ -231,20 +266,32 @@ export default function ConditionDetails() {
     },
     {
       title: "When To Seek Help",
+      shortLabel: "Help",
+      tone: "help",
+      summary: redFlagSymptoms.length > 0 ? "Seek urgent help for red flags" : "Know when to contact a clinic",
       value:
         condition?.when_to_seek_help ||
         "Contact a clinic if symptoms worsen, last longer than expected, or affect breathing, hydration, or daily activity.",
     },
     {
       title: "Related Body System",
+      shortLabel: "Body",
+      tone: "body",
+      summary: bodySystemName,
       value:
         condition?.body_system_description ||
         `This topic is grouped under ${bodySystemName}.`,
+      actionLabel: condition?.body_system_slug ? "Open body system" : "",
+      actionTo: condition?.body_system_slug ? `/health/body-system/${condition.body_system_slug}` : "",
     },
   ];
 
   return (
-    <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div
+      className={`browse-health-page condition-details-page ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -261,7 +308,15 @@ export default function ConditionDetails() {
         <main className="browse-health-main">
           <div className="health-browser-layout">
             <aside className="left-panel">
-              <div className="left-card">
+              <button
+                type="button"
+                className="browse-back-btn"
+                onClick={() => navigate(-1)}
+              >
+                <span className="browse-back-icon" aria-hidden="true" />
+                Back
+              </button>
+              <div className="left-card left-search-card">
                 <h2 className="left-title">Browse Health Topics</h2>
 
                 <div className="left-search">
@@ -275,7 +330,7 @@ export default function ConditionDetails() {
                 </div>
               </div>
 
-              <div className="left-card">
+              <div className="left-card body-system-card">
                 <h3 className="left-section-title">Body System</h3>
                 <div className="menu-list">
                   {filteredBodySystems.map((item) => (
@@ -297,7 +352,7 @@ export default function ConditionDetails() {
                 </div>
               </div>
 
-              <div className="left-card">
+              <div className="left-card quick-actions-card">
                 <h3 className="left-section-title">What are you looking for?</h3>
                 <div className="menu-list">
                   {quickActions.map((item) => (
@@ -324,6 +379,26 @@ export default function ConditionDetails() {
                     "Use this page as a quick guide, then check symptoms or book a clinic when you need care."}
                 </p>
               </div>
+
+              <VoiceAssistantPopup className="sidebar-voice-card" ariaLabel="Voice Search">
+                <span className="sidebar-voice-icon" aria-hidden="true">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    className="voice-fab-svg"
+                  >
+                    <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2"></path>
+                    <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
+                  </svg>
+                </span>
+                <span className="sidebar-voice-copy">
+                  <strong>Voice Assistant</strong>
+                  <small>Describe symptoms hands-free.</small>
+                </span>
+              </VoiceAssistantPopup>
             </aside>
 
             <section className="main-panel">
@@ -366,13 +441,13 @@ export default function ConditionDetails() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      className="clinic-btn"
-                      onClick={() => navigate("/find-clinic")}
-                    >
-                      Find Clinics
-                    </button>
+                    <div className="condition-hero-note">
+                      <span>Health reference</span>
+                      <p>
+                        Use this information as a guide. For diagnosis, treatment, or urgent
+                        symptoms, consult a licensed healthcare professional.
+                      </p>
+                    </div>
                   </section>
 
                   <section className="overview-grid">
@@ -461,7 +536,9 @@ export default function ConditionDetails() {
                                 <div className="disease-content">
                                   <h4>{item.symptom_name}</h4>
                                   <p>
-                                    {Number(item.is_red_flag) === 1
+                                    {item.description
+                                      ? item.description
+                                      : Number(item.is_red_flag) === 1
                                       ? "Red flag symptom. Consider prompt medical attention."
                                       : item.category
                                         ? `${toTitle(item.category)} symptom associated with this condition.`
@@ -482,13 +559,72 @@ export default function ConditionDetails() {
                     </div>
 
                     <div className="condition-support-grid">
-                      {supportCards.map((card) => (
-                        <div className="condition-support-card" key={card.title}>
-                          <span>{card.title}</span>
-                          <p>{card.value}</p>
-                        </div>
+                      {supportCards.map((card, index) => (
+                        <button
+                          type="button"
+                          className={`condition-support-card ${card.tone}`}
+                          key={card.title}
+                          onClick={() => setActiveSupportIndex(index)}
+                        >
+                          <span className="condition-support-card-inner">
+                            <span className="condition-support-icon">{card.shortLabel}</span>
+                            <span className="condition-support-summary">
+                              <span>{card.title}</span>
+                              <strong>{card.summary}</strong>
+                            </span>
+                            <span className="condition-support-toggle">Open</span>
+                          </span>
+                        </button>
                       ))}
                     </div>
+
+                    {activeSupportIndex !== null && supportCards[activeSupportIndex] && (
+                      <div
+                        className="condition-support-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="condition-support-modal-title"
+                        onClick={() => setActiveSupportIndex(null)}
+                      >
+                        <div
+                          className="condition-support-modal-card"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            className="condition-support-modal-close"
+                            onClick={() => setActiveSupportIndex(null)}
+                            aria-label="Close support details"
+                          >
+                            x
+                          </button>
+                          <span className="condition-support-icon">
+                            {supportCards[activeSupportIndex].shortLabel}
+                          </span>
+                          <span className="condition-support-modal-label">
+                            {supportCards[activeSupportIndex].title}
+                          </span>
+                          <h3 id="condition-support-modal-title">
+                            {supportCards[activeSupportIndex].summary}
+                          </h3>
+                          <p>{supportCards[activeSupportIndex].value}</p>
+                          {supportCards[activeSupportIndex].actionLabel &&
+                            supportCards[activeSupportIndex].actionTo && (
+                              <button
+                                type="button"
+                                className="condition-support-action"
+                                onClick={() => {
+                                  const target = supportCards[activeSupportIndex]?.actionTo;
+                                  setActiveSupportIndex(null);
+                                  if (target) navigate(target);
+                                }}
+                              >
+                                {supportCards[activeSupportIndex].actionLabel}
+                              </button>
+                            )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="symptoms-card">
                       <h3>Quick Symptoms List</h3>
@@ -524,34 +660,11 @@ export default function ConditionDetails() {
 
                     <div className="footer-voice-row">
                       <footer className="heart-footer">
-                        <div className="footer-links">
-                          <span>About Us</span>
-                          <span>|</span>
-                          <span>Contact</span>
-                          <span>|</span>
-                          <span>Privacy Policy</span>
-                          <span>|</span>
-                          <span>Terms of Service</span>
-                        </div>
                         <p>
                           This is a general health information page. For serious symptoms,
                           consult a doctor immediately.
                         </p>
                       </footer>
-
-                      <VoiceAssistantPopup className="voice-fab" ariaLabel="Voice Search">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                          className="voice-fab-svg"
-                        >
-                          <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2"></path>
-                          <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
-                        </svg>
-                      </VoiceAssistantPopup>
                     </div>
                   </section>
                 </>

@@ -5,6 +5,8 @@ import { Link, NavLink } from "react-router-dom";
 import "./UserAppointment.css";
 import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
+import { apiUrl } from "../sharedBackendFetch";
+import logo from "../img/logo.png";
 import {
   Filter,
   Plus,
@@ -45,7 +47,18 @@ type Appointment = {
   symptoms?: string;
   patient_note?: string;
   clinic_note?: string;
-  status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+  status:
+    | "pending"
+    | "confirmed"
+    | "reschedule_requested"
+    | "cancelled"
+    | "completed"
+    | "no_show";
+  proposed_start_at?: string | null;
+  proposed_end_at?: string | null;
+  reschedule_reason?: string | null;
+  reschedule_requested_by?: string | null;
+  reschedule_requested_at?: string | null;
   cancelled_at?: string | null;
   cancelled_by?: "patient" | "clinic" | "admin" | null;
   cancel_reason?: string | null;
@@ -107,10 +120,28 @@ function parseDateTime(
     return Number.isNaN(value.getTime()) ? null : value;
   }
 
-  const parsed =
-    typeof value === "string"
-      ? new Date(value.replace(" ", "T"))
-      : new Date(value);
+  if (typeof value === "string") {
+    const dateTimeMatch = value
+      .trim()
+      .match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+
+    if (dateTimeMatch) {
+      const [, year, month, day, hours = "00", minutes = "00", seconds = "00"] =
+        dateTimeMatch;
+      const parsedLocal = new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hours),
+        Number(minutes),
+        Number(seconds)
+      );
+
+      return Number.isNaN(parsedLocal.getTime()) ? null : parsedLocal;
+    }
+  }
+
+  const parsed = new Date(value);
 
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
@@ -155,6 +186,19 @@ function formatDay(
   return date.toLocaleDateString([], {
     weekday: "long",
   });
+}
+
+function formatStatus(status: Appointment["status"] | string | undefined): string {
+  if (status === "reschedule_requested") return "Reschedule Requested";
+  if (!status) return "Unknown";
+  return status.replace(/_/g, " ");
+}
+
+function getTimelineStartAt(appointment: Appointment): string {
+  return appointment.status === "reschedule_requested" &&
+    appointment.proposed_start_at
+    ? appointment.proposed_start_at
+    : appointment.start_at;
 }
 
 function toMySqlDateTime(date: string, time: string): string {
@@ -445,7 +489,7 @@ function BookingModal({
 
       console.log("BOOK PAYLOAD:", payload);
 
-      const res = await fetch("http://localhost:5000/api/appointments/book", {
+      const res = await fetch(apiUrl("/api/appointments/book"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -533,10 +577,6 @@ function BookingModal({
     <div className="booking-modal-overlay front">
       <div className="booking-modal">
         <div className="booking-modal-header">
-          <div>
-            <h2>Book Appointment</h2>
-            <p>Choose your clinic, service, and preferred schedule.</p>
-          </div>
           <button
             type="button"
             className="modal-close-btn"
@@ -728,20 +768,23 @@ function UserAppointmentsContent({
 
   const [actionMessage, setActionMessage] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "calendar">(
+  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "all">(
     "upcoming"
   );
   const [showAllAppointments, setShowAllAppointments] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  
-  const [logoutPopupOpen, setLogoutPopupOpen] = useState(false);
-
 
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "pending" | "confirmed" | "cancelled" | "completed" | "no_show"
+    | "all"
+    | "pending"
+    | "confirmed"
+    | "reschedule_requested"
+    | "cancelled"
+    | "completed"
+    | "no_show"
   >("all");
   const [clinicFilter, setClinicFilter] = useState("all");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const [calendarDate, setCalendarDate] = useState(() => {
     const now = new Date();
@@ -764,9 +807,7 @@ function UserAppointmentsContent({
       setLoading(true);
       setError("");
 
-      const res = await fetch(
-        `http://localhost:5000/api/appointments/by-user/${userId}`
-      );
+      const res = await fetch(apiUrl(`/api/appointments/by-user/${userId}`));
 
       if (!res.ok) {
         throw new Error(`Request failed: ${res.status}`);
@@ -774,6 +815,12 @@ function UserAppointmentsContent({
 
       const data: Appointment[] = await res.json();
       setAppointments(Array.isArray(data) ? data : []);
+
+      void fetch(apiUrl(`/api/users/${userId}/notifications`)).catch(
+        (notificationError) => {
+          console.warn("Failed to sync appointment reminders:", notificationError);
+        }
+      );
     } catch (err) {
       console.error("Failed to load appointments:", err);
       setError("Failed to load appointments.");
@@ -795,29 +842,29 @@ function UserAppointmentsContent({
 
   const upcomingAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
-      .filter((a) => (parseDateTime(a.start_at)?.getTime() ?? 0) >= now)
+      .filter((a) => (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) >= now)
       .sort(
         (a, b) =>
-          (parseDateTime(a.start_at)?.getTime() ?? 0) -
-          (parseDateTime(b.start_at)?.getTime() ?? 0)
+          (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) -
+          (parseDateTime(getTimelineStartAt(b))?.getTime() ?? 0)
       );
   }, [validAppointments, now]);
 
   const pastAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
-      .filter((a) => (parseDateTime(a.start_at)?.getTime() ?? 0) < now)
+      .filter((a) => (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) < now)
       .sort(
         (a, b) =>
-          (parseDateTime(b.start_at)?.getTime() ?? 0) -
-          (parseDateTime(a.start_at)?.getTime() ?? 0)
+          (parseDateTime(getTimelineStartAt(b))?.getTime() ?? 0) -
+          (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0)
       );
   }, [validAppointments, now]);
 
   const allAppointments = useMemo<Appointment[]>(() => {
     return [...validAppointments].sort(
       (a, b) =>
-        (parseDateTime(a.start_at)?.getTime() ?? 0) -
-        (parseDateTime(b.start_at)?.getTime() ?? 0)
+        (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) -
+        (parseDateTime(getTimelineStartAt(b))?.getTime() ?? 0)
     );
   }, [validAppointments]);
 
@@ -831,9 +878,31 @@ function UserAppointmentsContent({
 
   const baseAppointments = useMemo(() => {
     if (activeTab === "past") return pastAppointments;
-    if (activeTab === "calendar") return allAppointments;
+    if (activeTab === "all") return allAppointments;
     return upcomingAppointments;
   }, [activeTab, pastAppointments, allAppointments, upcomingAppointments]);
+
+  const needsAppointmentResponse = (appointment: Appointment) =>
+    appointment.status === "reschedule_requested";
+
+  const isRecentAppointment = (appointment: Appointment) => {
+    const recentAnchor = parseDateTime(
+      appointment.reschedule_requested_at ||
+        appointment.updated_at ||
+        appointment.created_at ||
+        appointment.start_at
+    );
+
+    if (!recentAnchor) return false;
+
+    const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+    const age = now - recentAnchor.getTime();
+    return age >= 0 && age <= threeDaysMs;
+  };
+
+  const rescheduleRequestCount = useMemo(() => {
+    return upcomingAppointments.filter(needsAppointmentResponse).length;
+  }, [upcomingAppointments]);
 
   const filteredAppointments = useMemo(() => {
     let list = [...baseAppointments];
@@ -869,13 +938,21 @@ function UserAppointmentsContent({
     }
 
     list.sort((a, b) => {
-      const aTime = parseDateTime(a.start_at)?.getTime() ?? 0;
-      const bTime = parseDateTime(b.start_at)?.getTime() ?? 0;
+      const aNeedsResponse = needsAppointmentResponse(a) ? 1 : 0;
+      const bNeedsResponse = needsAppointmentResponse(b) ? 1 : 0;
+
+      if (aNeedsResponse !== bNeedsResponse) {
+        return bNeedsResponse - aNeedsResponse;
+      }
+
+      const aTime = parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0;
+      const bTime = parseDateTime(getTimelineStartAt(b))?.getTime() ?? 0;
       return sortOrder === "asc" ? aTime - bTime : bTime - aTime;
     });
 
-    return showAllAppointments ? list : list.slice(0, 4);
+    return showAllAppointments || activeTab === "upcoming" ? list : list.slice(0, 4);
   }, [
+    activeTab,
     baseAppointments,
     statusFilter,
     clinicFilter,
@@ -885,26 +962,31 @@ function UserAppointmentsContent({
   ]);
 
   const confirmedCount = appointments.filter((a) => a.status === "confirmed").length;
-  const pendingCount = appointments.filter((a) => a.status === "pending").length;
+  const pendingCount = appointments.filter((a) =>
+    ["pending", "reschedule_requested"].includes(a.status)
+  ).length;
   const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
   const displayedAppointmentCount =
     activeTab === "past"
       ? pastAppointments.length
-      : activeTab === "calendar"
+      : activeTab === "all"
       ? allAppointments.length
       : upcomingAppointments.length;
   const displayedAppointmentLabel =
     activeTab === "past"
       ? "Past Appointments"
-      : activeTab === "calendar"
+      : activeTab === "all"
       ? "Total Appointments"
       : "Upcoming Appointments";
 
   const nextAppointment =
     upcomingAppointments.length > 0 ? upcomingAppointments[0] : null;
 
-  const canEditAppointment = (appointment: Appointment) =>
+  const canRescheduleAppointment = (appointment: Appointment) =>
     appointment.status === "pending" || appointment.status === "confirmed";
+
+  const canCancelAppointment = (appointment: Appointment) =>
+    ["pending", "confirmed", "reschedule_requested"].includes(appointment.status);
 
   const closeCancelModal = () => {
     setCancelOpen(false);
@@ -922,8 +1004,10 @@ function UserAppointmentsContent({
   };
 
   const openCancelModal = (appointment: Appointment) => {
-    if (!canEditAppointment(appointment)) {
-      setActionMessage("Only pending or confirmed appointments can be cancelled.");
+    if (!canCancelAppointment(appointment)) {
+      setActionMessage(
+        "Only pending, confirmed, or reschedule-requested appointments can be cancelled."
+      );
       return;
     }
 
@@ -937,7 +1021,7 @@ function UserAppointmentsContent({
   };
 
   const openRescheduleModal = (appointment: Appointment) => {
-    if (!canEditAppointment(appointment)) {
+    if (!canRescheduleAppointment(appointment)) {
       setActionMessage("Only pending or confirmed appointments can be rescheduled.");
       return;
     }
@@ -980,7 +1064,7 @@ function UserAppointmentsContent({
       setActionMessage("");
 
       const res = await fetch(
-        `http://localhost:5000/api/appointments/${selectedAppointment.id}/cancel`,
+        apiUrl(`/api/appointments/${selectedAppointment.id}/cancel`),
         {
           method: "PATCH",
           headers: {
@@ -1061,7 +1145,7 @@ function UserAppointmentsContent({
       }
 
       const res = await fetch(
-        `http://localhost:5000/api/appointments/${selectedAppointment.id}/reschedule`,
+        apiUrl(`/api/appointments/${selectedAppointment.id}/reschedule`),
         {
           method: "PATCH",
           headers: {
@@ -1095,29 +1179,76 @@ function UserAppointmentsContent({
     }
   };
 
+  const handleClinicRescheduleResponse = async (
+    appointment: Appointment,
+    action: "accept" | "cancel"
+  ) => {
+    try {
+      if (!userId) {
+        setActionMessage("No logged-in user found.");
+        return;
+      }
+
+      setActionMessage("");
+
+      const res = await fetch(
+        apiUrl(`/api/appointments/${appointment.id}/reschedule-response`),
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            action,
+          }),
+        }
+      );
+
+      const data = (await res.json().catch(() => ({}))) as ApiErrorResponse;
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update reschedule request");
+      }
+
+      setActionMessage(
+        action === "accept"
+          ? "New schedule accepted. Your appointment was updated."
+          : "Reschedule declined. The appointment was cancelled."
+      );
+      await loadAppointments();
+    } catch (err) {
+      setActionMessage(
+        err instanceof Error
+          ? err.message
+          : "Failed to update reschedule request."
+      );
+    }
+  };
+
   const monthCells = useMemo(() => {
     return getMonthMatrix(calendarDate.getFullYear(), calendarDate.getMonth());
   }, [calendarDate]);
 
   const appointmentDates = useMemo(() => {
     return validAppointments
-      .map((a) => parseDateTime(a.start_at))
+      .map((a) => parseDateTime(getTimelineStartAt(a)))
       .filter((d): d is Date => d !== null);
   }, [validAppointments]);
 
   const todayReference = nextAppointment
-    ? parseDateTime(nextAppointment.start_at) || new Date()
+    ? parseDateTime(getTimelineStartAt(nextAppointment)) || new Date()
     : new Date();
 
   const dayAppointments = validAppointments
     .filter((a) => {
-      const date = parseDateTime(a.start_at);
+      const date = parseDateTime(getTimelineStartAt(a));
       return date ? sameDate(date, todayReference) : false;
     })
     .sort(
       (a, b) =>
-        (parseDateTime(a.start_at)?.getTime() ?? 0) -
-        (parseDateTime(b.start_at)?.getTime() ?? 0)
+        (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) -
+        (parseDateTime(getTimelineStartAt(b))?.getTime() ?? 0)
     );
 
 
@@ -1138,7 +1269,7 @@ function UserAppointmentsContent({
             </button>
 
             <Link className="appointments-mobile-brand" to="/homepage">
-              CUIDADO
+              <img src={logo} alt="CUIDADO" />
             </Link>
 
             <Link
@@ -1212,14 +1343,14 @@ function UserAppointmentsContent({
             Past
           </button>
           <button
-            className={`tab ${activeTab === "calendar" ? "active" : ""}`}
+            className={`tab ${activeTab === "all" ? "active" : ""}`}
             type="button"
             onClick={() => {
-              setActiveTab("calendar");
+              setActiveTab("all");
               setShowAllAppointments(true);
             }}
           >
-            Calendar
+            All
           </button>
         </div>
 
@@ -1246,6 +1377,7 @@ function UserAppointmentsContent({
                         | "all"
                         | "pending"
                         | "confirmed"
+                        | "reschedule_requested"
                         | "cancelled"
                         | "completed"
                         | "no_show"
@@ -1255,6 +1387,7 @@ function UserAppointmentsContent({
                   <option value="all">All statuses</option>
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
+                  <option value="reschedule_requested">Reschedule Requested</option>
                   <option value="cancelled">Cancelled</option>
                   <option value="completed">Completed</option>
                   <option value="no_show">No show</option>
@@ -1293,7 +1426,7 @@ function UserAppointmentsContent({
                   setSearchTerm("");
                   setStatusFilter("all");
                   setClinicFilter("all");
-                  setSortOrder("asc");
+                  setSortOrder("desc");
                 }}
               >
                 Clear Filters
@@ -1378,7 +1511,7 @@ function UserAppointmentsContent({
                 {dayAppointments.length > 0 ? (
                   <div className="today-mini-card">
                     <div className="today-mini-time">
-                      {formatTime(dayAppointments[0].start_at)}
+                      {formatTime(getTimelineStartAt(dayAppointments[0]))}
                     </div>
 
                     <div className="today-mini-body">
@@ -1396,7 +1529,7 @@ function UserAppointmentsContent({
                             "Consultation"}
                         </p>
                         <span className={`status ${dayAppointments[0].status || ""}`}>
-                          {dayAppointments[0].status || "unknown"}
+                          {formatStatus(dayAppointments[0].status)}
                         </span>
 
                         <div className="today-location-row">
@@ -1420,18 +1553,18 @@ function UserAppointmentsContent({
                   <h2>
                     {activeTab === "past"
                       ? "Past Appointments"
-                      : activeTab === "calendar"
-                      ? "Calendar Appointments"
+                      : activeTab === "all"
+                      ? "All Appointments"
                       : "Upcoming Appointments"}
                   </h2>
                 </div>
 
-                {activeTab !== "calendar" && (
+                {activeTab !== "all" && (
                   <button
                     className="view-all-btn"
                     type="button"
                     onClick={() => {
-                      setActiveTab("calendar");
+                      setActiveTab("all");
                       setShowAllAppointments(true);
                     }}
                   >
@@ -1439,6 +1572,25 @@ function UserAppointmentsContent({
                   </button>
                 )}
               </div>
+
+              {rescheduleRequestCount > 0 && activeTab !== "past" && (
+                <button
+                  type="button"
+                  className="appointment-priority-banner"
+                  onClick={() => {
+                    setStatusFilter("reschedule_requested");
+                    setShowFilters(true);
+                    setShowAllAppointments(true);
+                  }}
+                >
+                  <strong>
+                    {rescheduleRequestCount} reschedule{" "}
+                    {rescheduleRequestCount === 1 ? "request needs" : "requests need"} your
+                    response
+                  </strong>
+                  <span>Review the clinic's proposed time before your appointment changes.</span>
+                </button>
+              )}
 
               {loading ? (
                 <p>Loading appointments...</p>
@@ -1449,9 +1601,20 @@ function UserAppointmentsContent({
               ) : (
                 <div className="appointment-list">
                   {filteredAppointments.map((item) => (
-                    <div className="appointment-item" key={item.id}>
+                    <div
+                      className={[
+                        "appointment-item",
+                        needsAppointmentResponse(item) ? "needs-action" : "",
+                        isRecentAppointment(item) ? "is-new" : "",
+                      ]
+                        .join(" ")
+                        .trim()}
+                      key={item.id}
+                    >
                       <div className="appointment-time">
-                        <span className="time-main">{formatTime(item.start_at)}</span>
+                        <span className="time-main">
+                          {formatTime(getTimelineStartAt(item))}
+                        </span>
                       </div>
 
                       <div className="appointment-info-wrap">
@@ -1459,6 +1622,19 @@ function UserAppointmentsContent({
 
                         <div className="appointment-info">
                           <h3>{item.clinic_name_snapshot || item.clinic_name || "Clinic"}</h3>
+
+                          {(needsAppointmentResponse(item) || isRecentAppointment(item)) && (
+                            <div className="appointment-meta-badges">
+                              {needsAppointmentResponse(item) && (
+                                <span className="appointment-badge warning">
+                                  Needs response
+                                </span>
+                              )}
+                              {isRecentAppointment(item) && (
+                                <span className="appointment-badge new">New update</span>
+                              )}
+                            </div>
+                          )}
 
                           <p>{item.purpose || item.specialization || "Consultation"}</p>
 
@@ -1475,19 +1651,32 @@ function UserAppointmentsContent({
                                 .join(", ")}
                             </small>
                           )}
+
+                          {item.status === "reschedule_requested" && (
+                            <div className="reschedule-request-box">
+                              <strong>Clinic proposed a new schedule</strong>
+                              <span>
+                                {formatDate(item.proposed_start_at)} at{" "}
+                                {formatTime(item.proposed_start_at)}
+                              </span>
+                              {item.reschedule_reason && (
+                                <small>{item.reschedule_reason}</small>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       <div className="appointment-date">
                         <div className="date-row">
                           <CalendarDays size={16} />
-                          <span>{formatDate(item.start_at)}</span>
+                          <span>{formatDate(getTimelineStartAt(item))}</span>
                         </div>
-                        <small>{formatDay(item.start_at)}</small>
+                        <small>{formatDay(getTimelineStartAt(item))}</small>
                       </div>
 
                       <div className={`status ${item.status || ""}`}>
-                        {item.status || "unknown"}
+                        {formatStatus(item.status)}
                       </div>
 
                       <div className="appointment-more">
@@ -1497,21 +1686,49 @@ function UserAppointmentsContent({
                       </div>
 
                       <div className="appointment-actions">
-                        <button
-                          className="mini-action-btn"
-                          type="button"
-                          onClick={() => openRescheduleModal(item)}
-                        >
-                          Reschedule
-                        </button>
+                        {item.status === "reschedule_requested" ? (
+                          <>
+                            <button
+                              className="mini-action-btn accept"
+                              type="button"
+                              onClick={() =>
+                                handleClinicRescheduleResponse(item, "accept")
+                              }
+                            >
+                              Accept New Time
+                            </button>
 
-                        <button
-                          className="mini-action-btn danger"
-                          type="button"
-                          onClick={() => openCancelModal(item)}
-                        >
-                          Cancel
-                        </button>
+                            <button
+                              className="mini-action-btn danger"
+                              type="button"
+                              onClick={() =>
+                                handleClinicRescheduleResponse(item, "cancel")
+                              }
+                            >
+                              Decline and Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="mini-action-btn"
+                              type="button"
+                              onClick={() => openRescheduleModal(item)}
+                              disabled={!canRescheduleAppointment(item)}
+                            >
+                              Reschedule
+                            </button>
+
+                            <button
+                              className="mini-action-btn danger"
+                              type="button"
+                              onClick={() => openCancelModal(item)}
+                              disabled={!canCancelAppointment(item)}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1730,8 +1947,8 @@ function UserAppointmentsContent({
                   "Clinic"}
               </h4>
               <small>
-                {formatDate(selectedAppointment.start_at)} at{" "}
-                {formatTime(selectedAppointment.start_at)}
+                {formatDate(getTimelineStartAt(selectedAppointment))} at{" "}
+                {formatTime(getTimelineStartAt(selectedAppointment))}
               </small>
             </div>
 

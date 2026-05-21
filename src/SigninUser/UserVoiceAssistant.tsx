@@ -6,12 +6,15 @@ import VoiceAssistantResult from "./VoiceAssistantResult";
 import { useNavigate } from "react-router-dom";
 import {
   Mic,
-  CalendarDays,
-  FlaskConical,
-  MapPin,
-  Bell,
   HeartPulse,
-  Moon,
+  Thermometer,
+  Wind,
+  Brain,
+  Activity,
+  ClipboardList,
+  SearchCheck,
+  ShieldAlert,
+  Keyboard,
   Lightbulb,
   Headphones,
   ChevronRight,
@@ -84,12 +87,12 @@ export default function UserVoiceAssistant() {
   }, []);
 
   const suggestions = [
-    { icon: CalendarDays, text: "What are my upcoming appointments?" },
-    { icon: FlaskConical, text: "Show my lab test results" },
-    { icon: MapPin, text: "Where is the nearest clinic?" },
-    { icon: HeartPulse, text: "I have fever cough and body ache" },
-    { icon: Bell, text: "Remind me to take my medicine at 8 PM" },
-    { icon: Moon, text: "How can I improve my sleep?" },
+    { icon: Thermometer, text: "I have fever, chills, and body aches" },
+    { icon: Wind, text: "I have cough and shortness of breath" },
+    { icon: Brain, text: "I have headache and dizziness" },
+    { icon: Activity, text: "I feel nauseous and have stomach pain" },
+    { icon: HeartPulse, text: "I have chest pain and palpitations" },
+    { icon: ClipboardList, text: "I have skin rash and itching" },
   ];
 
   const analyzeVoiceSymptoms = async (transcript: string) => {
@@ -193,11 +196,13 @@ export default function UserVoiceAssistant() {
         setHeaderProfileOpen={setHeaderProfileOpen}
       />
 
-      <main className="page-content">
+      <main className="page-content voice-page-content">
         <div className="voice-page">
           <div className="voice-main">
             <h1>Voice Assistant</h1>
-            <p className="voice-subtitle">Your health companion, just a voice away.</p>
+            <p className="voice-subtitle">
+              Describe your symptoms by voice and get possible condition matches.
+            </p>
 
             <section className="voice-card">
               <div className="voice-fixed-top">
@@ -244,7 +249,7 @@ export default function UserVoiceAssistant() {
                 )}
 
                 <div className="suggestions-section">
-                  <h3>Try asking me</h3>
+                  <h3>Try describing symptoms</h3>
 
                   <div className="suggestions-grid">
                     {suggestions.map(({ icon: Icon, text }) => (
@@ -274,39 +279,39 @@ export default function UserVoiceAssistant() {
             </section>
 
             <section className="features-card">
-              <h3>Voice Assistant Features</h3>
+              <h3>Symptom Voice Assistant</h3>
 
               <div className="features-grid">
                 <div className="feature-item">
                   <div className="feature-icon teal">
-                    <CalendarDays size={26} />
+                    <ClipboardList size={26} />
                   </div>
-                  <h4>Appointments</h4>
-                  <p>Book, reschedule or check your appointments</p>
+                  <h4>Symptom capture</h4>
+                  <p>Describe what you feel in plain language.</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon blue">
-                    <FlaskConical size={26} />
+                    <SearchCheck size={26} />
                   </div>
-                  <h4>Lab Results</h4>
-                  <p>Get your lab test results and reports</p>
+                  <h4>Possible matches</h4>
+                  <p>Compares your symptoms with mapped conditions.</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon green">
-                    <Bell size={26} />
+                    <ShieldAlert size={26} />
                   </div>
-                  <h4>Medications</h4>
-                  <p>Set reminders and get medication information</p>
+                  <h4>Care guidance</h4>
+                  <p>Shows self-care, consult, or urgent-care guidance.</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon purple">
-                    <HeartPulse size={26} />
+                    <Keyboard size={26} />
                   </div>
-                  <h4>Health Info</h4>
-                  <p>Get reliable health information and tips</p>
+                  <h4>Typed backup</h4>
+                  <p>Type symptoms when the microphone is not available.</p>
                 </div>
               </div>
             </section>
@@ -363,7 +368,9 @@ export default function UserVoiceAssistant() {
               ×
             </button>
 
-            <VoiceAssistantResult result={symptomResult} showTranscript />
+            <div className="voice-result-scroll">
+              <VoiceAssistantResult result={symptomResult} showTranscript />
+            </div>
             <div className="voice-result-section">
               <strong>Possible conditions:</strong>
               {symptomResult.possible_conditions.length > 0 ? (

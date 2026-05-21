@@ -1070,3 +1070,245 @@ body {
 .admin-Userpage .dash-right-top .dash-panel-body {
   min-height: 345px !important;
 }
+
+/* ================= CLINIC DETAILS MODAL ================= */
+.admin-UserClinics .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.48);
+  display: grid;
+  place-items: center;
+}
+
+.admin-UserClinics .modal-card {
+  width: min(900px, 92vw);
+  max-width: 92vw;
+  max-height: 88vh;
+  overflow: auto;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.26);
+}
+
+.admin-UserClinics .modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px 18px;
+  border-bottom: 1px solid #e5edf0;
+}
+
+.admin-UserClinics .modal-head h3 {
+  margin: 0;
+  color: #102a2a;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.admin-UserClinics .modal-close {
+  border: none;
+  background: transparent;
+  color: #0f2f2f;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  margin: 0;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.admin-UserClinics .modal-body {
+  padding: 24px 28px 26px;
+}
+
+.admin-UserClinics .modal-body > p:not(.clinic-detail-note) {
+  display: none;
+}
+
+.admin-UserClinics .modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 28px 26px;
+}
+
+.admin-UserClinics .clinic-detail-hero {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid #dcebea;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eefaf8 0%, #ffffff 68%);
+}
+
+.admin-UserClinics .clinic-detail-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: #078b7d;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 23px;
+  font-weight: 900;
+}
+
+.admin-UserClinics .clinic-detail-identity {
+  min-width: 0;
+}
+
+.admin-UserClinics .clinic-detail-identity h4 {
+  margin: 0 0 5px;
+  color: #102a2a;
+  font-size: 23px;
+  line-height: 1.15;
+}
+
+.admin-UserClinics .clinic-detail-identity span,
+.admin-UserClinics .clinic-detail-identity small {
+  display: block;
+  overflow: hidden;
+  color: #647d82;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-UserClinics .clinic-detail-identity small {
+  margin-top: 4px;
+  color: #078b7d;
+  text-transform: capitalize;
+}
+
+.admin-UserClinics .clinic-detail-statuses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.admin-UserClinics .clinic-detail-status {
+  min-width: 110px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  text-align: center;
+  text-transform: capitalize;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-UserClinics .approval-approved,
+.admin-UserClinics .account-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-UserClinics .approval-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.admin-UserClinics .approval-rejected,
+.admin-UserClinics .account-disabled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.admin-UserClinics .clinic-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-UserClinics .clinic-detail-stat,
+.admin-UserClinics .clinic-detail-field {
+  border: 1px solid #e1ebed;
+  border-radius: 16px;
+  background: #fbfefe;
+}
+
+.admin-UserClinics .clinic-detail-stat {
+  min-height: 118px;
+  padding: 16px;
+}
+
+.admin-UserClinics .clinic-detail-stat span,
+.admin-UserClinics .clinic-detail-field span {
+  display: block;
+  margin-bottom: 7px;
+  color: #70858a;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-UserClinics .clinic-detail-stat strong {
+  display: block;
+  color: #0f2f2f;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.admin-UserClinics .clinic-detail-stat small,
+.admin-UserClinics .clinic-detail-field small {
+  display: block;
+  margin-top: 8px;
+  color: #6b7f84;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.admin-UserClinics .clinic-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.admin-UserClinics .clinic-detail-field {
+  padding: 14px 16px;
+}
+
+.admin-UserClinics .clinic-detail-field strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #172f35;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.admin-UserClinics .clinic-detail-field-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-UserClinics .clinic-detail-note {
+  margin: 14px 0 0 !important;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f1f8f7;
+  color: #4b6268 !important;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media screen and (max-width: 760px) {
+  .admin-UserClinics .clinic-detail-hero,
+  .admin-UserClinics .clinic-detail-stats,
+  .admin-UserClinics .clinic-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserClinics .clinic-detail-statuses {
+    align-items: stretch;
+  }
+}

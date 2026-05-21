@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
+import { apiUrl, getConfiguredBackendUrl } from "../sharedBackendFetch";
 import "./Cardio.css";
 import searchIcon from "../img/search.png";
 
@@ -60,8 +61,6 @@ const quickActions = [
   { id: "emergency", icon: "🧰", label: "Emergency Guide" },
 ];
 
-const API_BASE = "http://localhost:5000";
-
 const toTitle = (value?: string | null) => {
   const text = String(value || "").trim();
   if (!text) return "";
@@ -76,7 +75,7 @@ const toAssetUrl = (value?: string | null) => {
   const path = String(value || "").trim();
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
+  return `${getConfiguredBackendUrl()}/${path.replace(/^\/+/, "")}`;
 };
 
 export default function ConditionDetails() {
@@ -109,10 +108,38 @@ export default function ConditionDetails() {
   }, []);
   const userId = currentUser?.id ? Number(currentUser.id) : 0;
 
+  useLayoutEffect(() => {
+    const resetScroll = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      document
+        .querySelectorAll<HTMLElement>(
+          ".condition-details-page, .condition-details-page .browse-page-content, .condition-details-page .browse-health-main, .condition-details-page .main-panel"
+        )
+        .forEach((element) => {
+          element.scrollTop = 0;
+        });
+    };
+
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    resetScroll();
+
+    const frame = window.requestAnimationFrame(resetScroll);
+    const timer = window.setTimeout(resetScroll, 150);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, [selectedSlug, condition?.condition_id, loading]);
+
   useEffect(() => {
     const loadBodySystems = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/health/body-systems");
+        const res = await fetch(apiUrl("/api/health/body-systems"));
         if (!res.ok) throw new Error("Failed to load body systems");
         const data = await res.json();
         setBodySystems(Array.isArray(data) ? data : []);
@@ -131,11 +158,11 @@ export default function ConditionDetails() {
         setError("");
 
         const urls = {
-          details: `http://localhost:5000/api/health/condition/${selectedSlug}?user_id=${userId}`,
-          symptoms: `http://localhost:5000/api/health/condition/${selectedSlug}/symptoms`,
-          articles: `http://localhost:5000/api/health/condition/${selectedSlug}/articles`,
-          prevention: `http://localhost:5000/api/health/condition/${selectedSlug}/prevention-tips`,
-          facts: `http://localhost:5000/api/health/condition/${selectedSlug}/facts`,
+          details: apiUrl(`/api/health/condition/${selectedSlug}?user_id=${userId}`),
+          symptoms: apiUrl(`/api/health/condition/${selectedSlug}/symptoms`),
+          articles: apiUrl(`/api/health/condition/${selectedSlug}/articles`),
+          prevention: apiUrl(`/api/health/condition/${selectedSlug}/prevention-tips`),
+          facts: apiUrl(`/api/health/condition/${selectedSlug}/facts`),
         };
 
         const [detailsRes, symptomsRes, articlesRes, preventionRes, factsRes] =
@@ -244,7 +271,11 @@ export default function ConditionDetails() {
   ];
 
   return (
-    <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div
+      className={`browse-health-page condition-details-page ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}

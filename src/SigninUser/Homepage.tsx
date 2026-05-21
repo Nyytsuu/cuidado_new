@@ -250,6 +250,7 @@ useEffect(() => {
     }
   }
 }, []);
+
   return (
     <div className={`homepage ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar

@@ -319,6 +319,7 @@
 
 .admin-table.clinics-table {
   width: 100%;
+  min-width: 900px;
   border-collapse: separate;
   border-spacing: 0;
 }

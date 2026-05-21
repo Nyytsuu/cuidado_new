@@ -4,6 +4,7 @@ import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./Cardio.css";
 import searchIcon from "../img/search.png";
+import { apiUrl } from "../sharedBackendFetch";
 
 type BodySystemMenuItem = {
   id: number;
@@ -30,6 +31,7 @@ type BodySystemDetailsType = {
 type ConditionItem = {
   condition_id: number;
   slug: string | null;
+  condition_slug?: string | null;
   condition_name: string;
   description: string | null;
   thumbnail_image: string | null;
@@ -58,6 +60,9 @@ type HealthFact = {
 type SymptomItem = {
   symptom_id: number;
   symptom_name: string;
+  description?: string | null;
+  category?: string | null;
+  is_red_flag?: number | boolean | null;
 };
 
 const quickActions = [
@@ -90,7 +95,7 @@ export default function BodySystemDetails() {
   useEffect(() => {
     const loadBodySystems = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/health/body-systems");
+        const res = await fetch(apiUrl("/api/health/body-systems"), { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to load body systems");
 
         const data = await res.json();
@@ -110,12 +115,12 @@ export default function BodySystemDetails() {
       setError("");
 
       const urls = {
-        bodySystem: `http://localhost:5000/api/health/body-systems/${selectedSlug}`,
-        conditions: `http://localhost:5000/api/health/body-systems/${selectedSlug}/conditions`,
-        articles: `http://localhost:5000/api/health/body-systems/${selectedSlug}/articles`,
-        symptoms: `http://localhost:5000/api/health/body-systems/${selectedSlug}/symptoms`,
-        prevention: `http://localhost:5000/api/health/body-systems/${selectedSlug}/prevention-tips`,
-        facts: `http://localhost:5000/api/health/body-systems/${selectedSlug}/facts`,
+        bodySystem: apiUrl(`/api/health/body-systems/${selectedSlug}`),
+        conditions: apiUrl(`/api/health/body-systems/${selectedSlug}/conditions`),
+        articles: apiUrl(`/api/health/body-systems/${selectedSlug}/articles`),
+        symptoms: apiUrl(`/api/health/body-systems/${selectedSlug}/symptoms`),
+        prevention: apiUrl(`/api/health/body-systems/${selectedSlug}/prevention-tips`),
+        facts: apiUrl(`/api/health/body-systems/${selectedSlug}/facts`),
       };
 
       const [
@@ -133,13 +138,6 @@ export default function BodySystemDetails() {
         fetch(urls.prevention),
         fetch(urls.facts),
       ]);
-
-      console.log("bodySystemRes", bodySystemRes.status, urls.bodySystem);
-      console.log("conditionsRes", conditionsRes.status, urls.conditions);
-      console.log("articlesRes", articlesRes.status, urls.articles);
-      console.log("symptomsRes", symptomsRes.status, urls.symptoms);
-      console.log("preventionRes", preventionRes.status, urls.prevention);
-      console.log("factsRes", factsRes.status, urls.facts);
 
       if (!bodySystemRes.ok) throw new Error(`Body system failed: ${bodySystemRes.status}`);
       if (!conditionsRes.ok) throw new Error(`Conditions failed: ${conditionsRes.status}`);
@@ -197,7 +195,10 @@ export default function BodySystemDetails() {
   };
 
   const handleConditionClick = (item: ConditionItem) => {
-    navigate(`/health/condition/${item.slug || item.condition_id}`);
+    const conditionSlug = item.condition_slug || item.slug;
+    const conditionTarget =
+      conditionSlug && conditionSlug !== selectedSlug ? conditionSlug : item.condition_id;
+    navigate(`/health/condition/${conditionTarget}`);
   };
 
   const handleQuickActionClick = (actionId: string) => {
@@ -238,7 +239,7 @@ export default function BodySystemDetails() {
         <main className="browse-health-main">
           <div className="health-browser-layout">
             <aside className="left-panel">
-              <div className="left-card">
+              <div className="left-card left-search-card">
                 <h2 className="left-title">Browse Health Topics</h2>
 
                 <div className="left-search">
@@ -252,7 +253,7 @@ export default function BodySystemDetails() {
                 </div>
               </div>
 
-              <div className="left-card">
+              <div className="left-card body-system-card">
                 <h3 className="left-section-title">Body System</h3>
                 <div className="menu-list">
                   {filteredBodySystems.map((item) => (
@@ -272,7 +273,7 @@ export default function BodySystemDetails() {
                 </div>
               </div>
 
-              <div className="left-card">
+              <div className="left-card quick-actions-card">
                 <h3 className="left-section-title">What are you looking?</h3>
                 <div className="menu-list">
                   {quickActions.map((item) => (
@@ -299,6 +300,26 @@ export default function BodySystemDetails() {
                     "Health facts will appear here once loaded from the database."}
                 </p>
               </div>
+
+              <VoiceAssistantPopup className="sidebar-voice-card" ariaLabel="Voice Search">
+                <span className="sidebar-voice-icon" aria-hidden="true">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                    className="voice-fab-svg"
+                  >
+                    <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2"></path>
+                    <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
+                  </svg>
+                </span>
+                <span className="sidebar-voice-copy">
+                  <strong>Voice Assistant</strong>
+                  <small>Describe symptoms hands-free.</small>
+                </span>
+              </VoiceAssistantPopup>
             </aside>
 
             <section className="main-panel">
@@ -420,7 +441,10 @@ export default function BodySystemDetails() {
                       <ul>
                         {symptoms.length > 0 ? (
                           symptoms.map((item) => (
-                            <li key={item.symptom_id}>{item.symptom_name}</li>
+                            <li key={item.symptom_id}>
+                              <strong>{item.symptom_name}</strong>
+                              {item.description && <span>{item.description}</span>}
+                            </li>
                           ))
                         ) : (
                           <li>No symptoms found.</li>
@@ -449,34 +473,11 @@ export default function BodySystemDetails() {
 
                     <div className="footer-voice-row">
                       <footer className="heart-footer">
-                        <div className="footer-links">
-                          <span>About Us</span>
-                          <span>|</span>
-                          <span>Contact</span>
-                          <span>|</span>
-                          <span>Privacy Policy</span>
-                          <span>|</span>
-                          <span>Terms of Service</span>
-                        </div>
                         <p>
                           This is a general health information page. For serious symptoms,
                           consult a doctor immediately.
                         </p>
                       </footer>
-
-                      <VoiceAssistantPopup className="voice-fab" ariaLabel="Voice Search">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="24"
-                          height="24"
-                          fill="currentColor"
-                          viewBox="0 0 24 24"
-                          className="voice-fab-svg"
-                        >
-                          <path d="M16 12V6c0-2.21-1.79-4-4-4S8 3.79 8 6v6c0 2.21 1.79 4 4 4s4-1.79 4-4m-6 0V6c0-1.1.9-2 2-2s2 .9 2 2v6c0 1.1-.9 2-2 2s-2-.9-2-2"></path>
-                          <path d="M18 12c0 3.31-2.69 6-6 6s-6-2.69-6-6H4c0 4.07 3.06 7.44 7 7.93V22h2v-2.07c3.94-.49 7-3.86 7-7.93z"></path>
-                        </svg>
-                      </VoiceAssistantPopup>
                     </div>
                   </section>
                 </>

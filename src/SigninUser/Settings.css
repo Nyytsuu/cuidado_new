@@ -307,6 +307,12 @@
   line-height: 1.4;
 }
 
+.settings-toggle-row.settings-toggle-highlight {
+  border-color: #0f8f83;
+  background: #ecfbf9;
+  box-shadow: 0 0 0 3px rgba(15, 143, 131, 0.12);
+}
+
 .settings-note {
   margin-top: 16px;
   padding: 12px;

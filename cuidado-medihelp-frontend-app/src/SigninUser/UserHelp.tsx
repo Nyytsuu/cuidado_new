@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Bell,
   CalendarDays,
+  ChevronRight,
   CircleHelp,
   ClipboardList,
   LifeBuoy,
@@ -13,9 +14,12 @@ import {
   Search,
   Send,
   Settings,
+  ShieldCheck,
   User,
+  type LucideIcon,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./UserHelp.css";
 
@@ -45,8 +49,6 @@ type SupportForm = {
   contact_phone: string;
 };
 
-const API_BASE = "http://localhost:5000";
-
 const supportTopics = [
   "Account",
   "Appointments",
@@ -63,32 +65,42 @@ const faqItems = [
     answer:
       "Open Find Clinics, choose an available clinic, then send an appointment request from the booking popup.",
     category: "Appointments",
+    icon: CalendarDays,
   },
   {
     question: "Why is a clinic closed when I try to book?",
     answer:
       "Clinics can set weekly hours and blocked dates. Booking is only allowed when the selected time matches their schedule.",
     category: "Clinic Search",
+    icon: MapPin,
   },
   {
     question: "Where can I update my profile picture?",
     answer:
       "Open Profile from the header avatar, choose a JPG, PNG, or WEBP image, then save it.",
     category: "Account",
+    icon: User,
   },
   {
     question: "What should I do if the voice assistant says network?",
     answer:
       "Check that the backend server is running on port 5000, then reload the page and try again.",
     category: "Voice Assistant",
+    icon: Mic,
   },
   {
     question: "When should I use the Emergency page?",
     answer:
       "Use it when you need fast access to emergency hotlines, location sharing, or nearby clinics.",
     category: "Emergency Page",
+    icon: LifeBuoy,
   },
-];
+] satisfies Array<{
+  question: string;
+  answer: string;
+  category: string;
+  icon: LucideIcon;
+}>;
 
 const quickLinks = [
   {
@@ -199,7 +211,7 @@ export default function UserHelp() {
 
     try {
       setRequestsLoading(true);
-      const res = await fetch(`${API_BASE}/api/users/${userId}/support-requests`, {
+      const res = await fetch(apiUrl(`/api/users/${userId}/support-requests`), {
         cache: "no-store",
       });
       const data = await res.json().catch(() => []);
@@ -249,7 +261,7 @@ export default function UserHelp() {
       setErrorMessage("");
       setStatusMessage("");
 
-      const res = await fetch(`${API_BASE}/api/users/${userId}/support-requests`, {
+      const res = await fetch(apiUrl(`/api/users/${userId}/support-requests`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -284,7 +296,7 @@ export default function UserHelp() {
   };
 
   return (
-    <div className={`user-help-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div className={`user-help-page user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -314,9 +326,8 @@ export default function UserHelp() {
           </button>
         </section>
 
-        <section className="help-layout">
-          <div className="help-left">
-            <section className="help-panel">
+        <section className="help-content-grid">
+          <section className="help-panel help-faq-panel">
               <div className="help-panel-head">
                 <div>
                   <h2>Frequently asked questions</h2>
@@ -350,65 +361,28 @@ export default function UserHelp() {
                 {filteredFaqs.length === 0 ? (
                   <div className="help-empty">No help articles matched your search.</div>
                 ) : (
-                  filteredFaqs.map((item) => (
-                    <article className="faq-item" key={item.question}>
-                      <span>{item.category}</span>
-                      <h3>{item.question}</h3>
-                      <p>{item.answer}</p>
-                    </article>
-                  ))
+                  filteredFaqs.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <article className="faq-item" key={item.question}>
+                        <span className="faq-icon">
+                          <Icon size={18} />
+                        </span>
+                        <div className="faq-copy">
+                          <small>{item.category}</small>
+                          <h3>{item.question}</h3>
+                          <p>{item.answer}</p>
+                        </div>
+                        <ChevronRight size={18} className="faq-chevron" />
+                      </article>
+                    );
+                  })
                 )}
               </div>
-            </section>
+          </section>
 
-            <section className="help-panel">
-              <div className="help-panel-head">
-                <div>
-                  <h2>Quick links</h2>
-                  <p>Open the page you need without going back to the dashboard.</p>
-                </div>
-              </div>
-
-              <div className="quick-help-grid">
-                {quickLinks.map((item) => {
-                  const Icon = item.icon;
-
-                  if (item.title === "Voice Assistant") {
-                    return (
-                      <VoiceAssistantPopup
-                        key={item.title}
-                        userId={currentUser?.id ? Number(currentUser.id) : null}
-                        className="quick-help-card"
-                      >
-                        <span>
-                          <Icon size={21} />
-                        </span>
-                        <div>
-                          <h3>{item.title}</h3>
-                          <p>{item.description}</p>
-                        </div>
-                      </VoiceAssistantPopup>
-                    );
-                  }
-
-                  return (
-                    <Link className="quick-help-card" to={item.path} key={item.title}>
-                      <span>
-                        <Icon size={21} />
-                      </span>
-                      <div>
-                        <h3>{item.title}</h3>
-                        <p>{item.description}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          </div>
-
-          <aside className="help-right">
-            <section className="help-panel support-form-panel">
+          <section className="help-panel support-form-panel">
               <div className="help-panel-title">
                 <MessageSquareText size={20} />
                 <h2>Contact support</h2>
@@ -487,9 +461,10 @@ export default function UserHelp() {
                   {submitting ? "Sending..." : "Send Request"}
                 </button>
               </form>
-            </section>
+          </section>
 
-            <section className="help-panel">
+          <aside className="help-side-stack">
+            <section className="help-panel recent-requests-panel">
               <div className="help-panel-title">
                 <ClipboardList size={20} />
                 <h2>Recent requests</h2>
@@ -525,6 +500,54 @@ export default function UserHelp() {
                 <User size={17} />
                 My Profile
               </Link>
+            </section>
+
+            <section className="help-panel quick-links-panel">
+              <div className="help-panel-title">
+                <ShieldCheck size={20} />
+                <h2>Quick links</h2>
+              </div>
+              <p className="quick-links-note">
+                Open the page you need without going back to the dashboard.
+              </p>
+
+              <div className="quick-help-grid">
+                {quickLinks.map((item) => {
+                  const Icon = item.icon;
+
+                  if (item.title === "Voice Assistant") {
+                    return (
+                      <VoiceAssistantPopup
+                        key={item.title}
+                        userId={currentUser?.id ? Number(currentUser.id) : null}
+                        className="quick-help-card"
+                      >
+                        <span>
+                          <Icon size={18} />
+                        </span>
+                        <div>
+                          <h3>{item.title}</h3>
+                          <p>{item.description}</p>
+                        </div>
+                        <ChevronRight size={16} />
+                      </VoiceAssistantPopup>
+                    );
+                  }
+
+                  return (
+                    <Link className="quick-help-card" to={item.path} key={item.title}>
+                      <span>
+                        <Icon size={18} />
+                      </span>
+                      <div>
+                        <h3>{item.title}</h3>
+                        <p>{item.description}</p>
+                      </div>
+                      <ChevronRight size={16} />
+                    </Link>
+                  );
+                })}
+              </div>
             </section>
           </aside>
         </section>

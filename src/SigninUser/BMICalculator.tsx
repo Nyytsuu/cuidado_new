@@ -1,5 +1,17 @@
 import { useMemo, useState, useEffect } from "react";
+import {
+  Apple,
+  Building2,
+  Calculator,
+  Phone,
+  Ruler,
+  Scale,
+  Star,
+  UserRound,
+  Weight,
+} from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import "./BMICalculator.css";
 
 type WeeklyScheduleDay = {
@@ -31,8 +43,17 @@ type Clinic = {
   operating_days?: string | null;
   status?: string | null;
   account_status?: string | null;
+  is_open_now?: number | boolean | string | null;
+  is_working_today?: number | boolean | string | null;
+  clinic_today?: string | null;
+  clinic_now_time?: string | null;
+  average_rating?: number | string | null;
+  rating?: number | string | null;
+  rating_count?: number | string | null;
+  review_count?: number | string | null;
   latitude?: string | number | null;
   longitude?: string | number | null;
+  distanceKm?: string | number | null;
   is_blocked_today?: number | boolean;
   today_opening_time?: string | null;
   today_closing_time?: string | null;
@@ -61,8 +82,6 @@ type CurrentUser = {
   name?: string;
   phone?: string;
 };
-
-const API = "http://localhost:5000/api";
 
 function getStoredCurrentUser(): CurrentUser | null {
   try {
@@ -271,6 +290,73 @@ function toTitle(value?: string | null): string {
     .join(" ");
 }
 
+function getClinicSummary(clinic: Clinic): string {
+  const specialization = toTitle(clinic.specialization);
+  const services = toTitle(clinic.services_offered);
+
+  if (specialization !== "Not provided" && services !== "Not provided") {
+    return `${specialization} offering ${services} services.`;
+  }
+
+  if (specialization !== "Not provided") {
+    return `${specialization} clinic available for appointment requests.`;
+  }
+
+  if (services !== "Not provided") {
+    return `Clinic offering ${services} services.`;
+  }
+
+  return "Approved clinic available for appointments.";
+}
+
+function getClinicDistanceLabel(clinic: Clinic): string {
+  const distance = Number(clinic.distanceKm);
+  return Number.isFinite(distance) ? `${distance.toFixed(1)} km away` : "Nearby";
+}
+
+function getClinicBookingDisabledReason(clinic: Clinic | null | undefined): string {
+  if (!clinic) return "Select a clinic before booking.";
+
+  const status = String(clinic.status || "approved").toLowerCase();
+  const accountStatus = String(clinic.account_status || "active").toLowerCase();
+
+  if (status !== "approved" || accountStatus !== "active") {
+    return "This clinic is not available for booking.";
+  }
+
+  if (
+    clinic.is_open_now !== undefined &&
+    clinic.is_open_now !== null &&
+    !isEnabledFlag(clinic.is_open_now)
+  ) {
+    return `${clinic.clinic_name} is currently closed. Please choose an open clinic.`;
+  }
+
+  if (isEnabledFlag(clinic.is_blocked_today)) {
+    return `${clinic.clinic_name} is unavailable today.`;
+  }
+
+  return "";
+}
+
+function getClinicRatingSummary(clinic: Clinic): {
+  score: number | null;
+  countLabel: string;
+} {
+  const rawScore = clinic.average_rating ?? clinic.rating;
+  const score = Number(rawScore);
+  const rawCount = clinic.rating_count ?? clinic.review_count;
+  const count = Number(rawCount);
+
+  return {
+    score: Number.isFinite(score) && score > 0 ? Math.min(5, Math.max(0, score)) : null,
+    countLabel:
+      Number.isFinite(count) && count > 0
+        ? `${count} ${count === 1 ? "rating" : "ratings"}`
+        : "No ratings yet",
+  };
+}
+
 function splitServices(value?: string | null): string[] {
   return String(value || "")
     .split(",")
@@ -287,6 +373,7 @@ export default function BMICalculator() {
   const [age, setAge] = useState("");
   const [weight, setWeight] = useState("");
   const [height, setHeight] = useState("");
+  const [clinicSearch, setClinicSearch] = useState("");
 
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [clinicsLoading, setClinicsLoading] = useState(true);
@@ -313,7 +400,7 @@ export default function BMICalculator() {
         setClinicsLoading(true);
         setClinicsError("");
 
-        const res = await fetch(`${API}/clinics`);
+        const res = await fetch(apiUrl("/api/clinics"));
         const data = await res.json();
 
         if (!res.ok) {
@@ -445,7 +532,23 @@ const bmiCheckupAdvice = useMemo(() => {
   };
 }, [bmiData]);
 
-  const displayedClinics = useMemo(() => clinics.slice(0, 4), [clinics]);
+  const displayedClinics = useMemo(() => {
+    const keyword = clinicSearch.trim().toLowerCase();
+    const filteredClinics = keyword
+      ? clinics.filter((clinic) =>
+          [
+            clinic.clinic_name,
+            clinic.address,
+            clinic.specialization,
+            clinic.services_offered,
+          ]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(keyword))
+        )
+      : clinics;
+
+    return filteredClinics.slice(0, 3);
+  }, [clinics, clinicSearch]);
   const profileClinic = clinicProfile || selectedClinic;
   const activeServices = useMemo(
     () =>
@@ -464,9 +567,20 @@ const bmiCheckupAdvice = useMemo(() => {
     activeServices.length > 0
       ? activeServices.map((service) => service.name)
       : splitServices(profileClinic?.services_offered).map(toTitle);
+  const bookingDisabledReason = getClinicBookingDisabledReason(profileClinic);
+  const appointmentValidationMessage =
+    profileClinic && appointmentDate && appointmentTime
+      ? isPastAppointmentTime(appointmentDate, appointmentTime)
+        ? "Please choose a future date and time."
+        : getAppointmentScheduleMessage(profileClinic, appointmentDate, appointmentTime)
+      : "";
   const canBookSelectedClinic =
-    (profileClinic?.status || "approved") === "approved" &&
-    (profileClinic?.account_status || "active") === "active";
+    Boolean(profileClinic) &&
+    !bookingDisabledReason &&
+    !appointmentValidationMessage;
+  const profileRatingSummary = profileClinic
+    ? getClinicRatingSummary(profileClinic)
+    : null;
 
   const openClinicProfile = async (clinic: Clinic) => {
     const currentUser = getStoredCurrentUser();
@@ -493,7 +607,7 @@ const bmiCheckupAdvice = useMemo(() => {
     try {
       setClinicProfileLoading(true);
 
-      const res = await fetch(`${API}/clinic/profile?clinic_id=${clinic.id}`);
+      const res = await fetch(apiUrl(`/api/clinic/profile?clinic_id=${clinic.id}`));
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -555,8 +669,8 @@ const bmiCheckupAdvice = useMemo(() => {
       return;
     }
 
-    if (!canBookSelectedClinic) {
-      setBookingMessage("This clinic is not available for booking.");
+    if (bookingDisabledReason) {
+      setBookingMessage(bookingDisabledReason);
       return;
     }
 
@@ -567,6 +681,11 @@ const bmiCheckupAdvice = useMemo(() => {
 
     if (isPastAppointmentTime(appointmentDate, appointmentTime)) {
       setBookingMessage("Please choose a future date and time.");
+      return;
+    }
+
+    if (appointmentValidationMessage) {
+      setBookingMessage(appointmentValidationMessage);
       return;
     }
 
@@ -595,7 +714,7 @@ const bmiCheckupAdvice = useMemo(() => {
       const startAt = `${appointmentDate} ${appointmentTime}:00`;
       const endAt = addMinutes(appointmentDate, appointmentTime, durationMinutes);
 
-      const res = await fetch(`${API}/appointments/book`, {
+      const res = await fetch(apiUrl("/api/appointments/book"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -634,7 +753,7 @@ const bmiCheckupAdvice = useMemo(() => {
       }
 
       setBookingSuccess(
-        `Your appointment with ${profileClinic.clinic_name} was booked successfully.`
+        `Your appointment request with ${profileClinic.clinic_name} was sent successfully.`
       );
       setBookingMessage("");
     } catch (err) {
@@ -653,6 +772,10 @@ const bmiCheckupAdvice = useMemo(() => {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={clinicSearch}
+        onSearchChange={setClinicSearch}
+        searchPlaceholder="Search clinics..."
+        onSearchSubmit={setClinicSearch}
       />
 
       <div className="bmi-content">
@@ -671,6 +794,7 @@ const bmiCheckupAdvice = useMemo(() => {
                     className={unit === "Metric" ? "active" : ""}
                     onClick={() => setUnit("Metric")}
                   >
+                    <Scale size={16} />
                     ☰ <span>Metric</span>
                   </button>
                   <button
@@ -678,12 +802,15 @@ const bmiCheckupAdvice = useMemo(() => {
                     className={unit === "Imperial" ? "active" : ""}
                     onClick={() => setUnit("Imperial")}
                   >
+                    <Ruler size={16} />
+                    <span>Imperial</span>
                     Imperial
                   </button>
                 </div>
 
                 <div className="bmi-input-group">
                   <div className="bmi-input-row">
+                    <span className="input-icon clean"><UserRound size={17} /></span>
                     <span className="input-icon">👤</span>
                     <input
                       type="text"
@@ -695,6 +822,7 @@ const bmiCheckupAdvice = useMemo(() => {
 
                   <div className="bmi-input-row split">
                     <div className="split-left">
+                      <span className="input-icon clean"><Weight size={17} /></span>
                       <span className="input-icon">🫀</span>
                       <span className="label-text">
                         {unit === "Metric" ? "Weight (kg)" : "Weight (lb)"}
@@ -712,6 +840,7 @@ const bmiCheckupAdvice = useMemo(() => {
 
                   <div className="bmi-input-row split">
                     <div className="split-left">
+                      <span className="input-icon clean"><Ruler size={17} /></span>
                       <span className="input-icon">🧍</span>
                       <span className="label-text">
                         {unit === "Metric" ? "Height (cm)" : "Height (in)"}
@@ -729,7 +858,8 @@ const bmiCheckupAdvice = useMemo(() => {
                 </div>
 
                 <button type="button" className="bmi-primary-btn" onClick={() => setShowBmiPopup(true)}>
-                  Calculate BMI 
+                  <Calculator size={17} />
+                  Calculate BMI
                 </button>
               </div>
 
@@ -776,6 +906,7 @@ const bmiCheckupAdvice = useMemo(() => {
               </div>
 
               <div className="bmi-tip-card">
+                <div className="tip-icon clean"><Apple size={22} /></div>
                 <div className="tip-icon">🍏</div>
                 <p>
                   <strong>Eat a balanced diet</strong> rich in fruits, vegetables,
@@ -796,22 +927,47 @@ const bmiCheckupAdvice = useMemo(() => {
                   <p>No clinics found.</p>
                 ) : (
                   <div className="clinic-list">
-                    {displayedClinics.map((clinic) => (
+                    {displayedClinics.map((clinic) => {
+                      const ratingSummary = getClinicRatingSummary(clinic);
+                      const clinicDisabledReason = getClinicBookingDisabledReason(clinic);
+
+                      return (
                       <div key={clinic.id} className="clinic-item">
                         <div className="clinic-left">
+                          <div className="clinic-avatar clean"><Building2 size={20} /></div>
                           <div className="clinic-avatar">👨‍⚕️</div>
 
                           <div className="clinic-info">
                             <h4>{clinic.clinic_name}</h4>
-                            <p>{clinic.address || "Address unavailable"}</p>
+                            <p className="clinic-summary">{getClinicSummary(clinic)}</p>
+                            <p className="clinic-address">{clinic.address || "Address unavailable"}</p>
+
+                            <div className="clinic-rating-row">
+                              <Star size={14} fill="currentColor" />
+                              <span>
+                                {ratingSummary.score
+                                  ? ratingSummary.score.toFixed(1)
+                                  : "No rating"}
+                              </span>
+                              <small>{ratingSummary.countLabel}</small>
+                            </div>
 
                             <div className="clinic-meta">
+                              <span className="clinic-phone-clean"><Phone size={13} /> {clinic.phone || "No phone available"}</span>
                               <span>📞 {clinic.phone || "No phone available"}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="clinic-right">
+                          <span className="clinic-distance">{getClinicDistanceLabel(clinic)}</span>
+                          <span
+                            className={`clinic-open-pill ${
+                              clinicDisabledReason ? "closed" : "open"
+                            }`}
+                          >
+                            {clinicDisabledReason ? "Closed" : "Open"}
+                          </span>
                           <button
                             type="button"
                             className="near-btn"
@@ -821,7 +977,8 @@ const bmiCheckupAdvice = useMemo(() => {
                           </button>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -963,6 +1120,16 @@ const bmiCheckupAdvice = useMemo(() => {
                               {toTitle(profileClinic.account_status || "active")}
                             </strong>
                           </div>
+                          <div>
+                            <span>Clinic Rating</span>
+                            <strong className="clinic-rating-detail">
+                              <Star size={14} fill="currentColor" />
+                              {profileRatingSummary?.score
+                                ? `${profileRatingSummary.score.toFixed(1)} / 5`
+                                : "No ratings yet"}
+                              <small>{profileRatingSummary?.countLabel}</small>
+                            </strong>
+                          </div>
                         </div>
                       </section>
 
@@ -988,9 +1155,15 @@ const bmiCheckupAdvice = useMemo(() => {
                         </div>
                       </div>
 
-                      {!canBookSelectedClinic && (
+                      {bookingDisabledReason && (
                         <div className="clinic-profile-alert error">
-                          This clinic is not available for booking.
+                          {bookingDisabledReason}
+                        </div>
+                      )}
+
+                      {!bookingDisabledReason && appointmentValidationMessage && (
+                        <div className="clinic-profile-alert warning">
+                          {appointmentValidationMessage}
                         </div>
                       )}
 
@@ -1111,9 +1284,14 @@ const bmiCheckupAdvice = useMemo(() => {
                           type="button"
                           className="clinic-book-btn"
                           onClick={handleBookAppointment}
-                          disabled={booking || !canBookSelectedClinic}
+                          disabled={
+                            booking ||
+                            !canBookSelectedClinic ||
+                            !appointmentDate ||
+                            !appointmentTime
+                          }
                         >
-                          {booking ? "Booking..." : "Confirm Booking"}
+                          {booking ? "Sending..." : "Send Request"}
                         </button>
                       </div>
                     </section>

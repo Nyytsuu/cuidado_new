@@ -229,9 +229,9 @@ body {
 /* all rows */
 .admin-UserServices .users-row.services-row {
   display: grid;
-  grid-template-columns: 1.4fr 0.9fr;
+  grid-template-columns: minmax(0, 1.35fr) 150px minmax(220px, 0.85fr);
   align-items: center;
-  gap: 0;
+  gap: 12px;
   background: #ffffff;
 }
 
@@ -329,6 +329,33 @@ body {
 .admin-UserServices .pill-view { background: #0B7A68; }
 .admin-UserServices .pill-danger { background: #c62828; }
 .admin-UserServices .pill-success { background: #2e7d32; }
+.admin-UserServices .pill-deactivate {
+  background: #fff4d7;
+  color: #8a5b00;
+  border: 1px solid #e4bd5d;
+}
+
+.admin-UserServices .service-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  min-height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-UserServices .service-status-badge.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-UserServices .service-status-badge.inactive {
+  background: #f1f5f9;
+  color: #475569;
+}
 
 /* inactive badge */
 .admin-UserServices .badge {
@@ -496,6 +523,23 @@ body {
   box-shadow: 0 0 0 3px rgba(57, 154, 145, 0.12);
 }
 
+.admin-UserServices .service-modal-message {
+  width: 100%;
+  margin: -8px 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.admin-UserServices .service-modal-message.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
 .admin-UserServices .service-modal-actions {
   display: flex;
   justify-content: center;
@@ -513,6 +557,11 @@ body {
   font-size: 14px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.admin-UserServices .service-btn:disabled {
+  cursor: wait;
+  opacity: 0.68;
 }
 
 .admin-UserServices .service-btn.cancel {
@@ -537,9 +586,41 @@ body {
   color: #333;
 }
 
+.admin-UserServices .confirm-helper {
+  display: block;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #eef8f7;
+  color: #426365;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .admin-UserServices .confirm-service-name {
   color: #0f4242;
   font-weight: 700;
+}
+
+.admin-UserServices .service-notice {
+  max-width: 430px;
+}
+
+.admin-UserServices .service-notice-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  background: #078b7d;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.admin-UserServices .service-notice.error .service-notice-icon {
+  background: #c62828;
 }
 
 @keyframes modalPopIn {

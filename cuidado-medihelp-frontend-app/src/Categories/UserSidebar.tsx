@@ -20,6 +20,7 @@ import {
   Mic,
   User,
   Bell,
+  Menu,
   TriangleAlert,
   CircleHelp,
   LogOut,
@@ -32,6 +33,7 @@ import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
 import VoiceAssistantPopup from "../SigninUser/VoiceAssistantPopup";
+import { clearStoredAuth } from "../authSession";
 
 type HeaderUser = {
   id?: number;
@@ -181,6 +183,19 @@ export default function UserSidebar({
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+      {sidebarExpanded && (
+        <button
+          type="button"
+          className="sidebar-mobile-backdrop"
+          aria-label="Close sidebar"
+          onClick={() => {
+            setSidebarExpanded(false);
+            setProfileOpen(false);
+            setHeaderProfileOpen(false);
+          }}
+        />
+      )}
+
       <aside
         className={`sidebar ${sidebarExpanded ? "expanded" : "collapsed"}`}
         onClick={() => {
@@ -256,7 +271,7 @@ export default function UserSidebar({
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/stress-index") ? "active" : ""}`}>
+            <div className={`sidebar-item ${isPathActive("/stress-index") ? "active" : ""}`}>
               <Link to="/stress-index" className="sidebar-btn">
                 <Smile size={24} />
                 <span>Stress Index</span>
@@ -268,13 +283,10 @@ export default function UserSidebar({
             <p className="sidebar-section-title">SMART</p>
 
             <div className={`sidebar-item ${isPathActive("/voice-assistant") ? "active" : ""}`}>
-              <VoiceAssistantPopup
-                userId={headerUser?.id ? Number(headerUser.id) : null}
-                className="sidebar-btn"
-              >
+              <Link to="/voice-assistant" className="sidebar-btn">
                 <Mic size={24} />
                 <span>Voice Assistant</span>
-              </VoiceAssistantPopup>
+              </Link>
             </div>
           </div>
 
@@ -288,7 +300,7 @@ export default function UserSidebar({
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/notifications") ? "active" : ""}`}>
+            <div className={`sidebar-item ${isPathActive("/notifications") ? "active" : ""}`}>
               <Link to="/notifications" className="sidebar-btn">
                 <Bell size={24} />
                 <span>Notifications</span>
@@ -323,9 +335,67 @@ export default function UserSidebar({
         </div>
       </aside>
 
+      <header className="user-mobile-header">
+        <div className="user-mobile-header-bar">
+          <button
+            type="button"
+            className="user-mobile-header-button"
+            aria-label="Open sidebar"
+            onClick={() => setSidebarExpanded(true)}
+          >
+            <Menu size={20} />
+          </button>
+
+          <img src={logo} alt="CUIDADO logo" className="user-mobile-header-logo" />
+
+          <Link
+            to="/notifications"
+            className={`user-mobile-header-button user-mobile-header-alert ${
+              location.pathname === "/notifications" ? "active" : ""
+            }`}
+            aria-label="Open notifications"
+            onClick={() => setHeaderProfileOpen(false)}
+          >
+            <Bell size={19} />
+          </Link>
+        </div>
+
+        <form className="user-mobile-header-search" onSubmit={handleSearchSubmit}>
+          <button aria-label="Search" type="submit" className="user-mobile-search-icon">
+            <img src={searchIcon} alt="Search" />
+          </button>
+          <input
+            type="text"
+            placeholder={searchPlaceholder}
+            value={currentSearch}
+            onChange={(event) => handleSearchChange(event.target.value)}
+          />
+        </form>
+      </header>
+
       <header className="app-header">
         <div className="header-left">
+          <button
+            type="button"
+            className="mobile-sidebar-trigger"
+            aria-label="Open sidebar"
+            onClick={() => setSidebarExpanded(true)}
+          >
+            <Menu size={19} />
+          </button>
+
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
+
+          <Link
+            to="/notifications"
+            className={`mobile-header-action ${
+              location.pathname === "/notifications" ? "active" : ""
+            }`}
+            aria-label="Open notifications"
+            onClick={() => setHeaderProfileOpen(false)}
+          >
+            <Bell size={19} />
+          </Link>
 
           <form className="header-search" onSubmit={handleSearchSubmit}>
             <input
@@ -474,16 +544,14 @@ export default function UserSidebar({
           onClick={() => {
             setShowLogoutConfirm(false);
 
-            // clear session
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
+            clearStoredAuth();
 
             // show success popup
             setShowLogoutSuccess(true);
 
             // redirect after delay
             setTimeout(() => {
-              navigate("/Signin");
+              navigate("/signin");
             }, 1500);
           }}
         >

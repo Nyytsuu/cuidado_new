@@ -92,6 +92,10 @@ body,
   padding-bottom: 90px;
 }
 
+.health-mobile-layout {
+  display: none;
+}
+
 .sidebar-box,
 .content-box,
 .voice-search-card {
@@ -623,5 +627,804 @@ body,
 
   .topic-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .browse-health-page .health-browser-layout {
+    display: none !important;
+  }
+
+  .browse-health-page .health-mobile-layout {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .browse-health-page {
+    background: #f7fafb !important;
+  }
+
+  .browse-health-page .browse-page-content,
+  .browse-health-page.sidebar-expanded .browse-page-content {
+    margin-left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  .browse-health-page .browse-health-main {
+    width: 100vw !important;
+    min-height: calc(100vh - var(--mobile-header-height));
+    padding: calc(var(--mobile-header-height) + 9px) 18px calc(var(--mobile-bottom-nav-height) + 22px) !important;
+    background: #f7fafb !important;
+    overflow-x: hidden;
+  }
+
+  .browse-health-page .mobile-health-head h1 {
+    margin: 0 0 2px;
+    font-size: 18px;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #1d2b3c;
+  }
+
+  .browse-health-page .mobile-health-head p {
+    margin: 0;
+    font-size: 9px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: #6d7b87;
+  }
+
+  .browse-health-page .mobile-category-tabs {
+    width: 100%;
+    height: 31px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 10px 0 0;
+    border: 1px solid #e2e7ea;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f0f2f4;
+  }
+
+  .browse-health-page .mobile-category-tabs button {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #5f6e79;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+  }
+
+  .browse-health-page .mobile-category-tabs button.active {
+    background: #dff6f3;
+    color: #246d68;
+  }
+
+  .browse-health-page .mobile-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .browse-health-page .mobile-section-heading h2,
+  .browse-health-page .mobile-browse-topics h2 {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #1e2d3d;
+  }
+
+  .browse-health-page .mobile-section-heading button {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: #008d83;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+
+  .browse-health-page .mobile-section-heading span {
+    font-size: 15px;
+  }
+
+  .browse-health-page .mobile-topic-strip {
+    display: flex;
+    gap: 12px;
+    width: calc(100% + 18px);
+    margin-right: -18px;
+    padding: 0 18px 6px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+  }
+
+  .browse-health-page .mobile-topic-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .browse-health-page .mobile-topic-card {
+    position: relative;
+    flex: 0 0 130px;
+    min-height: 130px;
+    padding: 12px 18px 12px 12px;
+    border: 1px solid #e7edf0;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(30, 48, 67, 0.07);
+    text-align: left;
+    cursor: pointer;
+    scroll-snap-align: start;
+  }
+
+  .browse-health-page .mobile-topic-icon {
+    width: 38px;
+    height: 38px;
+    margin: 0 0 9px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #ebfaf8;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .browse-health-page .mobile-topic-card strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 12px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #213044;
+  }
+
+  .browse-health-page .mobile-topic-card > span:not(.mobile-topic-icon) {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    font-size: 10px;
+    line-height: 1.25;
+    color: #667788;
+  }
+
+  .browse-health-page .mobile-topic-card b {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #81909b;
+    font-size: 17px;
+    line-height: 1;
+  }
+
+  .browse-health-page .mobile-voice-card {
+    min-height: 88px;
+    padding: 12px;
+    border: 1px solid #e8edf0;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(30, 48, 67, 0.06);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 132px;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .browse-health-page .mobile-voice-card h2 {
+    margin: 0 0 5px;
+    font-size: 12px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #26364a;
+  }
+
+  .browse-health-page .mobile-voice-card p {
+    max-width: 145px;
+    margin: 0;
+    font-size: 9px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: #627282;
+  }
+
+  .browse-health-page .mobile-voice-button {
+    position: relative;
+    width: 132px;
+    min-height: 56px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: transparent;
+    font-size: 0;
+    cursor: pointer;
+  }
+
+  .browse-health-page .mobile-voice-button::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    background:
+      url("../img/mic.png") center / 25px 25px no-repeat,
+      linear-gradient(180deg, #58c9c1, #14968f);
+    box-shadow:
+      0 0 0 8px rgba(226, 247, 245, 0.96),
+      0 0 0 16px rgba(226, 247, 245, 0.64);
+  }
+
+  .browse-health-page .mobile-voice-button::after {
+    content: "Start Voice Search";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    min-width: 90px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    transform: translateY(-50%);
+    background: #2da99f;
+    color: #ffffff;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 800;
+    box-shadow: 0 6px 12px rgba(14, 136, 128, 0.18);
+  }
+
+  .browse-health-page .mobile-browse-topics {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .browse-health-page .mobile-topic-search {
+    height: 31px;
+    padding: 0 11px;
+    border: 1px solid #e3e9ed;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 5px 14px rgba(30, 48, 67, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .browse-health-page .mobile-topic-search img {
+    width: 13px;
+    height: 13px;
+    opacity: 0.75;
+  }
+
+  .browse-health-page .mobile-topic-search input {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #1e2d3d;
+    font-size: 11px;
+  }
+
+  .browse-health-page .mobile-system-list {
+    overflow: hidden;
+    border: 1px solid #e6ecef;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(30, 48, 67, 0.05);
+  }
+
+  .browse-health-page .mobile-system-item {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: none;
+    border-bottom: 1px solid #eef2f4;
+    background: #ffffff;
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 14px;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .browse-health-page .mobile-system-item:last-child {
+    border-bottom: none;
+  }
+
+  .browse-health-page .mobile-system-item span {
+    font-size: 20px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .browse-health-page .mobile-system-item strong {
+    font-size: 11px;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #26364a;
+  }
+
+  .browse-health-page .mobile-system-item b {
+    color: #81909b;
+    font-size: 18px;
+    line-height: 1;
+    text-align: right;
+  }
+
+  .browse-health-page .mobile-health-state {
+    margin: 0;
+    color: #617080;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .browse-health-page .mobile-health-note {
+    margin: 0 auto;
+    max-width: 230px;
+    color: #8a98a4;
+    font-size: 8px;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  .browse-health-page .mobile-common-section {
+    min-width: 0;
+  }
+
+  .browse-health-page .health-browser-layout {
+    display: none !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .browse-health-page .health-browser-layout {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .browse-health-page .health-content-card,
+  .browse-health-page .health-sidebar-card {
+    display: contents !important;
+  }
+
+  .browse-health-page .content-header-box {
+    order: 1;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .browse-health-page .content-top {
+    margin: 0 0 10px;
+  }
+
+  .browse-health-page .content-title {
+    margin: 0 0 2px;
+    font-size: 18px !important;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #1d2b3c;
+  }
+
+  .browse-health-page .content-subtitle {
+    margin: 0;
+    font-size: 9px !important;
+    line-height: 1.25;
+    color: #6d7b87;
+    font-weight: 600;
+  }
+
+  .browse-health-page .category-tabs {
+    width: 100%;
+    height: 31px;
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 10px 0 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f0f2f4;
+    border: 1px solid #e2e7ea;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  }
+
+  .browse-health-page .category-tab {
+    min-width: 0;
+    width: 100%;
+    padding: 0 6px;
+    border-radius: 0;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 800;
+    color: #5f6e79;
+    display: grid;
+    place-items: center;
+  }
+
+  .browse-health-page .category-tab.active {
+    background: #dff6f3;
+    color: #246d68;
+    box-shadow: none;
+  }
+
+  .browse-health-page .category-section-box {
+    order: 2;
+    min-height: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .browse-health-page .health-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 2px 0 10px;
+  }
+
+  .browse-health-page .recent-title {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #1e2d3d;
+  }
+
+  .browse-health-page .view-all-btn {
+    border: none;
+    background: transparent;
+    padding: 0;
+    color: #008d83;
+    font-size: 9px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+
+  .browse-health-page .view-all-btn span {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .browse-health-page .topic-grid {
+    display: flex !important;
+    grid-template-columns: none !important;
+    gap: 12px;
+    width: calc(100% + 10px);
+    margin: 0;
+    padding: 0 10px 6px 0 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+  }
+
+  .browse-health-page .topic-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .browse-health-page .topic-card {
+    position: relative;
+    flex: 0 0 130px;
+    min-height: 130px;
+    padding: 12px 19px 12px 12px;
+    border-radius: 10px;
+    border: 1px solid #e7edf0;
+    background: #ffffff;
+    display: block !important;
+    text-align: left;
+    box-shadow: 0 8px 18px rgba(30, 48, 67, 0.07);
+    scroll-snap-align: start;
+  }
+
+  .browse-health-page .topic-left {
+    display: block !important;
+  }
+
+  .browse-health-page .topic-icon-wrap {
+    width: 38px;
+    height: 38px;
+    margin: 0 0 9px;
+    border-radius: 50%;
+    font-size: 22px;
+    background: #ebfaf8;
+  }
+
+  .browse-health-page .topic-title-row {
+    display: block;
+    margin: 0 0 4px;
+  }
+
+  .browse-health-page .topic-title {
+    display: block;
+    font-size: 12px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #213044;
+  }
+
+  .browse-health-page .topic-tag {
+    display: none;
+  }
+
+  .browse-health-page .topic-subtitle {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    font-size: 10px;
+    line-height: 1.25;
+    color: #667788;
+  }
+
+  .browse-health-page .topic-card > .system-arrow {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #81909b;
+  }
+
+  .browse-health-page .voice-search-card {
+    order: 3;
+    position: static !important;
+    width: 100% !important;
+    min-height: 88px;
+    margin: 0 !important;
+    padding: 12px !important;
+    border-radius: 10px;
+    border: 1px solid #e8edf0;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(30, 48, 67, 0.06);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .browse-health-page .voice-info-btn {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    text-align: left;
+    pointer-events: none;
+    font-size: 12px;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #26364a;
+  }
+
+  .browse-health-page .voice-info-btn .system-arrow {
+    display: none;
+  }
+
+  .browse-health-page .voice-info-btn::after {
+    content: "Use voice search to quickly find possible conditions and relevant information.";
+    display: block;
+    max-width: 145px;
+    margin-top: 5px;
+    font-size: 9px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: #627282;
+  }
+
+  .browse-health-page .voice-card-copy {
+    display: block;
+  }
+
+  .browse-health-page .voice-card-copy h3 {
+    margin: 0 0 5px;
+    font-size: 12px;
+    line-height: 1.15;
+    color: #26364a;
+  }
+
+  .browse-health-page .voice-card-copy p {
+    max-width: 145px;
+    margin: 0;
+    font-size: 9px;
+    line-height: 1.25;
+    font-weight: 600;
+    color: #627282;
+  }
+
+  .browse-health-page .voice-start-btn {
+    position: relative;
+    width: 132px;
+    min-height: 56px;
+    padding: 0 0 0 66px;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 0;
+    cursor: pointer;
+  }
+
+  .browse-health-page .voice-start-btn::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    background:
+      url("../img/mic.png") center / 25px 25px no-repeat,
+      linear-gradient(180deg, #58c9c1, #14968f);
+    box-shadow:
+      0 0 0 8px rgba(226, 247, 245, 0.96),
+      0 0 0 16px rgba(226, 247, 245, 0.64);
+  }
+
+  .browse-health-page .voice-start-btn::after {
+    content: "Start Voice Search";
+    position: absolute;
+    right: 0;
+    top: 50%;
+    min-width: 90px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    transform: translateY(-50%);
+    background: #2da99f;
+    color: #ffffff;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 800;
+    box-shadow: 0 6px 12px rgba(14, 136, 128, 0.18);
+  }
+
+  .browse-health-page .health-sidebar-card .sidebar-header-box {
+    order: 4;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .browse-health-page .section-title {
+    margin: 0 0 9px !important;
+    font-size: 14px !important;
+    line-height: 1.15;
+    font-weight: 800;
+    color: #1f2f43;
+  }
+
+  .browse-health-page .inner-search-box {
+    height: 31px;
+    padding: 0 11px;
+    gap: 8px;
+    border-radius: 10px;
+    border: 1px solid #e3e9ed;
+    background: #ffffff;
+    box-shadow: 0 5px 14px rgba(30, 48, 67, 0.04);
+  }
+
+  .browse-health-page .inner-search-icon,
+  .browse-health-page .inner-search-icon img {
+    width: 13px;
+    height: 13px;
+  }
+
+  .browse-health-page .inner-search-box input {
+    font-size: 11px;
+    line-height: 1;
+    color: #1e2d3d;
+  }
+
+  .browse-health-page .health-sidebar-card .sidebar-box:nth-of-type(2) {
+    order: 5;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .browse-health-page .health-sidebar-card .sidebar-box:nth-of-type(2) .group-title,
+  .browse-health-page .health-sidebar-card .sidebar-box:nth-of-type(3) {
+    display: none !important;
+  }
+
+  .browse-health-page .system-list {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid #e6ecef;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 8px 18px rgba(30, 48, 67, 0.05);
+  }
+
+  .browse-health-page .system-item {
+    min-height: 42px;
+    padding: 8px 12px;
+    border: none;
+    border-bottom: 1px solid #eef2f4;
+    border-radius: 0;
+    background: #ffffff;
+    box-shadow: none;
+  }
+
+  .browse-health-page .system-item:last-child {
+    border-bottom: none;
+  }
+
+  .browse-health-page .system-item-left {
+    gap: 10px;
+  }
+
+  .browse-health-page .system-icon {
+    width: 24px;
+    min-width: 24px;
+    font-size: 20px;
+    line-height: 1;
+    text-align: center;
+  }
+
+  .browse-health-page .system-name {
+    font-size: 11px;
+    line-height: 1.1;
+    font-weight: 800;
+    color: #26364a;
+  }
+
+  .browse-health-page .system-item .system-arrow {
+    font-size: 18px;
+    color: #81909b;
+  }
+
+  .browse-health-page .health-note {
+    order: 6;
+    position: static !important;
+    margin: 4px auto 0;
+    max-width: 230px;
+    color: #8a98a4;
+    font-size: 8px;
+    line-height: 1.25;
+  }
+}
+
+@media (max-width: 760px) {
+  .browse-health-page .health-browser-layout {
+    display: none !important;
+  }
+
+  .browse-health-page .health-mobile-layout {
+    display: flex !important;
+  }
+
+  .browse-health-page .browse-health-main {
+    padding: calc(var(--mobile-header-height) + 9px) 18px calc(var(--mobile-bottom-nav-height) + 22px) !important;
   }
 }

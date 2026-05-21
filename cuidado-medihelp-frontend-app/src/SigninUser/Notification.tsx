@@ -9,6 +9,7 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import "./Notification.css";
 
@@ -95,7 +96,14 @@ const renderIcon = (icon: string) => {
   return <Icon size={24} strokeWidth={2.2} />;
 };
 
+const matchesFilter = (item: NotificationItem, name: FilterName) => {
+  if (name === "All") return true;
+  if (name === "Unread") return item.unread;
+  return item.category.toLowerCase() === name.toLowerCase();
+};
+
 export default function Notifications() {
+  const location = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
@@ -107,6 +115,33 @@ export default function Notifications() {
   const [error, setError] = useState("");
 
   const userId = useMemo(() => getStoredUserId(), []);
+
+  useEffect(() => {
+    window.history.scrollRestoration = "manual";
+
+    const resetScroll = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.querySelector(".notification-page .browse-health-main")?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+      document.querySelector(".notification-page .notification-list-box")?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+    };
+
+    resetScroll();
+    const frame = window.requestAnimationFrame(resetScroll);
+    const timer = window.setTimeout(resetScroll, 80);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [location.key, location.pathname]);
 
   useEffect(() => {
     if (!userId) {
@@ -148,25 +183,29 @@ export default function Notifications() {
   const filteredNotifications = useMemo(() => {
     let data = notifications;
 
-    if (activeTab === "Unread") {
-      data = data.filter((item) => item.unread);
-    } else if (activeTab !== "All") {
-      data = data.filter((item) => item.category === activeTab);
-    }
-
-    if (filter === "Unread") {
-      data = data.filter((item) => item.unread);
-    } else if (filter !== "All") {
-      data = data.filter((item) => item.category === filter);
-    }
+    data = data.filter((item) => matchesFilter(item, activeTab));
+    data = data.filter((item) => matchesFilter(item, filter));
 
     return data;
   }, [activeTab, filter, notifications]);
 
+  useEffect(() => {
+    const resetFeedScroll = () => {
+      document.querySelector(".notification-page .notification-list-box")?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+    };
+
+    resetFeedScroll();
+    const frame = window.requestAnimationFrame(resetFeedScroll);
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, filter, filteredNotifications.length]);
+
   const getCount = (name: FilterName) => {
-    if (name === "All") return notifications.length;
-    if (name === "Unread") return notifications.filter((item) => item.unread).length;
-    return notifications.filter((item) => item.category === name).length;
+    return notifications.filter((item) => matchesFilter(item, name)).length;
   };
 
   const markNotificationRead = async (notification: NotificationItem) => {
@@ -208,7 +247,7 @@ export default function Notifications() {
   };
 
   return (
-    <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div className={`notification-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -216,13 +255,13 @@ export default function Notifications() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchPlaceholder="Search..."
       />
 
       <div className="browse-page-content">
         <main className="browse-health-main">
-          <section className="health-browser-layout notifications-layout">
-            <section className="health-content-card">
-              <div className="content-box">
+          <section className="notifications-layout">
+              <div className="content-box notification-header-box">
                 <h1 className="content-title">Notifications</h1>
                 <p className="content-subtitle">
                   Stay updated with your latest alerts and important updates.
@@ -253,7 +292,7 @@ export default function Notifications() {
                 </div>
               </div>
 
-              <div className="content-box category-section-box">
+              <div className="content-box category-section-box notification-list-box">
                 {loading && <div className="notification-status">Loading notifications...</div>}
 
                 {!loading && error && <div className="notification-status error">{error}</div>}
@@ -275,8 +314,8 @@ export default function Notifications() {
                           <div className="notification-icon">{renderIcon(item.icon)}</div>
 
                           <div>
-                            <div className="topic-title">{item.title}</div>
-                            <div className="topic-subtitle">{item.message}</div>
+                            <div className="notification-title">{item.title}</div>
+                            <div className="notification-message">{item.message}</div>
                           </div>
                         </div>
 
@@ -289,20 +328,19 @@ export default function Notifications() {
                   </div>
                 )}
               </div>
-            </section>
 
-            <aside className="health-sidebar-card">
+            <aside className="health-sidebar-card notification-side-panel">
               <div className="sidebar-box">
                 <h3 className="group-title">Notification Filter</h3>
 
                 {FILTERS.map((item) => (
                   <button
                     key={item}
-                    className={`system-item ${filter === item ? "active-filter" : ""}`}
+                    className={`notification-filter-item ${filter === item ? "active-filter" : ""}`}
                     onClick={() => setFilter(item)}
                     type="button"
                   >
-                    <span className="system-name">{item}</span>
+                    <span className="notification-filter-name">{item}</span>
                     <span className="badge">{getCount(item)}</span>
                   </button>
                 ))}
@@ -310,28 +348,28 @@ export default function Notifications() {
 
               <div className="sidebar-box">
                 <h3 className="group-title">Notification Preferences</h3>
-                <p className="topic-subtitle">Manage how you receive notifications</p>
-                <button className="voice-start-btn" type="button">
+                <p className="notification-side-copy">Manage how you receive notifications</p>
+                <button className="notification-action-btn" type="button">
                   Manage Preferences
                 </button>
               </div>
 
               <div className="sidebar-box">
                 <h3 className="group-title">Need Help?</h3>
-                <p className="topic-subtitle">
+                <p className="notification-side-copy">
                   If you have any questions about notifications, we're here to help.
                 </p>
-                <button className="voice-start-btn" type="button">
+                <button className="notification-action-btn" type="button">
                   Contact Support
                 </button>
               </div>
 
               <div className="sidebar-box promo-box">
                 <h3 className="group-title">Never miss an update!</h3>
-                <p className="topic-subtitle">
+                <p className="notification-side-copy">
                   Enable push notifications to stay informed in real-time.
                 </p>
-                <button className="voice-start-btn" type="button">
+                <button className="notification-action-btn" type="button">
                   Enable Notifications
                 </button>
               </div>

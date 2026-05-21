@@ -14,8 +14,10 @@ import {
   Mail,
   ClipboardList,
   CheckCircle2,
+  Building2,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import "./FindClinic.css";
 import "leaflet/dist/leaflet.css";
 
@@ -56,6 +58,10 @@ type Clinic = {
   created_at: string;
   status: string;
   account_status: string;
+  average_rating?: number | string | null;
+  rating?: number | string | null;
+  rating_count?: number | string | null;
+  review_count?: number | string | null;
   latitude: string | number | null;
   longitude: string | number | null;
   is_working_today?: number | boolean;
@@ -110,6 +116,17 @@ type ClinicService = {
   is_active?: number | boolean;
 };
 
+type ClinicReview = {
+  id: number;
+  appointment_id?: number;
+  user_id?: number;
+  rating: number | string;
+  feedback?: string | null;
+  reviewer_name?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 type CurrentUser = {
   id?: number;
   full_name?: string | null;
@@ -155,7 +172,7 @@ function isEnabledFlag(value: number | boolean | string | null | undefined): boo
 async function loadClinicScheduleSnapshot(clinic: Clinic): Promise<Clinic> {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/clinic/schedule?clinic_id=${clinic.id}`,
+      apiUrl(`/api/clinic/schedule?clinic_id=${clinic.id}`),
       { cache: "no-store" }
     );
 
@@ -252,6 +269,19 @@ function formatClockTime(value: string | null | undefined): string {
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
+function formatReviewDate(value: string | null | undefined): string {
+  if (!value) return "Recent";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Recent";
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 function formatServicePrice(value: string | number | null | undefined): string {
   const amount = Number(value || 0);
   return amount > 0 ? `PHP ${amount.toFixed(2)}` : "No listed fee";
@@ -304,6 +334,24 @@ function getClinicDistanceLabel(
   }
 
   return hasUserLocation ? "Calculating distance" : "Use My Location";
+}
+
+function getClinicRatingSummary(clinic: Clinic): {
+  score: number | null;
+  countLabel: string;
+} {
+  const rawScore = clinic.average_rating ?? clinic.rating;
+  const score = Number(rawScore);
+  const rawCount = clinic.rating_count ?? clinic.review_count;
+  const count = Number(rawCount);
+
+  return {
+    score: Number.isFinite(score) && score > 0 ? Math.min(5, Math.max(0, score)) : null,
+    countLabel:
+      Number.isFinite(count) && count > 0
+        ? `${count} ${count === 1 ? "rating" : "ratings"}`
+        : "No ratings yet",
+  };
 }
 
 function getClosureMessageForDate(clinic: Clinic, date: Date): string | null {
@@ -472,6 +520,11 @@ export default function FindClinic() {
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
   const [selectedServiceId, setSelectedServiceId] = useState("");
   const [loadingClinicServices, setLoadingClinicServices] = useState(false);
+  const [profileClinic, setProfileClinic] = useState<ClinicWithDistance | null>(null);
+  const [profileServices, setProfileServices] = useState<ClinicService[]>([]);
+  const [profileReviews, setProfileReviews] = useState<ClinicReview[]>([]);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState("");
   const currentUser = useMemo<CurrentUser | null>(() => {
     try {
       const storedUser = localStorage.getItem("user");
@@ -494,7 +547,7 @@ export default function FindClinic() {
       if (specialization !== "All") params.append("specialization", specialization);
       if (openNow) params.append("openNow", "true");
 
-      const res = await fetch(`http://localhost:5000/api/clinics?${params.toString()}`, {
+      const res = await fetch(apiUrl(`/api/clinics?${params.toString()}`), {
         cache: "no-store",
       });
       const result = await res.json();
@@ -561,7 +614,7 @@ export default function FindClinic() {
       try {
         setLoadingClinicServices(true);
         const res = await fetch(
-          `http://localhost:5000/api/clinic/services?clinic_id=${selectedClinic.id}`,
+          apiUrl(`/api/clinic/services?clinic_id=${selectedClinic.id}`),
           { cache: "no-store" }
         );
         const data = await res.json().catch(() => []);
@@ -756,10 +809,76 @@ export default function FindClinic() {
   const selectedClinicService =
     clinicServices.find((service) => String(service.id) === selectedServiceId) ||
     null;
+  const selectedClinicRating = selectedClinic
+    ? getClinicRatingSummary(selectedClinic)
+    : null;
+  const profileClinicRating = profileClinic
+    ? getClinicRatingSummary(profileClinic)
+    : null;
   const patientDisplayName =
     currentUser?.full_name || currentUser?.name || "Not provided";
   const patientDisplayPhone = currentUser?.phone || "Not provided";
   const patientDisplayEmail = currentUser?.email || "Not provided";
+
+  const openClinicProfile = async (clinic: ClinicWithDistance) => {
+    setProfileClinic(clinic);
+    setProfileServices([]);
+    setProfileReviews([]);
+    setProfileError("");
+    setProfileLoading(true);
+
+    try {
+      const [servicesRes, feedbackRes] = await Promise.all([
+        fetch(apiUrl(`/api/clinic/services?clinic_id=${clinic.id}`), {
+          cache: "no-store",
+        }),
+        fetch(apiUrl(`/api/clinic-feedback?clinic_id=${clinic.id}`), {
+          cache: "no-store",
+        }),
+      ]);
+
+      const servicesData = await servicesRes.json().catch(() => []);
+      const feedbackData = await feedbackRes.json().catch(() => ({}));
+
+      if (servicesRes.ok && Array.isArray(servicesData)) {
+        setProfileServices(
+          servicesData.filter((service: ClinicService) =>
+            isEnabledFlag(service.is_active)
+          )
+        );
+      }
+
+      if (feedbackRes.ok) {
+        setProfileReviews(
+          Array.isArray(feedbackData.reviews) ? feedbackData.reviews : []
+        );
+
+        setProfileClinic((current) =>
+          current?.id === clinic.id
+            ? {
+                ...current,
+                average_rating: feedbackData.average_rating ?? current.average_rating,
+                rating_count: feedbackData.rating_count ?? current.rating_count,
+              }
+            : current
+        );
+      }
+    } catch (err) {
+      setProfileError(
+        err instanceof Error ? err.message : "Failed to load clinic profile."
+      );
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const closeClinicProfile = () => {
+    setProfileClinic(null);
+    setProfileServices([]);
+    setProfileReviews([]);
+    setProfileError("");
+    setProfileLoading(false);
+  };
 
   const openBookingModal = (clinic: ClinicWithDistance) => {
     if (!clinic.isOpenNow) {
@@ -860,7 +979,7 @@ export default function FindClinic() {
           ]
         : [];
 
-      const res = await fetch("http://localhost:5000/api/appointments/book", {
+      const res = await fetch(apiUrl("/api/appointments/book"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -985,9 +1104,8 @@ export default function FindClinic() {
                 {loading ? "Searching..." : "Search"}
               </button>
             </div>
-          </div>
 
-          <div className="fc-filters">
+            <div className="fc-filters">
             <button type="button" className="fc-filter-chip fc-filter-chip-cost">
               <MapPin size={14} strokeWidth={2.2} />
               <span>Cost</span>
@@ -1024,6 +1142,7 @@ export default function FindClinic() {
               <LocateFixed size={14} strokeWidth={2.2} />
               <span>{locating ? "Locating..." : "My Location"}</span>
             </button>
+            </div>
           </div>
 
           {error && <p className="fc-message fc-message-error">{error}</p>}
@@ -1036,6 +1155,7 @@ export default function FindClinic() {
               {sortedClinics.map((clinic, index) => {
                 const isNearest = nearestClinic?.id === clinic.id;
                 const showImageCard = index === 3;
+                const ratingSummary = getClinicRatingSummary(clinic);
 
                 return (
                   <div
@@ -1043,6 +1163,15 @@ export default function FindClinic() {
                       isNearest ? "fc-card-nearest" : ""
                     }`}
                     key={clinic.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openClinicProfile(clinic)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openClinicProfile(clinic);
+                      }
+                    }}
                   >
                     <div className="fc-card-left">
                       {showImageCard && (
@@ -1051,6 +1180,12 @@ export default function FindClinic() {
                             src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=400&q=80"
                             alt={clinic.clinic_name}
                           />
+                        </div>
+                      )}
+
+                      {!showImageCard && (
+                        <div className="fc-card-clinic-icon" aria-hidden="true">
+                          <Building2 size={32} strokeWidth={1.9} />
                         </div>
                       )}
 
@@ -1072,29 +1207,40 @@ export default function FindClinic() {
                     </div>
 
                     <div className="fc-card-right">
-                      <div className="fc-card-rating">{renderStars()}</div>
+                      <div className="fc-card-rating">
+                        {renderStars()}
+                        <span className="fc-rating-count">
+                          {ratingSummary.score
+                            ? `${ratingSummary.score.toFixed(1)} (${ratingSummary.countLabel})`
+                            : ratingSummary.countLabel}
+                        </span>
+                      </div>
 
                       <div className="fc-card-distance">
                         {getClinicDistanceLabel(clinic, Boolean(userLocation))}
                       </div>
 
-                     <button
-  type="button"
-  className="fc-book-btn"
-  disabled={
-    !clinic.isOpenNow ||
-    booking ||
-    clinic.status !== "approved" ||
-    clinic.account_status !== "active"
-  }
-  onClick={() => openBookingModal(clinic)}
->
-  {clinic.status !== "approved" || clinic.account_status !== "active"
-    ? "Unavailable"
-    : clinic.isOpenNow
-    ? "Book Now"
-    : "Closed"}
-</button>
+                      <button
+                        type="button"
+                        className="fc-book-btn"
+                        disabled={
+                          !clinic.isOpenNow ||
+                          booking ||
+                          clinic.status !== "approved" ||
+                          clinic.account_status !== "active"
+                        }
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openBookingModal(clinic);
+                        }}
+                      >
+                        {clinic.status !== "approved" ||
+                        clinic.account_status !== "active"
+                          ? "Unavailable"
+                          : clinic.isOpenNow
+                          ? "Book Now"
+                          : "Closed"}
+                      </button>
                     </div>
                   </div>
                 );
@@ -1217,6 +1363,12 @@ export default function FindClinic() {
                     <span>
                       <MapPin size={15} />
                       {getClinicDistanceLabel(selectedClinic, Boolean(userLocation))}
+                    </span>
+                    <span>
+                      <Star size={15} fill="currentColor" />
+                      {selectedClinicRating?.score
+                        ? `${selectedClinicRating.score.toFixed(1)} / 5`
+                        : selectedClinicRating?.countLabel || "No ratings yet"}
                     </span>
                   </div>
                 </div>
@@ -1434,6 +1586,170 @@ export default function FindClinic() {
         </div>
       )}
 
+      {profileClinic && (
+        <div className="fc-modal-overlay" onClick={closeClinicProfile}>
+          <div
+            className="fc-modal-card fc-profile-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="fc-modal-header fc-profile-header">
+              <div>
+                <p className="fc-modal-eyebrow">Clinic profile</p>
+                <h2>{profileClinic.clinic_name}</h2>
+              </div>
+              <button
+                type="button"
+                className="fc-modal-close"
+                onClick={closeClinicProfile}
+                aria-label="Close clinic profile"
+              >
+                x
+              </button>
+            </div>
+
+            <div className="fc-profile-body">
+              <section className="fc-profile-hero">
+                <div className="fc-profile-icon">
+                  <Building2 size={38} strokeWidth={1.8} />
+                </div>
+
+                <div className="fc-profile-summary">
+                  <span
+                    className={`fc-status-pill ${
+                      profileClinic.isOpenNow ? "open" : "closed"
+                    }`}
+                  >
+                    {profileClinic.isOpenNow ? "Open now" : "Closed"}
+                  </span>
+                  <h3>{profileClinic.clinic_name}</h3>
+                  <p>{getClinicDescription(profileClinic)}</p>
+                  <div className="fc-profile-meta-row">
+                    <span>
+                      <Star size={16} fill="currentColor" />
+                      {profileClinicRating?.score
+                        ? `${profileClinicRating.score.toFixed(1)} (${profileClinicRating.countLabel})`
+                        : profileClinicRating?.countLabel || "No ratings yet"}
+                    </span>
+                    <span>
+                      <MapPin size={16} />
+                      {getClinicDistanceLabel(profileClinic, Boolean(userLocation))}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="fc-modal-btn primary fc-profile-book-btn"
+                  disabled={
+                    !profileClinic.isOpenNow ||
+                    profileClinic.status !== "approved" ||
+                    profileClinic.account_status !== "active"
+                  }
+                  onClick={() => {
+                    const clinic = profileClinic;
+                    closeClinicProfile();
+                    openBookingModal(clinic);
+                  }}
+                >
+                  {profileClinic.isOpenNow ? "Book Appointment" : "Clinic Closed"}
+                </button>
+              </section>
+
+              {profileError && (
+                <div className="fc-modal-alert error">{profileError}</div>
+              )}
+
+              {profileLoading ? (
+                <div className="fc-profile-loading">Loading clinic details...</div>
+              ) : (
+                <div className="fc-profile-grid">
+                  <section className="fc-profile-panel">
+                    <h3>Clinic Details</h3>
+                    <div className="fc-profile-detail-list">
+                      <span>
+                        <MapPin size={16} />
+                        <strong>{profileClinic.address || "Address not provided"}</strong>
+                      </span>
+                      <span>
+                        <Phone size={16} />
+                        <strong>{profileClinic.phone || "Phone not provided"}</strong>
+                      </span>
+                      <span>
+                        <Mail size={16} />
+                        <strong>{profileClinic.email || "Email not provided"}</strong>
+                      </span>
+                      <span>
+                        <Clock3 size={16} />
+                        <strong>
+                          {profileClinic.opening_time && profileClinic.closing_time
+                            ? `${formatClockTime(
+                                profileClinic.opening_time
+                              )} - ${formatClockTime(profileClinic.closing_time)}`
+                            : "Hours not provided"}
+                        </strong>
+                      </span>
+                    </div>
+                  </section>
+
+                  <section className="fc-profile-panel">
+                    <h3>Available Services</h3>
+                    {profileServices.length > 0 ? (
+                      <div className="fc-profile-services">
+                        {profileServices.slice(0, 8).map((service) => (
+                          <span key={service.id}>
+                            <ClipboardList size={14} />
+                            {service.name}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="fc-profile-muted">
+                        This clinic has not listed active services yet.
+                      </p>
+                    )}
+                  </section>
+                </div>
+              )}
+
+              <section className="fc-profile-panel fc-profile-reviews">
+                <div className="fc-profile-section-head">
+                  <h3>Patient Reviews</h3>
+                  <span>
+                    {profileClinicRating?.countLabel || "No ratings yet"}
+                  </span>
+                </div>
+
+                {profileReviews.length > 0 ? (
+                  <div className="fc-profile-review-list">
+                    {profileReviews.map((review) => (
+                      <article className="fc-profile-review" key={review.id}>
+                        <div>
+                          <strong>{review.reviewer_name || "Cuidado user"}</strong>
+                          <span>
+                            {formatReviewDate(
+                              review.updated_at || review.created_at
+                            )}
+                          </span>
+                        </div>
+                        <p className="fc-profile-review-rating">
+                          {Number(review.rating).toFixed(0)} / 5
+                        </p>
+                        {review.feedback && <p>{review.feedback}</p>}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="fc-profile-empty-reviews">
+                    No patient reviews yet. Completed appointments can leave a
+                    rating after the visit.
+                  </div>
+                )}
+              </section>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSuccessPopup && (
         <div
           className="fc-success-overlay"
@@ -1446,7 +1762,7 @@ export default function FindClinic() {
             <div className="fc-success-icon">
               <CheckCircle2 size={52} strokeWidth={2.4} />
             </div>
-            <h3>Booking Successful</h3>
+            <h3>Request Sent</h3>
             <p>{successPopupMessage}</p>
 
             <button

@@ -1,23 +1,13 @@
-html,
-body,
-#root {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-}
-
-* {
+.sympcheck-page,
+.sympcheck-page * {
   box-sizing: border-box;
-}
-
-body {
-  font-family: Arial, sans-serif;
-  background: #e6eff5;
 }
 
 .sympcheck-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #e1e1e1 0%, #dfe8ef 100%);
+  background: #eef8f8;
+  color: #172033;
+  overflow-x: hidden;
 }
 
 .sympcheck-content {
@@ -35,435 +25,714 @@ body {
 }
 
 .sympcheck-main {
-  padding: 28px 34px 18px;
-  background: rgba(255, 255, 255, 0.22);
+  width: 100%;
+  max-width: 980px;
   min-height: calc(100vh - 58px);
+  margin: 0 auto;
+  padding: 20px 18px 86px;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(103, 204, 199, 0.22), transparent 28%),
+    linear-gradient(180deg, #f5fbfb 0%, #eef8f8 45%, #f7fbfb 100%);
+}
+
+.sympcheck-hero {
+  display: grid;
+  gap: 10px;
+}
+
+.sympcheck-title-wrap {
+  margin: 0;
 }
 
 .sympcheck-title-wrap h1 {
   margin: 0;
-  font-size: 38px;
-  color: #2a3b45;
-  font-weight: 700;
+  color: #172033;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .sympcheck-title-wrap p {
-  margin: 10px 0 24px;
-  font-size: 17px;
-  color: #566873;
+  margin: 5px 0 0;
+  color: #526475;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .sympcheck-form-card {
-  min-height: 160px;
-  border-radius: 20px;
-  border: 1px solid #dfe6ea;
-  background: rgba(255, 255, 255, 0.68);
-  display: block;
-  overflow: hidden;
-}
-
-.sympcheck-form-left {
-  padding: 20px 26px 24px;
+  width: 100%;
+  border: 1px solid #d6ecec;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 34px rgba(23, 46, 55, 0.08);
+  padding: 14px;
 }
 
 .sympcheck-form-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin: 0 0 12px;
+}
+
+.sympcheck-form-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #d8f6f4;
+  color: #078a84;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
 }
 
 .sympcheck-form-title h2 {
   margin: 0;
-  font-size: 22px;
-  color: #35505a;
-  font-weight: 700;
-}
-
-.sympcheck-form-icon {
-  font-size: 26px;
+  color: #172033;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0;
 }
 
 .sympcheck-input-row.full {
-  width: 675px;
-  max-width: 100%;
-  height: 44px;
-  border: 1px solid #d9e1e6;
-  border-radius: 10px;
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #cbe2e6;
+  border-radius: 11px;
   background: #ffffff;
   display: flex;
   align-items: center;
-  padding: 0 14px;
-  margin-bottom: 12px;
+  padding: 0 36px 0 14px;
+  margin: 0 0 10px;
 }
 
 .sympcheck-input-row.full input {
-  flex: 1;
-  border: none;
-  outline: none;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
   background: transparent;
-  font-size: 15px;
-  color: #44535d;
+  color: #172033;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
 }
 
 .sympcheck-input-row.full input::placeholder {
-  color: #9aa7af;
-}
-
-.sympcheck-bottom-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  justify-content: flex-start;
-}
-
-.sympcheck-select {
-  width: 175px;
-  height: 46px;
-  border: 1px solid #d9e1e6;
-  border-radius: 10px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 10px;
-  flex: 0 0 auto;
-}
-
-.select-icon {
-  font-size: 18px;
-  opacity: 0.8;
-}
-
-.sympcheck-select select {
-  flex: 1;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 15px;
-  color: #41515a;
-  appearance: none;
+  color: #98a7b4;
+  font-weight: 800;
 }
 
 .dropdown-arrow {
-  font-size: 11px;
-  color: #7a8b95;
-  flex-shrink: 0;
+  color: #8b9daa;
+  flex: 0 0 auto;
+}
+
+.sympcheck-input-row.full .dropdown-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.sympcheck-bottom-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 9px;
+  margin: 0 0 10px;
+}
+
+.sympcheck-select {
+  position: relative;
+  min-width: 0;
+  min-height: 42px;
+  border: 1px solid #cbe2e6;
+  border-radius: 11px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 32px 0 12px;
+}
+
+.select-icon {
+  color: #078a84;
+  flex: 0 0 auto;
+}
+
+.sympcheck-select select {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  appearance: none;
+  background: transparent;
+  color: #172033;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.sympcheck-select .dropdown-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .sympcheck-btn-primary {
-  width: 200px;
-  height: 46px;
-  padding: 0 20px;
-  border: none;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #46a8bb 0%, #348aa0 100%);
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0c918a 0%, #08776f 100%);
   color: #ffffff;
-  font-size: 15px;
-  font-weight: 600;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
   cursor: pointer;
-  flex-shrink: 0;
-  margin-left: 0;
-  padding-top: 10px;
+  box-shadow: 0 12px 26px rgba(8, 119, 111, 0.18);
 }
 
-.common-symptoms-section {
-  margin-top: 20px;
+.sympcheck-btn-primary:disabled {
+  opacity: 0.68;
+  cursor: wait;
+}
+
+.sympcheck-alert {
+  margin: 10px 0 0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.sympcheck-alert.error {
+  color: #8f1d1d;
+  background: #ffe6e6;
+  border: 1px solid #ffc9c9;
+}
+
+.sympcheck-result-card {
+  margin-top: 10px;
+  border: 1px solid #bfe8d1;
+  border-radius: 12px;
+  background: #edfff4;
+  color: #0d5f43;
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.sympcheck-result-card strong {
+  color: #006c49;
+}
+
+.common-symptoms-section,
+.health-tools-section {
+  margin-top: 16px;
 }
 
 .common-symptoms-section h2,
-.tools-column h2 {
-  margin: 0 0 16px;
-  font-size: 28px;
-  color: #344852;
-}
-
-.common-symptoms-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 640px;
-  gap: 10px;
-  align-items: stretch;
+.health-tools-section h2 {
+  margin: 0 0 10px;
+  color: #172033;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: 0;
 }
 
 .symptom-card-list {
-  display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
 }
 
 .symptom-card {
-  width: 132px;
-  min-width: 132px;
-  height: 122px;
-  border: 1px solid #d9e2e8;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
+  min-width: 0;
+  min-height: 96px;
+  border: 1px solid #d4eaec;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 28px rgba(28, 62, 70, 0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 9px;
+  padding: 10px 6px;
+  color: #172033;
   cursor: pointer;
 }
 
 .symptom-card-icon {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: #d9f0f4;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  flex: 0 0 auto;
+}
+
+.symptom-card-icon.teal,
+.tool-icon.teal,
+.consult-icon {
+  background: #d8f6f4;
+  color: #078a84;
+}
+
+.symptom-card-icon.blue,
+.tool-icon.blue {
+  background: #e4f1ff;
+  color: #1f77b9;
+}
+
+.symptom-card-icon.amber,
+.tool-icon.amber {
+  background: #fff1cf;
+  color: #c26d00;
+}
+
+.symptom-card-icon.rose,
+.tool-icon.rose {
+  background: #ffe4ec;
+  color: #d94572;
+}
+
+.symptom-card-icon.lime,
+.tool-icon.lime {
+  background: #ebf8d8;
+  color: #5f9e1f;
 }
 
 .symptom-card span {
-  font-size: 15px;
-  font-weight: 600;
-  color: #485b65;
+  width: 100%;
+  color: #172033;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.16;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .consult-card {
-  border: 1px solid #d9e2e8;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
+  width: 100%;
+  min-width: 0;
+  margin-top: 10px;
+  border: 1px solid #d4eaec;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 26px rgba(28, 62, 70, 0.06);
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 22px 28px;
-  min-width: 640px;
+  gap: 10px;
+  padding: 10px 12px;
 }
 
 .consult-icon {
-  font-size: 34px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
 }
 
 .consult-card p {
   margin: 0;
-  font-size: 18px;
-  line-height: 1.45;
-  color: #4a5b66;
-  max-width: 390px;
+  color: #3d5060;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.3;
 }
 
-.health-tools-grid {
+.health-tools-list {
   display: grid;
-  grid-template-columns: 1fr 1.25fr;
-  gap: 28px;
-  margin-top: 28px;
-}
-
-.tool-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.tool-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 8px;
 }
 
 .tool-card {
-  border: 1px solid #d9e2e8;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.76);
-  position: relative;
-  bottom: 15px;
-}
-
-.tool-card.large {
-  min-height: 80px;
-  padding: 14px 18px;
-  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  border: 1px solid #d4eaec;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 12px 26px rgba(28, 62, 70, 0.06);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 14px;
-}
-
-.tool-card.small {
-  min-height: 92px;
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding: 10px 12px;
 }
 
 .tool-left {
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-width: 0;
-  flex: 1;
+  gap: 10px;
 }
 
-.tool-left > div {
+.tool-left > div:last-child {
   min-width: 0;
 }
 
 .tool-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: #d9f0f4;
-  display: flex;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .tool-left h3 {
-  margin: 0 0 4px;
-  font-size: 19px;
-  color: #3a4c56;
-  font-weight: 700;
-  line-height: 1.2;
-  word-break: normal;
-  overflow-wrap: break-word;
+  margin: 0 0 3px;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .tool-left p {
   margin: 0;
-  font-size: 13px;
-  color: #7b8b94;
-  line-height: 1.3;
-  word-break: normal;
-  overflow-wrap: break-word;
-}
-
-.tool-card.small .tool-left {
-  gap: 12px;
-}
-
-.tool-card.small .tool-icon {
-  width: 46px;
-  height: 46px;
-  font-size: 22px;
-}
-
-.tool-card.small .tool-left h3 {
-  margin: 0 0 3px;
-  font-size: 17px;
-  line-height: 1.15;
-}
-
-.tool-card.small .tool-left p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.25;
+  color: #657585;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .tool-btn {
-  margin-left: auto;
-  height: 38px;
-  border: none;
+  min-width: 76px;
+  height: 28px;
+  border: 0;
   border-radius: 8px;
-  background: linear-gradient(180deg, #48aabd 0%, #358ea4 100%);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+  background: linear-gradient(135deg, #0c918a 0%, #08776f 100%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 900;
   cursor: pointer;
-  padding: 0 16px;
-  flex: 0 0 auto;
-  width: auto;
-  max-width: none;
-  padding-top: 10px !important;
-}
-
-.tool-card.large .tool-btn {
-  width: 90px;
-  min-width: 90px;
-  max-width: 90px;
-  height: 34px;
-  padding: 0 8px;
-  font-size: 12px;
-}
-
-.tool-card.small .tool-btn {
-  width: 100px;
-  min-width: 100px;
-  max-width: 100px;
-  height: 36px;
-  padding: 0 12px;
-  font-size: 13px;
+  padding: 0 10px;
+  white-space: nowrap;
 }
 
 .sympcheck-footer {
-  margin-top: 24px;
-  padding: 18px 6px 0;
-  border-top: 1px solid rgba(214, 224, 229, 0.8);
+  margin-top: 13px;
+  padding: 10px 2px 2px;
+  border-top: 1px solid rgba(198, 224, 226, 0.95);
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 7px;
   flex-wrap: wrap;
-  color: #677983;
-  font-size: 14px;
+  color: #647788;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .symptom-card:hover,
 .tool-btn:hover,
 .sympcheck-btn-primary:hover {
-  opacity: 0.96;
+  transform: translateY(-1px);
 }
 
-@media (max-width: 1280px) {
-  .common-symptoms-row,
-  .health-tools-grid,
-  .tool-grid {
+@media (min-width: 761px) {
+  .sympcheck-main {
+    padding: 28px 28px 96px;
+  }
+
+  .sympcheck-form-card {
+    padding: 22px;
+  }
+
+  .sympcheck-btn-primary {
+    max-width: 280px;
+  }
+
+  .health-tools-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tool-card {
     grid-template-columns: 1fr;
+    align-items: start;
   }
 
-  .symptom-card-list {
-    flex-wrap: wrap;
-  }
-
-  .consult-card {
-    min-width: 100%;
-  }
-}
-
-@media (max-width: 1024px) {
-  .sympcheck-content {
-    margin-left: 74px;
-    width: calc(100% - 74px);
-  }
-
-  .sympcheck-page.sidebar-expanded .sympcheck-content {
-    margin-left: 270px;
-    width: calc(100% - 270px);
-  }
-
-  .sympcheck-main {
-    padding: 22px 20px 18px;
-  }
-}
-
-@media (max-width: 900px) {
-  .sympcheck-content {
-    margin-left: 74px;
-    width: calc(100% - 74px);
-  }
-
-  .sympcheck-page.sidebar-expanded .sympcheck-content {
-    margin-left: 74px;
-    width: calc(100% - 74px);
-  }
-
-  .sympcheck-main {
-    padding: 18px;
-  }
-
-  .sympcheck-bottom-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .sympcheck-select,
-  .sympcheck-btn-primary,
-  .sympcheck-input-row.full {
+  .tool-btn {
     width: 100%;
-    max-width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .sympcheck-page {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100dvh !important;
+    background: #eef8f8 !important;
+  }
+
+  .sympcheck-page .sympcheck-content,
+  .sympcheck-page.sidebar-expanded .sympcheck-content {
+    margin: var(--mobile-header-height, 120px) 0 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: calc(100dvh - var(--mobile-header-height, 120px)) !important;
+    overflow-x: hidden !important;
+  }
+
+  .sympcheck-page .sympcheck-main {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: calc(100dvh - var(--mobile-header-height, 120px)) !important;
+    padding: 12px 12px calc(var(--mobile-bottom-nav-height, 58px) + 24px) !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+    background: #eef8f8 !important;
+  }
+
+  .sympcheck-page .sympcheck-title-wrap {
+    margin: 0 0 10px !important;
+  }
+
+  .sympcheck-page .sympcheck-title-wrap h1 {
+    font-size: 21px !important;
+    line-height: 1.1 !important;
+  }
+
+  .sympcheck-page .sympcheck-title-wrap p {
+    margin-top: 3px !important;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+
+  .sympcheck-page .sympcheck-form-card {
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .sympcheck-page .sympcheck-form-title {
+    gap: 9px !important;
+    margin-bottom: 11px !important;
+  }
+
+  .sympcheck-page .sympcheck-form-icon {
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 10px !important;
+  }
+
+  .sympcheck-page .sympcheck-form-title h2 {
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+  }
+
+  .sympcheck-page .sympcheck-input-row.full {
+    width: 100% !important;
+    min-height: 40px !important;
+    height: 40px !important;
+    border-radius: 9px !important;
+    padding-left: 12px !important;
+    margin-bottom: 9px !important;
+  }
+
+  .sympcheck-page .sympcheck-input-row.full input {
+    font-size: 11.5px !important;
+  }
+
+  .sympcheck-page .sympcheck-bottom-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 8px !important;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 9px !important;
+  }
+
+  .sympcheck-page .sympcheck-select {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 39px !important;
+    height: 39px !important;
+    flex: initial !important;
+    border-radius: 9px !important;
+    padding-left: 11px !important;
+    gap: 8px !important;
+  }
+
+  .sympcheck-page .sympcheck-select select {
+    font-size: 11.5px !important;
+  }
+
+  .sympcheck-page .sympcheck-btn-primary {
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 39px !important;
+    height: 39px !important;
+    flex: initial !important;
+    padding: 0 10px !important;
+    margin: 0 !important;
+    border-radius: 9px !important;
+    font-size: 11.5px !important;
+  }
+
+  .sympcheck-page .sympcheck-alert,
+  .sympcheck-page .sympcheck-result-card {
+    font-size: 10.5px !important;
+    border-radius: 9px !important;
+    padding: 9px 10px !important;
+  }
+
+  .sympcheck-page .common-symptoms-section,
+  .sympcheck-page .health-tools-section {
+    margin-top: 15px !important;
+  }
+
+  .sympcheck-page .common-symptoms-section h2,
+  .sympcheck-page .health-tools-section h2 {
+    margin-bottom: 9px !important;
+    font-size: 14px !important;
+  }
+
+  .sympcheck-page .symptom-card-list {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  .sympcheck-page .symptom-card {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 82px !important;
+    border-radius: 11px !important;
+    gap: 7px !important;
+    padding: 8px 3px !important;
+  }
+
+  .sympcheck-page .symptom-card-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+
+  .sympcheck-page .symptom-card-icon svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  .sympcheck-page .symptom-card span {
+    font-size: 8.6px !important;
+    line-height: 1.15 !important;
+  }
+
+  .sympcheck-page .consult-card {
+    min-width: 0 !important;
+    margin-top: 10px !important;
+    padding: 10px 11px !important;
+    border-radius: 11px !important;
+    gap: 9px !important;
+  }
+
+  .sympcheck-page .consult-icon {
+    width: 35px !important;
+    height: 35px !important;
+    border-radius: 10px !important;
+  }
+
+  .sympcheck-page .consult-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .sympcheck-page .consult-card p {
+    font-size: 10px !important;
+    line-height: 1.3 !important;
+  }
+
+  .sympcheck-page .health-tools-list {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .sympcheck-page .tool-card {
+    min-height: 58px !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    gap: 9px !important;
+    padding: 10px 11px !important;
+    border-radius: 11px !important;
+    bottom: auto !important;
+    position: relative !important;
+  }
+
+  .sympcheck-page .tool-left {
+    gap: 9px !important;
+  }
+
+  .sympcheck-page .tool-icon {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
+  }
+
+  .sympcheck-page .tool-icon svg {
+    width: 19px !important;
+    height: 19px !important;
+  }
+
+  .sympcheck-page .tool-left h3 {
+    font-size: 11px !important;
+    line-height: 1.12 !important;
+  }
+
+  .sympcheck-page .tool-left p {
+    font-size: 9px !important;
+    line-height: 1.18 !important;
+  }
+
+  .sympcheck-page .tool-btn {
+    width: auto !important;
+    min-width: 68px !important;
+    height: 27px !important;
+    padding: 0 8px !important;
+    border-radius: 8px !important;
+    font-size: 8.2px !important;
+  }
+
+  .sympcheck-page .sympcheck-footer {
+    margin-top: 12px !important;
+    padding-top: 9px !important;
+    gap: 6px !important;
+    font-size: 7px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .sympcheck-page .symptom-card-list {
+    gap: 5px !important;
+  }
+
+  .sympcheck-page .symptom-card span {
+    font-size: 7.8px !important;
+  }
+
+  .sympcheck-page .tool-btn {
+    min-width: 60px !important;
+    font-size: 7.5px !important;
   }
 }

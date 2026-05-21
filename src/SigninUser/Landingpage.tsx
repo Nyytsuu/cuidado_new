@@ -1,314 +1,614 @@
-import { useEffect } from "react";
-import "./LandingPage.css";
-import {Link, useNavigate} from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
+import "./Landingpage.css";
+import logo from "../img/logo.png";
+import doctorImage from "../img/doc.png";
+import patientImage from "../img/doc-patient.png";
+
+const SUPPORT_EMAIL = "cuidadosupport@gmail.com";
+
+const steps = [
+  {
+    number: "01",
+    title: "Check symptoms",
+    text: "Describe what you feel and review possible health topics in plain language.",
+  },
+  {
+    number: "02",
+    title: "Find nearby care",
+    text: "Compare clinics, services, ratings, and availability before sending a request.",
+  },
+  {
+    number: "03",
+    title: "Manage visits",
+    text: "Track requests, accepted schedules, notifications, and appointment changes.",
+  },
+];
+
+const features = [
+  {
+    title: "Symptom checker",
+    text: "Quickly match symptoms with mapped conditions and care guidance.",
+  },
+  {
+    title: "Clinic search",
+    text: "Find available clinics, services, contact details, and booking options.",
+  },
+  {
+    title: "Appointments",
+    text: "Book, review, cancel, and respond to clinic schedule changes.",
+  },
+  {
+    title: "Health tools",
+    text: "Use BMI, stress index, emergency guide, and voice-assisted health search.",
+  },
+];
+
+const trustItems = [
+  "Simple patient-first booking flow",
+  "Clinic updates and appointment notifications",
+  "Organized health topics and body systems",
+  "Secure account and personal health information",
+];
+
+const contactOptions = [
+  {
+    label: "Patient support",
+    title: "Need help with your account?",
+    text: "Log in to manage your profile, appointments, notifications, and support requests.",
+    action: "Log in",
+    to: "/signin",
+  },
+  {
+    label: "New to Cuidado",
+    title: "Ready to start using Cuidado?",
+    text: "Create a patient account to check symptoms, find clinics, and book appointments.",
+    action: "Get started",
+    to: "/signup",
+  },
+  {
+    label: "General contact",
+    title: "Questions about Cuidado?",
+    text: "Send us a message for website questions, clinic interest, or account guidance.",
+    action: "Email Cuidado",
+    isEmail: true,
+  },
+];
+
+const statItems = [
+  {
+    value: 24,
+    suffix: "/7",
+    label: "Access to health tools",
+  },
+  {
+    value: 3,
+    suffix: "",
+    label: "Steps from symptom to visit",
+  },
+  {
+    value: 1,
+    suffix: "",
+    label: "Place for care requests",
+  },
+];
+
 export default function LandingPage() {
+  const countedStatsRef = useRef(false);
+  const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
+  const [animatedStats, setAnimatedStats] = useState(() =>
+    statItems.map(() => 0)
+  );
+
+  const handleSupportEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const data = new FormData(event.currentTarget);
+    const name = String(data.get("name") || "").trim();
+    const email = String(data.get("email") || "").trim();
+    const subjectInput = String(data.get("subject") || "").trim();
+    const message = String(data.get("message") || "").trim();
+    const subject = subjectInput || "Cuidado support request";
+    const body = [
+      `Name: ${name || "Not provided"}`,
+      `Email: ${email || "Not provided"}`,
+      "",
+      message || "No message provided.",
+    ].join("\n");
+
+    window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+    setIsEmailPopupOpen(false);
+  };
+
   useEffect(() => {
     const prevHtmlOverflow = document.documentElement.style.overflowY;
     const prevBodyOverflow = document.body.style.overflowY;
     const prevHtmlHeight = document.documentElement.style.height;
     const prevBodyHeight = document.body.style.height;
     const prevBodyOverflowX = document.body.style.overflowX;
+    const prevBodyDisplay = document.body.style.display;
+    const prevBodyAlignItems = document.body.style.alignItems;
+    const prevBodyJustifyContent = document.body.style.justifyContent;
+    const prevRootWidth = document.getElementById("root")?.style.width || "";
+    const prevRootDisplay = document.getElementById("root")?.style.display || "";
 
     document.documentElement.style.overflowY = "auto";
     document.body.style.overflowY = "auto";
     document.documentElement.style.height = "auto";
     document.body.style.height = "auto";
     document.body.style.overflowX = "hidden";
+    document.body.style.display = "block";
+    document.body.style.alignItems = "stretch";
+    document.body.style.justifyContent = "flex-start";
+
+    const root = document.getElementById("root");
+    if (root) {
+      root.style.width = "100%";
+      root.style.display = "block";
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    const revealItems = Array.from(
+      document.querySelectorAll<HTMLElement>(".lp-animate")
+    );
+    let revealObserver: IntersectionObserver | null = null;
+    let statsObserver: IntersectionObserver | null = null;
+    let countFrame = 0;
+
+    revealItems.forEach((item, index) => {
+      item.style.setProperty("--lp-delay", `${Math.min(index * 70, 420)}ms`);
+    });
+
+    if (prefersReducedMotion) {
+      revealItems.forEach((item) => item.classList.add("is-visible"));
+      setAnimatedStats(statItems.map((item) => item.value));
+    } else {
+      revealObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              revealObserver?.unobserve(entry.target);
+            }
+          });
+        },
+        { rootMargin: "0px 0px -12% 0px", threshold: 0.14 }
+      );
+
+      revealItems.forEach((item) => revealObserver?.observe(item));
+
+      const statsElement = document.querySelector<HTMLElement>(".lp-stats");
+      if (statsElement) {
+        statsObserver = new IntersectionObserver(
+          ([entry]) => {
+            if (!entry?.isIntersecting || countedStatsRef.current) {
+              return;
+            }
+
+            countedStatsRef.current = true;
+            const duration = 1100;
+            const startedAt = performance.now();
+
+            const tick = (now: number) => {
+              const progress = Math.min((now - startedAt) / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+
+              setAnimatedStats(
+                statItems.map((item) => Math.round(item.value * eased))
+              );
+
+              if (progress < 1) {
+                countFrame = requestAnimationFrame(tick);
+              }
+            };
+
+            countFrame = requestAnimationFrame(tick);
+            statsObserver?.disconnect();
+          },
+          { threshold: 0.35 }
+        );
+
+        statsObserver.observe(statsElement);
+      }
+    }
+
+    const hero = document.querySelector<HTMLElement>(".lp-hero");
+    const handleHeroMove = (event: MouseEvent) => {
+      if (!hero || prefersReducedMotion) {
+        return;
+      }
+
+      const rect = hero.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width - 0.5;
+      const y = (event.clientY - rect.top) / rect.height - 0.5;
+
+      hero.style.setProperty("--lp-bg-x", `${x * 14}px`);
+      hero.style.setProperty("--lp-bg-y", `${y * 10}px`);
+      hero.style.setProperty("--lp-doctor-x", `${x * -24}px`);
+      hero.style.setProperty("--lp-doctor-y", `${y * -18}px`);
+    };
+    const resetHeroMove = () => {
+      if (!hero) {
+        return;
+      }
+
+      hero.style.setProperty("--lp-bg-x", "0px");
+      hero.style.setProperty("--lp-bg-y", "0px");
+      hero.style.setProperty("--lp-doctor-x", "0px");
+      hero.style.setProperty("--lp-doctor-y", "0px");
+    };
+
+    hero?.addEventListener("mousemove", handleHeroMove);
+    hero?.addEventListener("mouseleave", resetHeroMove);
+
+    const interactiveCards = Array.from(
+      document.querySelectorAll<HTMLElement>(".lp-interactive-card")
+    );
+    const cardCleanups = interactiveCards.map((card) => {
+      const handleCardMove = (event: MouseEvent) => {
+        if (prefersReducedMotion) {
+          return;
+        }
+
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty("--card-x", `${event.clientX - rect.left}px`);
+        card.style.setProperty("--card-y", `${event.clientY - rect.top}px`);
+        card.classList.add("is-hovered");
+      };
+      const handleCardLeave = () => {
+        card.classList.remove("is-hovered");
+      };
+
+      card.addEventListener("mousemove", handleCardMove);
+      card.addEventListener("mouseleave", handleCardLeave);
+
+      return () => {
+        card.removeEventListener("mousemove", handleCardMove);
+        card.removeEventListener("mouseleave", handleCardLeave);
+      };
+    });
 
     return () => {
+      revealObserver?.disconnect();
+      statsObserver?.disconnect();
+      cancelAnimationFrame(countFrame);
+      hero?.removeEventListener("mousemove", handleHeroMove);
+      hero?.removeEventListener("mouseleave", resetHeroMove);
+      cardCleanups.forEach((cleanup) => cleanup());
+
       document.documentElement.style.overflowY = prevHtmlOverflow;
       document.body.style.overflowY = prevBodyOverflow;
       document.documentElement.style.height = prevHtmlHeight;
       document.body.style.height = prevBodyHeight;
       document.body.style.overflowX = prevBodyOverflowX;
+      document.body.style.display = prevBodyDisplay;
+      document.body.style.alignItems = prevBodyAlignItems;
+      document.body.style.justifyContent = prevBodyJustifyContent;
+
+      if (root) {
+        root.style.width = prevRootWidth;
+        root.style.display = prevRootDisplay;
+      }
     };
   }, []);
 
   return (
     <div className="lp">
-      {/* NAVBAR */}
       <header className="lp-nav">
         <div className="lp-nav-inner">
-          <div className="lp-brand">
-            <img className="lp-logo" src="/src/img/logo.png" alt="CUIDADO" />
-          </div>
+          <a className="lp-brand" href="#home" aria-label="Cuidado home">
+            <img className="lp-logo" src={logo} alt="CUIDADO" />
+          </a>
 
-          <nav className="lp-links">
-            <a href="#home">Home</a>
-            <a href="#contact">Contact Us</a>
-            <a href="#about">About Us</a>
+          <nav className="lp-links" aria-label="Landing navigation">
+            <a href="#features">Features</a>
+            <a href="#how">How it works</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
           </nav>
 
-          <Link to="/signin" className="lp-login-btn">
-  LOGIN
-</Link>
+          <div className="lp-nav-actions">
+            <Link to="/signin" className="lp-login-btn">
+              Log in
+            </Link>
+            <Link to="/signup" className="lp-signup-btn">
+              Sign up
+            </Link>
+          </div>
         </div>
       </header>
 
-      {/* HERO */}
-      <section id="home" className="lp-hero">
-        <div className="lp-hero-bg" />
+      <main>
+        <section id="home" className="lp-hero">
+          <div className="lp-hero-bg" aria-hidden="true" />
+          <img
+            className="lp-hero-doctor"
+            src={doctorImage}
+            alt="Doctor using Cuidado MediHelp"
+          />
 
-        <div className="lp-hero-inner">
-          <div className="lp-hero-left">
-            <h1 className="lp-hero-title">
-              Know your symptoms.
-              <br />
-              Book with confidence.
-            </h1>
-
-            <p className="lp-hero-text">
-              Not feeling well and unsure what it means? Our website helps you
-              identify possible symptoms and connect with the right healthcare
-              services. With just a few clicks, you can learn more about your
-              condition and book a checkup at a time that works best for you.Not
-              feeling well and unsure what it means? Our website helps you
-              identify possible symptoms and connect with the right healthcare
-              services. With just a few clicks, you can learn more about your
-              condition and book a checkup at a time that works best for you.
+          <div className="lp-hero-inner lp-animate">
+            <span className="lp-eyebrow">Patient care, organized</span>
+            <h1>Cuidado MediHelp</h1>
+            <p>
+              Check symptoms, find clinics, and manage appointments in one calm
+              healthcare workspace made for patients and local clinics.
             </p>
 
             <div className="lp-hero-actions">
-              <button className="lp-cta">LOGIN</button>
+              <Link to="/signup" className="lp-primary-btn">
+                Get started
+              </Link>
+              <Link to="/signin" className="lp-secondary-btn">
+                I already have an account
+              </Link>
+            </div>
 
-              <div className="lp-social">
-                <a href="#" className="lp-social-btn" aria-label="Facebook">
-                  <span className="fb">f</span>
-                </a>
+            <div className="lp-stats" aria-label="Cuidado highlights">
+              {statItems.map((item, index) => (
+                <div
+                  className="lp-stat-card lp-animate lp-interactive-card"
+                  key={item.label}
+                >
+                  <strong>
+                    {animatedStats[index]}
+                    {item.suffix}
+                  </strong>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-                <a href="#" className="lp-social-btn ig" aria-label="Instagram">
-                  <img src="/src/img/instagram.png" alt="Instagram" />
-                </a>
+        <section id="how" className="lp-section lp-how">
+          <div className="lp-section-heading lp-animate">
+            <span>How it works</span>
+            <h2>From concern to clinic request without the confusion.</h2>
+          </div>
 
-                <a href="#" className="lp-social-btn" aria-label="Twitter">
-                  <span className="x">𝕏</span>
-                </a>
-              </div>
+          <div className="lp-steps">
+            {steps.map((step) => (
+              <article
+                className="lp-step-card lp-animate lp-interactive-card"
+                key={step.number}
+              >
+                <span>{step.number}</span>
+                <h3>{step.title}</h3>
+                <p>{step.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="features" className="lp-section lp-features">
+          <div className="lp-feature-copy lp-animate">
+            <span>Everything in reach</span>
+            <h2>Designed around the real patient flow.</h2>
+            <p>
+              Cuidado keeps the important actions close: symptom checking,
+              clinic search, appointment tracking, and health references.
+            </p>
+            <Link to="/signup" className="lp-primary-btn">
+              Create an account
+            </Link>
+          </div>
+
+          <div className="lp-feature-grid">
+            {features.map((feature) => (
+              <article
+                className="lp-feature-card lp-animate lp-interactive-card"
+                key={feature.title}
+              >
+                <div className="lp-feature-icon" aria-hidden="true">
+                  {feature.title.slice(0, 1)}
+                </div>
+                <h3>{feature.title}</h3>
+                <p>{feature.text}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="about" className="lp-section lp-about">
+          <div className="lp-about-copy lp-animate">
+            <span>About Us</span>
+            <h2>Helping patients move from uncertainty to care with less confusion.</h2>
+            <p>
+              Cuidado MediHelp is a patient-centered health companion built to
+              make symptom checking, clinic discovery, and appointment requests
+              easier to understand and manage.
+            </p>
+
+            <div className="lp-about-actions">
+              <Link to="/signup" className="lp-primary-btn">
+                Get started
+              </Link>
+              <a href="#contact" className="lp-secondary-btn">
+                Contact us
+              </a>
             </div>
           </div>
 
-          <div className="lp-hero-right">
-            <img
-              className="lp-hero-img"
-              src="/src/img/doc.png"
-              alt="Doctor illustration"
-            />
-          </div>
-        </div>
+          <div className="lp-about-card lp-animate lp-interactive-card">
+            <img src={patientImage} alt="Cuidado team supporting a patient" />
 
-        {/* TOP WAVE (SVG) */}
-        <svg
-          className="lp-wave-top"
-          viewBox="-60 0 1560 180"
-          preserveAspectRatio="none"
-          aria-hidden="true"
+            <div className="lp-about-list">
+              {trustItems.map((item, index) => (
+                <div key={item}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <strong>{item}</strong>
+                  <p>
+                    Practical tools that keep health information, clinic
+                    updates, and next steps easier to follow.
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="contact" className="lp-section lp-contact">
+          <div className="lp-contact-heading lp-animate">
+            <span>Contact Us</span>
+            <h2>Need help, clinic information, or a place to begin?</h2>
+            <p>
+              Choose the path that matches what you need. Cuidado keeps account
+              access, patient help, and clinic questions easy to reach.
+            </p>
+          </div>
+
+          <div className="lp-contact-grid">
+            {contactOptions.map((option) => (
+              <article
+                className="lp-contact-card lp-animate lp-interactive-card"
+                key={option.label}
+              >
+                <span>{option.label}</span>
+                <h3>{option.title}</h3>
+                <p>{option.text}</p>
+                {option.to ? (
+                  <Link to={option.to}>{option.action}</Link>
+                ) : option.isEmail ? (
+                  <button type="button" onClick={() => setIsEmailPopupOpen(true)}>
+                    {option.action}
+                  </button>
+                ) : (
+                  <a href={option.href}>{option.action}</a>
+                )}
+              </article>
+            ))}
+          </div>
+
+        </section>
+
+        <footer className="lp-footer">
+          <div className="lp-footer-ribbon">
+            <div>
+              <span>Cuidado MediHelp</span>
+              <span>Learn about Cuidado and create an account when you are ready.</span>
+            </div>
+
+            <div className="lp-footer-ribbon-actions">
+              <Link to="/signup">Get started</Link>
+              <Link to="/signin">Log in</Link>
+            </div>
+          </div>
+
+          <div className="lp-footer-inner">
+            <div className="lp-footer-brand">
+              <img src={logo} alt="CUIDADO" />
+              <p>
+                Cuidado MediHelp helps patients check symptoms, find clinics, and
+                manage appointment requests with clearer next steps.
+              </p>
+            </div>
+
+            <nav className="lp-footer-links" aria-label="Footer navigation">
+              <div>
+                <h3>Explore</h3>
+                <a href="#home">Home</a>
+                <a href="#features">Features</a>
+                <a href="#how">How it works</a>
+              </div>
+
+              <div>
+                <h3>Account</h3>
+                <Link to="/signin">Log in</Link>
+                <Link to="/signup">Create account</Link>
+                <Link to="/signup">Get started</Link>
+              </div>
+
+              <div>
+                <h3>Company</h3>
+                <a href="#about">About us</a>
+                <a href="#contact">Contact us</a>
+                <a href="#home">Back to top</a>
+              </div>
+            </nav>
+          </div>
+
+          <div className="lp-footer-bottom">
+            <span>For informational use only. For emergencies, contact local emergency services.</span>
+            <span>(c) 2026 Cuidado MediHelp</span>
+          </div>
+        </footer>
+      </main>
+
+      {isEmailPopupOpen && (
+        <div
+          className="lp-email-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="lp-email-title"
+          onClick={() => setIsEmailPopupOpen(false)}
         >
-          <path
-            d="
-              M-60,120
-              C120,150 260,80 420,110
-              C600,145 760,155 900,120
-              C1040,85 1160,25 1290,35
-              C1400,55 1460,25 1500,15
-              L1500,180
-              L-60,180
-              Z
-            "
-            fill="var(--teal-2)"
-          />
-        </svg>
-      </section>
+          <div className="lp-email-card" onClick={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              className="lp-email-close"
+              aria-label="Close email popup"
+              onClick={() => setIsEmailPopupOpen(false)}
+            >
+              x
+            </button>
 
-      {/* HOW IT WORKS */}
-      <section className="how">
-   
-        <div className="how-bg" aria-hidden="true" />
+            <span>Send Email</span>
+            <h2 id="lp-email-title">Contact Cuidado Support</h2>
+            <p>
+              Your message will be prepared as an email to{" "}
+              <strong>{SUPPORT_EMAIL}</strong>.
+            </p>
 
-        {/* ✅ top wave image */}
-        <div className="how-wave how-wave-top" aria-hidden="true" />
+            <form onSubmit={handleSupportEmailSubmit}>
+              <label>
+                Your name
+                <input name="name" type="text" placeholder="Juan Dela Cruz" />
+              </label>
 
-        <h2 className="how-title">How it works:</h2>
-        <p className="how-sub">Follow these simple steps</p>
+              <label>
+                Your email
+                <input
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                />
+              </label>
 
-        <div className="how-steps">
-          <div className="how-step">
-            <div className="how-step-label">Step 1</div>
-            <div className="how-card">
-              <div className="how-card-head">ENTER YOUR SYMPTOMS</div>
-              <div className="how-card-body">
-                Type in what you’re feeling and answer a few simple questions.
+              <label>
+                Subject
+                <input
+                  name="subject"
+                  type="text"
+                  placeholder="How can we help?"
+                />
+              </label>
+
+              <label>
+                Message
+                <textarea
+                  name="message"
+                  rows={5}
+                  placeholder="Write your message here..."
+                  required
+                />
+              </label>
+
+              <div className="lp-email-actions">
+                <button type="button" onClick={() => setIsEmailPopupOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit">Prepare Email</button>
               </div>
-              <div className="how-arrow">
-                <span>→</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="how-step">
-            <div className="how-step-label">Step 2</div>
-            <div className="how-card">
-              <div className="how-card-head">GET POSSIBLE HEALTH INSIGHTS</div>
-              <div className="how-card-body">
-                Receive information about possible conditions based on your
-                symptoms.
-              </div>
-              <div className="how-arrow">
-                <span>→</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="how-step">
-            <div className="how-step-label">Step 3</div>
-            <div className="how-card">
-              <div className="how-card-head">BOOK A CHECKUP</div>
-              <div className="how-card-body">
-                Choose a doctor and schedule your appointment in just a few
-                clicks.
-              </div>
-            </div>
+            </form>
           </div>
         </div>
-
-        <div className="how-slogan">EVERYTHING YOU NEED IN ONE PLACE</div>
-
-        <div className="how-mini-grid">
-          <div className="how-mini">
-            <div className="how-mini-title">SYMPTOMS CHECKER</div>
-            <div className="how-mini-text">
-              Quickly check your symptoms and receive helpful health insights.
-            </div>
-          </div>
-
-          <div className="how-mini">
-            <div className="how-mini-title">EASY APPOINTMENT BOOKING</div>
-            <div className="how-mini-text">
-              Schedule your checkup online in just a few simple steps.
-            </div>
-          </div>
-
-          <div className="how-mini">
-            <div className="how-mini-title">DOCTOR OR CLINIC SELECTION</div>
-            <div className="how-mini-text">
-              Choose the doctor or clinic that best fits your needs.
-            </div>
-          </div>
-
-          <div className="how-mini">
-            <div className="how-mini-title">SCHEDULE MANAGEMENT</div>
-            <div className="how-mini-text">
-              View, reschedule, or cancel appointments with ease.
-            </div>
-          </div>
-
-          <div className="how-mini">
-            <div className="how-mini-title">SECURE PATIENT INFORMATION</div>
-            <div className="how-mini-text">
-              Your personal and medical data is protected and kept confidential.
-            </div>
-          </div>
-        </div>
-
-        {/* ✅ bottom waves (2 layered images) */}
-        <div className="how-wave-bottom" aria-hidden="true">
-          <div className="how-wave how2"></div>
-          <div className="how-wave how3"></div>
-        </div>
-      </section>
-
-      {/* TRUST */}
-      <section id="about" className="lp-section lp-trust">
-        <div className="lp-trust-bg">
-        <div className="lp-trust-inner">
-          <div className="lp-photo-wrap">
-            <img
-              className="lp-photo"
-              src="/src/img/doc-patient.png"
-              alt="Doctors helping patient"
-            />
-          </div>
-
-          <div className="trust-card">
-            <h3 className="trust-title">Why Patients Trust Us</h3>
-
-            <ul className="trust-list">
-              <li>
-                <span className="trust-check">✓</span>
-                <div>
-                  <strong>Fast and Simple Process</strong>
-                  <p>Check symptoms and book appointments in minutes.</p>
-                </div>
-              </li>
-
-              <li>
-                <span className="trust-check">✓</span>
-                <div>
-                  <strong>Reliable Health Information</strong>
-                  <p>Get helpful and easy-to-understand health guidance.</p>
-                </div>
-              </li>
-
-              <li>
-                <span className="trust-check">✓</span>
-                <div>
-                  <strong>User-Friendly Interface</strong>
-                  <p>Designed to be simple, clear, and easy for everyone to use.</p>
-                </div>
-              </li>
-
-              <li>
-                <span className="trust-check">✓</span>
-                <div>
-                  <strong>Book Anytime, Anywhere</strong>
-                  <p>Access the system on your phone or computer, 24/7.</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-        </div>
-        
-      </section>
-
-      {/* FOOTER */}
-      <footer className="footer">
-        <div className="footer-inner">
-          <div className="footer-logo">
-            <img src="/src/img/logo.png" alt="CUIDADO" />
-          </div>
-
-          <div className="footer-links">
-            <div className="footer-col">
-              <a href="#">Home</a>
-              <a href="#">FAQ</a>
-              <a href="#">Contact Us</a>
-            </div>
-
-            <div className="footer-col">
-              <a href="#">About Us</a>
-              <a href="#">Terms and Condition</a>
-              <a href="#">Privacy and Policy</a>
-            </div>
-
-            <div className="footer-col">
-              <span className="footer-follow">Follow Us</span>
-              <div className="footer-socials">
-                <a href="#" className="social">
-                  <span className="fb">f</span>
-                </a>
-
-                <a href="#" className="social ig" aria-label="Instagram">
-                  <img src="/src/img/instagram.png" alt="Instagram" />
-                </a>
-
-                <a href="#" className="social">
-                  <span className="x">𝕏</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      )}
     </div>
   );
 }

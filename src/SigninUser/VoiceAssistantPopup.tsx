@@ -254,7 +254,7 @@ export default function VoiceAssistantPopup({
               <p>{voiceContent.subtitle}</p>
             </div>
 
-            {voiceTranscript && (
+            {voiceTranscript && voiceStep !== "result" && (
               <div className="voice-transcript-preview">
                 <strong>Heard:</strong> {voiceTranscript}
               </div>
@@ -265,20 +265,24 @@ export default function VoiceAssistantPopup({
             )}
 
             {voiceStep === "result" && symptomResult && (
-              <VoiceAssistantResult result={symptomResult} compact />
+              <div className="voice-popup-result-scroll">
+                <VoiceAssistantResult result={symptomResult} compact />
+              </div>
             )}
 
-            {(voiceStep === "retry" || voiceStep === "result") && (
-              <button
-                type="button"
-                className="voice-popup-retry"
-                onClick={startVoiceAssistant}
-              >
-                Try again
-              </button>
-            )}
+            <div className="voice-popup-footer">
+              {(voiceStep === "retry" || voiceStep === "result") && (
+                <button
+                  type="button"
+                  className="voice-popup-retry"
+                  onClick={startVoiceAssistant}
+                >
+                  Try again
+                </button>
+              )}
 
-            <div className="voice-popup-language">English (Philippines)</div>
+              <div className="voice-popup-language">English (Philippines)</div>
+            </div>
           </div>
         </div>
       )}

@@ -77,6 +77,7 @@ mailer.verify((err) => {
 // LOGIN (admin + clinic + user)
 const handleLogin = (req, res) => {
   const { email, password } = req.body;
+  const isMobileLogin = req.path === "/mobile/login";
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required." });
@@ -105,6 +106,44 @@ const handleLogin = (req, res) => {
 
   (async () => {
     try {
+      if (isMobileLogin) {
+        const found = await tryLogin("users", "user", "full_name");
+
+        if (found === "bad_password") {
+          return res.status(401).json({ message: "Invalid email or password." });
+        }
+
+        if (!found) {
+          const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
+          const accountType = accounts?.[0]?.account_type;
+
+          if (accountType && accountType !== "user") {
+            return res.status(403).json({
+              message: "Only user accounts can log in to the mobile app.",
+            });
+          }
+
+          return res.status(401).json({ message: "Invalid email or password." });
+        }
+
+        const token = jwt.sign(
+          { id: found.id, role: found.role, email: found.email },
+          process.env.JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+
+        return res.json({
+          message: "Login successful",
+          token,
+          user: {
+            id: found.id,
+            role: found.role,
+            email: found.email,
+            name: found.name,
+          },
+        });
+      }
+
       // 1) admins
       let found = await tryLogin("admins", "admin", "full_name");
       if (found === "bad_password") return res.status(401).json({ message: "Invalid email or password." });

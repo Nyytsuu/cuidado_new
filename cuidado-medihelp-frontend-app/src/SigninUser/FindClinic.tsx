@@ -14,8 +14,11 @@ import {
   Mail,
   ClipboardList,
   CheckCircle2,
+  Building2,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
+import { getCurrentAppLocation, getLocationErrorMessage } from "../utils/location";
 import "./FindClinic.css";
 import "leaflet/dist/leaflet.css";
 
@@ -155,7 +158,7 @@ function isEnabledFlag(value: number | boolean | string | null | undefined): boo
 async function loadClinicScheduleSnapshot(clinic: Clinic): Promise<Clinic> {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/clinic/schedule?clinic_id=${clinic.id}`,
+      apiUrl(`/api/clinic/schedule?clinic_id=${clinic.id}`),
       { cache: "no-store" }
     );
 
@@ -494,7 +497,7 @@ export default function FindClinic() {
       if (specialization !== "All") params.append("specialization", specialization);
       if (openNow) params.append("openNow", "true");
 
-      const res = await fetch(`http://localhost:5000/api/clinics?${params.toString()}`, {
+      const res = await fetch(apiUrl(`/api/clinics?${params.toString()}`), {
         cache: "no-store",
       });
       const result = await res.json();
@@ -561,7 +564,7 @@ export default function FindClinic() {
       try {
         setLoadingClinicServices(true);
         const res = await fetch(
-          `http://localhost:5000/api/clinic/services?clinic_id=${selectedClinic.id}`,
+          apiUrl(`/api/clinic/services?clinic_id=${selectedClinic.id}`),
           { cache: "no-store" }
         );
         const data = await res.json().catch(() => []);
@@ -600,36 +603,24 @@ export default function FindClinic() {
     };
   }, [showBookingModal, selectedClinic?.id]);
 
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported on this browser.");
-      return;
-    }
-
+  const requestLocation = async () => {
     setLocating(true);
     setError("");
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
+    try {
+      const coords = await getCurrentAppLocation();
+      setUserLocation(coords);
+      setHighlightLocation(true);
+      setMapTarget([coords.lat, coords.lng]);
 
-        setUserLocation(coords);
-        setHighlightLocation(true);
-        setMapTarget([coords.lat, coords.lng]);
-        setLocating(false);
-
-        setTimeout(() => {
-          setHighlightLocation(false);
-        }, 3000);
-      },
-      () => {
-        setError("Unable to get your location.");
-        setLocating(false);
-      }
-    );
+      setTimeout(() => {
+        setHighlightLocation(false);
+      }, 3000);
+    } catch (error) {
+      setError(getLocationErrorMessage(error));
+    } finally {
+      setLocating(false);
+    }
   };
 
   const handleHighlightMyLocation = () => {
@@ -860,7 +851,7 @@ export default function FindClinic() {
           ]
         : [];
 
-      const res = await fetch("http://localhost:5000/api/appointments/book", {
+      const res = await fetch(apiUrl("/api/appointments/book"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -985,9 +976,8 @@ export default function FindClinic() {
                 {loading ? "Searching..." : "Search"}
               </button>
             </div>
-          </div>
 
-          <div className="fc-filters">
+            <div className="fc-filters">
             <button type="button" className="fc-filter-chip fc-filter-chip-cost">
               <MapPin size={14} strokeWidth={2.2} />
               <span>Cost</span>
@@ -1024,6 +1014,7 @@ export default function FindClinic() {
               <LocateFixed size={14} strokeWidth={2.2} />
               <span>{locating ? "Locating..." : "My Location"}</span>
             </button>
+            </div>
           </div>
 
           {error && <p className="fc-message fc-message-error">{error}</p>}
@@ -1054,6 +1045,12 @@ export default function FindClinic() {
                         </div>
                       )}
 
+                      {!showImageCard && (
+                        <div className="fc-card-clinic-icon" aria-hidden="true">
+                          <Building2 size={32} strokeWidth={1.9} />
+                        </div>
+                      )}
+
                       <div className="fc-card-body">
                         <h3>
                           {clinic.clinic_name}
@@ -1072,7 +1069,10 @@ export default function FindClinic() {
                     </div>
 
                     <div className="fc-card-right">
-                      <div className="fc-card-rating">{renderStars()}</div>
+                      <div className="fc-card-rating">
+                        {renderStars()}
+                        <span className="fc-rating-count">({index === 0 ? 52 : 37})</span>
+                      </div>
 
                       <div className="fc-card-distance">
                         {getClinicDistanceLabel(clinic, Boolean(userLocation))}

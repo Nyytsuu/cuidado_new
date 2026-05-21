@@ -1,11 +1,12 @@
 import "./Signin.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { login } from "../api/api";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import ReCAPTCHA from "react-google-recaptcha";
 import logo from "../img/logo.png";
 import { getConfiguredBackendUrl } from "../sharedBackendFetch";
+import { getActiveAuthDestination } from "../authSession";
 
 import ForgotPassword from "./Forgetpass";
 import OtpPopup from "../SigninUser/OtpPopup";
@@ -20,6 +21,9 @@ function Signin() {
   // login
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [keepLoggedIn, setKeepLoggedIn] = useState(
+    () => localStorage.getItem("keepLoggedIn") === "true"
+  );
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -45,6 +49,14 @@ function Signin() {
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
   const showCaptcha = failedAttempts >= 5;
+
+  useEffect(() => {
+    const destination = getActiveAuthDestination();
+
+    if (destination) {
+      navigate(destination, { replace: true });
+    }
+  }, [navigate]);
 
   const closeAllFp = () => {
     setFpOpen(false);
@@ -87,19 +99,24 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 
   try {
     const data = await login(email, password, captchaToken || undefined);
+    const role = String(data?.user?.role || "").toLowerCase();
+
+    if (role !== "user") {
+      throw new Error("Only user accounts can log in to this app.");
+    }
 
     localStorage.setItem("token", data.token);
-    localStorage.setItem("role", data.user.role);
+    localStorage.setItem("role", role);
     localStorage.setItem("user", JSON.stringify(data.user));
     localStorage.setItem("userId", String(data.user.id));
+    localStorage.setItem("keepLoggedIn", keepLoggedIn ? "true" : "false");
+    sessionStorage.setItem("authSessionActive", "true");
 
     // reset on success
     setFailedAttempts(0);
     setCaptchaToken(null);
 
-    if (data.user.role === "admin") navigate("/admin/dashboard", { replace: true });
-    else if (data.user.role === "clinic") navigate("/clinic/dashboard", { replace: true });
-    else navigate("/homepage", { replace: true });
+    navigate("/homepage", { replace: true });
   } catch (err: any) {
     const newAttempts = failedAttempts + 1;
     setFailedAttempts(newAttempts);
@@ -240,12 +257,23 @@ console.log("CAPTCHA KEY:", siteKey);
               </span>
             </div>
 
-            <p className="forgot">
-              Forgot Password?{" "}
-              <span className="forgot-link" onClick={openForgot}>
-                Click here
-              </span>
-            </p>
+            <div className="login-options-row">
+              <label className="keep-login-option">
+                <input
+                  type="checkbox"
+                  checked={keepLoggedIn}
+                  onChange={(event) => setKeepLoggedIn(event.target.checked)}
+                />
+                <span>Keep me logged in</span>
+              </label>
+
+              <p className="forgot">
+                Forgot Password?{" "}
+                <span className="forgot-link" onClick={openForgot}>
+                  Click here
+                </span>
+              </p>
+            </div>
 
             {loginError && (
               <p style={{ color: "red", fontSize: "14px" }}>

@@ -222,7 +222,9 @@
   color: #202020;
 }
 
-.form-group input {
+.form-group input,
+.form-group select,
+.form-group textarea {
   width: 100%;
   margin: 0;
   border: 1.5px solid #bfd6d5;
@@ -234,7 +236,14 @@
   outline: none;
 }
 
-.form-group input:focus {
+.form-group textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: #0b8f88;
 }
 
@@ -298,14 +307,16 @@
   border: 1px solid #d9eceb;
   border-radius: 18px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-  padding: 22px;
+  padding: 22px 24px;
 }
 
 .symptom-list-top {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(620px, 760px);
+  align-items: start;
   justify-content: space-between;
-  margin-bottom: 18px;
+  gap: 24px;
+  margin-bottom: 22px;
 }
 
 .symptom-list-top h3 {
@@ -315,13 +326,78 @@
   color: #111;
 }
 
+.symptom-list-top p {
+  margin: 6px 0 0;
+  color: #607372;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.symptom-list-controls {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(160px, 1fr) minmax(140px, 0.75fr) minmax(160px, 1fr) 136px;
+  align-items: end;
+  gap: 10px;
+  width: 100%;
+}
+
+.symptom-list-control {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.symptom-list-control span {
+  color: #516160;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.symptom-list-control select,
+.sort-direction-btn {
+  height: 42px;
+  border: 1px solid #cfe3e2;
+  border-radius: 10px;
+  background: #f8fbfb;
+  color: #173232;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+}
+
+.symptom-list-control select {
+  width: 100%;
+  min-width: 0;
+}
+
+.symptom-list-control select:focus,
+.sort-direction-btn:focus-visible {
+  border-color: #0b8f88;
+  box-shadow: 0 0 0 3px rgba(11, 143, 136, 0.14);
+}
+
+.sort-direction-btn {
+  width: 136px;
+  min-width: 136px;
+  background: #e7f5f4;
+  color: #0b756f;
+  cursor: pointer;
+}
+
 .admin-table-wrap {
   width: 100%;
-  overflow-x: auto;
+  max-height: min(48vh, 520px);
+  overflow: auto;
+  border: 1px solid #dcebea;
+  border-radius: 14px;
+  background: #fff;
 }
 
 .admin-table.symptoms-table {
   width: 100%;
+  min-width: 1120px;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -329,7 +405,7 @@
 .admin-table.symptoms-table thead th {
   background: #0b8f88;
   color: #fff;
-  padding: 18px 20px;
+  padding: 16px 20px;
   text-align: left;
   font-size: 16px;
   font-weight: 700;
@@ -347,9 +423,16 @@
   background: #fff;
   color: #222;
   font-size: 15px;
-  padding: 18px 20px;
+  padding: 16px 20px;
   border-bottom: 1px solid #e6efef;
   vertical-align: middle;
+}
+
+.symptom-description-cell {
+  max-width: 320px;
+  color: #526667 !important;
+  line-height: 1.45;
+  white-space: normal;
 }
 
 .status-badge {
@@ -425,6 +508,30 @@
   .save-symptom-btn,
   .cancel-symptom-btn {
     width: 100%;
+  }
+
+  .symptom-list-top {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .symptom-list-controls {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .symptom-list-control {
+    min-width: 0;
+  }
+
+  .symptom-list-control select,
+  .sort-direction-btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-table-wrap {
+    max-height: 520px;
   }
 
   .header-search {

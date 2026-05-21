@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AdminConditionSymptomMapping.css";
+import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
@@ -8,12 +9,17 @@ import logo from "../img/logo.png";
 type ConditionItem = {
   condition_id: number;
   condition_name: string;
+  body_system_id?: number | null;
+  body_system_name?: string | null;
 };
 
 type SymptomItem = {
   symptom_id: number;
   symptom_name: string;
+  description?: string | null;
   category: string;
+  body_system_id?: number | null;
+  body_system_name?: string | null;
   is_red_flag: boolean;
 };
 
@@ -37,6 +43,7 @@ export default function AdminConditionSymptomMapping() {
   const [symptoms, setSymptoms] = useState<SymptomItem[]>([]);
   const [selectedConditionId, setSelectedConditionId] = useState("");
   const [selectedSymptoms, setSelectedSymptoms] = useState<SelectedSymptom[]>([]);
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{
@@ -96,9 +103,32 @@ export default function AdminConditionSymptomMapping() {
     return symptoms.filter(
       (item) =>
         item.symptom_name.toLowerCase().includes(term) ||
-        (item.category || "").toLowerCase().includes(term)
+        (item.description || "").toLowerCase().includes(term) ||
+        (item.category || "").toLowerCase().includes(term) ||
+        (item.body_system_name || "").toLowerCase().includes(term)
     );
   }, [symptoms, q]);
+
+  const selectedCondition = useMemo(
+    () =>
+      conditions.find(
+        (condition) => String(condition.condition_id) === String(selectedConditionId)
+      ),
+    [conditions, selectedConditionId]
+  );
+
+  const selectedSymptomIds = useMemo(
+    () => new Set(selectedSymptoms.map((item) => item.symptom_id)),
+    [selectedSymptoms]
+  );
+
+  const visibleSymptoms = useMemo(() => {
+    if (!showSelectedOnly) return filteredSymptoms;
+
+    return filteredSymptoms.filter((symptom) =>
+      selectedSymptomIds.has(symptom.symptom_id)
+    );
+  }, [filteredSymptoms, selectedSymptomIds, showSelectedOnly]);
 
   const toggleSymptom = (symptomId: number) => {
     setSelectedSymptoms((prev) => {
@@ -265,7 +295,10 @@ setTimeout(() => setToast(null), 2500);
                     <label>Select Condition</label>
                     <select
                       value={selectedConditionId}
-                      onChange={(e) => setSelectedConditionId(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedConditionId(e.target.value);
+                        setShowSelectedOnly(false);
+                      }}
                     >
                       <option value="">Choose condition</option>
                       {conditions.map((condition) => (
@@ -274,15 +307,32 @@ setTimeout(() => setToast(null), 2500);
                           value={condition.condition_id}
                         >
                           {condition.condition_name}
+                          {condition.body_system_name ? ` (${condition.body_system_name})` : ""}
                         </option>
                       ))}
                     </select>
                   </div>
 
                   <div className="mapping-summary">
-                    <div className="summary-card">
+                    <button
+                      type="button"
+                      className={`summary-card summary-card-button ${
+                        showSelectedOnly ? "is-active" : ""
+                      }`}
+                      onClick={() => setShowSelectedOnly((current) => !current)}
+                      aria-pressed={showSelectedOnly}
+                    >
                       <span>Selected Symptoms</span>
                       <strong>{selectedSymptoms.length}</strong>
+                      <small>
+                        {showSelectedOnly ? "Showing selected" : "Click to view"}
+                      </small>
+                    </button>
+                    <div className="summary-card">
+                      <span>Body System</span>
+                      <strong className="summary-card-text">
+                        {selectedCondition?.body_system_name || "Not linked"}
+                      </strong>
                     </div>
                   </div>
                 </div>
@@ -300,7 +350,9 @@ setTimeout(() => setToast(null), 2500);
                         <tr>
                           <th>Select</th>
                           <th>Symptom</th>
+                          <th>Description</th>
                           <th>Category</th>
+                          <th>Body System</th>
                           <th>Red Flag</th>
                           <th>
                             Importance
@@ -310,14 +362,16 @@ setTimeout(() => setToast(null), 2500);
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredSymptoms.length === 0 ? (
+                        {visibleSymptoms.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="empty-cell">
-                              No symptoms found.
+                            <td colSpan={8} className="empty-cell">
+                              {showSelectedOnly
+                                ? "No selected symptoms to show."
+                                : "No symptoms found."}
                             </td>
                           </tr>
                         ) : (
-                          filteredSymptoms.map((symptom) => {
+                          visibleSymptoms.map((symptom) => {
                             const selected = selectedSymptoms.find(
                               (item) => item.symptom_id === symptom.symptom_id
                             );
@@ -332,7 +386,11 @@ setTimeout(() => setToast(null), 2500);
                                   />
                                 </td>
                                 <td>{symptom.symptom_name}</td>
+                                <td className="mapping-description-cell">
+                                  {symptom.description || "--"}
+                                </td>
                                 <td>{symptom.category || "--"}</td>
+                                <td>{symptom.body_system_name || "--"}</td>
                                 <td>
                                   <span
                                     className={

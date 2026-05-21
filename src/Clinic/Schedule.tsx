@@ -363,7 +363,11 @@ const todayDate = toDateInputValue();
 const [, setError] = useState("");
 
   return (
-    <div className="Schedule with-sidebar">
+    <div
+      className={`Schedule with-sidebar ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}

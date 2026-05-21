@@ -1,39 +1,78 @@
-import { useState } from "react";
+import { useState, type ComponentType } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Apple,
+  BatteryWarning,
+  ChevronDown,
+  ClipboardList,
+  HeartPulse,
+  Lightbulb,
+  MapPin,
+  Scale,
+  Stethoscope,
+  Thermometer,
+  UserRound,
+  Wind,
+} from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import "./SympCheck.css";
 
-const symptomCards = [
-  { id: "cold", title: "Cold & Flu", icon: "👤" },
-  { id: "cough", title: "Cough", icon: "😷" },
-  { id: "fever", title: "Fever", icon: "🪐" },
-  { id: "headache", title: "Headache", icon: "💊" },
-  { id: "fatigue", title: "Fatigue", icon: "😵" },
+type Tone = "teal" | "blue" | "amber" | "rose" | "lime";
+
+type SymptomCard = {
+  id: string;
+  title: string;
+  apiSymptom: string;
+  Icon: ComponentType<{ size?: number; strokeWidth?: number }>;
+  tone: Tone;
+};
+
+type HealthTool = {
+  id: string;
+  title: string;
+  desc: string;
+  button: string;
+  path: string;
+  Icon: ComponentType<{ size?: number; strokeWidth?: number }>;
+  tone: Tone;
+};
+
+const symptomCards: SymptomCard[] = [
+  { id: "cold", title: "Cold & Flu", apiSymptom: "Fever", Icon: Stethoscope, tone: "teal" },
+  { id: "cough", title: "Cough", apiSymptom: "Cough", Icon: Wind, tone: "blue" },
+  { id: "fever", title: "Fever", apiSymptom: "Fever", Icon: Thermometer, tone: "amber" },
+  { id: "headache", title: "Headache", apiSymptom: "Headache", Icon: HeartPulse, tone: "rose" },
+  { id: "fatigue", title: "Fatigue", apiSymptom: "Fatigue", Icon: BatteryWarning, tone: "lime" },
 ];
 
-const leftTools = [
+const healthTools: HealthTool[] = [
   {
     id: "bmi",
     title: "BMI Calculator",
     desc: "Discover your ideal weight",
-    icon: "⚖️",
     button: "Check BMI",
+    path: "/bmi-calculator",
+    Icon: Scale,
+    tone: "teal",
   },
-];
-
-const rightTools = [
   {
     id: "clinic",
     title: "Find Clinic",
     desc: "Find a location",
-    icon: "📍",
     button: "Find Clinic",
+    path: "/find-clinic",
+    Icon: MapPin,
+    tone: "rose",
   },
   {
     id: "tips",
     title: "Health Tips",
     desc: "Read useful tips",
-    icon: "🍎",
     button: "Manage",
+    path: "/browse-health",
+    Icon: Apple,
+    tone: "lime",
   },
 ];
 
@@ -49,7 +88,21 @@ type SymptomCheckerResponse = {
   };
 };
 
+const getStoredUserId = () => {
+  try {
+    const directId = localStorage.getItem("userId");
+    if (directId) return Number(directId);
+
+    const storedUser = localStorage.getItem("user");
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    return user?.id || 1;
+  } catch {
+    return 1;
+  }
+};
+
 export default function SympCheck() {
+  const navigate = useNavigate();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
@@ -65,13 +118,7 @@ export default function SympCheck() {
   const [matchedSymptoms, setMatchedSymptoms] = useState<string[]>([]);
   const [adviceLevel, setAdviceLevel] = useState("");
 
-  const handleSymptomCardClick = (title: string) => {
-    let mappedTitle = title;
-
-    if (title === "Cold & Flu") mappedTitle = "Fever";
-    if (title === "Headache") mappedTitle = "Fever";
-    if (title === "Fatigue") mappedTitle = "Fever";
-
+  const handleSymptomCardClick = (symptom: string) => {
     const currentSymptoms = symptomInput
       .split(",")
       .map((item) => item.trim())
@@ -79,14 +126,13 @@ export default function SympCheck() {
 
     if (
       currentSymptoms.some(
-        (item) => item.toLowerCase() === mappedTitle.toLowerCase()
+        (item) => item.toLowerCase() === symptom.toLowerCase()
       )
     ) {
       return;
     }
 
-    const updatedSymptoms = [...currentSymptoms, mappedTitle];
-    setSymptomInput(updatedSymptoms.join(", "));
+    setSymptomInput([...currentSymptoms, symptom].join(", "));
   };
 
   const handleCheckSymptoms = async () => {
@@ -109,13 +155,13 @@ export default function SympCheck() {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:5000/api/symptom-checker", {
+      const response = await fetch(apiUrl("/api/symptom-checker"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userId: 1, // replace with real logged in user id later
+          userId: getStoredUserId(),
           selectedSymptoms,
           age,
           gender,
@@ -148,6 +194,7 @@ export default function SympCheck() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchPlaceholder="Search..."
       />
 
       <div className="sympcheck-content">
@@ -159,163 +206,130 @@ export default function SympCheck() {
             </div>
 
             <div className="sympcheck-form-card">
-              <div className="sympcheck-form-left">
-                <div className="sympcheck-form-title">
-                  <span className="sympcheck-form-icon">📝</span>
-                  <h2>Tell us about your symptoms</h2>
-                </div>
-
-                <div className="sympcheck-input-row full">
-                  <input
-                    type="text"
-                    placeholder="e.g. Fever, Cough, Shortness of Breath"
-                    value={symptomInput}
-                    onChange={(e) => setSymptomInput(e.target.value)}
-                  />
-                  <span className="dropdown-arrow">▼</span>
-                </div>
-
-                <div className="sympcheck-bottom-row">
-                  <div className="sympcheck-select">
-                    <span className="select-icon">👤</span>
-                    <select value={age} onChange={(e) => setAge(e.target.value)}>
-                      <option value="">Age</option>
-                      <option value="1-12">1-12</option>
-                      <option value="13-18">13-18</option>
-                      <option value="19-35">19-35</option>
-                      <option value="36-60">36-60</option>
-                      <option value="60+">60+</option>
-                    </select>
-                    <span className="dropdown-arrow">▼</span>
-                  </div>
-
-                  <div className="sympcheck-select">
-                    <span className="select-icon">👤</span>
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                    >
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                    </select>
-                    <span className="dropdown-arrow">▼</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="sympcheck-btn-primary"
-                    onClick={handleCheckSymptoms}
-                    disabled={loading}
-                  >
-                    {loading ? "Checking..." : "Check Symptoms"}
-                  </button>
-                </div>
-
-                {error && (
-                  <p style={{ color: "red", marginTop: "12px" }}>{error}</p>
-                )}
-
-                {successMessage && (
-                  <p style={{ color: "green", marginTop: "12px" }}>
-                    {successMessage}
-                  </p>
-                )}
-
-                {matchedSymptoms.length > 0 && (
-                  <div style={{ marginTop: "14px" }}>
-                    <strong>Matched Symptoms:</strong> {matchedSymptoms.join(", ")}
-                  </div>
-                )}
-
-                {possibleConditions.length > 0 && (
-                  <div style={{ marginTop: "10px" }}>
-                    <strong>Possible Conditions:</strong>{" "}
-                    {possibleConditions.join(", ")}
-                  </div>
-                )}
-
-                {adviceLevel && (
-                  <div style={{ marginTop: "10px" }}>
-                    <strong>Advice Level:</strong> {adviceLevel}
-                  </div>
-                )}
+              <div className="sympcheck-form-title">
+                <span className="sympcheck-form-icon">
+                  <ClipboardList size={18} />
+                </span>
+                <h2>Tell us about your symptoms</h2>
               </div>
+
+              <div className="sympcheck-input-row full">
+                <input
+                  type="text"
+                  placeholder="e.g. Fever, Cough, Shortness of Breath"
+                  value={symptomInput}
+                  onChange={(e) => setSymptomInput(e.target.value)}
+                />
+                <ChevronDown size={14} className="dropdown-arrow" />
+              </div>
+
+              <div className="sympcheck-bottom-row">
+                <label className="sympcheck-select">
+                  <UserRound size={16} className="select-icon" />
+                  <select value={age} onChange={(e) => setAge(e.target.value)}>
+                    <option value="">Age</option>
+                    <option value="1-12">1-12</option>
+                    <option value="13-18">13-18</option>
+                    <option value="19-35">19-35</option>
+                    <option value="36-60">36-60</option>
+                    <option value="60+">60+</option>
+                  </select>
+                  <ChevronDown size={13} className="dropdown-arrow" />
+                </label>
+
+                <label className="sympcheck-select">
+                  <UserRound size={16} className="select-icon" />
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                  <ChevronDown size={13} className="dropdown-arrow" />
+                </label>
+              </div>
+
+              <button
+                type="button"
+                className="sympcheck-btn-primary"
+                onClick={handleCheckSymptoms}
+                disabled={loading}
+              >
+                {loading ? "Checking..." : "Check Symptoms"}
+              </button>
+
+              {error && <p className="sympcheck-alert error">{error}</p>}
+              {successMessage && (
+                <div className="sympcheck-result-card">
+                  <strong>{successMessage}</strong>
+                  {matchedSymptoms.length > 0 && (
+                    <span>Matched: {matchedSymptoms.join(", ")}</span>
+                  )}
+                  {possibleConditions.length > 0 && (
+                    <span>Possible: {possibleConditions.join(", ")}</span>
+                  )}
+                  {adviceLevel && <span>Advice: {adviceLevel}</span>}
+                </div>
+              )}
             </div>
           </section>
 
           <section className="common-symptoms-section">
             <h2>Common Symptoms</h2>
 
-            <div className="common-symptoms-row">
-              <div className="symptom-card-list">
-                {symptomCards.map((item) => (
-                  <button
-                    key={item.id}
-                    className="symptom-card"
-                    type="button"
-                    onClick={() => handleSymptomCardClick(item.title)}
-                  >
-                    <div className="symptom-card-icon">{item.icon}</div>
-                    <span>{item.title}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="symptom-card-list">
+              {symptomCards.map((item) => (
+                <button
+                  key={item.id}
+                  className="symptom-card"
+                  type="button"
+                  onClick={() => handleSymptomCardClick(item.apiSymptom)}
+                >
+                  <div className={`symptom-card-icon ${item.tone}`}>
+                    <item.Icon size={23} strokeWidth={2.3} />
+                  </div>
+                  <span>{item.title}</span>
+                </button>
+              ))}
+            </div>
 
-              <div className="consult-card">
-                <div className="consult-icon">💡</div>
-                <p>
-                  Always consult with a healthcare professional for a proper
-                  diagnosis.
-                </p>
+            <div className="consult-card">
+              <div className="consult-icon">
+                <Lightbulb size={21} strokeWidth={2.4} />
               </div>
+              <p>
+                Always consult with a healthcare professional for a proper
+                diagnosis.
+              </p>
             </div>
           </section>
 
-          <section className="health-tools-grid">
-            <div className="tools-column">
-              <h2>Health Tools</h2>
+          <section className="health-tools-section">
+            <h2>Health Tools</h2>
 
-              <div className="tool-stack">
-                {leftTools.map((tool) => (
-                  <div className="tool-card large" key={tool.id}>
-                    <div className="tool-left">
-                      <div className="tool-icon">{tool.icon}</div>
-                      <div>
-                        <h3>{tool.title}</h3>
-                        <p>{tool.desc}</p>
-                      </div>
+            <div className="health-tools-list">
+              {healthTools.map((tool) => (
+                <div className="tool-card" key={tool.id}>
+                  <div className="tool-left">
+                    <div className={`tool-icon ${tool.tone}`}>
+                      <tool.Icon size={22} strokeWidth={2.3} />
                     </div>
-
-                    <button type="button" className="tool-btn">
-                      {tool.button}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="tools-column">
-              <h2>Health Tools</h2>
-
-              <div className="tool-grid">
-                {rightTools.map((tool) => (
-                  <div className="tool-card small" key={tool.id}>
-                    <div className="tool-left">
-                      <div className="tool-icon">{tool.icon}</div>
-                      <div>
-                        <h3>{tool.title}</h3>
-                        <p>{tool.desc}</p>
-                      </div>
+                    <div>
+                      <h3>{tool.title}</h3>
+                      <p>{tool.desc}</p>
                     </div>
-
-                    {tool.button && (
-                      <button type="button" className="tool-btn">
-                        {tool.button}
-                      </button>
-                    )}
                   </div>
-                ))}
-              </div>
+
+                  <button
+                    type="button"
+                    className="tool-btn"
+                    onClick={() => navigate(tool.path)}
+                  >
+                    {tool.button}
+                  </button>
+                </div>
+              ))}
             </div>
           </section>
 

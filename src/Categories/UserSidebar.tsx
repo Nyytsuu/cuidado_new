@@ -19,6 +19,7 @@ import {
   Mic,
   User,
   Bell,
+  Menu,
   TriangleAlert,
   CircleHelp,
   LogOut,
@@ -30,7 +31,7 @@ import {
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
-import VoiceAssistantPopup from "../SigninUser/VoiceAssistantPopup";
+import { clearStoredAuth } from "../authSession";
 
 type HeaderUser = {
   id?: number;
@@ -38,6 +39,11 @@ type HeaderUser = {
   name?: string | null;
   email?: string | null;
   profile_picture?: string | null;
+};
+
+type HeaderNotification = {
+  is_read?: number | boolean | null;
+  unread?: boolean | null;
 };
 
 const API_BASE = "http://localhost:5000";
@@ -80,6 +86,7 @@ export default function UserSidebar({
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
   const [headerUser, setHeaderUser] = useState<HeaderUser | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const isPathActive = (path: string) => location.pathname === path;
   const headerDisplayName =
@@ -153,6 +160,66 @@ export default function UserSidebar({
     };
   }, [storedHeaderUser]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const userId =
+      headerUser?.id ||
+      storedHeaderUser?.id ||
+      (() => {
+        try {
+          const storedUser = localStorage.getItem("user");
+          const user = storedUser ? (JSON.parse(storedUser) as HeaderUser) : null;
+          return user?.id;
+        } catch {
+          return undefined;
+        }
+      })();
+
+    const loadUnreadNotifications = async () => {
+      if (!userId) {
+        setUnreadNotifications(0);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/users/${userId}/notifications`, {
+          cache: "no-store",
+        });
+        const data = (await res.json().catch(() => [])) as HeaderNotification[];
+
+        if (!res.ok || !Array.isArray(data)) {
+          if (!cancelled) setUnreadNotifications(0);
+          return;
+        }
+
+        const unreadCount = data.filter((item) => {
+          if (typeof item.unread === "boolean") return item.unread;
+          return Number(item.is_read) === 0;
+        }).length;
+
+        if (!cancelled) setUnreadNotifications(unreadCount);
+      } catch (err) {
+        console.error("Header notifications load error:", err);
+        if (!cancelled) setUnreadNotifications(0);
+      }
+    };
+
+    void loadUnreadNotifications();
+
+    const handleNotificationUpdated = () => {
+      void loadUnreadNotifications();
+    };
+
+    window.addEventListener("focus", handleNotificationUpdated);
+    window.addEventListener("user-notifications-updated", handleNotificationUpdated);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", handleNotificationUpdated);
+      window.removeEventListener("user-notifications-updated", handleNotificationUpdated);
+    };
+  }, [headerUser?.id, storedHeaderUser?.id, location.pathname]);
+
   const handleSearchChange = (value: string) => {
     if (searchValue === undefined) {
       setInternalSearch(value);
@@ -176,10 +243,30 @@ export default function UserSidebar({
     }
   };
 
+  const hasUnreadNotifications = unreadNotifications > 0;
+  const notificationBadge =
+    unreadNotifications > 9 ? "9+" : String(unreadNotifications);
+  const notificationAriaLabel = hasUnreadNotifications
+    ? `Open notifications, ${unreadNotifications} unread`
+    : "Open notifications";
+
 
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+      {sidebarExpanded && (
+        <button
+          type="button"
+          className="sidebar-mobile-backdrop"
+          aria-label="Close sidebar"
+          onClick={() => {
+            setSidebarExpanded(false);
+            setProfileOpen(false);
+            setHeaderProfileOpen(false);
+          }}
+        />
+      )}
+
       <aside
         className={`sidebar ${sidebarExpanded ? "expanded" : "collapsed"}`}
         onClick={() => {
@@ -284,7 +371,7 @@ export default function UserSidebar({
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/notifications") ? "active" : ""}`}>
+            <div className={`sidebar-item ${isPathActive("/notifications") ? "active" : ""}`}>
               <Link to="/notifications" className="sidebar-btn">
                 <Bell size={24} />
                 <span>Notifications</span>
@@ -319,6 +406,47 @@ export default function UserSidebar({
         </div>
       </aside>
 
+      <header className="user-mobile-header">
+        <div className="user-mobile-header-bar">
+          <button
+            type="button"
+            className="user-mobile-header-button"
+            aria-label="Open sidebar"
+            onClick={() => setSidebarExpanded(true)}
+          >
+            <Menu size={20} />
+          </button>
+
+          <img src={logo} alt="CUIDADO logo" className="user-mobile-header-logo" />
+
+          <Link
+            to="/notifications"
+            className={`user-mobile-header-button user-mobile-header-alert ${
+              location.pathname === "/notifications" ? "active" : ""
+            } ${hasUnreadNotifications ? "has-unread" : ""}`}
+            aria-label={notificationAriaLabel}
+            onClick={() => setHeaderProfileOpen(false)}
+          >
+            <Bell size={19} />
+            {hasUnreadNotifications && (
+              <span className="notification-badge">{notificationBadge}</span>
+            )}
+          </Link>
+        </div>
+
+        <form className="user-mobile-header-search" onSubmit={handleSearchSubmit}>
+          <button aria-label="Search" type="submit" className="user-mobile-search-icon">
+            <img src={searchIcon} alt="Search" />
+          </button>
+          <input
+            type="text"
+            placeholder={searchPlaceholder}
+            value={currentSearch}
+            onChange={(event) => handleSearchChange(event.target.value)}
+          />
+        </form>
+      </header>
+
       <header className="app-header">
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
@@ -337,6 +465,20 @@ export default function UserSidebar({
         </div>
 
         <nav className="header-nav">
+          <Link
+            to="/notifications"
+            className={`header-notification-button ${
+              location.pathname === "/notifications" ? "active" : ""
+            } ${hasUnreadNotifications ? "has-unread" : ""}`}
+            aria-label={notificationAriaLabel}
+            title={hasUnreadNotifications ? `${unreadNotifications} unread notifications` : "Notifications"}
+            onClick={() => setHeaderProfileOpen(false)}
+          >
+            <Bell size={18} />
+            {hasUnreadNotifications && (
+              <span className="notification-badge">{notificationBadge}</span>
+            )}
+          </Link>
           <Link
             to="/homepage"
             className={`nav-link ${location.pathname === "/homepage" ? "active" : ""}`}
@@ -427,16 +569,14 @@ export default function UserSidebar({
           onClick={() => {
             setShowLogoutConfirm(false);
 
-            // clear session
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
+            clearStoredAuth();
 
             // show success popup
             setShowLogoutSuccess(true);
 
             // redirect after delay
             setTimeout(() => {
-              navigate("/Signin");
+              navigate("/signin");
             }, 1500);
           }}
         >

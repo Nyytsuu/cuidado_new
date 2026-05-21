@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import "./Patient.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
-import searchIcon from "../img/search.png";
-import logo from "../img/logo.png";
 // logout
 import { useNavigate } from "react-router-dom";
 
@@ -190,7 +188,11 @@ export default function Patients() {
   
 
   return (
-    <div className={`Patient with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
+    <div
+      className={`Patient with-sidebar ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      } ${isPopupOpen ? "modal-open" : ""}`}
+    >
       <SidebarClinic
               sidebarExpanded={sidebarExpanded}
               setSidebarExpanded={setSidebarExpanded}

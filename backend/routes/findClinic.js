@@ -41,6 +41,25 @@ const MANILA_NOW_SQL = "UTC_TIMESTAMP() + INTERVAL 8 HOUR";
 const MANILA_DATE_SQL = `DATE(${MANILA_NOW_SQL})`;
 const MANILA_TIME_SQL = `TIME(${MANILA_NOW_SQL})`;
 
+const ensureClinicFeedbackTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clinic_feedback (
+      id INT NOT NULL AUTO_INCREMENT,
+      appointment_id INT NOT NULL,
+      clinic_id INT NOT NULL,
+      user_id INT NOT NULL,
+      rating TINYINT NOT NULL,
+      feedback TEXT NULL,
+      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY unique_feedback_appointment_user (appointment_id, user_id),
+      KEY idx_clinic_feedback_clinic (clinic_id),
+      KEY idx_clinic_feedback_user (user_id)
+    )
+  `);
+};
+
 router.get("/", async (req, res) => {
   try {
     const { search = "", specialization = "", openNow = "" } = req.query;
@@ -155,16 +174,41 @@ router.get("/", async (req, res) => {
       [clinicIds]
     );
 
+    await ensureClinicFeedbackTable();
+
+    const [ratingRows] = await pool.query(
+      `
+      SELECT
+        clinic_id,
+        ROUND(AVG(rating), 1) AS average_rating,
+        COUNT(*) AS rating_count
+      FROM clinic_feedback
+      WHERE clinic_id IN (?)
+      GROUP BY clinic_id
+      `,
+      [clinicIds]
+    );
+
+    const ratingsByClinic = new Map(
+      ratingRows.map((rating) => [Number(rating.clinic_id), rating])
+    );
+
     res.json(
-      rows.map((clinic) => ({
-        ...clinic,
-        weekly_schedule: weeklyScheduleRows.filter(
-          (schedule) => schedule.clinic_id === clinic.id
-        ),
-        blocked_dates: blockedDateRows.filter(
-          (blockedDate) => blockedDate.clinic_id === clinic.id
-        ),
-      }))
+      rows.map((clinic) => {
+        const rating = ratingsByClinic.get(Number(clinic.id));
+
+        return {
+          ...clinic,
+          average_rating: rating ? Number(rating.average_rating) : null,
+          rating_count: rating ? Number(rating.rating_count) : 0,
+          weekly_schedule: weeklyScheduleRows.filter(
+            (schedule) => schedule.clinic_id === clinic.id
+          ),
+          blocked_dates: blockedDateRows.filter(
+            (blockedDate) => blockedDate.clinic_id === clinic.id
+          ),
+        };
+      })
     );
   } catch (error) {
     console.error("Find clinic error:", error);

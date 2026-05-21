@@ -6,9 +6,11 @@ import {
   Clock3,
   Info,
   Megaphone,
+  X,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import "./Notification.css";
 
@@ -22,6 +24,7 @@ type NotificationItem = {
   category: string;
   unread: boolean;
   created_at: string;
+  appointment_id?: number | null;
 };
 
 type RawNotification = {
@@ -33,7 +36,11 @@ type RawNotification = {
   is_read?: number;
   unread?: boolean;
   created_at?: string;
+  appointment_id?: number | null;
 };
+
+type PushPermissionState = NotificationPermission | "unsupported";
+type PushStatusTone = "info" | "success" | "error";
 
 const API_BASE = "http://localhost:5000";
 const FILTERS: FilterName[] = ["All", "Unread", "Appointments", "System", "Promotions"];
@@ -45,6 +52,11 @@ const ICONS: Record<string, LucideIcon> = {
   info: Info,
   megaphone: Megaphone,
   "x-circle": XCircle,
+};
+
+const getInitialPushPermission = (): PushPermissionState => {
+  if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
+  return window.Notification.permission;
 };
 
 const getStoredUserId = () => {
@@ -67,6 +79,7 @@ const toNotification = (item: RawNotification): NotificationItem => ({
   category: item.category,
   unread: item.unread ?? Number(item.is_read) === 0,
   created_at: item.created_at || new Date().toISOString(),
+  appointment_id: item.appointment_id ?? null,
 });
 
 const formatRelativeTime = (value: string) => {
@@ -90,12 +103,37 @@ const formatRelativeTime = (value: string) => {
   });
 };
 
+const formatFullDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Date unavailable";
+
+  return date.toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
 const renderIcon = (icon: string) => {
   const Icon = ICONS[icon] || Bell;
   return <Icon size={24} strokeWidth={2.2} />;
 };
 
+const notifyHeaderRefresh = () => {
+  window.dispatchEvent(new Event("user-notifications-updated"));
+};
+
+const matchesFilter = (item: NotificationItem, name: FilterName) => {
+  if (name === "All") return true;
+  if (name === "Unread") return item.unread;
+  return item.category.toLowerCase() === name.toLowerCase();
+};
+
 export default function Notifications() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
@@ -103,10 +141,43 @@ export default function Notifications() {
   const [activeTab, setActiveTab] = useState<FilterName>("All");
   const [filter, setFilter] = useState<FilterName>("All");
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [selectedNotification, setSelectedNotification] =
+    useState<NotificationItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pushPermission, setPushPermission] =
+    useState<PushPermissionState>(getInitialPushPermission);
+  const [pushStatus, setPushStatus] = useState("");
+  const [pushStatusTone, setPushStatusTone] = useState<PushStatusTone>("info");
 
   const userId = useMemo(() => getStoredUserId(), []);
+
+  useEffect(() => {
+    window.history.scrollRestoration = "manual";
+
+    const resetScroll = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.querySelector(".notification-page .browse-health-main")?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+      document.querySelector(".notification-page .notification-list-box")?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+    };
+
+    resetScroll();
+    const frame = window.requestAnimationFrame(resetScroll);
+    const timer = window.setTimeout(resetScroll, 80);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [location.key, location.pathname]);
 
   useEffect(() => {
     if (!userId) {
@@ -132,6 +203,7 @@ export default function Notifications() {
         }
 
         setNotifications(Array.isArray(data) ? data.map(toNotification) : []);
+        notifyHeaderRefresh();
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to load notifications.");
@@ -148,25 +220,29 @@ export default function Notifications() {
   const filteredNotifications = useMemo(() => {
     let data = notifications;
 
-    if (activeTab === "Unread") {
-      data = data.filter((item) => item.unread);
-    } else if (activeTab !== "All") {
-      data = data.filter((item) => item.category === activeTab);
-    }
-
-    if (filter === "Unread") {
-      data = data.filter((item) => item.unread);
-    } else if (filter !== "All") {
-      data = data.filter((item) => item.category === filter);
-    }
+    data = data.filter((item) => matchesFilter(item, activeTab));
+    data = data.filter((item) => matchesFilter(item, filter));
 
     return data;
   }, [activeTab, filter, notifications]);
 
+  useEffect(() => {
+    const resetFeedScroll = () => {
+      document.querySelector(".notification-page .notification-list-box")?.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+    };
+
+    resetFeedScroll();
+    const frame = window.requestAnimationFrame(resetFeedScroll);
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, filter, filteredNotifications.length]);
+
   const getCount = (name: FilterName) => {
-    if (name === "All") return notifications.length;
-    if (name === "Unread") return notifications.filter((item) => item.unread).length;
-    return notifications.filter((item) => item.category === name).length;
+    return notifications.filter((item) => matchesFilter(item, name)).length;
   };
 
   const markNotificationRead = async (notification: NotificationItem) => {
@@ -182,10 +258,12 @@ export default function Notifications() {
       });
 
       if (!res.ok) throw new Error("Failed to mark notification as read.");
+      notifyHeaderRefresh();
     } catch {
       setNotifications((items) =>
         items.map((item) => (item.id === notification.id ? { ...item, unread: true } : item))
       );
+      notifyHeaderRefresh();
     }
   };
 
@@ -201,14 +279,92 @@ export default function Notifications() {
       });
 
       if (!res.ok) throw new Error("Failed to mark notifications as read.");
+      notifyHeaderRefresh();
     } catch {
       setNotifications(previous);
+      notifyHeaderRefresh();
       setError("Failed to mark notifications as read.");
     }
   };
 
+  const openNotification = (notification: NotificationItem) => {
+    setSelectedNotification({ ...notification, unread: false });
+    markNotificationRead(notification);
+  };
+
+  const closeNotificationModal = () => {
+    setSelectedNotification(null);
+  };
+
+  const openRelatedAppointment = () => {
+    closeNotificationModal();
+    navigate("/appointments");
+  };
+
+  const openNotificationPreferences = () => {
+    navigate("/settings", { state: { focusNotifications: true } });
+  };
+
+  const openNotificationSupport = () => {
+    navigate("/help", {
+      state: {
+        focusSupport: true,
+        topic: "Notifications",
+        subject: "Notification question",
+      },
+    });
+  };
+
+  const enableBrowserNotifications = async () => {
+    setPushStatus("");
+    setPushStatusTone("info");
+
+    if (!("Notification" in window)) {
+      setPushPermission("unsupported");
+      setPushStatus("This browser does not support notifications.");
+      setPushStatusTone("error");
+      return;
+    }
+
+    const localHostnames = ["localhost", "127.0.0.1", "::1"];
+    if (!window.isSecureContext && !localHostnames.includes(window.location.hostname)) {
+      setPushStatus("Notifications require HTTPS or localhost.");
+      setPushStatusTone("error");
+      return;
+    }
+
+    try {
+      let permission = window.Notification.permission;
+
+      if (permission === "default") {
+        permission = await window.Notification.requestPermission();
+      }
+
+      setPushPermission(permission);
+
+      if (permission === "granted") {
+        localStorage.setItem("cuidado-browser-notifications", "enabled");
+        setPushStatus("Notifications are enabled for this browser.");
+        setPushStatusTone("success");
+        return;
+      }
+
+      if (permission === "denied") {
+        localStorage.setItem("cuidado-browser-notifications", "blocked");
+        setPushStatus("Notifications are blocked. Enable them in your browser site settings.");
+        setPushStatusTone("error");
+        return;
+      }
+
+      setPushStatus("Notification permission was not changed.");
+    } catch {
+      setPushStatus("Could not enable notifications. Please try again.");
+      setPushStatusTone("error");
+    }
+  };
+
   return (
-    <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div className={`notification-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -216,13 +372,13 @@ export default function Notifications() {
         setProfileOpen={setProfileOpen}
         headerProfileOpen={headerProfileOpen}
         setHeaderProfileOpen={setHeaderProfileOpen}
+        searchPlaceholder="Search..."
       />
 
       <div className="browse-page-content">
         <main className="browse-health-main">
-          <section className="health-browser-layout notifications-layout">
-            <section className="health-content-card">
-              <div className="content-box">
+          <section className="notifications-layout">
+              <div className="content-box notification-header-box">
                 <h1 className="content-title">Notifications</h1>
                 <p className="content-subtitle">
                   Stay updated with your latest alerts and important updates.
@@ -253,7 +409,7 @@ export default function Notifications() {
                 </div>
               </div>
 
-              <div className="content-box category-section-box">
+              <div className="content-box category-section-box notification-list-box">
                 {loading && <div className="notification-status">Loading notifications...</div>}
 
                 {!loading && error && <div className="notification-status error">{error}</div>}
@@ -268,15 +424,15 @@ export default function Notifications() {
                       <button
                         className={`notification-card ${item.unread ? "unread" : ""}`}
                         key={item.id}
-                        onClick={() => markNotificationRead(item)}
+                        onClick={() => openNotification(item)}
                         type="button"
                       >
                         <div className="notification-left">
                           <div className="notification-icon">{renderIcon(item.icon)}</div>
 
                           <div>
-                            <div className="topic-title">{item.title}</div>
-                            <div className="topic-subtitle">{item.message}</div>
+                            <div className="notification-title">{item.title}</div>
+                            <div className="notification-message">{item.message}</div>
                           </div>
                         </div>
 
@@ -289,20 +445,19 @@ export default function Notifications() {
                   </div>
                 )}
               </div>
-            </section>
 
-            <aside className="health-sidebar-card">
+            <aside className="health-sidebar-card notification-side-panel">
               <div className="sidebar-box">
                 <h3 className="group-title">Notification Filter</h3>
 
                 {FILTERS.map((item) => (
                   <button
                     key={item}
-                    className={`system-item ${filter === item ? "active-filter" : ""}`}
+                    className={`notification-filter-item ${filter === item ? "active-filter" : ""}`}
                     onClick={() => setFilter(item)}
                     type="button"
                   >
-                    <span className="system-name">{item}</span>
+                    <span className="notification-filter-name">{item}</span>
                     <span className="badge">{getCount(item)}</span>
                   </button>
                 ))}
@@ -310,35 +465,132 @@ export default function Notifications() {
 
               <div className="sidebar-box">
                 <h3 className="group-title">Notification Preferences</h3>
-                <p className="topic-subtitle">Manage how you receive notifications</p>
-                <button className="voice-start-btn" type="button">
+                <p className="notification-side-copy">Manage how you receive notifications</p>
+                <button
+                  className="notification-action-btn"
+                  type="button"
+                  onClick={openNotificationPreferences}
+                >
                   Manage Preferences
                 </button>
               </div>
 
               <div className="sidebar-box">
                 <h3 className="group-title">Need Help?</h3>
-                <p className="topic-subtitle">
+                <p className="notification-side-copy">
                   If you have any questions about notifications, we're here to help.
                 </p>
-                <button className="voice-start-btn" type="button">
+                <button
+                  className="notification-action-btn"
+                  type="button"
+                  onClick={openNotificationSupport}
+                >
                   Contact Support
                 </button>
               </div>
 
               <div className="sidebar-box promo-box">
                 <h3 className="group-title">Never miss an update!</h3>
-                <p className="topic-subtitle">
+                <p className="notification-side-copy">
                   Enable push notifications to stay informed in real-time.
                 </p>
-                <button className="voice-start-btn" type="button">
-                  Enable Notifications
+                <button
+                  className="notification-action-btn"
+                  type="button"
+                  onClick={enableBrowserNotifications}
+                >
+                  {pushPermission === "granted" ? "Notifications Enabled" : "Enable Notifications"}
                 </button>
+                {pushStatus && (
+                  <p className={`notification-action-status ${pushStatusTone}`} aria-live="polite">
+                    {pushStatus}
+                  </p>
+                )}
               </div>
             </aside>
           </section>
         </main>
       </div>
+
+      {selectedNotification && (
+        <div
+          className="notification-modal-overlay"
+          onClick={closeNotificationModal}
+        >
+          <div
+            className="notification-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="notification-modal-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="notification-modal-header">
+              <div className="notification-modal-icon">
+                {renderIcon(selectedNotification.icon)}
+              </div>
+
+              <div>
+                <span className="notification-modal-category">
+                  {selectedNotification.category}
+                </span>
+                <h2 id="notification-modal-title">
+                  {selectedNotification.title}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="notification-modal-close"
+                onClick={closeNotificationModal}
+                aria-label="Close notification details"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="notification-modal-body">
+              <p>{selectedNotification.message}</p>
+
+              <div className="notification-modal-meta">
+                <div>
+                  <span>Date</span>
+                  <strong>{formatFullDate(selectedNotification.created_at)}</strong>
+                </div>
+                <div>
+                  <span>Status</span>
+                  <strong>{selectedNotification.unread ? "Unread" : "Read"}</strong>
+                </div>
+                {selectedNotification.appointment_id && (
+                  <div>
+                    <span>Appointment</span>
+                    <strong>#{selectedNotification.appointment_id}</strong>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="notification-modal-actions">
+              {selectedNotification.appointment_id && (
+                <button
+                  type="button"
+                  className="notification-modal-primary"
+                  onClick={openRelatedAppointment}
+                >
+                  Open Appointments
+                </button>
+              )}
+
+              <button
+                type="button"
+                className="notification-modal-secondary"
+                onClick={closeNotificationModal}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

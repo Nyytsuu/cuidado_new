@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {Link, useNavigate} from "react-router-dom";
 import "./AdminAppoint.css";
+import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
@@ -442,4 +443,3 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
     </div>
   );
 }
-  

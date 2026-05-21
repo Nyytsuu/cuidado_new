@@ -22,6 +22,7 @@ import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
 import UserEmergency from "./SigninUser/UserEmergency";
 import UserHelp from "./SigninUser/UserHelp";
+import Cardio from "./SigninUser/Cardio";
 
 // admin
 import SidebarAdmin from "./admin/SidebarAdmin";
@@ -67,6 +68,7 @@ function App() {
         <Route path="/find-clinic" element={<FindClinic />} />
         <Route path="/homepage" element={<Homepage />} />
         <Route path="/notifications" element={<Notifications />} />
+       <Route path="/cardio" element={<Cardio />} /> 
         
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<UserSettings />} />

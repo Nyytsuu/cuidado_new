@@ -424,6 +424,8 @@ export default function ClinicDashboard() {
   return (
     <div
       className={`ad-wrap clinic-dashboard-page ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      } ${
         sidebarExpanded ? "modal-open" : ""
       }`}
     >

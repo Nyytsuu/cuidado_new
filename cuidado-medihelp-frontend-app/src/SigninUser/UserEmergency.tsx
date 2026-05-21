@@ -14,6 +14,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { getCurrentAppLocation, getLocationErrorMessage } from "../utils/location";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./UserEmergency.css";
 
@@ -175,29 +176,18 @@ export default function UserEmergency() {
       .slice(0, 3);
   }, [clinics, location]);
 
-  const requestLocation = () => {
+  const requestLocation = async () => {
     setLocationError("");
-    setLocationMessage("");
+    setLocationMessage("Requesting your location...");
 
-    if (!navigator.geolocation) {
-      setLocationError("Your browser does not support location services.");
-      return;
+    try {
+      const coords = await getCurrentAppLocation();
+      setLocation(coords);
+      setLocationMessage("Location found. You can copy it or use it to sort nearby clinics.");
+    } catch (error) {
+      setLocationMessage("");
+      setLocationError(getLocationErrorMessage(error));
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const coords = {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        };
-        setLocation(coords);
-        setLocationMessage("Location found. You can copy it or use it to sort nearby clinics.");
-      },
-      () => {
-        setLocationError("Unable to access your location. Please type or share your address manually.");
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
   };
 
   const copyLocation = async () => {

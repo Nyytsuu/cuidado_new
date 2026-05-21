@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import micIcon from "../img/mic.png";
 import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
 import VoiceAssistantResult from "./VoiceAssistantResult";
@@ -56,6 +57,8 @@ type VoiceAssistantPopupProps = {
   children: ReactNode;
 };
 
+const LISTENING_TIMEOUT_MS = 12000;
+
 const getStoredUserId = () => {
   try {
     const storedUser = localStorage.getItem("user");
@@ -75,14 +78,27 @@ export default function VoiceAssistantPopup({
   const [voicePopupOpen, setVoicePopupOpen] = useState(false);
   const [voiceStep, setVoiceStep] = useState<VoiceStep>("idle");
   const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [typedSymptoms, setTypedSymptoms] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const listeningTimeoutRef = useRef<number | null>(null);
+  const latestTranscriptRef = useRef("");
+  const heardSpeechRef = useRef(false);
+  const recognitionSettledRef = useRef(false);
 
   const effectiveUserId = useMemo(() => userId ?? getStoredUserId(), [userId]);
 
+  const clearListeningTimer = () => {
+    if (listeningTimeoutRef.current !== null) {
+      window.clearTimeout(listeningTimeoutRef.current);
+      listeningTimeoutRef.current = null;
+    }
+  };
+
   useEffect(() => {
     return () => {
+      clearListeningTimer();
       recognitionRef.current?.abort();
     };
   }, []);
@@ -90,9 +106,11 @@ export default function VoiceAssistantPopup({
   const analyzeVoiceSymptoms = async (transcript: string) => {
     try {
       const cleanedTranscript = transcript.trim();
+      clearListeningTimer();
+      recognitionSettledRef.current = true;
 
       if (!cleanedTranscript) {
-        setVoiceError("I did not hear anything clearly. Please try again.");
+        setVoiceError("I did not receive microphone audio. Check the emulator microphone input, then try again.");
         setVoiceStep("retry");
         return;
       }
@@ -154,11 +172,14 @@ export default function VoiceAssistantPopup({
   };
 
   const closeVoicePopup = () => {
+    clearListeningTimer();
+    recognitionSettledRef.current = true;
     recognitionRef.current?.abort();
     recognitionRef.current = null;
     setVoicePopupOpen(false);
     setVoiceStep("idle");
     setVoiceTranscript("");
+    setTypedSymptoms("");
     setVoiceError("");
     setSymptomResult(null);
   };
@@ -170,6 +191,9 @@ export default function VoiceAssistantPopup({
     setVoiceTranscript("");
     setVoiceError("");
     setSymptomResult(null);
+    latestTranscriptRef.current = "";
+    heardSpeechRef.current = false;
+    recognitionSettledRef.current = false;
 
     if (!SpeechRecognitionAPI) {
       setVoiceStep("unsupported");
@@ -181,12 +205,34 @@ export default function VoiceAssistantPopup({
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
 
-    recognition.lang = "en-PH";
+    recognition.lang = "en-US";
     recognition.continuous = false;
     recognition.interimResults = true;
 
     recognition.onstart = () => {
+      clearListeningTimer();
+      heardSpeechRef.current = false;
+      latestTranscriptRef.current = "";
+      recognitionSettledRef.current = false;
       setVoiceStep("listening");
+
+      listeningTimeoutRef.current = window.setTimeout(() => {
+        if (recognitionSettledRef.current) {
+          return;
+        }
+
+        recognitionSettledRef.current = true;
+        const transcript = latestTranscriptRef.current.trim();
+        recognition.abort();
+
+        if (transcript) {
+          void analyzeVoiceSymptoms(transcript);
+          return;
+        }
+
+        setVoiceError("I could not hear microphone audio. Make sure the emulator microphone is enabled, then try again.");
+        setVoiceStep("retry");
+      }, LISTENING_TIMEOUT_MS);
     };
 
     recognition.onresult = (event) => {
@@ -196,21 +242,55 @@ export default function VoiceAssistantPopup({
         transcript += event.results[i][0].transcript;
       }
 
+      latestTranscriptRef.current = transcript;
+      if (transcript.trim()) {
+        heardSpeechRef.current = true;
+      }
       setVoiceTranscript(transcript);
 
       const lastResult = event.results[event.results.length - 1];
       if (lastResult?.isFinal) {
+        recognitionSettledRef.current = true;
+        clearListeningTimer();
         void analyzeVoiceSymptoms(transcript);
       }
     };
 
     recognition.onerror = (event) => {
-      const errorMessage =
-        event.error === "network"
-          ? "Speech recognition could not connect. Please check your connection and try again."
-          : event.error || "Speech recognition failed.";
+      recognitionSettledRef.current = true;
+      clearListeningTimer();
+      const errorMessages: Record<string, string> = {
+        network: "Speech recognition could not connect. Check your internet connection and try again.",
+        "not-allowed": "Microphone permission is blocked. Allow Microphone for Cuidado, then try again.",
+        "no-speech": "I did not receive microphone audio. Check the emulator microphone input, then try again and speak clearly.",
+        "not-supported": "Speech recognition is not available on this device.",
+        audio: "Android could not open the microphone audio stream. Check the emulator microphone setting and try again.",
+        client: "Android speech recognition could not start on this emulator. Restart the emulator or try typed symptoms below.",
+        service: "The Android speech recognition service stopped unexpectedly. Restart the emulator and try again.",
+        language: "English (US) is not available on this emulator. Please use typed symptoms instead.",
+        busy: "The microphone is already listening. Please wait a moment and try again.",
+      };
 
-      setVoiceError(errorMessage);
+      setVoiceError(errorMessages[event.error] || "Speech recognition failed. Please try again.");
+      setVoiceStep("retry");
+    };
+
+    recognition.onend = () => {
+      clearListeningTimer();
+
+      if (recognitionSettledRef.current) {
+        return;
+      }
+
+      recognitionSettledRef.current = true;
+      const transcript = latestTranscriptRef.current.trim();
+
+      if (transcript) {
+        void analyzeVoiceSymptoms(transcript);
+        return;
+      }
+
+      setVoiceError("I could not hear microphone audio. Check the emulator microphone input, then try again.");
       setVoiceStep("retry");
     };
 
@@ -222,7 +302,75 @@ export default function VoiceAssistantPopup({
     }
   };
 
+  const submitTypedSymptoms = () => {
+    void analyzeVoiceSymptoms(typedSymptoms);
+  };
+
   const voiceContent = getVoiceContent();
+  const popup = voicePopupOpen ? (
+    <div className="voice-assistant-popup" onClick={closeVoicePopup}>
+      <div
+        className={`voice-popup-card ${voiceStep === "result" ? "has-result" : ""}`}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button className="voice-popup-close" type="button" onClick={closeVoicePopup}>
+          x
+        </button>
+
+        <div className={`voice-popup-mic ${voiceContent.micClass}`}>
+          <img src={micIcon} alt="Mic" />
+        </div>
+
+        <div className="voice-popup-text">
+          <h3>{voiceContent.title}</h3>
+          <p>{voiceContent.subtitle}</p>
+        </div>
+
+        {voiceTranscript && (
+          <div className="voice-transcript-preview">
+            <strong>Heard:</strong> {voiceTranscript}
+          </div>
+        )}
+
+        {(voiceStep === "retry" || voiceStep === "unsupported") && (
+          <div className="voice-manual-entry">
+            <label htmlFor="voice-manual-symptoms">Type symptoms instead</label>
+            <textarea
+              id="voice-manual-symptoms"
+              value={typedSymptoms}
+              onChange={(event) => setTypedSymptoms(event.target.value)}
+              placeholder="Example: I have cough, fever, and headache"
+              rows={3}
+            />
+            <button
+              type="button"
+              className="voice-manual-submit"
+              onClick={submitTypedSymptoms}
+              disabled={!typedSymptoms.trim()}
+            >
+              Analyze symptoms
+            </button>
+          </div>
+        )}
+
+        {voiceStep === "result" && symptomResult && (
+          <VoiceAssistantResult result={symptomResult} compact />
+        )}
+
+        {(voiceStep === "retry" || voiceStep === "result") && (
+          <button
+            type="button"
+            className="voice-popup-retry"
+            onClick={startVoiceAssistant}
+          >
+            Try again
+          </button>
+        )}
+
+        <div className="voice-popup-language">English (US)</div>
+      </div>
+    </div>
+  ) : null;
 
   return (
     <>
@@ -235,53 +383,7 @@ export default function VoiceAssistantPopup({
         {children}
       </button>
 
-      {voicePopupOpen && (
-        <div className="voice-assistant-popup" onClick={closeVoicePopup}>
-          <div
-            className={`voice-popup-card ${voiceStep === "result" ? "has-result" : ""}`}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button className="voice-popup-close" type="button" onClick={closeVoicePopup}>
-              x
-            </button>
-
-            <div className={`voice-popup-mic ${voiceContent.micClass}`}>
-              <img src={micIcon} alt="Mic" />
-            </div>
-
-            <div className="voice-popup-text">
-              <h3>{voiceContent.title}</h3>
-              <p>{voiceContent.subtitle}</p>
-            </div>
-
-            {voiceTranscript && (
-              <div className="voice-transcript-preview">
-                <strong>Heard:</strong> {voiceTranscript}
-              </div>
-            )}
-
-            {voiceError && voiceStep === "retry" && (
-              <div className="voice-error-text">{voiceError}</div>
-            )}
-
-            {voiceStep === "result" && symptomResult && (
-              <VoiceAssistantResult result={symptomResult} compact />
-            )}
-
-            {(voiceStep === "retry" || voiceStep === "result") && (
-              <button
-                type="button"
-                className="voice-popup-retry"
-                onClick={startVoiceAssistant}
-              >
-                Try again
-              </button>
-            )}
-
-            <div className="voice-popup-language">English (Philippines)</div>
-          </div>
-        </div>
-      )}
+      {popup ? createPortal(popup, document.body) : null}
     </>
   );
 }

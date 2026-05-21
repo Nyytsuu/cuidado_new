@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AdminUser.css";
+import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
@@ -20,10 +21,17 @@ type UserProfile = {
   full_name: string;
   email: string;
   phone: string | null;
+  gender?: string | null;
+  date_of_birth?: string | null;
   address: string | null;
   created_at: string;
   account_status?: "active" | "disabled";
   status?: "active" | "disabled";
+  appointment_count?: number | string | null;
+  last_activity_at?: string | null;
+  last_appointment_request_at?: string | null;
+  last_appointment_at?: string | null;
+  next_appointment_at?: string | null;
 };
 
 type ActivityItem = {
@@ -84,6 +92,64 @@ export default function AdminUsers() {
     }
 
     return "badge-pending";
+  };
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return "Not recorded";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const formatDate = (value?: string | null) => {
+    if (!value) return "Not provided";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const getDaysSince = (value?: string | null) => {
+    if (!value) return null;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
+  };
+
+  const getLastKnownActivity = (user: UserProfile) =>
+    user.last_activity_at || user.last_appointment_request_at || user.created_at;
+
+  const getInactiveLabel = (user: UserProfile) => {
+    const days = getDaysSince(getLastKnownActivity(user));
+
+    if (days === null) return "No activity date recorded";
+    if (days === 0) return "Active today";
+    if (days === 1) return "Inactive for 1 day";
+
+    return `Inactive for ${days} days`;
+  };
+
+  const getInitials = (name?: string | null) => {
+    const parts = (name || "User").trim().split(/\s+/).filter(Boolean);
+    return parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("");
   };
 
   const loadActivity = async () => {
@@ -474,6 +540,70 @@ export default function AdminUsers() {
             </div>
 
             <div className="modal-body">
+              <section className="user-detail-hero">
+                <div className="user-detail-avatar">{getInitials(profile.full_name)}</div>
+                <div className="user-detail-identity">
+                  <h4>{profile.full_name ?? "Unnamed user"}</h4>
+                  <span>{profile.email ?? "No email recorded"}</span>
+                </div>
+                <span className={`user-detail-status ${getUserStatus(profile)}`}>
+                  {getUserStatus(profile)}
+                </span>
+              </section>
+
+              <section className="user-detail-stats">
+                <div className="user-detail-stat">
+                  <span>Activity estimate</span>
+                  <strong>{getInactiveLabel(profile)}</strong>
+                  <small>Last known activity: {formatDateTime(getLastKnownActivity(profile))}</small>
+                </div>
+                <div className="user-detail-stat">
+                  <span>Appointments</span>
+                  <strong>{Number(profile.appointment_count || 0)}</strong>
+                  <small>
+                    Latest request: {formatDateTime(profile.last_appointment_request_at)}
+                  </small>
+                </div>
+                <div className="user-detail-stat">
+                  <span>Member age</span>
+                  <strong>
+                    {getDaysSince(profile.created_at) ?? "—"}{" "}
+                    {getDaysSince(profile.created_at) === 1 ? "day" : "days"}
+                  </strong>
+                  <small>Created: {formatDateTime(profile.created_at)}</small>
+                </div>
+              </section>
+
+              <section className="user-detail-grid">
+                <div className="user-detail-field">
+                  <span>Phone</span>
+                  <strong>{profile.phone || "Not provided"}</strong>
+                </div>
+                <div className="user-detail-field">
+                  <span>Gender</span>
+                  <strong>{profile.gender || "Not provided"}</strong>
+                </div>
+                <div className="user-detail-field">
+                  <span>Date of birth</span>
+                  <strong>{formatDate(profile.date_of_birth)}</strong>
+                </div>
+                <div className="user-detail-field">
+                  <span>Last appointment</span>
+                  <strong>{formatDateTime(profile.last_appointment_at)}</strong>
+                </div>
+                <div className="user-detail-field">
+                  <span>Next appointment</span>
+                  <strong>{formatDateTime(profile.next_appointment_at)}</strong>
+                </div>
+                <div className="user-detail-field user-detail-field-wide">
+                  <span>Address</span>
+                  <strong>{profile.address || "Not provided"}</strong>
+                </div>
+              </section>
+
+              <p className="user-detail-note">
+                Inactivity is estimated from the latest recorded account or appointment activity.
+              </p>
               <p>
                 <b>Full Name:</b> {profile.full_name ?? "—"}
               </p>

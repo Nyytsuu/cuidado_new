@@ -2,9 +2,36 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
 
+const ensureConditionBodySystemColumn = async () => {
+  const [columns] = await pool.query(
+    `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'conditions'
+      AND COLUMN_NAME = 'body_system_id'
+    LIMIT 1
+    `
+  );
+
+  if (columns.length === 0) {
+    await pool.query(`
+      ALTER TABLE conditions
+      ADD COLUMN body_system_id INT NULL
+    `);
+  }
+};
+
+const normalizeBodySystemId = (value) => {
+  const id = Number(value);
+  return Number.isFinite(id) && id > 0 ? id : null;
+};
+
 /* GET all conditions */
 router.get("/", async (req, res) => {
   try {
+    await ensureConditionBodySystemColumn();
+
     const [rows] = await pool.query(`
       SELECT
         c.condition_id,
@@ -13,8 +40,12 @@ router.get("/", async (req, res) => {
         c.advice_level,
         c.when_to_seek_help,
         c.disclaimer,
+        c.body_system_id,
+        bs.name AS body_system_name,
         COUNT(cs.symptom_id) AS symptoms_count
       FROM conditions c
+      LEFT JOIN body_systems bs
+        ON bs.id = c.body_system_id
       LEFT JOIN condition_symptoms cs
         ON c.condition_id = cs.condition_id
       GROUP BY
@@ -23,7 +54,9 @@ router.get("/", async (req, res) => {
         c.description,
         c.advice_level,
         c.when_to_seek_help,
-        c.disclaimer
+        c.disclaimer,
+        c.body_system_id,
+        bs.name
       ORDER BY c.condition_name ASC
     `);
 
@@ -38,9 +71,27 @@ router.get("/", async (req, res) => {
 });
 
 
+router.get("/body-systems/options", async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT id, name, slug, icon
+      FROM body_systems
+      WHERE COALESCE(is_active, 1) = 1
+      ORDER BY sort_order ASC, name ASC
+    `);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Fetch body systems for conditions error:", err);
+    res.status(500).json({ message: "Failed to fetch body systems" });
+  }
+});
+
 /* GET one condition */
 router.get("/:id", async (req, res) => {
   try {
+    await ensureConditionBodySystemColumn();
+
     const { id } = req.params;
 
     const [rows] = await pool.query(
@@ -51,7 +102,8 @@ router.get("/:id", async (req, res) => {
         description,
         advice_level,
         when_to_seek_help,
-        disclaimer
+        disclaimer,
+        body_system_id
       FROM conditions
       WHERE condition_id = ?
       `,
@@ -72,12 +124,15 @@ router.get("/:id", async (req, res) => {
 /* CREATE condition */
 router.post("/", async (req, res) => {
   try {
+    await ensureConditionBodySystemColumn();
+
     const {
       condition_name,
       description,
       advice_level,
       when_to_seek_help,
       disclaimer,
+      body_system_id,
     } = req.body;
 
     if (!condition_name || !description || !advice_level) {
@@ -89,8 +144,8 @@ router.post("/", async (req, res) => {
     const [result] = await pool.query(
       `
       INSERT INTO conditions
-        (condition_name, description, advice_level, when_to_seek_help, disclaimer)
-      VALUES (?, ?, ?, ?, ?)
+        (condition_name, description, advice_level, when_to_seek_help, disclaimer, body_system_id)
+      VALUES (?, ?, ?, ?, ?, ?)
       `,
       [
         condition_name.trim(),
@@ -98,6 +153,7 @@ router.post("/", async (req, res) => {
         advice_level,
         when_to_seek_help || null,
         disclaimer || null,
+        normalizeBodySystemId(body_system_id),
       ]
     );
 
@@ -114,6 +170,8 @@ router.post("/", async (req, res) => {
 /* UPDATE condition */
 router.put("/:id", async (req, res) => {
   try {
+    await ensureConditionBodySystemColumn();
+
     const { id } = req.params;
     const {
       condition_name,
@@ -121,6 +179,7 @@ router.put("/:id", async (req, res) => {
       advice_level,
       when_to_seek_help,
       disclaimer,
+      body_system_id,
     } = req.body;
 
     if (!condition_name || !description || !advice_level) {
@@ -137,7 +196,8 @@ router.put("/:id", async (req, res) => {
         description = ?,
         advice_level = ?,
         when_to_seek_help = ?,
-        disclaimer = ?
+        disclaimer = ?,
+        body_system_id = ?
       WHERE condition_id = ?
       `,
       [
@@ -146,6 +206,7 @@ router.put("/:id", async (req, res) => {
         advice_level,
         when_to_seek_help || null,
         disclaimer || null,
+        normalizeBodySystemId(body_system_id),
         id,
       ]
     );

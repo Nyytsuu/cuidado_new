@@ -75,6 +75,22 @@ const checklist = [
   "Stay on the line and follow the dispatcher instructions.",
 ];
 
+const getGeolocationErrorMessage = (error: GeolocationPositionError) => {
+  if (error.code === error.PERMISSION_DENIED) {
+    return "Location permission is blocked. Allow Location for Cuidado in Android Settings, then tap Locate Me again.";
+  }
+
+  if (error.code === error.POSITION_UNAVAILABLE) {
+    return "Your location is unavailable. Turn on emulator/device Location or set a GPS point, then try again.";
+  }
+
+  if (error.code === error.TIMEOUT) {
+    return "Location took too long. Check that Location is on, then tap Locate Me again.";
+  }
+
+  return "Unable to access your location. Please type or share your address manually.";
+};
+
 const getStoredUserName = () => {
   try {
     const user = JSON.parse(localStorage.getItem("user") || "{}") as {
@@ -177,9 +193,10 @@ export default function UserEmergency() {
 
   const requestLocation = () => {
     setLocationError("");
-    setLocationMessage("");
+    setLocationMessage("Requesting your location...");
 
     if (!navigator.geolocation) {
+      setLocationMessage("");
       setLocationError("Your browser does not support location services.");
       return;
     }
@@ -193,10 +210,11 @@ export default function UserEmergency() {
         setLocation(coords);
         setLocationMessage("Location found. You can copy it or use it to sort nearby clinics.");
       },
-      () => {
-        setLocationError("Unable to access your location. Please type or share your address manually.");
+      (error) => {
+        setLocationMessage("");
+        setLocationError(getGeolocationErrorMessage(error));
       },
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
     );
   };
 
@@ -385,32 +403,9 @@ export default function UserEmergency() {
                 View all clinics
               </Link>
             </section>
-
-            <section className="emergency-panel emergency-note">
-              <HeartPulse size={22} />
-              <p>
-                Cuidado MediHelp can guide you to care, but emergency calls should
-                go directly to official responders.
-              </p>
-              <Link to="/help">Need app help instead?</Link>
-            </section>
           </aside>
         </section>
 
-        <section className="emergency-bottom-actions">
-          <VoiceAssistantPopup>
-            <Ambulance size={18} />
-            Open Voice Assistant
-          </VoiceAssistantPopup>
-          <button type="button" onClick={() => navigate("/symptom-checker")}>
-            <HeartPulse size={18} />
-            Symptom Checker
-          </button>
-          <button type="button" onClick={() => navigate("/appointments")}>
-            <ClipboardCheck size={18} />
-            My Appointments
-          </button>
-        </section>
       </main>
     </div>
   );

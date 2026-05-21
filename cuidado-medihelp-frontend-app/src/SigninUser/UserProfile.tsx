@@ -94,6 +94,8 @@ type SpeechRecognitionErrorEventLike = Event & {
   error: string;
 };
 
+const LISTENING_TIMEOUT_MS = 12000;
+
 declare global {
   interface Window {
     SpeechRecognition?: new () => SpeechRecognition;
@@ -129,6 +131,10 @@ export default function UserProfile() {
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const listeningTimeoutRef = useRef<number | null>(null);
+  const latestTranscriptRef = useRef("");
+  const heardSpeechRef = useRef(false);
+  const recognitionSettledRef = useRef(false);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -166,8 +172,16 @@ export default function UserProfile() {
   const displayProfilePicture =
     profilePicturePreview || toUploadUrl(profilePicture) || profileImg;
 
+  const clearListeningTimer = () => {
+    if (listeningTimeoutRef.current !== null) {
+      window.clearTimeout(listeningTimeoutRef.current);
+      listeningTimeoutRef.current = null;
+    }
+  };
+
   useEffect(() => {
     return () => {
+      clearListeningTimer();
       recognitionRef.current?.abort();
     };
   }, []);
@@ -182,12 +196,22 @@ export default function UserProfile() {
 
   const analyzeVoiceSymptoms = async (transcript: string) => {
     try {
+      const cleanedTranscript = transcript.trim();
+      clearListeningTimer();
+      recognitionSettledRef.current = true;
+
+      if (!cleanedTranscript) {
+        setVoiceError("I did not receive microphone audio. Check the emulator microphone input, then try again.");
+        setVoiceStep("retry");
+        return;
+      }
+
       setVoiceStep("processing");
       setVoiceError("");
       setSymptomResult(null);
-      setVoiceTranscript(transcript);
+      setVoiceTranscript(cleanedTranscript);
 
-      const result = await analyzeVoiceTranscript(transcript, userId || null);
+      const result = await analyzeVoiceTranscript(cleanedTranscript, userId || null);
 
       setSymptomResult(result);
       setVoiceStep("result");
@@ -245,6 +269,8 @@ export default function UserProfile() {
   };
 
   const closeVoicePopup = () => {
+    clearListeningTimer();
+    recognitionSettledRef.current = true;
     recognitionRef.current?.abort();
     recognitionRef.current = null;
     setVoicePopupOpen(false);
@@ -261,6 +287,9 @@ export default function UserProfile() {
     setVoiceTranscript("");
     setVoiceError("");
     setSymptomResult(null);
+    latestTranscriptRef.current = "";
+    heardSpeechRef.current = false;
+    recognitionSettledRef.current = false;
 
     if (!SpeechRecognitionAPI) {
       setVoiceStep("unsupported");
@@ -272,12 +301,34 @@ export default function UserProfile() {
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
 
-    recognition.lang = "en-PH";
+    recognition.lang = "en-US";
     recognition.continuous = false;
     recognition.interimResults = true;
 
     recognition.onstart = () => {
+      clearListeningTimer();
+      heardSpeechRef.current = false;
+      latestTranscriptRef.current = "";
+      recognitionSettledRef.current = false;
       setVoiceStep("listening");
+
+      listeningTimeoutRef.current = window.setTimeout(() => {
+        if (recognitionSettledRef.current) {
+          return;
+        }
+
+        recognitionSettledRef.current = true;
+        const transcript = latestTranscriptRef.current.trim();
+        recognition.abort();
+
+        if (transcript) {
+          analyzeVoiceSymptoms(transcript);
+          return;
+        }
+
+        setVoiceError("I could not hear microphone audio. Make sure the emulator microphone is enabled, then try again.");
+        setVoiceStep("retry");
+      }, LISTENING_TIMEOUT_MS);
     };
 
     recognition.onresult = (event) => {
@@ -287,25 +338,64 @@ export default function UserProfile() {
         transcript += event.results[i][0].transcript;
       }
 
+      latestTranscriptRef.current = transcript;
+      if (transcript.trim()) {
+        heardSpeechRef.current = true;
+      }
       setVoiceTranscript(transcript);
 
       const lastResult = event.results[event.results.length - 1];
       if (lastResult?.isFinal) {
+        recognitionSettledRef.current = true;
+        clearListeningTimer();
         analyzeVoiceSymptoms(transcript.trim());
       }
     };
 
     recognition.onerror = (event) => {
-      const errorMessage =
-        event.error === "network"
-          ? "Speech recognition could not connect. Please try again, or use the full Voice Assistant page."
-          : event.error || "Speech recognition failed.";
+      recognitionSettledRef.current = true;
+      clearListeningTimer();
+      const errorMessages: Record<string, string> = {
+        network: "Speech recognition could not connect. Check your internet connection and try again.",
+        "not-allowed": "Microphone permission is blocked. Allow Microphone for Cuidado, then try again.",
+        "no-speech": "I did not receive microphone audio. Check the emulator microphone input, then try again and speak clearly.",
+        "not-supported": "Speech recognition is not available on this device.",
+        audio: "Android could not open the microphone audio stream. Check the emulator microphone setting and try again.",
+        client: "Android speech recognition could not start on this emulator. Restart the emulator and try again.",
+        service: "The Android speech recognition service stopped unexpectedly. Restart the emulator and try again.",
+        language: "English (US) is not available on this emulator. Please try typed symptoms instead.",
+        busy: "The microphone is already listening. Please wait a moment and try again.",
+      };
 
-      setVoiceError(errorMessage);
+      setVoiceError(errorMessages[event.error] || "Speech recognition failed. Please try again.");
       setVoiceStep("retry");
     };
 
-    recognition.start();
+    recognition.onend = () => {
+      clearListeningTimer();
+
+      if (recognitionSettledRef.current) {
+        return;
+      }
+
+      recognitionSettledRef.current = true;
+      const transcript = latestTranscriptRef.current.trim();
+
+      if (transcript) {
+        analyzeVoiceSymptoms(transcript);
+        return;
+      }
+
+      setVoiceError("I could not hear microphone audio. Check the emulator microphone input, then try again.");
+      setVoiceStep("retry");
+    };
+
+    try {
+      recognition.start();
+    } catch {
+      setVoiceError("Speech recognition could not start. Please try again.");
+      setVoiceStep("retry");
+    }
   };
 
   const voiceContent = getVoiceContent();
@@ -1062,7 +1152,7 @@ export default function UserProfile() {
                 </button>
               )}
 
-              <div className="voice-popup-language">English (Philippines)</div>
+              <div className="voice-popup-language">English (US)</div>
             </div>
           </div>
         )}

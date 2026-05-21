@@ -12,6 +12,13 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',
+    watch: {
+      ignored: [
+        '**/android/**',
+        '**/dist/**',
+        '**/node_modules/**',
+      ],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

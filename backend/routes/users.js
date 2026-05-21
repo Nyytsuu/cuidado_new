@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
+const nodemailer = require("nodemailer");
 const pool = require("../db/pool");
 
 const router = express.Router();
@@ -22,6 +23,19 @@ const PROFILE_UPLOAD_DIR = path.join("uploads", "profile-pictures");
 const PROFILE_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const PROFILE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+const MAIL_USER = process.env.MAIL_USER || process.env.EMAIL_USER;
+const MAIL_PASS = process.env.MAIL_PASS || process.env.EMAIL_PASS;
+const MAIL_FROM = process.env.MAIL_FROM || MAIL_USER;
+const reminderMailer =
+  MAIL_USER && MAIL_PASS
+    ? nodemailer.createTransport({
+        service: process.env.MAIL_SERVICE || process.env.EMAIL_SERVICE || "gmail",
+        auth: {
+          user: MAIL_USER,
+          pass: MAIL_PASS,
+        },
+      })
+    : null;
 
 fs.mkdirSync(PROFILE_UPLOAD_DIR, { recursive: true });
 
@@ -96,6 +110,126 @@ const ensureUserProfilePictureColumn = async () => {
   }
 };
 
+let appointmentRescheduleSchemaPromise = null;
+
+const ensureAppointmentRescheduleColumns = async () => {
+  if (!appointmentRescheduleSchemaPromise) {
+    appointmentRescheduleSchemaPromise = (async () => {
+      const [columns] = await pool.query(
+        `
+        SELECT COLUMN_NAME, COLUMN_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'appointments'
+          AND COLUMN_NAME IN (
+            'status',
+            'proposed_start_at',
+            'proposed_end_at',
+            'reschedule_reason',
+            'reschedule_requested_by',
+            'reschedule_requested_at'
+          )
+        `
+      );
+
+      const existing = new Map(
+        columns.map((column) => [column.COLUMN_NAME, column.COLUMN_TYPE])
+      );
+
+      if (!existing.has("proposed_start_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN proposed_start_at DATETIME NULL AFTER end_at
+        `);
+      }
+
+      if (!existing.has("proposed_end_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN proposed_end_at DATETIME NULL AFTER proposed_start_at
+        `);
+      }
+
+      if (!existing.has("reschedule_reason")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_reason TEXT NULL AFTER cancel_reason
+        `);
+      }
+
+      if (!existing.has("reschedule_requested_by")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_requested_by VARCHAR(20) NULL AFTER reschedule_reason
+        `);
+      }
+
+      if (!existing.has("reschedule_requested_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_requested_at DATETIME NULL AFTER reschedule_requested_by
+        `);
+      }
+
+      const statusType = String(existing.get("status") || "");
+      if (
+        statusType.toLowerCase().startsWith("enum(") &&
+        !statusType.includes("'reschedule_requested'")
+      ) {
+        await pool.query(`
+          ALTER TABLE appointments
+          MODIFY COLUMN status ENUM(
+            'pending',
+            'confirmed',
+            'reschedule_requested',
+            'cancelled',
+            'completed',
+            'no_show'
+          ) NOT NULL DEFAULT 'pending'
+        `);
+      }
+
+      const [historyColumns] = await pool.query(
+        `
+        SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'appointment_status_history'
+          AND COLUMN_NAME IN ('old_status', 'new_status')
+        `
+      );
+
+      for (const column of historyColumns) {
+        const columnType = String(column.COLUMN_TYPE || "");
+        if (
+          columnType.toLowerCase().startsWith("enum(") &&
+          !columnType.includes("'reschedule_requested'")
+        ) {
+          const nullability =
+            column.IS_NULLABLE === "NO" ? "NOT NULL" : "NULL";
+
+          await pool.query(`
+            ALTER TABLE appointment_status_history
+            MODIFY COLUMN ${column.COLUMN_NAME} ENUM(
+              'pending',
+              'confirmed',
+              'reschedule_requested',
+              'cancelled',
+              'completed',
+              'no_show'
+            ) ${nullability}
+          `);
+        }
+      }
+    })().catch((error) => {
+      appointmentRescheduleSchemaPromise = null;
+      throw error;
+    });
+  }
+
+  return appointmentRescheduleSchemaPromise;
+};
+
 const ensureUserNotificationsTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_notifications (
@@ -109,6 +243,7 @@ const ensureUserNotificationsTable = async () => {
       is_read TINYINT(1) NOT NULL DEFAULT 0,
       appointment_id INT DEFAULT NULL,
       read_at DATETIME DEFAULT NULL,
+      email_sent_at DATETIME DEFAULT NULL,
       created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
@@ -116,6 +251,23 @@ const ensureUserNotificationsTable = async () => {
       INDEX idx_user_notifications_user (user_id, is_read, created_at)
     )
   `);
+
+  const [emailSentColumns] = await pool.query(
+    `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'user_notifications'
+      AND COLUMN_NAME = 'email_sent_at'
+    `
+  );
+
+  if (emailSentColumns.length === 0) {
+    await pool.query(`
+      ALTER TABLE user_notifications
+      ADD COLUMN email_sent_at DATETIME DEFAULT NULL AFTER read_at
+    `);
+  }
 };
 
 const ensureUserSupportRequestsTable = async () => {
@@ -155,6 +307,73 @@ const toDisplayDate = (value) => {
   });
 };
 
+const escapeHtml = (value) =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+const sendAppointmentReminderEmailOnce = async ({
+  userId,
+  uniqueKey,
+  to,
+  patientName,
+  clinicName,
+  appointmentDate,
+}) => {
+  if (!reminderMailer || !to) return;
+
+  const [notifications] = await pool.query(
+    `
+    SELECT id, email_sent_at
+    FROM user_notifications
+    WHERE user_id = ? AND unique_key = ?
+    LIMIT 1
+    `,
+    [userId, uniqueKey]
+  );
+
+  const notification = notifications[0];
+  if (!notification || notification.email_sent_at) return;
+
+  const safeName = patientName || "there";
+  const subject = "Upcoming clinic appointment reminder";
+  const text = `Hi ${safeName}, this is a reminder that you have an appointment with ${clinicName} on ${appointmentDate}.`;
+
+  try {
+    await reminderMailer.sendMail({
+      from: MAIL_FROM,
+      to,
+      subject,
+      text,
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #123;">
+          <h2 style="margin: 0 0 12px;">Upcoming clinic appointment</h2>
+          <p>Hi ${escapeHtml(safeName)},</p>
+          <p>This is a reminder that you have an appointment with <strong>${escapeHtml(
+            clinicName
+          )}</strong>.</p>
+          <p><strong>Schedule:</strong> ${escapeHtml(appointmentDate)}</p>
+          <p>Please check your Cuidado notifications for appointment updates.</p>
+        </div>
+      `,
+    });
+
+    await pool.query(
+      `
+      UPDATE user_notifications
+      SET email_sent_at = NOW()
+      WHERE id = ?
+      `,
+      [notification.id]
+    );
+  } catch (error) {
+    console.error("Appointment reminder email error:", error.message || error);
+  }
+};
+
 const insertNotification = async ({
   userId,
   uniqueKey,
@@ -167,7 +386,7 @@ const insertNotification = async ({
 }) => {
   const safeCategory = NOTIFICATION_CATEGORIES.has(category) ? category : "System";
 
-  await pool.query(
+  const [result] = await pool.query(
     `
     INSERT INTO user_notifications (
       user_id,
@@ -190,23 +409,34 @@ const insertNotification = async ({
     `,
     [userId, uniqueKey, title, message, safeCategory, icon, appointmentId, createdAt]
   );
+
+  return result;
 };
 
 const syncAppointmentNotifications = async (userId) => {
+  await ensureAppointmentRescheduleColumns();
+
   const [appointments] = await pool.query(
     `
     SELECT
       a.id,
       a.status,
       a.start_at,
+      a.proposed_start_at,
+      a.proposed_end_at,
+      a.reschedule_reason,
+      a.reschedule_requested_at,
       a.created_at,
       a.updated_at,
       a.cancelled_at,
       a.completed_at,
       a.cancel_reason,
-      COALESCE(a.clinic_name_snapshot, c.clinic_name, 'the clinic') AS clinic_name
+      COALESCE(a.clinic_name_snapshot, c.clinic_name, 'the clinic') AS clinic_name,
+      u.full_name AS user_name,
+      u.email AS user_email
     FROM appointments a
     LEFT JOIN clinics c ON c.id = a.clinic_id
+    LEFT JOIN users u ON u.id = a.user_id
     WHERE a.user_id = ?
     ORDER BY a.updated_at DESC
     LIMIT 100
@@ -219,6 +449,9 @@ const syncAppointmentNotifications = async (userId) => {
 
   for (const appointment of appointments) {
     const appointmentDate = toDisplayDate(appointment.start_at);
+    const proposedDate = toDisplayDate(
+      appointment.proposed_start_at || appointment.start_at
+    );
     const clinicName = appointment.clinic_name || "the clinic";
 
     await insertNotification({
@@ -242,6 +475,26 @@ const syncAppointmentNotifications = async (userId) => {
         icon: "check",
         appointmentId: appointment.id,
         createdAt: appointment.updated_at || new Date(),
+      });
+    }
+
+    if (appointment.status === "reschedule_requested") {
+      const requestTimestamp = new Date(
+        appointment.reschedule_requested_at || appointment.updated_at || new Date()
+      ).getTime();
+
+      await insertNotification({
+        userId,
+        uniqueKey: `appointment:${appointment.id}:reschedule:${requestTimestamp}`,
+        title: "Reschedule Request",
+        message: `${clinicName} proposed moving your appointment to ${proposedDate}. Please accept it or cancel the appointment.`,
+        category: "Appointments",
+        icon: "clock",
+        appointmentId: appointment.id,
+        createdAt:
+          appointment.reschedule_requested_at ||
+          appointment.updated_at ||
+          new Date(),
       });
     }
 
@@ -278,15 +531,25 @@ const syncAppointmentNotifications = async (userId) => {
       startAt - now <= oneDayMs &&
       ["pending", "confirmed"].includes(appointment.status)
     ) {
+      const upcomingKey = `appointment:${appointment.id}:upcoming`;
       await insertNotification({
         userId,
-        uniqueKey: `appointment:${appointment.id}:upcoming`,
+        uniqueKey: upcomingKey,
         title: "Upcoming Appointment Reminder",
         message: `You have an appointment with ${clinicName} on ${appointmentDate}.`,
         category: "Appointments",
         icon: "clock",
         appointmentId: appointment.id,
         createdAt: new Date(),
+      });
+
+      await sendAppointmentReminderEmailOnce({
+        userId,
+        uniqueKey: upcomingKey,
+        to: appointment.user_email,
+        patientName: appointment.user_name,
+        clinicName,
+        appointmentDate,
       });
     }
   }

@@ -4,6 +4,7 @@ import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./BrowseHealth.css";
 import searchIcon from "../img/search.png";
+import { apiUrl } from "../sharedBackendFetch";
 
 type TopicCard = {
   id: string;
@@ -13,6 +14,10 @@ type TopicCard = {
   tag?: string | null;
   slug?: string | null;
   body_system_slug?: string | null;
+  body_system_name?: string | null;
+  is_common?: boolean;
+  sort_order?: number;
+  recently_viewed_at?: string | null;
 };
 
 type BodySystem = {
@@ -44,6 +49,9 @@ type TopicApiItem = {
   subtitle?: string | null;
   body_system_name?: string | null;
   tag?: string | null;
+  is_common?: number | boolean | null;
+  sort_order?: number | null;
+  recently_viewed_at?: string | null;
 };
 
 type QuickAction = {
@@ -53,11 +61,62 @@ type QuickAction = {
   tone: string;
 };
 
+const normalizeTag = (tag?: string | null) =>
+  (tag || "").toLowerCase().replace(/[_-]+/g, " ").trim();
+
 const quickActions: QuickAction[] = [
   { id: "symptoms", icon: "🧾", label: "Check Symptoms", tone: "mint" },
   { id: "clinics", icon: "📍", label: "Find Clinics", tone: "blue" },
+  { id: "appointments", icon: "📅", label: "Appointments", tone: "mint" },
   { id: "emergency", icon: "🚨", label: "Emergency Guide", tone: "rose" },
+  { id: "bmi", icon: "⚖", label: "BMI Calculator", tone: "mint" },
+  { id: "stress", icon: "🧠", label: "Stress Index", tone: "blue" },
+  { id: "voice", icon: "🎙", label: "Voice Assistant", tone: "mint" },
 ];
+
+const categoryTabs = ["Most common", "Recently viewed", "All"] as const;
+type CategoryTab = (typeof categoryTabs)[number];
+
+const hasUsableIcon = (icon?: string | null) => Boolean(icon && icon.trim());
+
+const getBodySystemIcon = (item: BodySystemApiItem) => {
+  if (hasUsableIcon(item.icon)) return item.icon as string;
+
+  const key = `${item.title || ""} ${item.name || ""} ${item.slug || ""}`.toLowerCase();
+
+  if (key.includes("cardio")) return "💓";
+  if (key.includes("resp")) return "🫁";
+  if (key.includes("digest")) return "🍽️";
+  if (key.includes("derma") || key.includes("skin")) return "🧴";
+  if (key.includes("mental")) return "🧠";
+
+  return "🩺";
+};
+
+const isRecentlyViewedTopic = (card: TopicCard) =>
+  Boolean(card.recently_viewed_at) || normalizeTag(card.tag).includes("recent");
+
+const isCommonTopic = (card: TopicCard) => {
+  const tag = normalizeTag(card.tag);
+  return Boolean(card.is_common) || tag.includes("popular") || tag.includes("common");
+};
+
+const sortByTitle = (a: TopicCard, b: TopicCard) => a.title.localeCompare(b.title);
+
+const sortByRecent = (a: TopicCard, b: TopicCard) => {
+  const dateA = a.recently_viewed_at ? new Date(a.recently_viewed_at).getTime() : 0;
+  const dateB = b.recently_viewed_at ? new Date(b.recently_viewed_at).getTime() : 0;
+  return dateB - dateA || sortByTitle(a, b);
+};
+
+const sortByCommon = (a: TopicCard, b: TopicCard) => {
+  const orderA = a.sort_order ?? 9999;
+  const orderB = b.sort_order ?? 9999;
+
+  if (orderA !== orderB) return orderA - orderB;
+
+  return sortByTitle(a, b);
+};
 
 export default function BrowseHealth() {
   const navigate = useNavigate();
@@ -68,7 +127,7 @@ export default function BrowseHealth() {
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [search, setSearch] = useState("");
-  const [selectedTab, setSelectedTab] = useState("Most common");
+  const [selectedTab, setSelectedTab] = useState<CategoryTab>("All");
 
   const [bodySystems, setBodySystems] = useState<BodySystem[]>([]);
   const [topicCards, setTopicCards] = useState<TopicCard[]>([]);
@@ -85,6 +144,7 @@ export default function BrowseHealth() {
       return 0;
     }
   }, []);
+
   const querySearch = searchParams.get("search") || "";
 
   useEffect(() => {
@@ -100,17 +160,12 @@ export default function BrowseHealth() {
         setError("");
 
         const [systemsRes, topicsRes] = await Promise.all([
-          fetch("http://localhost:5000/api/health/body-systems"),
-          fetch(`http://localhost:5000/api/health/topics?user_id=${userId}`),
+          fetch(apiUrl("/api/health/body-systems"), { cache: "no-store" }),
+          fetch(apiUrl(`/api/health/topics?user_id=${userId}`), { cache: "no-store" }),
         ]);
 
-        if (!systemsRes.ok) {
-          throw new Error("Failed to load body systems");
-        }
-
-        if (!topicsRes.ok) {
-          throw new Error("Failed to load health topics");
-        }
+        if (!systemsRes.ok) throw new Error("Failed to load body systems");
+        if (!topicsRes.ok) throw new Error("Failed to load health topics");
 
         const systemsData: unknown = await systemsRes.json();
         const topicsData: unknown = await topicsRes.json();
@@ -119,7 +174,7 @@ export default function BrowseHealth() {
           ? (systemsData as BodySystemApiItem[]).map((item) => ({
               id: String(item.id),
               slug: item.slug ?? null,
-              icon: item.icon ?? "🩺",
+              icon: getBodySystemIcon(item),
               title: item.title ?? item.name ?? "Health Topic",
               subtitle: item.subtitle ?? item.short_description ?? "",
               name: item.name ?? item.title ?? "Health Topic",
@@ -131,10 +186,16 @@ export default function BrowseHealth() {
               id: String(item.id),
               slug: item.slug ?? null,
               body_system_slug: item.body_system_slug ?? null,
-              icon: item.icon ?? "🩺",
+              body_system_name: item.body_system_name ?? null,
+              icon: item.icon && item.icon.trim() ? item.icon : "🩺",
               title: item.title ?? item.condition_name ?? "Condition",
-              subtitle: item.subtitle ?? item.body_system_name ?? "Health Topic",
+              subtitle:
+                (item.subtitle || item.body_system_name || "Health Topic").slice(0, 120) +
+                "...",
               tag: item.tag ?? null,
+              is_common: Boolean(item.is_common),
+              sort_order: item.sort_order ?? 9999,
+              recently_viewed_at: item.recently_viewed_at ?? null,
             }))
           : [];
 
@@ -156,39 +217,45 @@ export default function BrowseHealth() {
   const filteredBodySystems = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    if (!query) return bodySystems;
+    const filtered = query
+      ? bodySystems.filter(
+          (item) =>
+            item.title.toLowerCase().includes(query) ||
+            item.subtitle.toLowerCase().includes(query) ||
+            (item.slug || "").toLowerCase().includes(query)
+        )
+      : bodySystems;
 
-    return bodySystems.filter(
-      (item) =>
-        item.title.toLowerCase().includes(query) ||
-        item.subtitle.toLowerCase().includes(query) ||
-        (item.slug || "").toLowerCase().includes(query)
-    );
+    return [...filtered].sort((a, b) => a.title.localeCompare(b.title));
   }, [bodySystems, search]);
 
   const filteredTopicCards = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    let base = topicCards;
+    const searchedCards = query
+      ? topicCards.filter(
+          (card) =>
+            card.title.toLowerCase().includes(query) ||
+            card.subtitle.toLowerCase().includes(query) ||
+            (card.tag || "").toLowerCase().includes(query) ||
+            (card.slug || "").toLowerCase().includes(query)
+        )
+      : topicCards;
 
     if (selectedTab === "Recently viewed") {
-      base = topicCards.filter((card) => card.tag === "Recently viewed");
-    } else if (selectedTab === "Most common") {
-      base = topicCards.filter(
-        (card) => card.tag === "Popular" || !card.tag || card.tag === "Most common"
-      );
+      return [...searchedCards].filter(isRecentlyViewedTopic).sort(sortByRecent);
     }
 
-    if (!query) return base;
+    if (selectedTab === "Most common") {
+      const commonCards = [...searchedCards].filter(isCommonTopic).sort(sortByCommon);
+      return commonCards.length > 0 ? commonCards : [...searchedCards].sort(sortByCommon);
+    }
 
-    return base.filter(
-      (card) =>
-        card.title.toLowerCase().includes(query) ||
-        card.subtitle.toLowerCase().includes(query) ||
-        (card.tag || "").toLowerCase().includes(query) ||
-        (card.slug || "").toLowerCase().includes(query)
-    );
+    return [...searchedCards].sort(sortByTitle);
   }, [topicCards, search, selectedTab]);
+
+  const mobileFeaturedTopicCards = filteredTopicCards;
+  const sidebarBodySystems = filteredBodySystems.length > 0 ? filteredBodySystems : bodySystems;
 
   const handleBodySystemClick = (item: BodySystem) => {
     if (item.slug) {
@@ -204,17 +271,8 @@ export default function BrowseHealth() {
   };
 
   const handleTopicClick = (card: TopicCard) => {
-    if (card.slug) {
-      navigate(`/health/condition/${card.slug}`);
-      return;
-    }
-
-    if (card.body_system_slug) {
-      navigate(`/health/body-system/${card.body_system_slug}`);
-      return;
-    }
-
-    navigate(`/health/condition/${card.id}`);
+    const conditionTarget = card.slug && card.slug !== card.body_system_slug ? card.slug : card.id;
+    navigate(`/health/condition/${conditionTarget}`);
   };
 
   const handleQuickActionClick = (actionId: string) => {
@@ -228,13 +286,33 @@ export default function BrowseHealth() {
       return;
     }
 
+    if (actionId === "appointments") {
+      navigate("/appointments");
+      return;
+    }
+
     if (actionId === "emergency") {
       navigate("/emergency-guide");
+      return;
+    }
+
+    if (actionId === "bmi") {
+      navigate("/bmi-calculator");
+      return;
+    }
+
+    if (actionId === "stress") {
+      navigate("/stress-index");
+      return;
+    }
+
+    if (actionId === "voice") {
+      navigate("/voice-assistant");
     }
   };
 
   return (
-    <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div className={`browse-health-page browse-health-index-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -249,6 +327,109 @@ export default function BrowseHealth() {
 
       <div className="browse-page-content">
         <main className="browse-health-main">
+          <section className="health-mobile-layout">
+            <div className="mobile-health-head">
+              <h1>Health Categories</h1>
+              <p>Browse common health concerns</p>
+
+              <div className="mobile-category-tabs">
+                {categoryTabs.map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    className={selectedTab === tab ? "active" : ""}
+                    onClick={() => setSelectedTab(tab)}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <section className="mobile-common-section">
+              <div className="mobile-section-heading">
+                <h2>{selectedTab}</h2>
+              </div>
+
+              {loading ? (
+                <p className="mobile-health-state">Loading health categories...</p>
+              ) : error ? (
+                <p className="mobile-health-state">{error}</p>
+              ) : mobileFeaturedTopicCards.length === 0 ? (
+                <p className="mobile-health-state">No topics found.</p>
+              ) : (
+                <div className="mobile-topic-strip">
+                  {mobileFeaturedTopicCards.map((card) => (
+                    <button
+                      key={card.id}
+                      className="mobile-topic-card"
+                      type="button"
+                      onClick={() => handleTopicClick(card)}
+                    >
+                      <span className="mobile-topic-icon">{card.icon}</span>
+                      <strong>{card.title}</strong>
+                      <span>{card.subtitle}</span>
+                      <b>{"\u203A"}</b>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className="mobile-voice-card">
+              <div>
+                <h2>Describe your symptoms</h2>
+                <p>
+                  Use voice search to quickly find possible conditions and relevant information.
+                </p>
+              </div>
+              <VoiceAssistantPopup userId={userId || null} className="mobile-voice-button">
+                Start Voice Search
+              </VoiceAssistantPopup>
+            </section>
+
+            <section className="mobile-browse-topics">
+              <h2>Browse Health Topics</h2>
+
+              <div className="mobile-topic-search">
+                <img src={searchIcon} alt="Search" />
+                <input
+                  type="text"
+                  placeholder="Search for health topics..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+
+              {loading ? (
+                <p className="mobile-health-state">Loading body systems...</p>
+              ) : error ? (
+                <p className="mobile-health-state">{error}</p>
+              ) : (
+                <div className="mobile-system-list">
+                  {filteredBodySystems.map((item) => (
+                    <button
+                      key={item.id}
+                      className="mobile-system-item"
+                      type="button"
+                      onClick={() => handleBodySystemClick(item)}
+                    >
+                      <span>{item.icon}</span>
+                      <strong>{item.title}</strong>
+                      <b>{"\u203A"}</b>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <p className="mobile-health-note">
+              This tool provides general health information.
+              <br />
+              For serious symptoms, consult a doctor.
+            </p>
+          </section>
+
           <section className="health-browser-layout">
             <aside className="health-sidebar-card">
               <div className="sidebar-box sidebar-header-box">
@@ -267,16 +448,18 @@ export default function BrowseHealth() {
                 </div>
               </div>
 
-              <div className="sidebar-box">
+              <div className="sidebar-box body-system-box">
                 <h3 className="group-title">Body System</h3>
 
                 {loading ? (
                   <p>Loading body systems...</p>
                 ) : error ? (
                   <p>{error}</p>
+                ) : sidebarBodySystems.length === 0 ? (
+                  <p className="health-topic-state sidebar-empty-state">No body systems found.</p>
                 ) : (
                   <div className="system-list">
-                    {filteredBodySystems.map((item) => (
+                    {sidebarBodySystems.map((item) => (
                       <button
                         key={item.id}
                         className="system-item"
@@ -294,7 +477,7 @@ export default function BrowseHealth() {
                 )}
               </div>
 
-              <div className="sidebar-box">
+              <div className="sidebar-box quick-actions-box">
                 <h3 className="group-title">What are you looking for?</h3>
                 <div className="quick-action-list">
                   {quickActions.map((action) => (
@@ -323,7 +506,7 @@ export default function BrowseHealth() {
                 </div>
 
                 <div className="category-tabs">
-                  {["Most common", "Recently viewed", "All"].map((tab) => (
+                  {categoryTabs.map((tab) => (
                     <button
                       key={tab}
                       type="button"
@@ -337,38 +520,44 @@ export default function BrowseHealth() {
               </div>
 
               <div className="content-box category-section-box">
-                <h3 className="recent-title">{selectedTab}</h3>
+                <div className="health-section-heading">
+                  <h3 className="recent-title">{selectedTab}</h3>
+                </div>
 
-                {loading ? (
-                  <p>Loading health categories...</p>
-                ) : error ? (
-                  <p>{error}</p>
-                ) : filteredTopicCards.length === 0 ? (
-                  <p>No topics found.</p>
-                ) : (
-                  <div className="topic-grid">
-                    {filteredTopicCards.map((card) => (
-                      <button
-                        key={card.id}
-                        className="topic-card"
-                        type="button"
-                        onClick={() => handleTopicClick(card)}
-                      >
-                        <div className="topic-left">
-                          <div className="topic-icon-wrap">{card.icon}</div>
-                          <div>
-                            <div className="topic-title-row">
-                              <span className="topic-title">{card.title}</span>
-                              {card.tag ? <span className="topic-tag">{card.tag}</span> : null}
+                <div className="topic-list-bound">
+                  {loading ? (
+                    <p className="health-topic-state">Loading health categories...</p>
+                  ) : error ? (
+                    <p className="health-topic-state">{error}</p>
+                  ) : filteredTopicCards.length === 0 ? (
+                    <p className="health-topic-state">No topics found.</p>
+                  ) : (
+                    <div className="topic-grid">
+                      {filteredTopicCards.map((card) => (
+                        <button
+                          key={card.id}
+                          className="topic-card"
+                          type="button"
+                          onClick={() => handleTopicClick(card)}
+                        >
+                          <div className="topic-left">
+                            <div className="topic-icon-wrap">{card.icon}</div>
+                            <div>
+                              <div className="topic-title-row">
+                                <span className="topic-title">{card.title}</span>
+                                {card.tag ? (
+                                  <span className="topic-tag">{card.tag}</span>
+                                ) : null}
+                              </div>
+                              <div className="topic-subtitle">{card.subtitle}</div>
                             </div>
-                            <div className="topic-subtitle">{card.subtitle}</div>
                           </div>
-                        </div>
-                        <span className="system-arrow">›</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                          <span className="system-arrow">›</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="voice-search-card">

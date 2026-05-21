@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./AdminClinic.css";
+import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
@@ -23,9 +24,27 @@ type ClinicProfile = {
   email: string;
   phone: string | null;
   address: string | null;
+  specialization?: string | null;
+  license_number?: string | null;
+  years_operation?: number | string | null;
+  rep_full_name?: string | null;
+  rep_position?: string | null;
+  rep_phone?: string | null;
+  services_offered?: string | null;
+  opening_time?: string | null;
+  closing_time?: string | null;
+  operating_days?: string | null;
   created_at: string;
   status: "pending" | "approved" | "rejected";
   account_status: "active" | "disabled";
+  appointment_count?: number | string | null;
+  pending_appointments?: number | string | null;
+  completed_appointments?: number | string | null;
+  cancelled_appointments?: number | string | null;
+  last_activity_at?: string | null;
+  last_appointment_request_at?: string | null;
+  last_appointment_at?: string | null;
+  next_appointment_at?: string | null;
 };
 
 type ActivityItem = {
@@ -51,10 +70,8 @@ export default function AdminClinics() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-  const [selectedClinic, setSelectedClinic] = useState<any | null>(null);
+  const [selectedClinic, setSelectedClinic] = useState<ClinicProfile | null>(null);
   const [isClinicPopupOpen, setIsClinicPopupOpen] = useState(false);
-  const [viewOpen, setViewOpen] = useState(false);
-  const [profile, setProfile] = useState<ClinicProfile | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [q, setQ] = useState("");
   const navigate = useNavigate();
@@ -73,6 +90,66 @@ export default function AdminClinics() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
+  };
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return "Not recorded";
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const getDaysSince = (value?: string | null) => {
+    if (!value) return null;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return null;
+
+    return Math.max(0, Math.floor((Date.now() - date.getTime()) / 86400000));
+  };
+
+  const toTitle = (value?: string | null) =>
+    value
+      ? value
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (letter) => letter.toUpperCase())
+      : "Not provided";
+
+  const getClinicInitials = (name?: string | null) => {
+    const parts = (name || "Clinic").trim().split(/\s+/).filter(Boolean);
+    return parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join("");
+  };
+
+  const getLastKnownClinicActivity = (clinic: ClinicProfile) =>
+    clinic.last_activity_at || clinic.last_appointment_request_at || clinic.created_at;
+
+  const getClinicInactiveLabel = (clinic: ClinicProfile) => {
+    const days = getDaysSince(getLastKnownClinicActivity(clinic));
+
+    if (days === null) return "No activity date recorded";
+    if (days === 0) return "Active today";
+    if (days === 1) return "Inactive for 1 day";
+
+    return `Inactive for ${days} days`;
+  };
+
+  const getOperatingWindow = (clinic: ClinicProfile) => {
+    const open = clinic.opening_time || "Not set";
+    const close = clinic.closing_time || "Not set";
+
+    if (open === "Not set" && close === "Not set") return "Not provided";
+    return `${open} - ${close}`;
   };
 
   const loadActivity = async () => {
@@ -148,8 +225,8 @@ export default function AdminClinics() {
       const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: ClinicProfile = await res.json();
-      setProfile(data);
-      setViewOpen(true);
+      setSelectedClinic(data);
+      setIsClinicPopupOpen(true);
     } catch (e) {
       console.error("View clinic error:", e);
       alert("Failed to view clinic.");
@@ -403,10 +480,7 @@ export default function AdminClinics() {
                                   <button
                                     type="button"
                                     className="pill pill-view pill-wide"
-                                    onClick={() => {
-                                      setSelectedClinic(c);
-                                      setIsClinicPopupOpen(true);
-                                    }}
+                                    onClick={() => viewClinic(c.id)}
                                   >
                                     View
                                   </button>
@@ -570,6 +644,102 @@ export default function AdminClinics() {
             </div>
 
             <div className="modal-body">
+              <section className="clinic-detail-hero">
+                <div className="clinic-detail-avatar">
+                  {getClinicInitials(selectedClinic.clinic_name)}
+                </div>
+                <div className="clinic-detail-identity">
+                  <h4>{selectedClinic.clinic_name ?? "Unnamed clinic"}</h4>
+                  <span>{selectedClinic.email ?? "No email recorded"}</span>
+                  <small>{toTitle(selectedClinic.specialization)}</small>
+                </div>
+                <div className="clinic-detail-statuses">
+                  <span className={`clinic-detail-status approval-${selectedClinic.status}`}>
+                    {selectedClinic.status}
+                  </span>
+                  <span className={`clinic-detail-status account-${selectedClinic.account_status}`}>
+                    {selectedClinic.account_status}
+                  </span>
+                </div>
+              </section>
+
+              <section className="clinic-detail-stats">
+                <div className="clinic-detail-stat">
+                  <span>Activity estimate</span>
+                  <strong>{getClinicInactiveLabel(selectedClinic)}</strong>
+                  <small>
+                    Last known activity: {formatDateTime(getLastKnownClinicActivity(selectedClinic))}
+                  </small>
+                </div>
+                <div className="clinic-detail-stat">
+                  <span>Appointment requests</span>
+                  <strong>{Number(selectedClinic.appointment_count || 0)}</strong>
+                  <small>
+                    Pending: {Number(selectedClinic.pending_appointments || 0)} | Completed:{" "}
+                    {Number(selectedClinic.completed_appointments || 0)}
+                  </small>
+                </div>
+                <div className="clinic-detail-stat">
+                  <span>Registered for</span>
+                  <strong>
+                    {getDaysSince(selectedClinic.created_at) ?? "--"}{" "}
+                    {getDaysSince(selectedClinic.created_at) === 1 ? "day" : "days"}
+                  </strong>
+                  <small>Created: {formatDateTime(selectedClinic.created_at)}</small>
+                </div>
+              </section>
+
+              <section className="clinic-detail-grid">
+                <div className="clinic-detail-field">
+                  <span>Phone</span>
+                  <strong>{selectedClinic.phone || "Not provided"}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>License number</span>
+                  <strong>{selectedClinic.license_number || "Not provided"}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Years operating</span>
+                  <strong>{selectedClinic.years_operation ?? "Not provided"}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Operating hours</span>
+                  <strong>{getOperatingWindow(selectedClinic)}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Operating days</span>
+                  <strong>{toTitle(selectedClinic.operating_days)}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Services offered</span>
+                  <strong>{toTitle(selectedClinic.services_offered)}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Representative</span>
+                  <strong>{selectedClinic.rep_full_name || "Not provided"}</strong>
+                  <small>{selectedClinic.rep_position || "Position not provided"}</small>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Representative phone</span>
+                  <strong>{selectedClinic.rep_phone || "Not provided"}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Last appointment</span>
+                  <strong>{formatDateTime(selectedClinic.last_appointment_at)}</strong>
+                </div>
+                <div className="clinic-detail-field">
+                  <span>Next appointment</span>
+                  <strong>{formatDateTime(selectedClinic.next_appointment_at)}</strong>
+                </div>
+                <div className="clinic-detail-field clinic-detail-field-wide">
+                  <span>Address</span>
+                  <strong>{selectedClinic.address || "Not provided"}</strong>
+                </div>
+              </section>
+
+              <p className="clinic-detail-note">
+                Activity is estimated from clinic registration and appointment request history.
+              </p>
               <p><b>Clinic Name:</b> {selectedClinic.clinic_name ?? "—"}</p>
               <p><b>Approval:</b> {selectedClinic.status ?? "—"}</p>
               <p><b>Account:</b> {selectedClinic.account_status ?? "—"}</p>

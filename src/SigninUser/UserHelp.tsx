@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   CalendarDays,
@@ -45,12 +45,19 @@ type SupportForm = {
   contact_phone: string;
 };
 
+type HelpRouteState = {
+  focusSupport?: boolean;
+  topic?: string;
+  subject?: string;
+};
+
 const API_BASE = "http://localhost:5000";
 
 const supportTopics = [
   "Account",
   "Appointments",
   "Clinic Search",
+  "Notifications",
   "Voice Assistant",
   "Emergency Page",
   "Technical Issue",
@@ -151,9 +158,11 @@ const formatDate = (value: string) => {
 
 export default function UserHelp() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const supportPanelRef = useRef<HTMLElement | null>(null);
 
   const currentUser = useMemo(() => getStoredUser(), []);
   const userId = currentUser?.id ? String(currentUser.id) : "";
@@ -174,6 +183,7 @@ export default function UserHelp() {
   const [errorMessage, setErrorMessage] = useState("");
   const [requests, setRequests] = useState<SupportRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [highlightSupport, setHighlightSupport] = useState(false);
 
   const faqCategories = useMemo(
     () => ["All", ...Array.from(new Set(faqItems.map((item) => item.category)))],
@@ -219,6 +229,31 @@ export default function UserHelp() {
   useEffect(() => {
     void loadSupportRequests();
   }, [loadSupportRequests]);
+
+  useEffect(() => {
+    const state = location.state as HelpRouteState | null;
+    if (!state?.focusSupport) return;
+
+    setForm((prev) => ({
+      ...prev,
+      topic:
+        state.topic && supportTopics.includes(state.topic)
+          ? state.topic
+          : prev.topic,
+      subject: state.subject || prev.subject,
+    }));
+    setHighlightSupport(true);
+    supportPanelRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+
+    const timer = window.setTimeout(() => {
+      setHighlightSupport(false);
+    }, 1800);
+
+    return () => window.clearTimeout(timer);
+  }, [location.state]);
 
   const updateForm = (field: keyof SupportForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -408,7 +443,13 @@ export default function UserHelp() {
           </div>
 
           <aside className="help-right">
-            <section className="help-panel support-form-panel">
+            <section
+              className={`help-panel support-form-panel ${
+                highlightSupport ? "support-panel-highlight" : ""
+              }`}
+              id="contact-support"
+              ref={supportPanelRef}
+            >
               <div className="help-panel-title">
                 <MessageSquareText size={20} />
                 <h2>Contact support</h2>

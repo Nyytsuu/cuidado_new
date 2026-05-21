@@ -2,13 +2,67 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
 
+const ensureHealthLinkColumns = async () => {
+  const [symptomColumns] = await pool.query(
+    `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'symptoms'
+      AND COLUMN_NAME IN ('description', 'body_system_id')
+    `
+  );
+
+  const existingSymptoms = new Set(symptomColumns.map((column) => column.COLUMN_NAME));
+
+  if (!existingSymptoms.has("description")) {
+    await pool.query(`
+      ALTER TABLE symptoms
+      ADD COLUMN description TEXT NULL
+    `);
+  }
+
+  if (!existingSymptoms.has("body_system_id")) {
+    await pool.query(`
+      ALTER TABLE symptoms
+      ADD COLUMN body_system_id INT NULL
+    `);
+  }
+
+  const [conditionColumns] = await pool.query(
+    `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'conditions'
+      AND COLUMN_NAME = 'body_system_id'
+    LIMIT 1
+    `
+  );
+
+  if (conditionColumns.length === 0) {
+    await pool.query(`
+      ALTER TABLE conditions
+      ADD COLUMN body_system_id INT NULL
+    `);
+  }
+};
+
 /* GET all conditions for dropdown */
 router.get("/conditions", async (req, res) => {
   try {
+    await ensureHealthLinkColumns();
+
     const [rows] = await pool.query(`
-      SELECT condition_id, condition_name
-      FROM conditions
-      ORDER BY condition_name ASC
+      SELECT
+        c.condition_id,
+        c.condition_name,
+        c.body_system_id,
+        bs.name AS body_system_name
+      FROM conditions c
+      LEFT JOIN body_systems bs
+        ON bs.id = c.body_system_id
+      ORDER BY c.condition_name ASC
     `);
     res.json(rows);
   } catch (err) {
@@ -20,10 +74,21 @@ router.get("/conditions", async (req, res) => {
 /* GET all symptoms for checkbox list */
 router.get("/symptoms", async (req, res) => {
   try {
+    await ensureHealthLinkColumns();
+
     const [rows] = await pool.query(`
-      SELECT symptom_id, symptom_name, category, is_red_flag
-      FROM symptoms
-      ORDER BY symptom_name ASC
+      SELECT
+        s.symptom_id,
+        s.symptom_name,
+        s.description,
+        s.category,
+        s.body_system_id,
+        bs.name AS body_system_name,
+        s.is_red_flag
+      FROM symptoms s
+      LEFT JOIN body_systems bs
+        ON bs.id = s.body_system_id
+      ORDER BY s.symptom_name ASC
     `);
     res.json(rows);
   } catch (err) {

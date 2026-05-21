@@ -1,11 +1,11 @@
 console.log("✅ RUNNING THIS FILE:", __filename);
-console.log("✅ LOADED admin.routes.js");
 
 require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const mysql = require("mysql2/promise");
+
+const pool = require("./db/pool");
 
 const adminRoutes = require("./routes/admin.routes");
 const clinicRoutes = require("./routes/clinic.routes");
@@ -20,12 +20,9 @@ const voiceAssistantRoute = require("./routes/voiceAssistant");
 const findClinicRoute = require("./routes/findClinic");
 const usersRouter = require("./routes/users");
 const articlesRouter = require("./routes/articles");
+const clinicFeedbackRouter = require("./routes/clinicFeedback");
+
 const app = express();
-
-
-
-
-
 
 app.use(cors());
 app.use(express.json());
@@ -38,16 +35,15 @@ app.use((req, res, next) => {
 
 app.use("/uploads", express.static("uploads"));
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "Cuidado_2026-cp1!",
-  database: process.env.DB_NAME || "cuidado_medihelp",
-  port: Number(process.env.DB_PORT || 3306),
-  waitForConnections: true,
-  connectionLimit: 10,
+app.get("/", (req, res) => {
+  res.send("Cuidado backend is running");
 });
 
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 /* ✅ TEST ROUTES */
 app.get("/", (req, res) => res.send("Cuidado Medihelp API is running ✅"));
 app.get("/ping", (req, res) => res.send("PONG"));
@@ -68,7 +64,7 @@ app.get("/api/admin/dashboard-metrics", async (req, res) => {
     const [[scheduledAppointments]] = await pool.query(`
       SELECT COUNT(*) AS scheduledAppointments
       FROM appointments
-      WHERE status IN ('pending', 'confirmed', 'scheduled', 'approved')
+      WHERE status IN ('pending', 'confirmed', 'reschedule_requested', 'scheduled', 'approved')
     `);
 
     const [trendRows] = await pool.query(`
@@ -564,6 +560,47 @@ app.patch("/api/clinic/services/:id/toggle", async (req, res) => {
   }
 });
 
+app.patch("/api/clinic/services/:id/status", async (req, res) => {
+  try {
+    const serviceId = Number(req.params.id);
+    const isActive = Number(req.body?.is_active);
+
+    if (!serviceId) {
+      return res.status(400).json({ message: "Invalid service id" });
+    }
+
+    if (![0, 1].includes(isActive)) {
+      return res.status(400).json({ message: "is_active must be 0 or 1" });
+    }
+
+    const [result] = await pool.query(
+      `
+      UPDATE clinic_services
+      SET
+        is_active = ?,
+        updated_at = NOW()
+      WHERE id = ?
+      `,
+      [isActive, serviceId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Service not found" });
+    }
+
+    res.json({
+      message: "Clinic service status updated successfully",
+      service: {
+        id: serviceId,
+        is_active: isActive,
+      },
+    });
+  } catch (err) {
+    console.error("Clinic service status update error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 app.delete("/api/clinic/services/:id", async (req, res) => {
   try {
     const serviceId = Number(req.params.id);
@@ -590,6 +627,8 @@ app.delete("/api/clinic/services/:id", async (req, res) => {
 /* ✅ CREATE APPOINTMENT ROUTE */
 app.get("/api/clinic/appointments", async (req, res) => {
   try {
+    await ensureAppointmentRescheduleColumns();
+
     const clinicId = Number(req.query.clinic_id);
 
     if (!clinicId) {
@@ -602,8 +641,10 @@ app.get("/api/clinic/appointments", async (req, res) => {
         id,
         user_id,
         clinic_id,
-        start_at,
-        end_at,
+        DATE_FORMAT(start_at, '%Y-%m-%d %H:%i:%s') AS start_at,
+        DATE_FORMAT(end_at, '%Y-%m-%d %H:%i:%s') AS end_at,
+        DATE_FORMAT(proposed_start_at, '%Y-%m-%d %H:%i:%s') AS proposed_start_at,
+        DATE_FORMAT(proposed_end_at, '%Y-%m-%d %H:%i:%s') AS proposed_end_at,
         purpose,
         symptoms,
         patient_note,
@@ -612,6 +653,9 @@ app.get("/api/clinic/appointments", async (req, res) => {
         cancelled_at,
         cancelled_by,
         cancel_reason,
+        reschedule_reason,
+        reschedule_requested_by,
+        DATE_FORMAT(reschedule_requested_at, '%Y-%m-%d %H:%i:%s') AS reschedule_requested_at,
         completed_at,
         patient_name_snapshot,
         patient_phone_snapshot,
@@ -756,6 +800,293 @@ app.patch("/api/clinic/appointments/:id/status", async (req, res) => {
   }
 });
 /* ✅ HEALTH BROWSER ROUTES */
+app.patch("/api/clinic/appointments/:id/reschedule", async (req, res) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await ensureAppointmentRescheduleColumns();
+
+    const appointmentId = Number(req.params.id);
+    const clinicId = Number(req.body.clinic_id);
+    const { start_at, end_at, reason } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({ message: "Invalid appointment id" });
+    }
+
+    if (!start_at) {
+      return res.status(400).json({ message: "start_at is required" });
+    }
+
+    const startDate = new Date(String(start_at).replace(" ", "T"));
+    const endDateFromBody = end_at
+      ? new Date(String(end_at).replace(" ", "T"))
+      : null;
+
+    if (Number.isNaN(startDate.getTime())) {
+      return res.status(400).json({ message: "Invalid start_at value" });
+    }
+
+    const [[appointment]] = await connection.query(
+      `
+      SELECT id, clinic_id, status, start_at, end_at
+      FROM appointments
+      WHERE id = ?
+      `,
+      [appointmentId]
+    );
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    if (clinicId && Number(appointment.clinic_id) !== clinicId) {
+      return res
+        .status(403)
+        .json({ message: "Appointment does not belong to this clinic" });
+    }
+
+    if (
+      !["pending", "confirmed", "reschedule_requested"].includes(
+        String(appointment.status).toLowerCase()
+      )
+    ) {
+      return res.status(400).json({
+        message:
+          "Only pending, confirmed, or existing reschedule requests can be updated",
+      });
+    }
+
+    const currentStart = new Date(appointment.start_at).getTime();
+    const currentEnd = appointment.end_at
+      ? new Date(appointment.end_at).getTime()
+      : NaN;
+    const existingDuration =
+      Number.isFinite(currentStart) &&
+      Number.isFinite(currentEnd) &&
+      currentEnd > currentStart
+        ? currentEnd - currentStart
+        : 30 * 60 * 1000;
+    const finalEndDate =
+      endDateFromBody && !Number.isNaN(endDateFromBody.getTime())
+        ? endDateFromBody
+        : new Date(startDate.getTime() + existingDuration);
+
+    if (finalEndDate.getTime() <= startDate.getTime()) {
+      return res.status(400).json({ message: "end_at must be after start_at" });
+    }
+
+    const pad = (value) => String(value).padStart(2, "0");
+    const toMysqlDatetime = (date) =>
+      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(
+        date.getHours()
+      )}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+
+    await connection.beginTransaction();
+
+    await connection.query(
+      `
+      UPDATE appointments
+      SET
+        proposed_start_at = ?,
+        proposed_end_at = ?,
+        reschedule_reason = ?,
+        reschedule_requested_by = 'clinic',
+        reschedule_requested_at = NOW(),
+        status = 'reschedule_requested',
+        updated_at = NOW()
+      WHERE id = ?
+      `,
+      [
+        toMysqlDatetime(startDate),
+        toMysqlDatetime(finalEndDate),
+        reason || "Clinic requested a new schedule",
+        appointmentId,
+      ]
+    );
+
+    await connection.query(
+      `
+      INSERT INTO appointment_status_history (
+        appointment_id,
+        old_status,
+        new_status,
+        changed_by,
+        changed_by_id,
+        note,
+        changed_at
+      )
+      VALUES (?, ?, 'reschedule_requested', 'clinic', ?, ?, NOW())
+      `,
+      [
+        appointmentId,
+        appointment.status,
+        clinicId || null,
+        reason ||
+          `Clinic proposed a new schedule for ${toMysqlDatetime(startDate)}`,
+      ]
+    );
+
+    await connection.commit();
+
+    res.json({ message: "Reschedule request sent to the patient" });
+  } catch (err) {
+    await connection.rollback();
+    console.error("Reschedule appointment error:", err);
+    res.status(500).json({ message: "Failed to reschedule appointment" });
+  } finally {
+    connection.release();
+  }
+});
+
+let appointmentRescheduleSchemaPromise = null;
+
+const ensureAppointmentRescheduleColumns = async () => {
+  if (!appointmentRescheduleSchemaPromise) {
+    appointmentRescheduleSchemaPromise = (async () => {
+      const [columns] = await pool.query(
+        `
+        SELECT COLUMN_NAME, COLUMN_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'appointments'
+          AND COLUMN_NAME IN (
+            'status',
+            'proposed_start_at',
+            'proposed_end_at',
+            'reschedule_reason',
+            'reschedule_requested_by',
+            'reschedule_requested_at'
+          )
+        `
+      );
+
+      const existing = new Map(
+        columns.map((column) => [column.COLUMN_NAME, column.COLUMN_TYPE])
+      );
+
+      if (!existing.has("proposed_start_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN proposed_start_at DATETIME NULL AFTER end_at
+        `);
+      }
+
+      if (!existing.has("proposed_end_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN proposed_end_at DATETIME NULL AFTER proposed_start_at
+        `);
+      }
+
+      if (!existing.has("reschedule_reason")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_reason TEXT NULL AFTER cancel_reason
+        `);
+      }
+
+      if (!existing.has("reschedule_requested_by")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_requested_by VARCHAR(20) NULL AFTER reschedule_reason
+        `);
+      }
+
+      if (!existing.has("reschedule_requested_at")) {
+        await pool.query(`
+          ALTER TABLE appointments
+          ADD COLUMN reschedule_requested_at DATETIME NULL AFTER reschedule_requested_by
+        `);
+      }
+
+      const statusType = String(existing.get("status") || "");
+      if (
+        statusType.toLowerCase().startsWith("enum(") &&
+        !statusType.includes("'reschedule_requested'")
+      ) {
+        await pool.query(`
+          ALTER TABLE appointments
+          MODIFY COLUMN status ENUM(
+            'pending',
+            'confirmed',
+            'reschedule_requested',
+            'cancelled',
+            'completed',
+            'no_show'
+          ) NOT NULL DEFAULT 'pending'
+        `);
+      }
+
+      const [historyColumns] = await pool.query(
+        `
+        SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = 'appointment_status_history'
+          AND COLUMN_NAME IN ('old_status', 'new_status')
+        `
+      );
+
+      for (const column of historyColumns) {
+        const columnType = String(column.COLUMN_TYPE || "");
+        if (
+          columnType.toLowerCase().startsWith("enum(") &&
+          !columnType.includes("'reschedule_requested'")
+        ) {
+          const nullability =
+            column.IS_NULLABLE === "NO" ? "NOT NULL" : "NULL";
+
+          await pool.query(`
+            ALTER TABLE appointment_status_history
+            MODIFY COLUMN ${column.COLUMN_NAME} ENUM(
+              'pending',
+              'confirmed',
+              'reschedule_requested',
+              'cancelled',
+              'completed',
+              'no_show'
+            ) ${nullability}
+          `);
+        }
+      }
+    })().catch((error) => {
+      appointmentRescheduleSchemaPromise = null;
+      throw error;
+    });
+  }
+
+  return appointmentRescheduleSchemaPromise;
+};
+
+const ensureHealthSymptomColumns = async () => {
+  const [columns] = await pool.query(
+    `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'symptoms'
+      AND COLUMN_NAME IN ('description', 'body_system_id')
+    `
+  );
+
+  const existing = new Set(columns.map((column) => column.COLUMN_NAME));
+
+  if (!existing.has("description")) {
+    await pool.query(`
+      ALTER TABLE symptoms
+      ADD COLUMN description TEXT NULL
+    `);
+  }
+
+  if (!existing.has("body_system_id")) {
+    await pool.query(`
+      ALTER TABLE symptoms
+      ADD COLUMN body_system_id INT NULL
+    `);
+  }
+};
+
 app.get("/api/health/body-systems", async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -790,6 +1121,9 @@ app.get("/api/health/topics", async (req, res) => {
         COALESCE(bs.icon, '🩺') AS icon,
         c.condition_name AS title,
         COALESCE(NULLIF(c.description, ''), bs.name, 'Health Topic') AS subtitle,
+        c.is_common,
+        COALESCE(c.sort_order, 9999) AS sort_order,
+        rv.viewed_at AS recently_viewed_at,
         CASE
           WHEN rv.condition_id IS NOT NULL THEN 'Recently viewed'
           WHEN c.is_common = 1 THEN 'Popular'
@@ -799,9 +1133,10 @@ app.get("/api/health/topics", async (req, res) => {
       LEFT JOIN body_systems bs
         ON bs.id = c.body_system_id
       LEFT JOIN (
-        SELECT DISTINCT condition_id
+        SELECT condition_id, MAX(viewed_at) AS viewed_at
         FROM recently_viewed_health_topics
         WHERE user_id = ?
+        GROUP BY condition_id
       ) rv
         ON rv.condition_id = c.condition_id
       ORDER BY
@@ -868,6 +1203,7 @@ app.get("/api/health/body-systems/:slug/conditions", async (req, res) => {
       SELECT
         c.condition_id,
         c.slug,
+        c.slug AS condition_slug,
         c.condition_name,
         c.description,
         c.thumbnail_image,
@@ -919,24 +1255,32 @@ app.get("/api/health/body-systems/:slug/articles", async (req, res) => {
 
 app.get("/api/health/body-systems/:slug/symptoms", async (req, res) => {
   try {
+    await ensureHealthSymptomColumns();
+
     const { slug } = req.params;
 
     const [rows] = await pool.query(
       `
       SELECT DISTINCT
         s.symptom_id,
-        s.symptom_name
-      FROM body_systems bs
-      INNER JOIN conditions c
-        ON c.body_system_id = bs.id
-      INNER JOIN condition_symptoms cs
-        ON cs.condition_id = c.condition_id
-      INNER JOIN symptoms s
-        ON s.symptom_id = cs.symptom_id
-      WHERE bs.slug = ?
+        s.symptom_name,
+        s.description,
+        s.category,
+        s.is_red_flag
+      FROM symptoms s
+      LEFT JOIN body_systems direct_bs
+        ON direct_bs.id = s.body_system_id
+      LEFT JOIN condition_symptoms cs
+        ON cs.symptom_id = s.symptom_id
+      LEFT JOIN conditions c
+        ON c.condition_id = cs.condition_id
+      LEFT JOIN body_systems condition_bs
+        ON condition_bs.id = c.body_system_id
+      WHERE direct_bs.slug = ?
+        OR condition_bs.slug = ?
       ORDER BY s.symptom_name ASC
       `,
-      [slug]
+      [slug, slug]
     );
 
     res.json(rows);
@@ -1044,22 +1388,30 @@ const getConditionBySlugOrId = async (slug) => {
   return condition || null;
 };
 
-const loadConditionSymptoms = (conditionId) =>
-  pool.query(
+const loadConditionSymptoms = async (conditionId) => {
+  await ensureHealthSymptomColumns();
+
+  return pool.query(
     `
     SELECT
       s.symptom_id,
       s.symptom_name,
+      s.description,
       s.category,
-      s.is_red_flag
+      s.is_red_flag,
+      s.body_system_id,
+      bs.name AS body_system_name
     FROM condition_symptoms cs
     INNER JOIN symptoms s
       ON s.symptom_id = cs.symptom_id
+    LEFT JOIN body_systems bs
+      ON bs.id = s.body_system_id
     WHERE cs.condition_id = ?
     ORDER BY s.is_red_flag DESC, s.symptom_name ASC
     `,
     [conditionId]
   );
+};
 
 app.get("/api/health/condition/:slug", async (req, res) => {
   try {
@@ -1219,6 +1571,7 @@ app.get("/api/health/condition/:slug/facts", async (req, res) => {
 app.use("/api", authRoutes);
 app.use("/api", locationRoutes);
 app.use("/api/clinics", findClinicRoute);
+app.use("/api/clinic-feedback", clinicFeedbackRouter);
 app.use("/api", clinicRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/conditions", adminConditionsRoutes);

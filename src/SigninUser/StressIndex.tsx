@@ -1,4 +1,11 @@
 import { useMemo, useState } from "react";
+import {
+  BookOpen,
+  CalendarDays,
+  ClipboardList,
+  Lightbulb,
+  type LucideIcon,
+} from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
 import "./StressIndex.css";
 
@@ -23,20 +30,20 @@ const dassOptions = [
   "Applied to me very much",
 ];
 
-const quickCards = [
+const quickCards: { id: string; Icon: LucideIcon; title: string }[] = [
   {
     id: "learn",
-    icon: "📖",
+    Icon: BookOpen,
     title: "Learn about stress",
   },
   {
     id: "tips",
-    icon: "💡",
+    Icon: Lightbulb,
     title: "See some tips",
   },
   {
     id: "manage",
-    icon: "🧰",
+    Icon: CalendarDays,
     title: "Manage your stress",
   },
 ];
@@ -77,7 +84,7 @@ export default function StressIndex() {
       return sum + (scoreMap[answers[q.id]] ?? 0);
     }, 0);
 
-    const finalScore = total * 2; // DASS-21 scoring rule
+    const finalScore = total * 2;
 
     let level = "";
     let description = "";
@@ -146,10 +153,15 @@ export default function StressIndex() {
           <section className="stress-layout">
             <div className="stress-left">
               <div className="stress-form-card">
-                <p className="stress-form-intro">
-                  Please read each statement and select how much it applied to you
-                  recently.
-                </p>
+                <div className="stress-form-intro">
+                  <span className="stress-form-intro-icon" aria-hidden="true">
+                    <ClipboardList size={22} strokeWidth={2.1} />
+                  </span>
+                  <p>
+                    Please read each statement and select how much it applied to you
+                    recently.
+                  </p>
+                </div>
 
                 <div className="stress-question-list">
                   {stressQuestions.map((item, index) => (
@@ -168,7 +180,7 @@ export default function StressIndex() {
                               checked={answers[item.id] === option}
                               onChange={() => handleAnswerChange(item.id, option)}
                             />
-                            <span className="stress-custom-radio"></span>
+                            <span className="stress-custom-radio" />
                             <span className="stress-option-text">{option}</span>
                           </label>
                         ))}
@@ -178,9 +190,7 @@ export default function StressIndex() {
                 </div>
 
                 <div className="stress-action-row">
-                  <p>
-                    Answer all seven items to get your DASS-21 stress result.
-                  </p>
+                  <p>Answer all seven items to get your DASS-21 stress result.</p>
                   <button
                     type="button"
                     className="stress-btn-primary"
@@ -202,7 +212,9 @@ export default function StressIndex() {
                 <div className="stress-quick-grid">
                   {quickCards.map((card) => (
                     <button key={card.id} className="stress-quick-card" type="button">
-                      <div className="stress-quick-icon">{card.icon}</div>
+                      <div className="stress-quick-icon">
+                        <card.Icon size={22} strokeWidth={2.2} />
+                      </div>
                       <span>{card.title}</span>
                     </button>
                   ))}
@@ -228,16 +240,13 @@ export default function StressIndex() {
           className="stress-popup-overlay"
           onClick={() => setShowResultPopup(false)}
         >
-          <div
-            className="stress-popup-card"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="stress-popup-card" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               className="stress-popup-close"
               onClick={() => setShowResultPopup(false)}
             >
-              ×
+              x
             </button>
 
             <h2>DASS-21 Stress Result</h2>

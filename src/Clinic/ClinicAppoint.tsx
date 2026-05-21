@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./ClinicAppoint.css";
-import searchIcon from "../img/search.png";
-import logo from "../img/logo.png";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
-import { FaCalendarAlt } from "react-icons/fa";
-import { FaEye } from "react-icons/fa";
+import { FaCalendarAlt, FaCheck, FaEye, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
+type AppointmentStatus =
+  | "Pending"
+  | "Confirmed"
+  | "Reschedule Requested"
+  | "Completed"
+  | "Cancelled";
 
 type ApiAppointmentRow = {
   id: number;
@@ -20,10 +22,21 @@ type ApiAppointmentRow = {
   symptoms: string | null;
   patient_note: string | null;
   clinic_note: string | null;
-  status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+  status:
+    | "pending"
+    | "confirmed"
+    | "reschedule_requested"
+    | "cancelled"
+    | "completed"
+    | "no_show";
   cancelled_at: string | null;
   cancelled_by: "patient" | "clinic" | "admin" | null;
   cancel_reason: string | null;
+  proposed_start_at?: string | null;
+  proposed_end_at?: string | null;
+  reschedule_reason?: string | null;
+  reschedule_requested_by?: string | null;
+  reschedule_requested_at?: string | null;
   completed_at: string | null;
   patient_name_snapshot: string | null;
   patient_phone_snapshot: string | null;
@@ -41,6 +54,10 @@ type AppointmentRow = {
   status: AppointmentStatus;
   startAtRaw: string;
   endAtRaw?: string | null;
+  proposedStartAtRaw?: string | null;
+  proposedEndAtRaw?: string | null;
+  rescheduleReason?: string;
+  rescheduleRequestedAt?: string | null;
   symptoms?: string;
   patientNote?: string;
   clinicNote?: string;
@@ -53,11 +70,13 @@ type ModalMode = "view" | "reschedule" | null;
 type RescheduleForm = {
   date: string;
   time: string;
+  reason: string;
 };
 
 const emptyRescheduleForm: RescheduleForm = {
   date: "",
   time: "",
+  reason: "",
 };
 
 const getStoredClinicId = () => {
@@ -101,6 +120,7 @@ export default function ClinicAppoint() {
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [savingAction, setSavingAction] = useState(false);
+  const [rescheduleSuccessOpen, setRescheduleSuccessOpen] = useState(false);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false); 
@@ -114,6 +134,8 @@ export default function ClinicAppoint() {
         return "Pending";
       case "confirmed":
         return "Confirmed";
+      case "reschedule_requested":
+        return "Reschedule Requested";
       case "completed":
         return "Completed";
       case "cancelled":
@@ -154,6 +176,31 @@ export default function ClinicAppoint() {
     return local.toISOString().slice(0, 16);
   };
 
+  const toMysqlDatetime = (date: Date) => {
+    const pad = (value: number) => String(value).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate()
+    )} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(
+      date.getSeconds()
+    )}`;
+  };
+
+  const getRescheduleDuration = (row: AppointmentRow) => {
+    const fallbackDuration = 30 * 60 * 1000;
+    const oldStart = new Date(row.startAtRaw).getTime();
+    const oldEnd = row.endAtRaw ? new Date(row.endAtRaw).getTime() : NaN;
+
+    if (
+      Number.isFinite(oldStart) &&
+      Number.isFinite(oldEnd) &&
+      oldEnd > oldStart
+    ) {
+      return oldEnd - oldStart;
+    }
+
+    return fallbackDuration;
+  };
+
   const loadAppointments = useCallback(async () => {
     try {
       setLoadingAppointments(true);
@@ -179,6 +226,10 @@ export default function ClinicAppoint() {
             status: mapDbStatusToUi(item.status),
             startAtRaw: item.start_at,
             endAtRaw: item.end_at,
+            proposedStartAtRaw: item.proposed_start_at || null,
+            proposedEndAtRaw: item.proposed_end_at || null,
+            rescheduleReason: item.reschedule_reason || "",
+            rescheduleRequestedAt: item.reschedule_requested_at || null,
             symptoms: item.symptoms || "",
             patientNote: item.patient_note || "",
             clinicNote: item.clinic_note || "",
@@ -206,6 +257,8 @@ export default function ClinicAppoint() {
         return "pill-warning";
       case "Confirmed":
         return "pill-success";
+      case "Reschedule Requested":
+        return "pill-resched";
       case "Completed":
         return "pill-gray";
       case "Cancelled":
@@ -224,12 +277,15 @@ export default function ClinicAppoint() {
   const openRescheduleModal = (row: AppointmentRow) => {
     setSelectedAppointment(row);
 
-    const localValue = toDatetimeLocalString(row.startAtRaw);
+    const localValue = toDatetimeLocalString(
+      row.proposedStartAtRaw || row.startAtRaw
+    );
     const [datePart, timePart] = localValue.split("T");
 
     setRescheduleForm({
       date: datePart || "",
       time: timePart || "",
+      reason: row.rescheduleReason || "",
     });
 
     setModalMode("reschedule");
@@ -305,7 +361,20 @@ export default function ClinicAppoint() {
       return;
     }
 
-    const startAt = `${rescheduleForm.date} ${rescheduleForm.time}:00`;
+    const startDate = new Date(
+      `${rescheduleForm.date}T${rescheduleForm.time}:00`
+    );
+
+    if (Number.isNaN(startDate.getTime())) {
+      alert("Please enter a valid appointment date and time.");
+      return;
+    }
+
+    const endDate = new Date(
+      startDate.getTime() + getRescheduleDuration(selectedAppointment)
+    );
+    const startAt = toMysqlDatetime(startDate);
+    const endAt = toMysqlDatetime(endDate);
 
     try {
       setSavingAction(true);
@@ -318,7 +387,12 @@ export default function ClinicAppoint() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            clinic_id: clinicId,
             start_at: startAt,
+            end_at: endAt,
+            reason:
+              rescheduleForm.reason.trim() ||
+              "Clinic requested a new schedule",
           }),
         }
       );
@@ -327,11 +401,19 @@ export default function ClinicAppoint() {
       console.log("Reschedule appointment:", res.status, raw);
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} - ${raw}`);
+        let message = raw;
+        try {
+          message = JSON.parse(raw)?.message || raw;
+        } catch {
+          message = raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        }
+
+        throw new Error(message || `HTTP ${res.status}`);
       }
 
       await loadAppointments();
       closeModal();
+      setRescheduleSuccessOpen(true);
     } catch (error) {
       console.error("Reschedule error:", error);
       alert(`Failed to reschedule appointment: ${String(error)}`);
@@ -358,6 +440,8 @@ export default function ClinicAppoint() {
   return (
     <div
       className={`ClinicAppoint with-sidebar ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      } ${
         isPopupOpen ? "modal-open" : ""
       }`}
     >
@@ -440,10 +524,10 @@ export default function ClinicAppoint() {
   {row.status === "Cancelled" || row.status === "Completed" ? (
     <button
       type="button"
-      className="pill pill-view"
+      className="icon-btn pill-view"
       onClick={() => openViewModal(row)}
     >
-      View
+      <FaEye />
     </button>
   ) : (
     <>
@@ -464,7 +548,7 @@ export default function ClinicAppoint() {
             title="Confirm"
             onClick={() => handleConfirm(row.id)}
           >
-            ✓
+            <FaCheck />
           </button>
 
           <button
@@ -473,12 +557,14 @@ export default function ClinicAppoint() {
             title="Reject"
             onClick={() => handleReject(row.id)}
           >
-            ✕
+            <FaTimes />
           </button>
         </>
       )}
 
-      {(row.status === "Pending" || row.status === "Confirmed") && (
+      {(row.status === "Pending" ||
+        row.status === "Confirmed" ||
+        row.status === "Reschedule Requested") && (
         <button
           type="button"
           className="icon-btn pill-resched"
@@ -492,25 +578,16 @@ export default function ClinicAppoint() {
       {row.status === "Confirmed" && (
         <button
           type="button"
-          className="icon-btn pill-gray "
+          className="icon-btn pill-done"
           title="Mark Done"
           onClick={() => handleComplete(row.id)}
         >
-          ✓
+          <FaCheck />
         </button>
       )}
     </>
   )}
 </div>
-                            {row.status === "Confirmed" && (
-                              <button
-  type="button"
-  className="pill pill-gray mark-done-btn"
-  onClick={() => handleComplete(row.id)}
->
-  Mark Done
-</button>
-                            )}
                           </div>
                         </div>
                     ))
@@ -526,13 +603,26 @@ export default function ClinicAppoint() {
 
       {isPopupOpen && selectedAppointment && (
         <div className="appoint-modal-overlay" onClick={closeModal}>
-          <div className="appoint-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`appoint-modal ${
+              modalMode === "view" ? "appoint-view-modal" : ""
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="appoint-modal-header">
-              <h3>
-                {modalMode === "view"
-                  ? "Appointment Details"
-                  : "Reschedule Appointment"}
-              </h3>
+              <div className="appoint-modal-title">
+                <span className="appoint-modal-mark">
+                  {modalMode === "view" ? "i" : "R"}
+                </span>
+                <div>
+                  <p>{modalMode === "view" ? "Clinic appointment" : "Schedule change"}</p>
+                  <h3>
+                    {modalMode === "view"
+                      ? "Appointment Details"
+                      : "Reschedule Appointment"}
+                  </h3>
+                </div>
+              </div>
               <button
                 type="button"
                 className="appoint-modal-close"
@@ -544,55 +634,64 @@ export default function ClinicAppoint() {
 
             <div className="appoint-modal-body">
               {modalMode === "view" && (
-                <div className="appoint-details">
-                  <div className="appoint-detail-row">
-                    <strong>Patient Name:</strong>
-                    <span>{selectedAppointment.patientName}</span>
-                  </div>
-
-                  <div className="appoint-detail-row">
-                    <strong>Phone:</strong>
-                    <span>{selectedAppointment.patientPhone || "—"}</span>
-                  </div>
-
-                  <div className="appoint-detail-row">
-                    <strong>Service Type:</strong>
-                    <span>{selectedAppointment.serviceType}</span>
-                  </div>
-
-                  <div className="appoint-detail-row">
-                    <strong>Date:</strong>
-                    <span>{selectedAppointment.date}</span>
-                  </div>
-
-                  <div className="appoint-detail-row">
-                    <strong>Time:</strong>
-                    <span>{selectedAppointment.time}</span>
-                  </div>
-
-                  <div className="appoint-detail-row">
-                    <strong>Status:</strong>
-                    <span
-                      className={`pill ${statusClass(selectedAppointment.status)}`}
-                    >
+                <div className="appoint-details appoint-details-polished">
+                  <section className="appoint-patient-hero">
+                    <div className="appoint-patient-avatar">
+                      {selectedAppointment.patientName.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="appoint-patient-copy">
+                      <span>Patient</span>
+                      <h4>{selectedAppointment.patientName}</h4>
+                      <p>{selectedAppointment.patientPhone || "No phone provided"}</p>
+                    </div>
+                    <span className={`pill ${statusClass(selectedAppointment.status)}`}>
                       {selectedAppointment.status}
                     </span>
-                  </div>
+                  </section>
 
-                  <div className="appoint-detail-row">
-                    <strong>Symptoms:</strong>
-                    <span>{selectedAppointment.symptoms || "—"}</span>
-                  </div>
+                  <section className="appoint-detail-grid">
+                    <article className="appoint-info-card">
+                      <span>Service</span>
+                      <strong>{selectedAppointment.serviceType}</strong>
+                    </article>
+                    <article className="appoint-info-card">
+                      <span>Date</span>
+                      <strong>{selectedAppointment.date}</strong>
+                    </article>
+                    <article className="appoint-info-card">
+                      <span>Time</span>
+                      <strong>{selectedAppointment.time}</strong>
+                    </article>
+                  </section>
 
-                  <div className="appoint-detail-row">
-                    <strong>Patient Note:</strong>
-                    <span>{selectedAppointment.patientNote || "—"}</span>
-                  </div>
+                  {selectedAppointment.status === "Reschedule Requested" && (
+                    <section className="appoint-reschedule-card">
+                      <span>Clinic proposed a new schedule</span>
+                      <strong>
+                        {selectedAppointment.proposedStartAtRaw
+                          ? `${formatDate(selectedAppointment.proposedStartAtRaw)} at ${formatTime(
+                              selectedAppointment.proposedStartAtRaw
+                            )}`
+                          : "No proposed schedule provided"}
+                      </strong>
+                      <p>{selectedAppointment.rescheduleReason || "No reason provided."}</p>
+                    </section>
+                  )}
 
-                  <div className="appoint-detail-row">
-                    <strong>Clinic Note:</strong>
-                    <span>{selectedAppointment.clinicNote || "—"}</span>
-                  </div>
+                  <section className="appoint-notes-grid">
+                    <article className="appoint-note-card">
+                      <span>Symptoms</span>
+                      <p>{selectedAppointment.symptoms || "No symptoms provided."}</p>
+                    </article>
+                    <article className="appoint-note-card">
+                      <span>Patient Note</span>
+                      <p>{selectedAppointment.patientNote || "No patient note provided."}</p>
+                    </article>
+                    <article className="appoint-note-card">
+                      <span>Clinic Note</span>
+                      <p>{selectedAppointment.clinicNote || "No clinic note added."}</p>
+                    </article>
+                  </section>
                 </div>
               )}
 
@@ -645,6 +744,26 @@ export default function ClinicAppoint() {
                       />
                     </div>
                   </div>
+
+                  <div className="form-group">
+                    <label>Message for patient</label>
+                    <textarea
+                      value={rescheduleForm.reason}
+                      onChange={(e) =>
+                        setRescheduleForm((prev) => ({
+                          ...prev,
+                          reason: e.target.value,
+                        }))
+                      }
+                      placeholder="Example: Doctor is unavailable at the original time."
+                      rows={3}
+                    />
+                  </div>
+
+                  <p className="appoint-form-note">
+                    This sends a request. The appointment time will only change
+                    after the patient accepts it.
+                  </p>
                 </div>
               )}
             </div>
@@ -661,13 +780,25 @@ export default function ClinicAppoint() {
                   </button>
 
                   {(selectedAppointment.status === "Pending" ||
-                    selectedAppointment.status === "Confirmed") && (
+                    selectedAppointment.status === "Confirmed" ||
+                    selectedAppointment.status === "Reschedule Requested") && (
                     <button
                       type="button"
                       className="pill pill-resched"
                       onClick={() => openRescheduleModal(selectedAppointment)}
                     >
                       Reschedule
+                    </button>
+                  )}
+
+                  {selectedAppointment.status === "Confirmed" && (
+                    <button
+                      type="button"
+                      className="pill pill-done"
+                      onClick={() => handleComplete(selectedAppointment.id)}
+                      disabled={savingAction}
+                    >
+                      Mark Done
                     </button>
                   )}
                 </>
@@ -687,7 +818,7 @@ export default function ClinicAppoint() {
                     onClick={handleRescheduleSave}
                     disabled={savingAction}
                   >
-                    {savingAction ? "Saving..." : "Save Changes"}
+                    {savingAction ? "Sending..." : "Send Request"}
                   </button>
                 </>
               )}
@@ -696,8 +827,27 @@ export default function ClinicAppoint() {
         </div>
       )}
 
+      {rescheduleSuccessOpen && (
+        <div className="appoint-modal-overlay success-overlay">
+          <div className="appoint-success-modal" role="dialog" aria-modal="true">
+            <div className="appoint-success-icon">OK</div>
+            <h3>Request Sent</h3>
+            <p>
+              The patient has been notified. The appointment time will update
+              only after they accept the proposed schedule.
+            </p>
+            <button
+              type="button"
+              className="pill pill-success"
+              onClick={() => setRescheduleSuccessOpen(false)}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
-      // logout
+      {/* logout */}
 {showLogoutConfirm && (
   <div className="logout-confirm-overlay">
     <div className="logout-confirm-modal">
