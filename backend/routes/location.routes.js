@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
+const db = pool;
 
 router.get("/provinces", (req, res) => {
   db.query(

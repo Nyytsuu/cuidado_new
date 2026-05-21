@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
 const pool = require("../db/pool");
+const db = pool;
 
 /* ================= MULTER SETUP ================= */
 const storage = multer.diskStorage({

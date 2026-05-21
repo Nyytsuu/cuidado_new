@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../db/pool");
@@ -27,13 +26,23 @@ const SIGNUP_OTP_PURPOSES = new Set([
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
-const dbQuery = (sql, params = []) =>
-  new Promise((resolve, reject) => {
-    db.query(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+const dbQuery = async (sql, params = []) => {
+  const [rows] = await pool.query(sql, params);
+  return rows;
+};
+
+const db = {
+  query(sql, params = [], callback = () => {}) {
+    if (typeof params === "function") {
+      callback = params;
+      params = [];
+    }
+
+    dbQuery(sql, params)
+      .then((rows) => callback(null, rows))
+      .catch((error) => callback(error));
+  },
+};
 
 const findAccountByEmail = (email) =>
   dbQuery(
@@ -48,20 +57,24 @@ const findAccountByEmail = (email) =>
     [email, email, email]
   );
 
-const ensureEmailVerificationTokensTable = () =>
-  dbQuery(`
+const ensureEmailVerificationTokensTable = async () => {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS email_verification_tokens (
-      id INT NOT NULL AUTO_INCREMENT,
+      id SERIAL PRIMARY KEY,
       email VARCHAR(255) NOT NULL,
       purpose VARCHAR(80) NOT NULL,
       token VARCHAR(128) NOT NULL,
-      expires_at DATETIME NOT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_email_verification (email, purpose),
-      INDEX idx_email_verification_token (token)
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_email_verification UNIQUE (email, purpose)
     )
   `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_email_verification_token
+    ON email_verification_tokens (token)
+  `);
+};
 
 mailer.verify((err) => {
   if (err) console.error("MAILER ERROR:", err);
