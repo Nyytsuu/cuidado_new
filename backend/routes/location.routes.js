@@ -1,14 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const mysql = require("mysql2");
-
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "Cuidado_2026-cp1!",
-  database: "Cuidado_medihelp",
-  port: 3306,
-});
+const pool = require("../db/pool");
 
 router.get("/provinces", (req, res) => {
   db.query(

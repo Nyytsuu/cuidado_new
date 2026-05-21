@@ -3,14 +3,7 @@ const router = express.Router();
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "Cuidado_2026-cp1!",
-  database: "Cuidado_medihelp",
-  port: 3306,
-});
-
+const pool = require("../db/pool");
 const nodemailer = require("nodemailer");
 
 const mailer = nodemailer.createTransport({
