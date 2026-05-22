@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
+
 import "./App.css";
+import UserProtectedRoute from "./routes/UserProtectedRoute";
 import ConditionDetails from "./SigninUser/ConditionDetails";
 import Signup from "./SignupUser/Signup";
 import Signin from "./SigninUser/Signin";
@@ -35,6 +37,7 @@ import AdminConditionalManagement  from "./admin/AdminConditionManagement";
 import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
 import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
+import ClinicProtectedRoute from "./routes/ClinicProtectedRoute";
 import ClinicSignup from "./Clinic/ClinicSignup";
 import ClinicDashboard from "./Clinic/ClinicDashboard";
 import ClinicAppoint from "./Clinic/ClinicAppoint";
@@ -48,6 +51,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        
         <Route path="/" element={<LandingPage />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
@@ -55,6 +59,9 @@ function App() {
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/landing" element={<LandingPage />} />
+
+        
+        <Route element={<UserProtectedRoute />}>
         <Route path="/browse-health" element={<BrowseHealth />} />
         <Route path="/health/body-system/:slug" element={<BodySystemDetails />} />
         <Route path="/health/condition/:slug" element={<ConditionDetails />} />
@@ -64,7 +71,6 @@ function App() {
         <Route path="/homepage" element={<Homepage />} />
         <Route path="/notifications" element={<Notifications />} />
        <Route path="/cardio" element={<Cardio />} /> 
-        
         <Route path="/profile" element={<Profile />} />
         <Route path="/settings" element={<UserSettings />} />
         <Route path="/bmi-calculator" element={<BMICalculator />} />
@@ -73,8 +79,9 @@ function App() {
         <Route path="/emergency" element={<UserEmergency />} />
         <Route path="/emergency-guide" element={<UserEmergency />} />
         <Route path="/help" element={<UserHelp />} />
-        
+        </Route>
         {/* clinic */}
+        <Route element={<ClinicProtectedRoute />}>
 <Route path="/clinic/signup" element={<ClinicSignup />} />
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
 <Route path="/clinic/appointments" element={<ClinicAppoint />} />
@@ -84,6 +91,7 @@ function App() {
 <Route path="/clinic/settings" element={<ClinicSettings />} />
 <Route path="/clinic/schedule" element={<Schedule />} />
 <Route path="/clinic/profile" element={<Clinicprofile />} />
+</Route>
 
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
