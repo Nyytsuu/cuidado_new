@@ -824,9 +824,9 @@ router.get("/clinic/notifications", async (req, res) => {
         icon,
         is_read,
         appointment_id,
-        DATE_FORMAT(read_at, '%Y-%m-%d %H:%i:%s') AS read_at,
-        DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,
-        DATE_FORMAT(updated_at, '%Y-%m-%d %H:%i:%s') AS updated_at
+        TO_CHAR(read_at, 'YYYY-MM-DD HH24:MI:SS') AS read_at,
+TO_CHAR(created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+TO_CHAR(updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at
       FROM clinic_notifications
       WHERE clinic_id = ?
       ORDER BY is_read ASC, created_at DESC, id DESC
