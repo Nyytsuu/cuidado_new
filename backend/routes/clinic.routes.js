@@ -110,22 +110,25 @@ const ensureClinicFeedbackTable = async () => {
 const ensureClinicNotificationsTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_notifications (
-      id INT NOT NULL AUTO_INCREMENT,
-      clinic_id INT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      clinic_id INTEGER NOT NULL,
       unique_key VARCHAR(160) NOT NULL,
       title VARCHAR(180) NOT NULL,
       message TEXT NOT NULL,
       category VARCHAR(80) NOT NULL DEFAULT 'Appointments',
       icon VARCHAR(40) NOT NULL DEFAULT 'calendar',
-      is_read TINYINT(1) NOT NULL DEFAULT 0,
-      appointment_id INT DEFAULT NULL,
-      read_at DATETIME DEFAULT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_notification (clinic_id, unique_key),
-      INDEX idx_clinic_notifications_clinic (clinic_id, is_read, created_at)
+      is_read SMALLINT NOT NULL DEFAULT 0,
+      appointment_id INTEGER DEFAULT NULL,
+      read_at TIMESTAMP DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_clinic_notification UNIQUE (clinic_id, unique_key)
     )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_clinic_notifications_clinic
+    ON clinic_notifications (clinic_id, is_read, created_at)
   `);
 };
 
@@ -168,12 +171,13 @@ const insertClinicNotification = async ({
       created_at
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      title = VALUES(title),
-      message = VALUES(message),
-      category = VALUES(category),
-      icon = VALUES(icon),
-      appointment_id = VALUES(appointment_id),
+    ON CONFLICT (clinic_id, unique_key)
+    DO UPDATE SET
+      title = EXCLUDED.title,
+      message = EXCLUDED.message,
+      category = EXCLUDED.category,
+      icon = EXCLUDED.icon,
+      appointment_id = EXCLUDED.appointment_id,
       updated_at = NOW()
     `,
     [clinicId, uniqueKey, title, message, category, icon, appointmentId, createdAt]
@@ -1336,16 +1340,15 @@ const DAY_SUMMARY = {
 const ensureScheduleTables = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_weekly_schedules (
-      id INT NOT NULL AUTO_INCREMENT,
-      clinic_id INT NOT NULL,
-      day_of_week ENUM('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
-      is_working TINYINT(1) NOT NULL DEFAULT 1,
+      id SERIAL PRIMARY KEY,
+      clinic_id INTEGER NOT NULL,
+      day_of_week VARCHAR(20) NOT NULL,
+      is_working SMALLINT NOT NULL DEFAULT 1,
       opening_time TIME DEFAULT NULL,
       closing_time TIME DEFAULT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_day (clinic_id, day_of_week),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_clinic_day UNIQUE (clinic_id, day_of_week),
       CONSTRAINT fk_clinic_weekly_schedules_clinic
         FOREIGN KEY (clinic_id) REFERENCES clinics(id)
         ON DELETE CASCADE
@@ -1354,13 +1357,12 @@ const ensureScheduleTables = async () => {
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_blocked_dates (
-      id INT NOT NULL AUTO_INCREMENT,
-      clinic_id INT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      clinic_id INTEGER NOT NULL,
       blocked_date DATE NOT NULL,
       reason VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_blocked_date (clinic_id, blocked_date),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_clinic_blocked_date UNIQUE (clinic_id, blocked_date),
       CONSTRAINT fk_clinic_blocked_dates_clinic
         FOREIGN KEY (clinic_id) REFERENCES clinics(id)
         ON DELETE CASCADE
@@ -1541,6 +1543,7 @@ router.get("/clinic/schedule", async (req, res) => {
       SELECT id, opening_time, closing_time, operating_days
       FROM clinics
       WHERE id = ?
+      LIMIT 1
       `,
       [clinicId]
     );
@@ -1554,7 +1557,16 @@ router.get("/clinic/schedule", async (req, res) => {
       SELECT day_of_week, is_working, opening_time, closing_time
       FROM clinic_weekly_schedules
       WHERE clinic_id = ?
-      ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+      ORDER BY CASE day_of_week
+        WHEN 'Monday' THEN 1
+        WHEN 'Tuesday' THEN 2
+        WHEN 'Wednesday' THEN 3
+        WHEN 'Thursday' THEN 4
+        WHEN 'Friday' THEN 5
+        WHEN 'Saturday' THEN 6
+        WHEN 'Sunday' THEN 7
+        ELSE 8
+      END
       `,
       [clinicId]
     );
@@ -1568,6 +1580,12 @@ router.get("/clinic/schedule", async (req, res) => {
           INSERT INTO clinic_weekly_schedules
             (clinic_id, day_of_week, is_working, opening_time, closing_time)
           VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT (clinic_id, day_of_week)
+          DO UPDATE SET
+            is_working = EXCLUDED.is_working,
+            opening_time = EXCLUDED.opening_time,
+            closing_time = EXCLUDED.closing_time,
+            updated_at = NOW()
           `,
           [
             clinicId,
@@ -1584,7 +1602,16 @@ router.get("/clinic/schedule", async (req, res) => {
         SELECT day_of_week, is_working, opening_time, closing_time
         FROM clinic_weekly_schedules
         WHERE clinic_id = ?
-        ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+        ORDER BY CASE day_of_week
+          WHEN 'Monday' THEN 1
+          WHEN 'Tuesday' THEN 2
+          WHEN 'Wednesday' THEN 3
+          WHEN 'Thursday' THEN 4
+          WHEN 'Friday' THEN 5
+          WHEN 'Saturday' THEN 6
+          WHEN 'Sunday' THEN 7
+          ELSE 8
+        END
         `,
         [clinicId]
       );
@@ -1594,7 +1621,8 @@ router.get("/clinic/schedule", async (req, res) => {
       `
       SELECT
         id,
-        DATE_FORMAT(blocked_date, '%Y-%m-%d') AS date,
+        clinic_id,
+        TO_CHAR(blocked_date, 'YYYY-MM-DD') AS date,
         reason
       FROM clinic_blocked_dates
       WHERE clinic_id = ?
@@ -1610,9 +1638,13 @@ router.get("/clinic/schedule", async (req, res) => {
     });
   } catch (err) {
     console.error("Load clinic schedule error:", err);
-    return res.status(500).json({ message: "Failed to load clinic schedule." });
+    return res.status(500).json({
+      message: "Failed to load clinic schedule.",
+      error: err.message,
+      code: err.code || null,
+    });
   }
-});
+});;
 
 router.put("/clinic/schedule", async (req, res) => {
   const connection = await pool.getConnection();
@@ -1714,11 +1746,15 @@ router.post("/clinic/schedule/blocked-dates", async (req, res) => {
     }
 
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return res.status(400).json({ message: "A valid blocked date is required." });
+      return res.status(400).json({
+        message: "A valid blocked date is required.",
+      });
     }
 
     if (date < toDateInputValue()) {
-      return res.status(400).json({ message: "Blocked date cannot be in the past." });
+      return res.status(400).json({
+        message: "Blocked date cannot be in the past.",
+      });
     }
 
     await ensureScheduleTables();
@@ -1727,9 +1763,9 @@ router.post("/clinic/schedule/blocked-dates", async (req, res) => {
       `
       INSERT INTO clinic_blocked_dates (clinic_id, blocked_date, reason)
       VALUES (?, ?, ?)
-      ON DUPLICATE KEY UPDATE
-        reason = VALUES(reason),
-        id = LAST_INSERT_ID(id)
+      ON CONFLICT (clinic_id, blocked_date)
+      DO UPDATE SET reason = EXCLUDED.reason
+      RETURNING id
       `,
       [clinicId, date, reason]
     );
@@ -1737,14 +1773,18 @@ router.post("/clinic/schedule/blocked-dates", async (req, res) => {
     return res.status(201).json({
       message: "Blocked date saved.",
       blockedDate: {
-        id: result.insertId,
+        id: result?.[0]?.id || null,
         date,
         reason,
       },
     });
   } catch (err) {
     console.error("Save blocked date error:", err);
-    return res.status(500).json({ message: "Failed to save blocked date." });
+    return res.status(500).json({
+      message: "Failed to save blocked date.",
+      error: err.message,
+      code: err.code || null,
+    });
   }
 });
 
@@ -1754,7 +1794,9 @@ router.delete("/clinic/schedule/blocked-dates/:id", async (req, res) => {
     const blockedDateId = Number(req.params.id);
 
     if (!clinicId || !blockedDateId) {
-      return res.status(400).json({ message: "clinic_id and blocked date id are required." });
+      return res.status(400).json({
+        message: "clinic_id and blocked date id are required.",
+      });
     }
 
     await ensureScheduleTables();
@@ -1774,7 +1816,11 @@ router.delete("/clinic/schedule/blocked-dates/:id", async (req, res) => {
     return res.json({ message: "Blocked date removed." });
   } catch (err) {
     console.error("Remove blocked date error:", err);
-    return res.status(500).json({ message: "Failed to remove blocked date." });
+    return res.status(500).json({
+      message: "Failed to remove blocked date.",
+      error: err.message,
+      code: err.code || null,
+    });
   }
 });
 
