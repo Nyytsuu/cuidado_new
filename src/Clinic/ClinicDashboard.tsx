@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
+import { apiUrl } from "../sharedBackendFetch";
 
 /* ---------- TYPES ---------- */
 type MetricsResponse = {
@@ -147,7 +148,6 @@ const getStoredClinicId = () => {
 };
 
 export default function ClinicDashboard() {
-  const API = "http://localhost:5000/api";
   const [clinicId] = useState(() => getStoredClinicId());
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -237,7 +237,7 @@ export default function ClinicDashboard() {
       setDetailsError("");
       setSelectedAppointment(null);
 
-      const res = await fetch(`${API}/appointments/details/${id}`);
+      const res = await fetch(apiUrl(`/api/appointments/details/${id}`));
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -291,9 +291,7 @@ export default function ClinicDashboard() {
       try {
         setLoadingMetrics(true);
 
-        const res = await fetch(
-          `${API}/clinic/dashboard/metrics?clinic_id=${clinicId}`
-        );
+        const res = await fetch(apiUrl(`/api/clinic/dashboard/metrics?clinic_id=${clinicId}`))
         if (!res.ok) throw new Error("Failed to fetch metrics");
 
         const data: MetricsResponse = await res.json();
@@ -314,7 +312,7 @@ export default function ClinicDashboard() {
     };
 
     fetchMetrics();
-  }, [API, clinicId]);
+  }, [clinicId]);
 
   /* ---------- FETCH APPOINTMENTS ---------- */
   useEffect(() => {
@@ -323,7 +321,7 @@ export default function ClinicDashboard() {
         setLoadingAppointments(true);
 
         const res = await fetch(
-          `${API}/clinic/dashboard/appointments?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/dashboard/appointments?clinic_id=${clinicId}`)
         );
         if (!res.ok) throw new Error("Failed to fetch appointments");
 
@@ -350,7 +348,7 @@ export default function ClinicDashboard() {
     };
 
     fetchAppointments();
-  }, [API, clinicId]);
+  }, [clinicId]);
 
   /* ---------- FETCH PATIENTS ---------- */
   useEffect(() => {
@@ -359,7 +357,7 @@ export default function ClinicDashboard() {
         setLoadingPatients(true);
 
         const res = await fetch(
-          `${API}/clinic/dashboard/patients?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/dashboard/patients?clinic_id=${clinicId}`)
         );
         if (!res.ok) throw new Error("Failed to fetch patients");
 
@@ -385,7 +383,7 @@ export default function ClinicDashboard() {
     };
 
     fetchPatients();
-  }, [API, clinicId]);
+  }, [clinicId]);
 
   /* ---------- FETCH ACTIVITIES ---------- */
   useEffect(() => {
@@ -394,7 +392,7 @@ export default function ClinicDashboard() {
         setLoadingActivities(true);
 
         const res = await fetch(
-          `${API}/clinic/dashboard/activities?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/dashboard/activities?clinic_id=${clinicId}`)
         );
         if (!res.ok) throw new Error("Failed to fetch activities");
 
@@ -419,16 +417,14 @@ export default function ClinicDashboard() {
     };
 
     fetchActivities();
-  }, [API, clinicId]);
+  }, [clinicId]);
 
   return (
     <div
-      className={`ad-wrap clinic-dashboard-page ${
-        sidebarExpanded ? "sidebar-expanded" : ""
-      } ${
-        sidebarExpanded ? "modal-open" : ""
-      }`}
-    >
+  className={`ad-wrap clinic-dashboard-page ${
+    sidebarExpanded ? "sidebar-expanded" : ""
+  }`}
+>
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
