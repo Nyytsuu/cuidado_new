@@ -34,6 +34,7 @@ export const isNativeMobileRuntime = () => {
   }
 
   const nativePlatform = window.Capacitor?.isNativePlatform?.() ?? false;
+
   if (nativePlatform) {
     return true;
   }
@@ -60,17 +61,10 @@ const shouldUseAndroidEmulatorBackend = (envBackendUrl: string) => {
     return true;
   }
 
-  return isAndroidUserAgent() && ["localhost", "127.0.0.1", ""].includes(window.location.hostname);
-};
-
-const getBackendUrlFromCurrentHost = () => {
-  const { protocol, hostname } = window.location;
-
-  if (!hostname || isLocalBackendUrl(`${protocol}//${hostname}`)) {
-    return "";
-  }
-
-  return `${protocol}//${hostname}:5000`;
+  return (
+    isAndroidUserAgent() &&
+    ["localhost", "127.0.0.1", ""].includes(window.location.hostname)
+  );
 };
 
 export const getConfiguredBackendUrl = () => {
@@ -80,15 +74,10 @@ export const getConfiguredBackendUrl = () => {
     return normalizeBackendUrl(explicitRuntimeUrl);
   }
 
-  const envBackendUrl = import.meta.env.VITE_API_BASE_URL || DEFAULT_BACKEND_URL;
-
-  if (isLocalBackendUrl(envBackendUrl)) {
-    const inferredBackendUrl = getBackendUrlFromCurrentHost();
-
-    if (inferredBackendUrl) {
-      return inferredBackendUrl;
-    }
-  }
+  const envBackendUrl =
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    DEFAULT_BACKEND_URL;
 
   if (shouldUseAndroidEmulatorBackend(envBackendUrl)) {
     return ANDROID_EMULATOR_BACKEND_URL;
@@ -107,11 +96,15 @@ const originalFetch = window.fetch.bind(window);
 window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
   if (typeof input === "string" && input.startsWith(DEFAULT_BACKEND_URL)) {
     const configuredBackendUrl = getConfiguredBackendUrl();
-    return originalFetch(input.replace(DEFAULT_BACKEND_URL, configuredBackendUrl), init);
+    return originalFetch(
+      input.replace(DEFAULT_BACKEND_URL, configuredBackendUrl),
+      init
+    );
   }
 
   if (input instanceof URL && input.href.startsWith(DEFAULT_BACKEND_URL)) {
     const configuredBackendUrl = getConfiguredBackendUrl();
+
     return originalFetch(
       new URL(input.href.replace(DEFAULT_BACKEND_URL, configuredBackendUrl)),
       init
