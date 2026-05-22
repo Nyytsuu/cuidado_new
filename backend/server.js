@@ -22,13 +22,7 @@ const findClinicRoute = require("./routes/findClinic");
 const usersRouter = require("./routes/users");
 const articlesRouter = require("./routes/articles");
 const clinicFeedbackRouter = require("./routes/clinicFeedback");
-
-// IMPORTANT:
-// If your file is named clinicDashboard.js, keep this:
 const clinicDashboardRoutes = require("./routes/clinicDashboard");
-
-// If your file is named clinicDashboard.routes.js instead, use this instead:
-// const clinicDashboardRoutes = require("./routes/clinicDashboard.routes");
 
 const app = express();
 
@@ -253,11 +247,9 @@ app.get("/api/clinic/patients", async (req, res) => {
 });
 
 /*
-  DO NOT PUT app.get("/api/clinic/dashboard/metrics") HERE.
-  DO NOT PUT app.get("/api/clinic/dashboard/appointments") HERE.
-
-  Those old inline routes are the reason your page stays white.
-  The fixed dashboard routes are mounted below using app.use().
+  IMPORTANT:
+  Do not add old inline /api/clinic/dashboard routes here.
+  The fixed dashboard routes are mounted below.
 */
 
 /* ROUTE MODULES */
@@ -269,7 +261,25 @@ app.use("/api/clinic-feedback", clinicFeedbackRouter);
 
 app.use("/api/clinic/dashboard", clinicDashboardRoutes);
 
+/*
+  These two are both needed:
+
+  app.use("/api", clinicRoutes)
+  gives:
+    /api/appointments
+    /api/services
+    /api/clinic/schedule
+    /api/clinic/profile
+
+  app.use("/api/clinic", clinicRoutes)
+  gives:
+    /api/clinic/appointments
+    /api/clinic/services
+
+  This fixes your 404 errors.
+*/
 app.use("/api", clinicRoutes);
+app.use("/api/clinic", clinicRoutes);
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/conditions", adminConditionsRoutes);
