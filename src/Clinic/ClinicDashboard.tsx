@@ -434,6 +434,20 @@ export default function ClinicDashboard() {
         sidebarExpanded ? "sidebar-expanded" : ""
       }`}
     >
+      <div
+  style={{
+    position: "fixed",
+    top: 20,
+    left: 20,
+    zIndex: 999999,
+    background: "red",
+    color: "white",
+    padding: "20px",
+    fontSize: "24px",
+  }}
+>
+  DASHBOARD IS RENDERING
+</div>
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
