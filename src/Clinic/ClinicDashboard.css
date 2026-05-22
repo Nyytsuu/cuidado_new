@@ -652,59 +652,15 @@
     grid-template-columns: 1fr;
   }
 }
-.clinic-dashboard-page,
-.clinic-dashboard-page .ad-main,
-.clinic-dashboard-page .dash-layout,
-.clinic-dashboard-page .dash-maincol,
-.clinic-dashboard-page .dash-metrics,
-.clinic-dashboard-page .dash-grid-main,
-.clinic-dashboard-page .dash-aside {
-  display: revert-layer;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.clinic-dashboard-page {
-  display: flex !important;
+html:has(.clinic-dashboard-page),
+body:has(.clinic-dashboard-page),
+body:has(.clinic-dashboard-page) #root {
+  height: auto !important;
   min-height: 100vh !important;
-  background: #f5faf9 !important;
-  overflow: visible !important;
+  overflow-y: auto !important;
 }
 
-.clinic-dashboard-page .ad-main {
+body:has(.clinic-dashboard-page) {
   display: block !important;
-  position: relative !important;
-  z-index: 50 !important;
-  min-height: 100vh !important;
-  overflow: visible !important;
-  background: transparent !important;
-}
-
-.clinic-dashboard-page .dash-layout {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) 290px !important;
-  gap: 22px !important;
-}
-
-.clinic-dashboard-page .dash-metrics {
-  display: grid !important;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-}
-
-.clinic-dashboard-page .dash-grid-main {
-  display: grid !important;
-  grid-template-columns: 290px minmax(0, 1fr) !important;
-}
-
-.clinic-dashboard-page .dash-aside {
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.clinic-dashboard-page .sidebar-backdrop,
-.clinic-dashboard-page .mobile-backdrop,
-.clinic-dashboard-page .overlay,
-.clinic-dashboard-page.modal-open::before,
-.clinic-dashboard-page.modal-open::after {
-  display: none !important;
+  overflow-x: hidden !important;
 }
