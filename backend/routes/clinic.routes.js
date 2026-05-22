@@ -91,19 +91,26 @@ const hasValidOperatingDays = (value) =>
 const ensureClinicFeedbackTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_feedback (
-      id INT NOT NULL AUTO_INCREMENT,
-      appointment_id INT NOT NULL,
-      clinic_id INT NOT NULL,
-      user_id INT NOT NULL,
-      rating TINYINT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      appointment_id INTEGER NOT NULL,
+      clinic_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
       feedback TEXT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_feedback_appointment_user (appointment_id, user_id),
-      KEY idx_clinic_feedback_clinic (clinic_id),
-      KEY idx_clinic_feedback_user (user_id)
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_feedback_appointment_user UNIQUE (appointment_id, user_id)
     )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_clinic_feedback_clinic
+    ON clinic_feedback (clinic_id)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_clinic_feedback_user
+    ON clinic_feedback (user_id)
   `);
 };
 
@@ -619,31 +626,26 @@ router.get("/clinics", async (req, res) => {
         c.address,
         c.created_at,
         c.status,
-
+        c.account_status,
         ws.day_of_week,
         ws.is_working,
-        TO_CHAR(ws.opening_time, '%H:%i') AS opening_time,
-        TO_CHAR(ws.closing_time, '%H:%i') AS closing_time,
-
+        TO_CHAR(ws.opening_time, 'HH24:MI') AS opening_time,
+        TO_CHAR(ws.closing_time, 'HH24:MI') AS closing_time,
         CASE
           WHEN bd.id IS NOT NULL THEN 0
           WHEN ws.is_working = 1
-            AND TIME(CONVERT_TZ(NOW(), @@session.time_zone, '+08:00')) >= ws.opening_time
-            AND TIME(CONVERT_TZ(NOW(), @@session.time_zone, '+08:00')) < ws.closing_time
+            AND (NOW() AT TIME ZONE 'Asia/Manila')::time >= ws.opening_time
+            AND (NOW() AT TIME ZONE 'Asia/Manila')::time < ws.closing_time
           THEN 1
           ELSE 0
         END AS is_open_now
-
       FROM clinics c
-
       LEFT JOIN clinic_weekly_schedules ws
         ON ws.clinic_id = c.id
         AND ws.day_of_week = ?
-
       LEFT JOIN clinic_blocked_dates bd
         ON bd.clinic_id = c.id
-        AND bd.blocked_date = CURDATE()
-
+        AND bd.blocked_date = CURRENT_DATE
       ORDER BY c.created_at DESC
       `,
       [today]
@@ -652,7 +654,11 @@ router.get("/clinics", async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error("FETCH CLINICS ERROR:", err);
-    return res.status(500).json({ message: "Failed to fetch clinics." });
+    return res.status(500).json({
+      message: "Failed to fetch clinics.",
+      error: err.message,
+      code: err.code || null,
+    });
   }
 });
 
@@ -977,8 +983,8 @@ router.get("/clinic/profile", async (req, res) => {
         clinic_id,
         day_of_week,
         is_working,
-        TO_CHAR(opening_time, '%H:%i:%s') AS opening_time,
-        TO_CHAR(closing_time, '%H:%i:%s') AS closing_time
+        TO_CHAR(opening_time, 'HH24:MI:SS') AS opening_time,
+       TO_CHAR(closing_time, 'HH24:MI:SS') AS closing_time
       FROM clinic_weekly_schedules
       WHERE clinic_id = ?
       ORDER BY CASE day_of_week
@@ -1000,10 +1006,10 @@ END
       SELECT
         id,
         clinic_id,
-        TO_CHAR(blocked_date, '%Y-%m-%d') AS date,
+        TO_CHAR(blocked_date, 'YYYY-MM-DD') AS date,
         reason
       FROM clinic_blocked_dates
-      WHERE clinic_id = ? AND blocked_date >= CURRENT_DATE()
+      WHERE clinic_id = ? AND blocked_date >= CURRENT_DATE
       ORDER BY blocked_date ASC
       `,
       [clinicId]
@@ -1584,26 +1590,26 @@ router.get("/clinic/schedule", async (req, res) => {
       const legacySchedule = buildScheduleFromClinic(clinic);
 
       for (const item of legacySchedule) {
-        await pool.query(
-          `
-          INSERT INTO clinic_weekly_schedules
-            (clinic_id, day_of_week, is_working, opening_time, closing_time)
-          VALUES (?, ?, ?, ?, ?)
-          ON CONFLICT (clinic_id, day_of_week)
-          DO UPDATE SET
-            is_working = EXCLUDED.is_working,
-            opening_time = EXCLUDED.opening_time,
-            closing_time = EXCLUDED.closing_time,
-            updated_at = NOW()
-          `,
-          [
-            clinicId,
-            item.day,
-            item.working ? 1 : 0,
-            `${item.open}:00`,
-            `${item.close}:00`,
-          ]
-        );
+      await connection.query(
+  `
+  INSERT INTO clinic_weekly_schedules
+    (clinic_id, day_of_week, is_working, opening_time, closing_time)
+  VALUES (?, ?, ?, ?, ?)
+  ON CONFLICT (clinic_id, day_of_week)
+  DO UPDATE SET
+    is_working = EXCLUDED.is_working,
+    opening_time = EXCLUDED.opening_time,
+    closing_time = EXCLUDED.closing_time,
+    updated_at = NOW()
+  `,
+  [
+    clinicId,
+    item.day,
+    item.working ? 1 : 0,
+    `${item.open}:00`,
+    `${item.close}:00`,
+  ]
+);
       }
 
       [scheduleRows] = await pool.query(
