@@ -1,10 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
 import { apiUrl } from "../sharedBackendFetch";
 
-/* ---------- TYPES ---------- */
 type MetricsResponse = {
   totalPatients: number;
   totalAppointments: number;
@@ -148,10 +146,6 @@ const getStoredClinicId = () => {
 
 export default function ClinicDashboard() {
   const [clinicId] = useState(() => getStoredClinicId());
-
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   const [loadingMetrics, setLoadingMetrics] = useState(true);
@@ -429,38 +423,21 @@ export default function ClinicDashboard() {
   }, [clinicId]);
 
   return (
-    <div
-      className={`ad-wrap clinic-dashboard-page ${
-        sidebarExpanded ? "sidebar-expanded" : ""
-      }`}
-    >
-      <div
-  style={{
-    position: "fixed",
-    top: 20,
-    left: 20,
-    zIndex: 999999,
-    background: "red",
-    color: "white",
-    padding: "20px",
-    fontSize: "24px",
-  }}
->
-  DASHBOARD IS RENDERING
-</div>
-{/* ---------- SIDEBAR & HEADER ---------- 
-      <SidebarClinic
-        sidebarExpanded={sidebarExpanded}
-        setSidebarExpanded={setSidebarExpanded}
-        profileOpen={profileOpen}
-        setProfileOpen={setProfileOpen}
-        headerProfileOpen={headerProfileOpen}
-        setHeaderProfileOpen={setHeaderProfileOpen}
-        searchValue={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search dashboard..."
-      />
-*/}
+    <div className="clinic-dashboard-page clinic-dashboard-standalone">
+      <header className="clinic-dashboard-topbar">
+        <div>
+          <h1>Clinic Dashboard</h1>
+          <p>Overview of your clinic appointments, patients, and activities.</p>
+        </div>
+
+        <input
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          placeholder="Search dashboard..."
+          className="clinic-dashboard-search"
+        />
+      </header>
+
       <main className="ad-main">
         <section className="dash-layout">
           <div className="dash-maincol">
