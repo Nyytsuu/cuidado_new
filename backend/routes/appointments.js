@@ -374,76 +374,70 @@ router.get("/by-user/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const appointmentsResult = await pool.query(
-      `
-      SELECT
-        a.id,
-        a.user_id,
-        a.clinic_id,
-        TO_CHAR(a.start_at, 'YYYY-MM-DD HH24:MI:SS') AS start_at,
-        TO_CHAR(a.end_at, 'YYYY-MM-DD HH24:MI:SS') AS end_at,
-        TO_CHAR(a.proposed_start_at, 'YYYY-MM-DD HH24:MI:SS') AS proposed_start_at,
-        TO_CHAR(a.proposed_end_at, 'YYYY-MM-DD HH24:MI:SS') AS proposed_end_at,
-        a.purpose,
-        a.symptoms,
-        a.patient_note,
-        a.clinic_note,
-        a.status,
-        TO_CHAR(a.cancelled_at, 'YYYY-MM-DD HH24:MI:SS') AS cancelled_at,
-        a.cancelled_by,
-        a.cancel_reason,
-        a.reschedule_reason,
-        a.reschedule_requested_by,
-        TO_CHAR(a.reschedule_requested_at, 'YYYY-MM-DD HH24:MI:SS') AS reschedule_requested_at,
-        TO_CHAR(a.completed_at, 'YYYY-MM-DD HH24:MI:SS') AS completed_at,
-        a.patient_name_snapshot,
-        a.patient_phone_snapshot,
-        a.clinic_name_snapshot,
-        TO_CHAR(a.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at,
-        TO_CHAR(a.updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at,
-        c.clinic_name,
-        c.specialization,
-        c.address,
-        c.opening_time,
-        c.closing_time,
-        cf.id AS feedback_id,
-        cf.rating AS clinic_feedback_rating,
-        cf.feedback AS clinic_feedback_text,
-        TO_CHAR(cf.updated_at, 'YYYY-MM-DD HH24:MI:SS') AS clinic_feedback_updated_at
-      FROM appointments a
-      JOIN clinics c ON c.id = a.clinic_id
-      LEFT JOIN clinic_feedback cf
-        ON cf.appointment_id = a.id
-        AND cf.user_id = a.user_id
-      WHERE a.user_id = $1
-      ORDER BY a.start_at ASC
-      `,
-      [userId]
-    );
-
-    const rows = appointmentsResult.rows;
-
-    if (!rows.length) {
-      return res.json([]);
-    }
+   const [rows] = await pool.query(
+  `
+  SELECT
+    a.id,
+    a.user_id,
+    a.clinic_id,
+    TO_CHAR(a.start_at, 'YYYY-MM-DD HH24:MI:SS') AS start_at,
+    TO_CHAR(a.end_at, 'YYYY-MM-DD HH24:MI:SS') AS end_at,
+    TO_CHAR(a.proposed_start_at, 'YYYY-MM-DD HH24:MI:SS') AS proposed_start_at,
+    TO_CHAR(a.proposed_end_at, 'YYYY-MM-DD HH24:MI:SS') AS proposed_end_at,
+    a.purpose,
+    a.symptoms,
+    a.patient_note,
+    a.clinic_note,
+    a.status,
+    TO_CHAR(a.cancelled_at, 'YYYY-MM-DD HH24:MI:SS') AS cancelled_at,
+    a.cancelled_by,
+    a.cancel_reason,
+    a.reschedule_reason,
+    a.reschedule_requested_by,
+    TO_CHAR(a.reschedule_requested_at, 'YYYY-MM-DD HH24:MI:SS') AS reschedule_requested_at,
+    TO_CHAR(a.completed_at, 'YYYY-MM-DD HH24:MI:SS') AS completed_at,
+    a.patient_name_snapshot,
+    a.patient_phone_snapshot,
+    a.clinic_name_snapshot,
+    TO_CHAR(a.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+    TO_CHAR(a.updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at,
+    c.clinic_name,
+    c.specialization,
+    c.address,
+    c.opening_time,
+    c.closing_time,
+    cf.id AS feedback_id,
+    cf.rating AS clinic_feedback_rating,
+    cf.feedback AS clinic_feedback_text,
+    TO_CHAR(cf.updated_at, 'YYYY-MM-DD HH24:MI:SS') AS clinic_feedback_updated_at
+  FROM appointments a
+  JOIN clinics c ON c.id = a.clinic_id
+  LEFT JOIN clinic_feedback cf
+    ON cf.appointment_id = a.id
+    AND cf.user_id = a.user_id
+  WHERE a.user_id = ?
+  ORDER BY a.start_at ASC
+  `,
+  [userId]
+);
 
     const appointmentIds = rows.map((r) => r.id);
 
-    const servicesResult = await pool.query(
-      `
-      SELECT
-        appointment_id,
-        service_id,
-        service_name_snapshot,
-        price_snapshot,
-        duration_minutes_snapshot,
-        description
-      FROM appointment_services
-      WHERE appointment_id = ANY($1::int[])
-      ORDER BY appointment_id ASC
-      `,
-      [appointmentIds]
-    );
+const [services] = await pool.query(
+  `
+  SELECT
+    appointment_id,
+    service_id,
+    service_name_snapshot,
+    price_snapshot,
+    duration_minutes_snapshot,
+    description
+  FROM appointment_services
+  WHERE appointment_id IN (?)
+  ORDER BY appointment_id ASC
+  `,
+  [appointmentIds]
+);
 
     const services = servicesResult.rows;
 
