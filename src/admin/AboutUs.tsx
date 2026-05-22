@@ -18,8 +18,6 @@ export default function AboutUs() {
         setSidebarExpanded={setSidebarExpanded}
         profileOpen={profileOpen}
         setProfileOpen={setProfileOpen}
-        headerProfileOpen={headerProfileOpen}
-        setHeaderProfileOpen={setHeaderProfileOpen}
       />
 
     

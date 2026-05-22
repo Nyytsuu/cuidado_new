@@ -3,10 +3,8 @@ import "./App.css";
 import ConditionDetails from "./SigninUser/ConditionDetails";
 import Signup from "./SignupUser/Signup";
 import Signin from "./SigninUser/Signin";
-import ForgetPass from "./SigninUser/Forgetpass";
 import LandingPage from "./SigninUser/Landingpage";
 import Categories from "./Categories/Categories";
-import Changepass from "./SigninUser/Changepass";
 import VerifyOtp from "./SigninUser/VerifyOtp";
 import BrowseHealth from "./SigninUser/BrowseHealth";
 import BodySystemDetails from "./SigninUser/BodySystemDetails";
@@ -25,7 +23,6 @@ import UserHelp from "./SigninUser/UserHelp";
 import Cardio from "./SigninUser/Cardio";
 
 // admin
-import SidebarAdmin from "./admin/SidebarAdmin";
 import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 import AdminUser from "./admin/AdminUser";
 import AdminDashboard from "./admin/AdminDashboard";
@@ -54,8 +51,6 @@ function App() {
         <Route path="/" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgetPass />} />
-        <Route path="/change-password" element={<Changepass />} />
         <Route path="/landingpage" element={<LandingPage/>} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
@@ -102,7 +97,6 @@ function App() {
       <Route path="/admin/conditional" element={<AdminConditionalManagement />} />
       <Route path="/admin/symptoms" element={ <AdminSymptomsManagement />} />
       <Route path="/admin/condition-symptom-mapping" element={<AdminConditionSymptomMapping />} />
-      <Route path="admin/Sidebar" element={<SidebarAdmin />} />
         </Route>
       
       </Routes>

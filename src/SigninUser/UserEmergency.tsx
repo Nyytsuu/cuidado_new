@@ -2,11 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
-  Ambulance,
   ClipboardCheck,
   Compass,
   Copy,
-  HeartPulse,
   Hospital,
   LocateFixed,
   MapPin,
@@ -14,7 +12,6 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
-import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./UserEmergency.css";
 
 type ClinicRow = {

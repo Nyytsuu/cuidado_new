@@ -479,7 +479,7 @@ export default function LandingPage() {
                     {option.action}
                   </button>
                 ) : (
-                  <a href={option.href}>{option.action}</a>
+                  <a href={option.to || "#"}>{option.action}</a>
                 )}
               </article>
             ))}
