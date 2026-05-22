@@ -79,7 +79,7 @@ function App() {
         <Route path="/help" element={<UserHelp />} />
         </Route>
         {/* clinic */}
-        <Route element={<ClinicProtectedRoute />}>
+
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
 <Route path="/clinic/appointments" element={<ClinicAppoint />} />
 <Route path="/clinic/patients" element={<Patients />} />
@@ -88,7 +88,6 @@ function App() {
 <Route path="/clinic/settings" element={<ClinicSettings />} />
 <Route path="/clinic/schedule" element={<Schedule />} />
 <Route path="/clinic/profile" element={<Clinicprofile />} />
-</Route>
 
         {/* admin */}
         <Route element={<AdminProtectedRoute/>}>
