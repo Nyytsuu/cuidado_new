@@ -1,22 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-import { cloudflare } from "@cloudflare/vite-plugin";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react({
-    babel: {
-      plugins: [['babel-plugin-react-compiler']],
-    },
-  }), cloudflare()],
+  plugins: [
+    react({
+      babel: {
+        plugins: [["babel-plugin-react-compiler"]],
+      },
+    }),
+  ],
   server: {
     watch: {
-      ignored: [
-        '**/android/**',
-        '**/dist/**',
-        '**/node_modules/**',
-      ],
+      ignored: ["**/android/**", "**/dist/**", "**/node_modules/**"],
     },
   },
-})
+});

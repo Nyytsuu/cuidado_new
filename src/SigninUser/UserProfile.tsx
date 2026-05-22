@@ -6,7 +6,7 @@ import micIcon from "../img/mic.png";
 import profileImg from "../img/profile1.jpg";
 import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
 import VoiceAssistantResult from "./VoiceAssistantResult";
-
+import { apiUrl, getConfiguredBackendUrl } from "../sharedBackendFetch";
 const menuItems = [
   { label: "Home", icon: "⌂" },
   { label: "Health Topics", icon: "♡" },
@@ -67,14 +67,20 @@ type Barangay = {
   name: string;
 };
 
-const API_BASE = "http://localhost:5000";
+const API_BASE = getConfiguredBackendUrl();
 const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 const toUploadUrl = (value?: string | null) => {
   const path = String(value || "").trim();
   if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
+
+  const backendUrl = getConfiguredBackendUrl();
+
+  if (/^https?:\/\//i.test(path)) {
+    return path.replace("http://localhost:5000", backendUrl);
+  }
+
+  return `${backendUrl}/${path.replace(/^\/+/, "")}`;
 };
 
 type SpeechRecognitionEventLike = Event & {
@@ -311,39 +317,39 @@ export default function UserProfile() {
   const voiceContent = getVoiceContent();
 
   const loadProvinces = useCallback(async () => {
-    const res = await fetch("http://localhost:5000/api/users/meta/provinces");
+    const res = await fetch(apiUrl("/api/users/meta/provinces"));
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to load provinces.");
     setProvinces(Array.isArray(data) ? data : []);
   }, []);
 
   const loadMunicipalities = useCallback(async (selectedProvinceId: string | number) => {
-    if (!selectedProvinceId) {
-      setMunicipalities([]);
-      return;
-    }
+  if (!selectedProvinceId) {
+    setMunicipalities([]);
+    return;
+  }
 
-    const res = await fetch(
-      `http://localhost:5000/api/users/meta/municipalities?province_id=${selectedProvinceId}`
-    );
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to load municipalities.");
-    setMunicipalities(Array.isArray(data) ? data : []);
-  }, []);
+  const res = await fetch(
+    apiUrl(`/api/users/meta/municipalities?province_id=${selectedProvinceId}`)
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to load municipalities.");
+  setMunicipalities(Array.isArray(data) ? data : []);
+}, []);
 
   const loadBarangays = useCallback(async (selectedMunicipalityId: string | number) => {
-    if (!selectedMunicipalityId) {
-      setBarangays([]);
-      return;
-    }
+  if (!selectedMunicipalityId) {
+    setBarangays([]);
+    return;
+  }
 
-    const res = await fetch(
-      `http://localhost:5000/api/users/meta/barangays?municipality_id=${selectedMunicipalityId}`
-    );
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to load barangays.");
-    setBarangays(Array.isArray(data) ? data : []);
-  }, []);
+  const res = await fetch(
+    apiUrl(`/api/users/meta/barangays?municipality_id=${selectedMunicipalityId}`)
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to load barangays.");
+  setBarangays(Array.isArray(data) ? data : []);
+}, []);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -359,7 +365,7 @@ export default function UserProfile() {
 
       await loadProvinces();
 
-      const res = await fetch(`http://localhost:5000/api/users/${userId}/profile`);
+      const res = await fetch(apiUrl(`/api/users/${userId}/profile`));
       const data: ProfileResponse = await res.json();
 
       if (!res.ok) {
@@ -436,7 +442,7 @@ export default function UserProfile() {
       setError("");
       setMessage("");
 
-      const res = await fetch(`http://localhost:5000/api/users/${userId}/profile`, {
+      const res = await fetch(apiUrl(`/api/users/${userId}/profile`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -513,7 +519,7 @@ export default function UserProfile() {
       const formData = new FormData();
       formData.append("profile_picture", profilePictureFile);
 
-      const res = await fetch(`${API_BASE}/api/users/${userId}/profile-picture`, {
+      const res = await fetch(apiUrl(`/api/users/${userId}/profile-picture`), {
         method: "PUT",
         body: formData,
       });
@@ -569,7 +575,7 @@ export default function UserProfile() {
         throw new Error("New password and confirm password do not match.");
       }
 
-      const res = await fetch(`http://localhost:5000/api/users/${userId}/password`, {
+      const res = await fetch(apiUrl(`/api/users/${userId}/password`), { 
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

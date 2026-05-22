@@ -44,7 +44,6 @@ function Signin() {
   const [loadingConfirm, setLoadingConfirm] = useState(false);
   const [loadingResend, setLoadingResend] = useState(false);
 
-  const apiBase = getConfiguredBackendUrl();
   const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
 
   const showCaptcha = failedAttempts >= 5;

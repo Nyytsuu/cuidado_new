@@ -27,9 +27,9 @@ const ensureAppointmentRescheduleColumns = async () => {
     appointmentRescheduleSchemaPromise = (async () => {
       const [columns] = await pool.query(
         `
-        SELECT COLUMN_NAME, COLUMN_TYPE
+        SELECT column_name AS "COLUMN_NAME", data_type AS "COLUMN_TYPE"
         FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
+        WHERE table_schema = 'public'
           AND TABLE_NAME = 'appointments'
           AND COLUMN_NAME IN (
             'status',
