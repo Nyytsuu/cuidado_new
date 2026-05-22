@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SidebarClinic from "../Clinic/SidebarClinic";
-import "../clinic/ClinicDashboard.css";
+import "../Clinic/ClinicDashboard.css";
 import { apiUrl } from "../sharedBackendFetch";
 
 /* ---------- TYPES ---------- */
