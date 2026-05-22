@@ -132,10 +132,6 @@ const handleLogout = () => {
     }
   };
 
-  const cancelAppointment = (id: number) => {
-  setCancelId(id);
-  setCancelPopupOpen(true);
-};
 
 const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: string) => {
   try {

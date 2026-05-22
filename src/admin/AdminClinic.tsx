@@ -6,7 +6,6 @@ import Sidebar from "./SidebarAdmin";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 
-type ClinicStatusUI = "Pending" | "Approved" | "Rejected" | "active" | "disabled";
 
 type ClinicRow = {
   id: number;
@@ -66,7 +65,7 @@ export default function AdminClinics() {
   const [clinics, setClinics] = useState<ClinicRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
-  const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const [setLoadingAppointments] = useState(true);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
