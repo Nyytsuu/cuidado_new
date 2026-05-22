@@ -32,6 +32,7 @@ import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
 import { clearStoredAuth } from "../authSession";
+import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
 type HeaderUser = {
   id?: number;
@@ -46,13 +47,25 @@ type HeaderNotification = {
   unread?: boolean | null;
 };
 
-const API_BASE = "http://localhost:5000";
-
-const toUploadUrl = (value?: string | null) => {
-  const path = String(value || "").trim();
+const fixImageUrl = (url?: string | null) => {
+  const path = String(url || "").trim();
   if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
+
+  const backendUrl = getConfiguredBackendUrl();
+
+  if (path.startsWith("http://localhost:5000")) {
+    return path.replace("http://localhost:5000", backendUrl);
+  }
+
+  if (path.startsWith("/uploads")) {
+    return `${backendUrl}${path}`;
+  }
+
+  if (path.startsWith("uploads")) {
+    return `${backendUrl}/${path}`;
+  }
+
+  return path;
 };
 
 interface SidebarProps {
@@ -81,18 +94,26 @@ export default function UserSidebar({
 }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [internalSearch, setInternalSearch] = useState("");
   const currentSearch = searchValue ?? internalSearch;
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
   const [headerUser, setHeaderUser] = useState<HeaderUser | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
 
+  const apiBase = getConfiguredBackendUrl();
+
   const isPathActive = (path: string) => location.pathname === path;
+
   const headerDisplayName =
     headerUser?.full_name || headerUser?.name || "My Profile";
+
   const headerDisplayEmail = headerUser?.email || "View account";
-  const headerProfileImage = toUploadUrl(headerUser?.profile_picture) || userIcon;
+
+  const headerProfileImage =
+    fixImageUrl(headerUser?.profile_picture) || userIcon;
 
   const storedHeaderUser = useMemo(() => {
     try {
@@ -126,18 +147,23 @@ export default function UserSidebar({
 
       try {
         const res = await fetch(
-          `${API_BASE}/api/users/${latestStoredHeaderUser.id}/profile`,
+          `${apiBase}/api/users/${latestStoredHeaderUser.id}/profile`,
           {
             cache: "no-store",
           }
         );
+
         const data = await res.json().catch(() => ({}));
 
         if (!cancelled && res.ok) {
-          setHeaderUser({
+          const updatedUser = {
             ...latestStoredHeaderUser,
             ...data,
-          });
+          };
+
+          setHeaderUser(updatedUser);
+
+          localStorage.setItem("user", JSON.stringify(updatedUser));
         }
       } catch (err) {
         console.error("Header profile load error:", err);
@@ -158,10 +184,11 @@ export default function UserSidebar({
       window.removeEventListener("user-profile-updated", handleProfileUpdated);
       window.removeEventListener("storage", handleProfileUpdated);
     };
-  }, [storedHeaderUser]);
+  }, [apiBase, storedHeaderUser]);
 
   useEffect(() => {
     let cancelled = false;
+
     const userId =
       headerUser?.id ||
       storedHeaderUser?.id ||
@@ -182,9 +209,10 @@ export default function UserSidebar({
       }
 
       try {
-        const res = await fetch(`${API_BASE}/api/users/${userId}/notifications`, {
+        const res = await fetch(`${apiBase}/api/users/${userId}/notifications`, {
           cache: "no-store",
         });
+
         const data = (await res.json().catch(() => [])) as HeaderNotification[];
 
         if (!res.ok || !Array.isArray(data)) {
@@ -218,7 +246,7 @@ export default function UserSidebar({
       window.removeEventListener("focus", handleNotificationUpdated);
       window.removeEventListener("user-notifications-updated", handleNotificationUpdated);
     };
-  }, [headerUser?.id, storedHeaderUser?.id, location.pathname]);
+  }, [apiBase, headerUser?.id, storedHeaderUser?.id, location.pathname]);
 
   const handleSearchChange = (value: string) => {
     if (searchValue === undefined) {
@@ -246,11 +274,10 @@ export default function UserSidebar({
   const hasUnreadNotifications = unreadNotifications > 0;
   const notificationBadge =
     unreadNotifications > 9 ? "9+" : String(unreadNotifications);
+
   const notificationAriaLabel = hasUnreadNotifications
     ? `Open notifications, ${unreadNotifications} unread`
     : "Open notifications";
-
-
 
   return (
     <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -315,7 +342,6 @@ export default function UserSidebar({
                 <span>Health Topics</span>
               </Link>
             </div>
-
           </div>
 
           <div className="sidebar-section">
@@ -354,7 +380,7 @@ export default function UserSidebar({
             <p className="sidebar-section-title">SMART</p>
 
             <div className={`sidebar-item ${isPathActive("/voice-assistant") ? "active" : ""}`}>
-                <Link to="/voice-assistant" className="sidebar-btn">
+              <Link to="/voice-assistant" className="sidebar-btn">
                 <Mic size={24} />
                 <span>Voice Assistant</span>
               </Link>
@@ -382,7 +408,13 @@ export default function UserSidebar({
           <div className="sidebar-section">
             <p className="sidebar-section-title">SUPPORT</p>
 
-            <div className={`sidebar-item ${isPathActive("/emergency") || isPathActive("/emergency-guide") ? "active" : ""}`}>
+            <div
+              className={`sidebar-item ${
+                isPathActive("/emergency") || isPathActive("/emergency-guide")
+                  ? "active"
+                  : ""
+              }`}
+            >
               <Link to="/emergency" className="sidebar-btn">
                 <TriangleAlert size={24} />
                 <span>Emergency</span>
@@ -398,7 +430,11 @@ export default function UserSidebar({
           </div>
 
           <div className="sidebar-item logout">
-            <button type="button" className="sidebar-btn" onClick={() => setShowLogoutConfirm(true)}>
+            <button
+              type="button"
+              className="sidebar-btn"
+              onClick={() => setShowLogoutConfirm(true)}
+            >
               <LogOut size={24} />
               <span>Logout</span>
             </button>
@@ -471,7 +507,11 @@ export default function UserSidebar({
               location.pathname === "/notifications" ? "active" : ""
             } ${hasUnreadNotifications ? "has-unread" : ""}`}
             aria-label={notificationAriaLabel}
-            title={hasUnreadNotifications ? `${unreadNotifications} unread notifications` : "Notifications"}
+            title={
+              hasUnreadNotifications
+                ? `${unreadNotifications} unread notifications`
+                : "Notifications"
+            }
             onClick={() => setHeaderProfileOpen(false)}
           >
             <Bell size={18} />
@@ -479,6 +519,7 @@ export default function UserSidebar({
               <span className="notification-badge">{notificationBadge}</span>
             )}
           </Link>
+
           <Link
             to="/homepage"
             className={`nav-link ${location.pathname === "/homepage" ? "active" : ""}`}
@@ -488,7 +529,9 @@ export default function UserSidebar({
 
           <Link
             to="/appointments"
-            className={`nav-link ${location.pathname === "/appointments" ? "active" : ""}`}
+            className={`nav-link ${
+              location.pathname === "/appointments" ? "active" : ""
+            }`}
           >
             Appointments
           </Link>
@@ -498,7 +541,7 @@ export default function UserSidebar({
               type="button"
               className={`nav-link profile-btn ${
                 location.pathname === "/profile" ||
-                location.pathname === "/notification"
+                location.pathname === "/notifications"
                   ? "active"
                   : ""
               }`}
@@ -519,19 +562,22 @@ export default function UserSidebar({
                   <small>{headerDisplayEmail}</small>
                 </span>
               </Link>
+
               <Link to="/profile" onClick={() => setHeaderProfileOpen(false)}>
                 My Profile
               </Link>
+
               <Link to="/notifications" onClick={() => setHeaderProfileOpen(false)}>
                 Notifications
               </Link>
+
               <button
                 type="button"
                 className="dropdown-logout"
                 onClick={() => {
-  setHeaderProfileOpen(false);
-  setShowLogoutConfirm(true);
-}}
+                  setHeaderProfileOpen(false);
+                  setShowLogoutConfirm(true);
+                }}
               >
                 Logout
               </button>
@@ -540,7 +586,9 @@ export default function UserSidebar({
 
           <Link
             to="/profile"
-            className={`header-avatar ${location.pathname === "/profile" ? "active" : ""}`}
+            className={`header-avatar ${
+              location.pathname === "/profile" ? "active" : ""
+            }`}
             aria-label="Open profile"
             onClick={() => setHeaderProfileOpen(false)}
           >
@@ -549,53 +597,47 @@ export default function UserSidebar({
         </nav>
       </header>
 
-      {/* CONFIRM LOGOUT */}
-{showLogoutConfirm && (
-  <div className="logout-confirm-overlay">
-    <div className="logout-confirm-modal">
-      <h3>Log out?</h3>
-      <p>Are you sure you want to log out of your account?</p>
+      {showLogoutConfirm && (
+        <div className="logout-confirm-overlay">
+          <div className="logout-confirm-modal">
+            <h3>Log out?</h3>
+            <p>Are you sure you want to log out of your account?</p>
 
-      <div className="logout-actions">
-        <button
-          className="btn-cancel"
-          onClick={() => setShowLogoutConfirm(false)}
-        >
-          No
-        </button>
+            <div className="logout-actions">
+              <button
+                className="btn-cancel"
+                onClick={() => setShowLogoutConfirm(false)}
+              >
+                No
+              </button>
 
-        <button
-          className="btn-confirm"
-          onClick={() => {
-            setShowLogoutConfirm(false);
+              <button
+                className="btn-confirm"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  clearStoredAuth();
+                  setShowLogoutSuccess(true);
 
-            clearStoredAuth();
+                  setTimeout(() => {
+                    navigate("/signin");
+                  }, 1500);
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-            // show success popup
-            setShowLogoutSuccess(true);
-
-            // redirect after delay
-            setTimeout(() => {
-              navigate("/signin");
-            }, 1500);
-          }}
-        >
-          Yes
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-{/* SUCCESS POPUP */}
-{showLogoutSuccess && (
-  <div className="logout-popup-overlay">
-    <div className="logout-popup">
-      <div className="logout-icon">✓</div>
-      <p>Logged out successfully</p>
-    </div>
-  </div>
-)}
+      {showLogoutSuccess && (
+        <div className="logout-popup-overlay">
+          <div className="logout-popup">
+            <div className="logout-icon">✓</div>
+            <p>Logged out successfully</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
