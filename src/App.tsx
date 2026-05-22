@@ -81,7 +81,6 @@ function App() {
         </Route>
         {/* clinic */}
         <Route element={<ClinicProtectedRoute />}>
-<Route path="/clinic/signup" element={<ClinicSignup />} />
 <Route path="/clinic/dashboard" element={<ClinicDashboard />} />
 <Route path="/clinic/appointments" element={<ClinicAppoint />} />
 <Route path="/clinic/patients" element={<Patients />} />
