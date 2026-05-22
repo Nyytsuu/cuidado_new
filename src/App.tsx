@@ -36,7 +36,6 @@ import AdminConditionalManagement  from "./admin/AdminConditionManagement";
 import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
 import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
-import ClinicProtectedRoute from "./routes/ClinicProtectedRoute";
 import ClinicDashboard from "./Clinic/ClinicDashboard";
 import ClinicAppoint from "./Clinic/ClinicAppoint";
 import Patients from "./Clinic/Patient";
