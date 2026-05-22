@@ -342,7 +342,7 @@ export default function UserSidebar({
               </Link>
             </div>
 
-            <div className={`sidebar-item ${isPathActive("/admin/stress-index") ? "active" : ""}`}>
+            <div className={`sidebar-item ${isPathActive("/stress-index") ? "active" : ""}`}>
               <Link to="/stress-index" className="sidebar-btn">
                 <Smile size={24} />
                 <span>Stress Index</span>

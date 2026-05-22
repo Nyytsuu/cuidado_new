@@ -117,11 +117,11 @@ const ensureAppointmentRescheduleColumns = async () => {
     appointmentRescheduleSchemaPromise = (async () => {
       const [columns] = await pool.query(
         `
-        SELECT COLUMN_NAME, COLUMN_TYPE
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'appointments'
-          AND COLUMN_NAME IN (
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'appointments'
+          AND column_name IN (
             'status',
             'proposed_start_at',
             'proposed_end_at',
@@ -133,94 +133,44 @@ const ensureAppointmentRescheduleColumns = async () => {
       );
 
       const existing = new Map(
-        columns.map((column) => [column.COLUMN_NAME, column.COLUMN_TYPE])
+        columns.map((column) => [column.column_name, column.data_type])
       );
 
       if (!existing.has("proposed_start_at")) {
         await pool.query(`
           ALTER TABLE appointments
-          ADD COLUMN proposed_start_at DATETIME NULL AFTER end_at
+          ADD COLUMN proposed_start_at TIMESTAMP NULL
         `);
       }
 
       if (!existing.has("proposed_end_at")) {
         await pool.query(`
           ALTER TABLE appointments
-          ADD COLUMN proposed_end_at DATETIME NULL AFTER proposed_start_at
+          ADD COLUMN proposed_end_at TIMESTAMP NULL
         `);
       }
 
       if (!existing.has("reschedule_reason")) {
         await pool.query(`
           ALTER TABLE appointments
-          ADD COLUMN reschedule_reason TEXT NULL AFTER cancel_reason
+          ADD COLUMN reschedule_reason TEXT NULL
         `);
       }
 
       if (!existing.has("reschedule_requested_by")) {
         await pool.query(`
           ALTER TABLE appointments
-          ADD COLUMN reschedule_requested_by VARCHAR(20) NULL AFTER reschedule_reason
+          ADD COLUMN reschedule_requested_by VARCHAR(20) NULL
         `);
       }
 
       if (!existing.has("reschedule_requested_at")) {
         await pool.query(`
           ALTER TABLE appointments
-          ADD COLUMN reschedule_requested_at DATETIME NULL AFTER reschedule_requested_by
+          ADD COLUMN reschedule_requested_at TIMESTAMP NULL
         `);
       }
 
-      const statusType = String(existing.get("status") || "");
-      if (
-        statusType.toLowerCase().startsWith("enum(") &&
-        !statusType.includes("'reschedule_requested'")
-      ) {
-        await pool.query(`
-          ALTER TABLE appointments
-          MODIFY COLUMN status ENUM(
-            'pending',
-            'confirmed',
-            'reschedule_requested',
-            'cancelled',
-            'completed',
-            'no_show'
-          ) NOT NULL DEFAULT 'pending'
-        `);
-      }
-
-      const [historyColumns] = await pool.query(
-        `
-        SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'appointment_status_history'
-          AND COLUMN_NAME IN ('old_status', 'new_status')
-        `
-      );
-
-      for (const column of historyColumns) {
-        const columnType = String(column.COLUMN_TYPE || "");
-        if (
-          columnType.toLowerCase().startsWith("enum(") &&
-          !columnType.includes("'reschedule_requested'")
-        ) {
-          const nullability =
-            column.IS_NULLABLE === "NO" ? "NOT NULL" : "NULL";
-
-          await pool.query(`
-            ALTER TABLE appointment_status_history
-            MODIFY COLUMN ${column.COLUMN_NAME} ENUM(
-              'pending',
-              'confirmed',
-              'reschedule_requested',
-              'cancelled',
-              'completed',
-              'no_show'
-            ) ${nullability}
-          `);
-        }
-      }
     })().catch((error) => {
       appointmentRescheduleSchemaPromise = null;
       throw error;
@@ -233,48 +183,39 @@ const ensureAppointmentRescheduleColumns = async () => {
 const ensureUserNotificationsTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_notifications (
-      id INT NOT NULL AUTO_INCREMENT,
-      user_id INT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
       unique_key VARCHAR(160) NOT NULL,
       title VARCHAR(180) NOT NULL,
       message TEXT NOT NULL,
       category VARCHAR(80) NOT NULL DEFAULT 'System',
       icon VARCHAR(40) NOT NULL DEFAULT 'bell',
-      is_read TINYINT(1) NOT NULL DEFAULT 0,
-      appointment_id INT DEFAULT NULL,
-      read_at DATETIME DEFAULT NULL,
-      email_sent_at DATETIME DEFAULT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_user_notification (user_id, unique_key),
-      INDEX idx_user_notifications_user (user_id, is_read, created_at)
+      is_read SMALLINT NOT NULL DEFAULT 0,
+      appointment_id INTEGER DEFAULT NULL,
+      read_at TIMESTAMP DEFAULT NULL,
+      email_sent_at TIMESTAMP DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_user_notification UNIQUE (user_id, unique_key)
     )
   `);
 
-  const [emailSentColumns] = await pool.query(
-    `
-    SELECT COLUMN_NAME
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'user_notifications'
-      AND COLUMN_NAME = 'email_sent_at'
-    `
-  );
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_user_notifications_user
+    ON user_notifications (user_id, is_read, created_at)
+  `);
 
-  if (emailSentColumns.length === 0) {
-    await pool.query(`
-      ALTER TABLE user_notifications
-      ADD COLUMN email_sent_at DATETIME DEFAULT NULL AFTER read_at
-    `);
-  }
+  await pool.query(`
+    ALTER TABLE user_notifications
+    ADD COLUMN IF NOT EXISTS email_sent_at TIMESTAMP DEFAULT NULL
+  `);
 };
 
 const ensureUserSupportRequestsTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS user_support_requests (
-      id INT NOT NULL AUTO_INCREMENT,
-      user_id INT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
       topic VARCHAR(80) NOT NULL,
       priority VARCHAR(20) NOT NULL DEFAULT 'normal',
       subject VARCHAR(180) NOT NULL,
@@ -282,12 +223,19 @@ const ensureUserSupportRequestsTable = async () => {
       contact_email VARCHAR(255) DEFAULT NULL,
       contact_phone VARCHAR(40) DEFAULT NULL,
       status VARCHAR(40) NOT NULL DEFAULT 'open',
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      INDEX idx_user_support_requests_user (user_id, created_at),
-      INDEX idx_user_support_requests_status (status)
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_user_support_requests_user
+    ON user_support_requests (user_id, created_at)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_user_support_requests_status
+    ON user_support_requests (status)
   `);
 };
 
@@ -399,13 +347,14 @@ const insertNotification = async ({
       created_at
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE
-      title = VALUES(title),
-      message = VALUES(message),
-      category = VALUES(category),
-      icon = VALUES(icon),
-      appointment_id = VALUES(appointment_id),
-      updated_at = NOW()
+    ON CONFLICT (user_id, unique_key) DO UPDATE SET
+      title = EXCLUDED.title,
+      message = EXCLUDED.message,
+      category = EXCLUDED.category,
+      icon = EXCLUDED.icon,
+      appointment_id = EXCLUDED.appointment_id,
+      updated_at = CURRENT_TIMESTAMP
+    RETURNING id
     `,
     [userId, uniqueKey, title, message, safeCategory, icon, appointmentId, createdAt]
   );
@@ -779,7 +728,8 @@ router.post("/:userId/support-requests", async (req, res) => {
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'open', NOW(), NOW())
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'open', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      RETURNING id
       `,
       [
         userId,

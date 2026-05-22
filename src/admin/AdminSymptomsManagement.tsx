@@ -70,10 +70,19 @@ export default function AdminSymptomsManagement() {
     try {
       setLoading(true);
       const res = await fetch(API_BASE);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch symptoms (${res.status})`);
+      }
       const data = await res.json();
-      setSymptoms(data);
+      setSymptoms(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch symptoms:", err);
+      setSymptoms([]);
+      setToast({
+        type: "error",
+        message: "Failed to load symptoms.",
+      });
+      setTimeout(() => setToast(null), 2500);
     } finally {
       setLoading(false);
     }
@@ -82,6 +91,9 @@ export default function AdminSymptomsManagement() {
   const fetchBodySystems = async () => {
     try {
       const res = await fetch(`${API_BASE}/body-systems/options`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch body systems (${res.status})`);
+      }
       const data = await res.json();
       setBodySystems(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -242,30 +254,6 @@ setTimeout(() => setToast(null), 2500);
     setBodySystemId(item.body_system_id ? String(item.body_system_id) : "");
     setIsRedFlag(!!item.is_red_flag);
   };
-
-  const handleDelete = async (id: number) => {
-    const confirmed = window.confirm("Are you sure you want to delete this symptom?");
-    if (!confirmed) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/${id}`, {
-        method: "DELETE",
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert(data.message || "Failed to delete symptom.");
-        return;
-      }
-
-      fetchSymptoms();
-    } catch (err) {
-      console.error("Delete symptom error:", err);
-      alert("Something went wrong while deleting.");
-    }
-  };
-
 
   const confirmDelete = async () => {
   if (!deleteId) return;

@@ -5,15 +5,17 @@ const pool = require("../db/pool");
 const ensureHealthLinkColumns = async () => {
   const [symptomColumns] = await pool.query(
     `
-    SELECT COLUMN_NAME
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'symptoms'
-      AND COLUMN_NAME IN ('description', 'body_system_id')
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'symptoms'
+      AND column_name IN ('description', 'body_system_id')
     `
   );
 
-  const existingSymptoms = new Set(symptomColumns.map((column) => column.COLUMN_NAME));
+  const existingSymptoms = new Set(
+    symptomColumns.map((column) => column.column_name)
+  );
 
   if (!existingSymptoms.has("description")) {
     await pool.query(`
@@ -31,11 +33,11 @@ const ensureHealthLinkColumns = async () => {
 
   const [conditionColumns] = await pool.query(
     `
-    SELECT COLUMN_NAME
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'conditions'
-      AND COLUMN_NAME = 'body_system_id'
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'conditions'
+      AND column_name = 'body_system_id'
     LIMIT 1
     `
   );

@@ -60,15 +60,41 @@ export default function AdminConditionSymptomMapping() {
   };
 
   const fetchConditions = async () => {
-    const res = await fetch(`${API_BASE}/conditions`);
-    const data = await res.json();
-    setConditions(data);
+    try {
+      const res = await fetch(`${API_BASE}/conditions`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch conditions (${res.status})`);
+      }
+      const data = await res.json();
+      setConditions(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch conditions:", err);
+      setConditions([]);
+      setToast({
+        type: "error",
+        message: "Failed to load conditions.",
+      });
+      setTimeout(() => setToast(null), 2500);
+    }
   };
 
   const fetchSymptoms = async () => {
-    const res = await fetch(`${API_BASE}/symptoms`);
-    const data = await res.json();
-    setSymptoms(data);
+    try {
+      const res = await fetch(`${API_BASE}/symptoms`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch symptoms (${res.status})`);
+      }
+      const data = await res.json();
+      setSymptoms(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch symptoms:", err);
+      setSymptoms([]);
+      setToast({
+        type: "error",
+        message: "Failed to load symptoms.",
+      });
+      setTimeout(() => setToast(null), 2500);
+    }
   };
 
   const fetchMappedSymptoms = async (conditionId: string) => {
@@ -80,10 +106,19 @@ export default function AdminConditionSymptomMapping() {
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE}/${conditionId}`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch mapped symptoms (${res.status})`);
+      }
       const data = await res.json();
-      setSelectedSymptoms(data);
+      setSelectedSymptoms(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Failed to fetch mapped symptoms:", err);
+      setSelectedSymptoms([]);
+      setToast({
+        type: "error",
+        message: "Failed to load mapped symptoms.",
+      });
+      setTimeout(() => setToast(null), 2500);
     } finally {
       setLoading(false);
     }

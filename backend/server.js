@@ -53,25 +53,25 @@ app.get("/api/test", (req, res) => res.json({ message: "Backend works!" }));
 app.get("/api/admin/dashboard-metrics", async (req, res) => {
   try {
     const [[usersCount]] = await pool.query(
-      "SELECT COUNT(*) AS totalUsers FROM users"
+      'SELECT COUNT(*) AS "totalUsers" FROM users'
     );
     const [[clinicsCount]] = await pool.query(
-      "SELECT COUNT(*) AS totalClinics FROM clinics"
+      'SELECT COUNT(*) AS "totalClinics" FROM clinics'
     );
     const [[pendingClinics]] = await pool.query(
-      "SELECT COUNT(*) AS pendingClinics FROM clinics WHERE status = 'pending'"
+      'SELECT COUNT(*) AS "pendingClinics" FROM clinics WHERE status = \'pending\''
     );
     const [[scheduledAppointments]] = await pool.query(`
-      SELECT COUNT(*) AS scheduledAppointments
+      SELECT COUNT(*) AS "scheduledAppointments"
       FROM appointments
       WHERE status IN ('pending', 'confirmed', 'reschedule_requested', 'scheduled', 'approved')
     `);
 
     const [trendRows] = await pool.query(`
-      SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS total
+      SELECT to_char(created_at::date, 'YYYY-MM-DD') AS day, COUNT(*) AS total
       FROM users
-      WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-      GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
+      WHERE created_at >= CURRENT_DATE - INTERVAL '6 days'
+      GROUP BY created_at::date
       ORDER BY day ASC
     `);
 
@@ -1062,15 +1062,15 @@ const ensureAppointmentRescheduleColumns = async () => {
 const ensureHealthSymptomColumns = async () => {
   const [columns] = await pool.query(
     `
-    SELECT COLUMN_NAME
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'symptoms'
-      AND COLUMN_NAME IN ('description', 'body_system_id')
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'symptoms'
+      AND column_name IN ('description', 'body_system_id')
     `
   );
 
-  const existing = new Set(columns.map((column) => column.COLUMN_NAME));
+  const existing = new Set(columns.map((column) => column.column_name));
 
   if (!existing.has("description")) {
     await pool.query(`
@@ -1091,7 +1091,7 @@ app.get("/api/health/body-systems", async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT
-        CAST(id AS CHAR) AS id,
+        id::text AS id,
         slug,
         COALESCE(icon, '🩺') AS icon,
         name,
@@ -1115,7 +1115,7 @@ app.get("/api/health/topics", async (req, res) => {
     const [rows] = await pool.query(
       `
       SELECT
-        CAST(c.condition_id AS CHAR) AS id,
+        c.condition_id::text AS id,
         c.slug,
         bs.slug AS body_system_slug,
         COALESCE(bs.icon, '🩺') AS icon,
@@ -1413,6 +1413,29 @@ const loadConditionSymptoms = async (conditionId) => {
   );
 };
 
+const saveRecentlyViewedHealthTopic = async (userId, conditionId) => {
+  const [, updateMeta] = await pool.query(
+    `
+    UPDATE recently_viewed_health_topics
+    SET viewed_at = CURRENT_TIMESTAMP
+    WHERE user_id = ? AND condition_id = ?
+    `,
+    [userId, conditionId]
+  );
+
+  if (Number(updateMeta?.affectedRows || updateMeta?.rowCount || 0) > 0) {
+    return;
+  }
+
+  await pool.query(
+    `
+    INSERT INTO recently_viewed_health_topics (user_id, condition_id)
+    VALUES (?, ?)
+    `,
+    [userId, conditionId]
+  );
+};
+
 app.get("/api/health/condition/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
@@ -1425,18 +1448,11 @@ app.get("/api/health/condition/:slug", async (req, res) => {
     }
 
     if (userId) {
-      await pool
-        .query(
-          `
-          INSERT INTO recently_viewed_health_topics (user_id, condition_id)
-          VALUES (?, ?)
-          ON DUPLICATE KEY UPDATE viewed_at = CURRENT_TIMESTAMP
-          `,
-          [userId, condition.condition_id]
-        )
-        .catch((viewErr) => {
+      await saveRecentlyViewedHealthTopic(userId, condition.condition_id).catch(
+        (viewErr) => {
           console.error("Save recently viewed health topic error:", viewErr);
-        });
+        }
+      );
     }
 
     const [symptoms] = await loadConditionSymptoms(condition.condition_id);

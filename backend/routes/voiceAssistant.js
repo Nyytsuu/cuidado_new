@@ -83,10 +83,10 @@ router.post("/analyze", async (req, res) => {
         c.advice_level,
         c.when_to_seek_help,
         COALESCE(SUM(cs.weight), 0) AS total_weight,
-        GROUP_CONCAT(
-          DISTINCT s.symptom_name
+        string_agg(
+          s.symptom_name,
+          '||'
           ORDER BY cs.required_symptom DESC, cs.weight DESC, s.symptom_name ASC
-          SEPARATOR '||'
         ) AS mapped_symptoms,
         MAX(COALESCE(s.is_red_flag, 0)) AS has_red_flag
       FROM conditions c
@@ -152,7 +152,7 @@ router.post("/analyze", async (req, res) => {
           COALESCE(SUM(cs.weight), 0) AS matched_weight,
           COUNT(cs.symptom_id) AS matched_count,
           totals.total_weight,
-          GROUP_CONCAT(s.symptom_name ORDER BY s.symptom_name SEPARATOR '||') AS matched_symptoms
+          string_agg(s.symptom_name, '||' ORDER BY s.symptom_name) AS matched_symptoms
         FROM condition_symptoms cs
         INNER JOIN conditions c
           ON c.condition_id = cs.condition_id

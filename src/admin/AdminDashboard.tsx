@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import SidebarAdmin from "./SidebarAdmin";
 import "./AdminDashboard.css";
 import "./AdminHeader.css";
@@ -73,11 +73,13 @@ type AdminAppointmentApiRow = {
 
 type AppointmentStatus =
   | "pending"
+  | "confirmed"
   | "approved"
   | "rejected"
   | "scheduled"
   | "completed"
-  | "cancelled";
+  | "cancelled"
+  | "reschedule_requested";
 
 type AppointmentDetails = {
   id: number;
@@ -112,6 +114,25 @@ const matchesSearch = (
       .includes(query)
   );
 
+const toStatusKey = (status: string) =>
+  String(status || "pending")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-");
+
+const toStatusLabel = (status: string, compact = false) => {
+  const key = toStatusKey(status);
+  if (key === "reschedule-requested") {
+    return compact ? "Reschedule" : "Reschedule Requested";
+  }
+
+  return key
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+};
+
 export default function AdminDashboard() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -134,6 +155,55 @@ export default function AdminDashboard() {
 
   const [latestUsers, setLatestUsers] = useState<LatestUserRow[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+
+  useLayoutEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById("root");
+
+    const previous = {
+      htmlHeight: html.style.height,
+      htmlOverflowY: html.style.overflowY,
+      bodyHeight: body.style.height,
+      bodyOverflowY: body.style.overflowY,
+      bodyDisplay: body.style.display,
+      bodyAlignItems: body.style.alignItems,
+      bodyJustifyContent: body.style.justifyContent,
+      rootHeight: root?.style.height || "",
+      rootMinHeight: root?.style.minHeight || "",
+      rootWidth: root?.style.width || "",
+    };
+
+    html.style.height = "auto";
+    html.style.overflowY = "auto";
+    body.style.height = "auto";
+    body.style.overflowY = "auto";
+    body.style.display = "block";
+    body.style.alignItems = "stretch";
+    body.style.justifyContent = "flex-start";
+
+    if (root) {
+      root.style.height = "auto";
+      root.style.minHeight = "100vh";
+      root.style.width = "100%";
+    }
+
+    return () => {
+      html.style.height = previous.htmlHeight;
+      html.style.overflowY = previous.htmlOverflowY;
+      body.style.height = previous.bodyHeight;
+      body.style.overflowY = previous.bodyOverflowY;
+      body.style.display = previous.bodyDisplay;
+      body.style.alignItems = previous.bodyAlignItems;
+      body.style.justifyContent = previous.bodyJustifyContent;
+
+      if (root) {
+        root.style.height = previous.rootHeight;
+        root.style.minHeight = previous.rootMinHeight;
+        root.style.width = previous.rootWidth;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const loadClinics = async () => {
@@ -236,8 +306,24 @@ export default function AdminDashboard() {
 
   const fmtDate = (iso: string) => new Date(iso).toLocaleDateString();
 
-  const locationText = (c: ClinicRow) =>
-    `${c.address ?? "No address"} (P:${c.province_id}, M:${c.municipality_id}, B:${c.barangay_id})`;
+  const locationText = (c: ClinicRow) => {
+    const clinic = c as ClinicRow & {
+      provinceId?: number | null;
+      municipalityId?: number | null;
+      barangayId?: number | null;
+    };
+    const address = clinic.address?.trim() || "No address";
+    const province = clinic.province_id ?? clinic.provinceId;
+    const municipality = clinic.municipality_id ?? clinic.municipalityId;
+    const barangay = clinic.barangay_id ?? clinic.barangayId;
+    const parts = [
+      province ? `P:${province}` : null,
+      municipality ? `M:${municipality}` : null,
+      barangay ? `B:${barangay}` : null,
+    ].filter(Boolean);
+
+    return parts.length > 0 ? `${address} (${parts.join(", ")})` : address;
+  };
 
   const dashboardQuery = q.trim().toLowerCase();
   const filteredClinics = clinics.filter((clinic) =>
@@ -276,7 +362,8 @@ export default function AdminDashboard() {
       appointment.patient,
       appointment.clinic,
       appointment.schedule,
-      appointment.status
+      appointment.status,
+      toStatusLabel(appointment.status)
     )
   );
 
@@ -316,7 +403,7 @@ export default function AdminDashboard() {
         patient: a.patient_name,
         clinic: a.clinic_name,
         startAt: a.start_at,
-        schedule: `${new Date(a.start_at).toLocaleDateString()} • ${new Date(
+        schedule: `${new Date(a.start_at).toLocaleDateString()} - ${new Date(
           a.start_at
         ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
         status: a.status,
@@ -508,7 +595,7 @@ export default function AdminDashboard() {
             <section className="dash-grid dash-grid-2col">
               <div className="dash-left">
                 <Panel title="Pending Approvals ">
-                  <table className="dash-table">
+                  <table className="dash-table dash-table-pending">
                     <thead>
                       <tr>
                         <th>Clinic</th>
@@ -563,19 +650,21 @@ export default function AdminDashboard() {
                   </table>
                 </Panel>
 
-                <Panel title="Users / Patients">
-                  <table className="dash-table">
+                <Panel
+                  title="Users / Patients"
+                  actions={
+                    <Link to="/admin/users">
+                      <button type="button" className="btn-outline btn-view-users">
+                        View all
+                      </button>
+                    </Link>
+                  }
+                >
+                  <table className="dash-table dash-table-users">
                     <thead>
                       <tr>
                         <th>User</th>
-                        <th className="th-joined">
-                          Joined
-                          <Link to="/admin/users">
-                            <button type="button" className="btn-outline btn-view-users">
-                              View all
-                            </button>
-                          </Link>
-                        </th>
+                        <th>Joined</th>
                       </tr>
                     </thead>
 
@@ -610,7 +699,7 @@ export default function AdminDashboard() {
 
               <div className="dash-center">
                 <Panel title="Clinics">
-                  <table className="dash-table">
+                  <table className="dash-table dash-table-clinics">
                     <thead>
                       <tr>
                         <th>Clinic</th>
@@ -657,7 +746,7 @@ export default function AdminDashboard() {
                   <div className="activity-empty">No recent activity yet.</div>
                 ) : (
                   <ul className="activity-list">
-                    {filteredActivities.slice(0, 3).map((item) => (
+                    {filteredActivities.map((item) => (
                       <li key={item.id} className={`activity-item ${item.type}`}>
                         <div className="activity-icon">
                           {item.type === "user" && "👤"}
@@ -681,47 +770,32 @@ export default function AdminDashboard() {
             </div>
 
             <Panel title="Appointments" className="appointment-panel">
-              <table className="dash-table">
-                <thead>
-                  <tr>
-                    <th>Patient</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
+              <div className="appointment-list">
+                {loadingAppointments ? (
+                  <div className="td-empty">Loading...</div>
+                ) : filteredAppointments.length === 0 ? (
+                  <div className="td-empty">No appointments yet.</div>
+                ) : (
+                  filteredAppointments.map((ap) => {
+                    const statusKey = toStatusKey(ap.status);
 
-                <tbody>
-                  {loadingAppointments ? (
-                    <tr>
-                      <td colSpan={3} className="td-empty">
-                        Loading...
-                      </td>
-                    </tr>
-                  ) : filteredAppointments.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="td-empty">
-                        No appointments yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredAppointments.map((ap) => (
-                      <tr key={ap.id}>
-                        <td className="appt-patient-cell">
+                    return (
+                      <div className="appointment-row" key={ap.id}>
+                        <div className="appointment-info">
                           <div className="t-main">{ap.patient}</div>
                           <div className="t-sub">
                             {ap.clinic} - {ap.schedule}
                           </div>
-                        </td>
+                        </div>
 
-                        <td className="appt-status-cell">
+                        <div className="appointment-controls">
                           <span
-                            className={`appt-badge appt-status-badge badge-${ap.status.toLowerCase()}`}
+                            className={`appt-badge appt-status-badge badge-${statusKey}`}
+                            title={toStatusLabel(ap.status)}
                           >
-                            {ap.status}
+                            {toStatusLabel(ap.status, true)}
                           </span>
-                        </td>
 
-                        <td className="appt-action-cell">
                           <button
                             type="button"
                             className="appt-badge appt-view-btn badge-view"
@@ -729,12 +803,12 @@ export default function AdminDashboard() {
                           >
                             View
                           </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </Panel>
           </aside>
         </section>
@@ -795,16 +869,19 @@ export default function AdminDashboard() {
 function Panel({
   title,
   children,
+  actions,
   className = "",
 }: {
   title: string;
   children: ReactNode;
+  actions?: ReactNode;
   className?: string;
 }) {  
   return (
     <div className={`dash-panel ${className}`}>
       <div className="dash-panel-head">
         <div className="dash-panel-title">{title}</div>
+        {actions && <div className="dash-panel-actions">{actions}</div>}
       </div>
       <div className="dash-panel-body dash-panel-pad">{children}</div>
     </div>

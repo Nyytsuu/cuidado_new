@@ -5,16 +5,17 @@ const pool = require("../db/pool");
 const ensureScheduleTables = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_weekly_schedules (
-      id INT NOT NULL AUTO_INCREMENT,
-      clinic_id INT NOT NULL,
-      day_of_week ENUM('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
-      is_working TINYINT(1) NOT NULL DEFAULT 1,
+      id SERIAL PRIMARY KEY,
+      clinic_id INTEGER NOT NULL,
+      day_of_week VARCHAR(9) NOT NULL CHECK (
+        day_of_week IN ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')
+      ),
+      is_working SMALLINT NOT NULL DEFAULT 1,
       opening_time TIME DEFAULT NULL,
       closing_time TIME DEFAULT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_day (clinic_id, day_of_week),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_clinic_day UNIQUE (clinic_id, day_of_week),
       CONSTRAINT fk_clinic_weekly_schedules_clinic
         FOREIGN KEY (clinic_id) REFERENCES clinics(id)
         ON DELETE CASCADE
@@ -23,13 +24,12 @@ const ensureScheduleTables = async () => {
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_blocked_dates (
-      id INT NOT NULL AUTO_INCREMENT,
-      clinic_id INT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      clinic_id INTEGER NOT NULL,
       blocked_date DATE NOT NULL,
       reason VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_blocked_date (clinic_id, blocked_date),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_clinic_blocked_date UNIQUE (clinic_id, blocked_date),
       CONSTRAINT fk_clinic_blocked_dates_clinic
         FOREIGN KEY (clinic_id) REFERENCES clinics(id)
         ON DELETE CASCADE
@@ -37,26 +37,33 @@ const ensureScheduleTables = async () => {
   `);
 };
 
-const MANILA_NOW_SQL = "UTC_TIMESTAMP() + INTERVAL 8 HOUR";
-const MANILA_DATE_SQL = `DATE(${MANILA_NOW_SQL})`;
-const MANILA_TIME_SQL = `TIME(${MANILA_NOW_SQL})`;
+const MANILA_NOW_SQL = "CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Manila'";
+const MANILA_DATE_SQL = `(${MANILA_NOW_SQL})::date`;
+const MANILA_TIME_SQL = `(${MANILA_NOW_SQL})::time`;
 
 const ensureClinicFeedbackTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_feedback (
-      id INT NOT NULL AUTO_INCREMENT,
-      appointment_id INT NOT NULL,
-      clinic_id INT NOT NULL,
-      user_id INT NOT NULL,
-      rating TINYINT NOT NULL,
+      id SERIAL PRIMARY KEY,
+      appointment_id INTEGER NOT NULL,
+      clinic_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      rating SMALLINT NOT NULL,
       feedback TEXT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_feedback_appointment_user (appointment_id, user_id),
-      KEY idx_clinic_feedback_clinic (clinic_id),
-      KEY idx_clinic_feedback_user (user_id)
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_feedback_appointment_user UNIQUE (appointment_id, user_id)
     )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_clinic_feedback_clinic
+    ON clinic_feedback (clinic_id)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_clinic_feedback_user
+    ON clinic_feedback (user_id)
   `);
 };
 
@@ -75,8 +82,8 @@ router.get("/", async (req, res) => {
         c.address,
         c.specialization,
         c.services_offered,
-        TIME_FORMAT(c.opening_time, '%H:%i:%s') AS opening_time,
-        TIME_FORMAT(c.closing_time, '%H:%i:%s') AS closing_time,
+        to_char(c.opening_time, 'HH24:MI:SS') AS opening_time,
+        to_char(c.closing_time, 'HH24:MI:SS') AS closing_time,
         c.operating_days,
         c.created_at,
         c.status,
@@ -84,23 +91,23 @@ router.get("/", async (req, res) => {
         c.latitude,
         c.longitude,
         COALESCE(cws.is_working, 1) AS is_working_today,
-        IF(cbd.id IS NULL, 0, 1) AS is_blocked_today,
-        TIME_FORMAT(COALESCE(cws.opening_time, c.opening_time), '%H:%i:%s') AS today_opening_time,
-        TIME_FORMAT(COALESCE(cws.closing_time, c.closing_time), '%H:%i:%s') AS today_closing_time,
-        DATE_FORMAT(${MANILA_DATE_SQL}, '%Y-%m-%d') AS clinic_today,
-        TIME_FORMAT(${MANILA_TIME_SQL}, '%H:%i:%s') AS clinic_now_time,
-        IF(
+        CASE WHEN cbd.id IS NULL THEN 0 ELSE 1 END AS is_blocked_today,
+        to_char(COALESCE(cws.opening_time, c.opening_time), 'HH24:MI:SS') AS today_opening_time,
+        to_char(COALESCE(cws.closing_time, c.closing_time), 'HH24:MI:SS') AS today_closing_time,
+        to_char(${MANILA_DATE_SQL}, 'YYYY-MM-DD') AS clinic_today,
+        to_char(${MANILA_TIME_SQL}, 'HH24:MI:SS') AS clinic_now_time,
+        CASE WHEN
           cbd.id IS NULL
           AND COALESCE(cws.is_working, 1) = 1
           AND ${MANILA_TIME_SQL} >= COALESCE(cws.opening_time, c.opening_time)
-          AND ${MANILA_TIME_SQL} < COALESCE(cws.closing_time, c.closing_time),
-          1,
-          0
-        ) AS is_open_now
+          AND ${MANILA_TIME_SQL} < COALESCE(cws.closing_time, c.closing_time)
+          THEN 1
+          ELSE 0
+        END AS is_open_now
       FROM clinics c
       LEFT JOIN clinic_weekly_schedules cws
         ON cws.clinic_id = c.id
-        AND cws.day_of_week = DAYNAME(${MANILA_DATE_SQL})
+        AND cws.day_of_week = to_char(${MANILA_DATE_SQL}, 'FMDay')
       LEFT JOIN clinic_blocked_dates cbd
         ON cbd.clinic_id = c.id
         AND cbd.blocked_date = ${MANILA_DATE_SQL}
@@ -112,10 +119,10 @@ router.get("/", async (req, res) => {
     if (search) {
       sql += `
         AND (
-          c.clinic_name LIKE ?
-          OR c.address LIKE ?
-          OR c.specialization LIKE ?
-          OR c.services_offered LIKE ?
+          c.clinic_name ILIKE ?
+          OR c.address ILIKE ?
+          OR c.specialization ILIKE ?
+          OR c.services_offered ILIKE ?
         )
       `;
       const q = `%${search}%`;
@@ -151,11 +158,20 @@ router.get("/", async (req, res) => {
         clinic_id,
         day_of_week,
         is_working,
-        TIME_FORMAT(opening_time, '%H:%i:%s') AS opening_time,
-        TIME_FORMAT(closing_time, '%H:%i:%s') AS closing_time
+        to_char(opening_time, 'HH24:MI:SS') AS opening_time,
+        to_char(closing_time, 'HH24:MI:SS') AS closing_time
       FROM clinic_weekly_schedules
       WHERE clinic_id IN (?)
-      ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+      ORDER BY CASE day_of_week
+        WHEN 'Monday' THEN 1
+        WHEN 'Tuesday' THEN 2
+        WHEN 'Wednesday' THEN 3
+        WHEN 'Thursday' THEN 4
+        WHEN 'Friday' THEN 5
+        WHEN 'Saturday' THEN 6
+        WHEN 'Sunday' THEN 7
+        ELSE 8
+      END
       `,
       [clinicIds]
     );
@@ -165,7 +181,7 @@ router.get("/", async (req, res) => {
       SELECT
         id,
         clinic_id,
-        DATE_FORMAT(blocked_date, '%Y-%m-%d') AS date,
+        to_char(blocked_date, 'YYYY-MM-DD') AS date,
         reason
       FROM clinic_blocked_dates
       WHERE clinic_id IN (?) AND blocked_date >= ${MANILA_DATE_SQL}

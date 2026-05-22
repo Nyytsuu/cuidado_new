@@ -6,15 +6,15 @@ const pool = require("../db/pool");
 const ensureSymptomAdminColumns = async () => {
   const [columns] = await pool.query(
     `
-    SELECT COLUMN_NAME
-    FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = 'symptoms'
-      AND COLUMN_NAME IN ('description', 'body_system_id')
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'symptoms'
+      AND column_name IN ('description', 'body_system_id')
     `
   );
 
-  const existing = new Set(columns.map((column) => column.COLUMN_NAME));
+  const existing = new Set(columns.map((column) => column.column_name));
 
   if (!existing.has("description")) {
     await pool.query(`
@@ -92,6 +92,7 @@ router.post("/", async (req, res) => {
       INSERT INTO symptoms
         (symptom_name, description, category, body_system_id, is_red_flag)
       VALUES (?, ?, ?, ?, ?)
+      RETURNING symptom_id AS id
       `,
       [
         symptom_name.trim(),
