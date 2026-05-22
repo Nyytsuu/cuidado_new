@@ -1864,7 +1864,6 @@ router.get("/services", (req, res) => {
       name,
       description,
       price,
-      duration,
       duration_minutes,
       is_active
     FROM clinic_services

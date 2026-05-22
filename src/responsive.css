@@ -893,6 +893,19 @@ button {
   box-sizing: border-box;
 }
 
+/* Override the global .with-sidebar { height:100vh; overflow:hidden; background:#fff }
+   leak from Categories.css — clinic pages need to scroll freely */
+.ClinicAppoint.with-sidebar,
+.Patient.with-sidebar,
+.services.with-sidebar,
+.Schedule.with-sidebar,
+.ClinicProfile.with-sidebar {
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow-y: auto !important;
+  background: transparent !important;
+}
+
 .SidebarClinic .app-header {
   left: var(--sidebar-width-collapsed) !important;
   right: 0 !important;
