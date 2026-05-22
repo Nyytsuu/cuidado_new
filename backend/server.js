@@ -21,6 +21,7 @@ const findClinicRoute = require("./routes/findClinic");
 const usersRouter = require("./routes/users");
 const articlesRouter = require("./routes/articles");
 const clinicFeedbackRouter = require("./routes/clinicFeedback");
+const clinicDashboardRoutes = require("./routes/clinicDashboard.js");
 
 const app = express();
 
@@ -1597,6 +1598,7 @@ app.use("/api/symptom-checker", symptomCheckerRoute);
 app.use("/api/voice-assistant", voiceAssistantRoute);
 app.use("/api/users", usersRouter);
 app.use("/api/articles", articlesRouter);
+app.use("/api/clinic/dashboard", clinicDashboardRoutes);
 
 /* ✅ ERROR HANDLER LAST */
 app.use((err, req, res, next) => {
