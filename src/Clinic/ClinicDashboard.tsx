@@ -448,6 +448,7 @@ export default function ClinicDashboard() {
 >
   DASHBOARD IS RENDERING
 </div>
+{/* ---------- SIDEBAR & HEADER ---------- 
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -459,7 +460,7 @@ export default function ClinicDashboard() {
         onSearchChange={setSearchTerm}
         searchPlaceholder="Search dashboard..."
       />
-
+*/}
       <main className="ad-main">
         <section className="dash-layout">
           <div className="dash-maincol">
