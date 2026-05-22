@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import SidebarClinic from "../Clinic/SidebarClinic";
-import "../Clinic/ClinicDashboard.css";
+import SidebarClinic from "./SidebarClinic";
+import "./ClinicDashboard.css";
 import { apiUrl } from "../sharedBackendFetch";
 
 /* ---------- TYPES ---------- */
@@ -115,7 +115,6 @@ const matchesSearch = (
       .includes(query)
   );
 
-/* ---------- SMALL PANEL COMPONENT ---------- */
 function Panel({ title, children, className = "" }: PanelProps) {
   return (
     <div className={`dash-panel ${className}`}>
@@ -155,14 +154,12 @@ export default function ClinicDashboard() {
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  /* ---------- METRICS ---------- */
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [totalPatients, setTotalPatients] = useState(0);
   const [totalAppointments, setTotalAppointments] = useState(0);
   const [pendingAppointments, setPendingAppointments] = useState(0);
   const [completedAppointments, setCompletedAppointments] = useState(0);
 
-  /* ---------- APPOINTMENTS ---------- */
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -171,15 +168,12 @@ export default function ClinicDashboard() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentDetails | null>(null);
 
-  /* ---------- PATIENTS ---------- */
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [patients, setPatients] = useState<PatientRow[]>([]);
 
-  /* ---------- ACTIVITIES ---------- */
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
-  /* ---------- HELPERS ---------- */
   const fmtDate = (created_at: string) => {
     if (!created_at) return "-";
 
@@ -288,7 +282,6 @@ export default function ClinicDashboard() {
     )
   );
 
-  /* ---------- FETCH METRICS ---------- */
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
@@ -324,7 +317,6 @@ export default function ClinicDashboard() {
     void fetchMetrics();
   }, [clinicId]);
 
-  /* ---------- FETCH APPOINTMENTS ---------- */
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -363,7 +355,6 @@ export default function ClinicDashboard() {
     void fetchAppointments();
   }, [clinicId]);
 
-  /* ---------- FETCH PATIENTS ---------- */
   useEffect(() => {
     const fetchPatients = async () => {
       try {
@@ -401,7 +392,6 @@ export default function ClinicDashboard() {
     void fetchPatients();
   }, [clinicId]);
 
-  /* ---------- FETCH ACTIVITIES ---------- */
   useEffect(() => {
     const fetchActivities = async () => {
       try {
@@ -442,7 +432,7 @@ export default function ClinicDashboard() {
     <div
       className={`ad-wrap clinic-dashboard-page ${
         sidebarExpanded ? "sidebar-expanded" : ""
-      } ${sidebarExpanded ? "modal-open" : ""}`}
+      }`}
     >
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
