@@ -991,7 +991,7 @@ router.get("/clinic/profile", async (req, res) => {
       SELECT
         id,
         clinic_id,
-        DATE_FORMAT(blocked_date, '%Y-%m-%d') AS date,
+        TO_CHAR(blocked_date, '%Y-%m-%d') AS date,
         reason
       FROM clinic_blocked_dates
       WHERE clinic_id = ? AND blocked_date >= CURDATE()

@@ -90,7 +90,7 @@ router.get("/appointments", async (req, res) => {
         a.id,
         a.patient_name_snapshot AS patient,
         COALESCE(
-          GROUP_CONCAT(DISTINCT aps.service_name_snapshot SEPARATOR ', '),
+          STRING_AGG(DISTINCT aps.service_name_snapshot, ', ') AS services
           a.purpose
         ) AS service,
         a.start_at AS schedule,
