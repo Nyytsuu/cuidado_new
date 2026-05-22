@@ -1,4 +1,4 @@
-import "./ForgetPass.css";
+import "../SigninUser/Forgetpass.css";
 import { useState } from "react";
 
 type Props = {
