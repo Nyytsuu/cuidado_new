@@ -1,3 +1,8 @@
+return (
+  <div style={{ padding: 40, fontSize: 30, color: "red" }}>
+    CLINIC DASHBOARD TEST
+  </div>
+);
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
