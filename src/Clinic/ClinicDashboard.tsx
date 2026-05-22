@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
+import { apiUrl } from "../sharedBackendFetch";
 
 /* ---------- TYPES ---------- */
 type MetricsResponse = {
@@ -147,7 +148,6 @@ const getStoredClinicId = () => {
 };
 
 export default function ClinicDashboard() {
-  const API = "http://localhost:5000/api";
   const [clinicId] = useState(() => getStoredClinicId());
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -237,7 +237,7 @@ export default function ClinicDashboard() {
       setDetailsError("");
       setSelectedAppointment(null);
 
-      const res = await fetch(`${API}/appointments/details/${id}`);
+      const res = await fetch(apiUrl(`/api/appointments/details/${id}`));
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -258,6 +258,7 @@ export default function ClinicDashboard() {
   };
 
   const dashboardQuery = searchTerm.trim().toLowerCase();
+
   const filteredAppointments = appointments.filter((appointment) =>
     matchesSearch(
       dashboardQuery,
@@ -267,6 +268,7 @@ export default function ClinicDashboard() {
       appointment.status
     )
   );
+
   const filteredPatients = patients.filter((patient) =>
     matchesSearch(
       dashboardQuery,
@@ -276,6 +278,7 @@ export default function ClinicDashboard() {
       fmtDate(patient.created_at)
     )
   );
+
   const filteredActivities = activities.filter((activity) =>
     matchesSearch(
       dashboardQuery,
@@ -292,16 +295,21 @@ export default function ClinicDashboard() {
         setLoadingMetrics(true);
 
         const res = await fetch(
-          `${API}/clinic/dashboard/metrics?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/dashboard/metrics?clinic_id=${clinicId}`)
         );
-        if (!res.ok) throw new Error("Failed to fetch metrics");
 
-        const data: MetricsResponse = await res.json();
+        const data = await res.json().catch(() => ({}));
 
-        setTotalPatients(data.totalPatients || 0);
-        setTotalAppointments(data.totalAppointments || 0);
-        setPendingAppointments(data.pendingAppointments || 0);
-        setCompletedAppointments(data.completedAppointments || 0);
+        if (!res.ok) {
+          throw new Error(data?.message || "Failed to fetch metrics");
+        }
+
+        const metrics = data as MetricsResponse;
+
+        setTotalPatients(metrics.totalPatients || 0);
+        setTotalAppointments(metrics.totalAppointments || 0);
+        setPendingAppointments(metrics.pendingAppointments || 0);
+        setCompletedAppointments(metrics.completedAppointments || 0);
       } catch (error) {
         console.error("Metrics fetch error:", error);
         setTotalPatients(0);
@@ -313,8 +321,8 @@ export default function ClinicDashboard() {
       }
     };
 
-    fetchMetrics();
-  }, [API, clinicId]);
+    void fetchMetrics();
+  }, [clinicId]);
 
   /* ---------- FETCH APPOINTMENTS ---------- */
   useEffect(() => {
@@ -323,14 +331,17 @@ export default function ClinicDashboard() {
         setLoadingAppointments(true);
 
         const res = await fetch(
-          `${API}/clinic/dashboard/appointments?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/dashboard/appointments?clinic_id=${clinicId}`)
         );
-        if (!res.ok) throw new Error("Failed to fetch appointments");
 
-        const data = (await res.json()) as RawAppointmentRow[];
+        const data = await res.json().catch(() => []);
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch appointments");
+        }
 
         const normalized: AppointmentRow[] = Array.isArray(data)
-          ? data.map((item) => ({
+          ? (data as RawAppointmentRow[]).map((item) => ({
               id: Number(item.id || 0),
               patient: item.patient || item.full_name || "Unknown Patient",
               service: item.service || item.service_name || "General Checkup",
@@ -349,8 +360,8 @@ export default function ClinicDashboard() {
       }
     };
 
-    fetchAppointments();
-  }, [API, clinicId]);
+    void fetchAppointments();
+  }, [clinicId]);
 
   /* ---------- FETCH PATIENTS ---------- */
   useEffect(() => {
@@ -359,14 +370,17 @@ export default function ClinicDashboard() {
         setLoadingPatients(true);
 
         const res = await fetch(
-          `${API}/clinic/dashboard/patients?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/dashboard/patients?clinic_id=${clinicId}`)
         );
-        if (!res.ok) throw new Error("Failed to fetch patients");
 
-        const data = (await res.json()) as RawPatientRow[];
+        const data = await res.json().catch(() => []);
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch patients");
+        }
 
         const normalized: PatientRow[] = Array.isArray(data)
-          ? data.map((item) => ({
+          ? (data as RawPatientRow[]).map((item) => ({
               id: Number(item.id || 0),
               full_name: item.full_name || item.name || "Unknown Patient",
               email: item.email || "No email",
@@ -384,8 +398,8 @@ export default function ClinicDashboard() {
       }
     };
 
-    fetchPatients();
-  }, [API, clinicId]);
+    void fetchPatients();
+  }, [clinicId]);
 
   /* ---------- FETCH ACTIVITIES ---------- */
   useEffect(() => {
@@ -394,14 +408,17 @@ export default function ClinicDashboard() {
         setLoadingActivities(true);
 
         const res = await fetch(
-          `${API}/clinic/dashboard/activities?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/dashboard/activities?clinic_id=${clinicId}`)
         );
-        if (!res.ok) throw new Error("Failed to fetch activities");
 
-        const data = (await res.json()) as RawActivityItem[];
+        const data = await res.json().catch(() => []);
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch activities");
+        }
 
         const normalized: ActivityItem[] = Array.isArray(data)
-          ? data.map((item, index) => ({
+          ? (data as RawActivityItem[]).map((item, index) => ({
               id: String(item.id ?? index),
               type: item.type || "appointment",
               text: item.text || item.message || "No activity",
@@ -418,16 +435,14 @@ export default function ClinicDashboard() {
       }
     };
 
-    fetchActivities();
-  }, [API, clinicId]);
+    void fetchActivities();
+  }, [clinicId]);
 
   return (
     <div
       className={`ad-wrap clinic-dashboard-page ${
         sidebarExpanded ? "sidebar-expanded" : ""
-      } ${
-        sidebarExpanded ? "modal-open" : ""
-      }`}
+      } ${sidebarExpanded ? "modal-open" : ""}`}
     >
       <SidebarClinic
         sidebarExpanded={sidebarExpanded}
@@ -443,7 +458,6 @@ export default function ClinicDashboard() {
 
       <main className="ad-main">
         <section className="dash-layout">
-          {/* LEFT */}
           <div className="dash-maincol">
             <section className="dash-metrics">
               <div className="metric-card">
@@ -515,10 +529,7 @@ export default function ClinicDashboard() {
 
                   <div className="dash-panel-body">
                     <div className="quick-actions-grid">
-                      <Link
-                        to="/clinic/appointments"
-                        className="quick-action-btn"
-                      >
+                      <Link to="/clinic/appointments" className="quick-action-btn">
                         Appointments
                       </Link>
                       <Link to="/clinic/patients" className="quick-action-btn">
@@ -602,7 +613,6 @@ export default function ClinicDashboard() {
             </section>
           </div>
 
-          {/* RIGHT */}
           <aside className="dash-aside">
             <div className="dash-panel dash-right-top">
               <div className="dash-panel-title">Schedule</div>
@@ -680,7 +690,9 @@ export default function ClinicDashboard() {
           >
             <div className="clinic-dash-modal-head">
               <div>
-                <h3 id="clinicDashboardAppointmentTitle">Appointment Details</h3>
+                <h3 id="clinicDashboardAppointmentTitle">
+                  Appointment Details
+                </h3>
                 <p>
                   {selectedAppointment
                     ? `Appointment #${selectedAppointment.id}`
@@ -748,12 +760,16 @@ export default function ClinicDashboard() {
 
                     <div>
                       <span>Start</span>
-                      <strong>{fmtOptionalDateTime(selectedAppointment.start_at)}</strong>
+                      <strong>
+                        {fmtOptionalDateTime(selectedAppointment.start_at)}
+                      </strong>
                     </div>
 
                     <div>
                       <span>End</span>
-                      <strong>{fmtOptionalDateTime(selectedAppointment.end_at)}</strong>
+                      <strong>
+                        {fmtOptionalDateTime(selectedAppointment.end_at)}
+                      </strong>
                     </div>
                   </div>
 
@@ -761,19 +777,31 @@ export default function ClinicDashboard() {
                     <h4>Visit Information</h4>
                     <p>
                       <b>Purpose:</b>{" "}
-                      {fallbackText(selectedAppointment.purpose, "No purpose provided")}
+                      {fallbackText(
+                        selectedAppointment.purpose,
+                        "No purpose provided"
+                      )}
                     </p>
                     <p>
                       <b>Symptoms:</b>{" "}
-                      {fallbackText(selectedAppointment.symptoms, "No symptoms listed")}
+                      {fallbackText(
+                        selectedAppointment.symptoms,
+                        "No symptoms listed"
+                      )}
                     </p>
                     <p>
                       <b>Patient Note:</b>{" "}
-                      {fallbackText(selectedAppointment.patient_note, "No patient note")}
+                      {fallbackText(
+                        selectedAppointment.patient_note,
+                        "No patient note"
+                      )}
                     </p>
                     <p>
                       <b>Clinic Note:</b>{" "}
-                      {fallbackText(selectedAppointment.clinic_note, "No clinic note")}
+                      {fallbackText(
+                        selectedAppointment.clinic_note,
+                        "No clinic note"
+                      )}
                     </p>
                   </div>
 
@@ -790,7 +818,9 @@ export default function ClinicDashboard() {
                               <strong>
                                 {fallbackText(
                                   service.service_name_snapshot,
-                                  `Service #${service.service_id ?? index + 1}`
+                                  `Service #${
+                                    service.service_id ?? index + 1
+                                  }`
                                 )}
                               </strong>
                               <span>
@@ -799,7 +829,9 @@ export default function ClinicDashboard() {
                                   : "Duration not set"}
                                 {" | "}
                                 {service.price_snapshot
-                                  ? `PHP ${Number(service.price_snapshot).toFixed(2)}`
+                                  ? `PHP ${Number(
+                                      service.price_snapshot
+                                    ).toFixed(2)}`
                                   : "No price"}
                               </span>
                             </div>
