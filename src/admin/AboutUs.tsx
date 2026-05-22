@@ -8,7 +8,6 @@ export default function AboutUs() {
   
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   return (
     <>
