@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
@@ -284,6 +284,56 @@ export default function ClinicDashboard() {
       fmtDate(activity.time)
     )
   );
+
+  /* ---------- BODY/HTML HEIGHT FIX ---------- */
+  useLayoutEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById("root");
+
+    const previous = {
+      htmlHeight: html.style.height,
+      htmlOverflowY: html.style.overflowY,
+      bodyHeight: body.style.height,
+      bodyOverflowY: body.style.overflowY,
+      bodyDisplay: body.style.display,
+      bodyAlignItems: body.style.alignItems,
+      bodyJustifyContent: body.style.justifyContent,
+      rootHeight: root?.style.height ?? "",
+      rootMinHeight: root?.style.minHeight ?? "",
+      rootWidth: root?.style.width ?? "",
+    };
+
+    html.style.height = "auto";
+    html.style.overflowY = "auto";
+    body.style.height = "auto";
+    body.style.overflowY = "auto";
+    body.style.display = "block";
+    body.style.alignItems = "stretch";
+    body.style.justifyContent = "flex-start";
+
+    if (root) {
+      root.style.height = "auto";
+      root.style.minHeight = "100vh";
+      root.style.width = "100%";
+    }
+
+    return () => {
+      html.style.height = previous.htmlHeight;
+      html.style.overflowY = previous.htmlOverflowY;
+      body.style.height = previous.bodyHeight;
+      body.style.overflowY = previous.bodyOverflowY;
+      body.style.display = previous.bodyDisplay;
+      body.style.alignItems = previous.bodyAlignItems;
+      body.style.justifyContent = previous.bodyJustifyContent;
+
+      if (root) {
+        root.style.height = previous.rootHeight;
+        root.style.minHeight = previous.rootMinHeight;
+        root.style.width = previous.rootWidth;
+      }
+    };
+  }, []);
 
   /* ---------- FETCH METRICS ---------- */
   useEffect(() => {
