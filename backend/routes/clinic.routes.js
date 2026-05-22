@@ -622,8 +622,8 @@ router.get("/clinics", async (req, res) => {
 
         ws.day_of_week,
         ws.is_working,
-        TIME_FORMAT(ws.opening_time, '%H:%i') AS opening_time,
-        TIME_FORMAT(ws.closing_time, '%H:%i') AS closing_time,
+        TO_CHAR(ws.opening_time, '%H:%i') AS opening_time,
+        TO_CHAR(ws.closing_time, '%H:%i') AS closing_time,
 
         CASE
           WHEN bd.id IS NOT NULL THEN 0
@@ -977,11 +977,20 @@ router.get("/clinic/profile", async (req, res) => {
         clinic_id,
         day_of_week,
         is_working,
-        TIME_FORMAT(opening_time, '%H:%i:%s') AS opening_time,
-        TIME_FORMAT(closing_time, '%H:%i:%s') AS closing_time
+        TO_CHAR(opening_time, '%H:%i:%s') AS opening_time,
+        TO_CHAR(closing_time, '%H:%i:%s') AS closing_time
       FROM clinic_weekly_schedules
       WHERE clinic_id = ?
-      ORDER BY FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+      ORDER BY CASE day_of_week
+  WHEN 'Monday' THEN 1
+  WHEN 'Tuesday' THEN 2
+  WHEN 'Wednesday' THEN 3
+  WHEN 'Thursday' THEN 4
+  WHEN 'Friday' THEN 5
+  WHEN 'Saturday' THEN 6
+  WHEN 'Sunday' THEN 7
+  ELSE 8
+END
       `,
       [clinicId]
     );
@@ -994,7 +1003,7 @@ router.get("/clinic/profile", async (req, res) => {
         TO_CHAR(blocked_date, '%Y-%m-%d') AS date,
         reason
       FROM clinic_blocked_dates
-      WHERE clinic_id = ? AND blocked_date >= CURDATE()
+      WHERE clinic_id = ? AND blocked_date >= CURRENT_DATE()
       ORDER BY blocked_date ASC
       `,
       [clinicId]
