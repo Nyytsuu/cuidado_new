@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
-import { apiUrl } from "../sharedBackendFetch";
 
+/* ---------- TYPES ---------- */
 type MetricsResponse = {
   totalPatients: number;
   totalAppointments: number;
@@ -113,6 +114,7 @@ const matchesSearch = (
       .includes(query)
   );
 
+/* ---------- SMALL PANEL COMPONENT ---------- */
 function Panel({ title, children, className = "" }: PanelProps) {
   return (
     <div className={`dash-panel ${className}`}>
@@ -145,15 +147,22 @@ const getStoredClinicId = () => {
 };
 
 export default function ClinicDashboard() {
+  const API = "http://localhost:5000/api";
   const [clinicId] = useState(() => getStoredClinicId());
+
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
+  /* ---------- METRICS ---------- */
   const [loadingMetrics, setLoadingMetrics] = useState(true);
   const [totalPatients, setTotalPatients] = useState(0);
   const [totalAppointments, setTotalAppointments] = useState(0);
   const [pendingAppointments, setPendingAppointments] = useState(0);
   const [completedAppointments, setCompletedAppointments] = useState(0);
 
+  /* ---------- APPOINTMENTS ---------- */
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -162,12 +171,15 @@ export default function ClinicDashboard() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentDetails | null>(null);
 
+  /* ---------- PATIENTS ---------- */
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [patients, setPatients] = useState<PatientRow[]>([]);
 
+  /* ---------- ACTIVITIES ---------- */
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
+  /* ---------- HELPERS ---------- */
   const fmtDate = (created_at: string) => {
     if (!created_at) return "-";
 
@@ -225,7 +237,7 @@ export default function ClinicDashboard() {
       setDetailsError("");
       setSelectedAppointment(null);
 
-      const res = await fetch(apiUrl(`/api/appointments/details/${id}`));
+      const res = await fetch(`${API}/appointments/details/${id}`);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -246,7 +258,6 @@ export default function ClinicDashboard() {
   };
 
   const dashboardQuery = searchTerm.trim().toLowerCase();
-
   const filteredAppointments = appointments.filter((appointment) =>
     matchesSearch(
       dashboardQuery,
@@ -256,7 +267,6 @@ export default function ClinicDashboard() {
       appointment.status
     )
   );
-
   const filteredPatients = patients.filter((patient) =>
     matchesSearch(
       dashboardQuery,
@@ -266,7 +276,6 @@ export default function ClinicDashboard() {
       fmtDate(patient.created_at)
     )
   );
-
   const filteredActivities = activities.filter((activity) =>
     matchesSearch(
       dashboardQuery,
@@ -276,27 +285,23 @@ export default function ClinicDashboard() {
     )
   );
 
+  /* ---------- FETCH METRICS ---------- */
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
         setLoadingMetrics(true);
 
         const res = await fetch(
-          apiUrl(`/api/clinic/dashboard/metrics?clinic_id=${clinicId}`)
+          `${API}/clinic/dashboard/metrics?clinic_id=${clinicId}`
         );
+        if (!res.ok) throw new Error("Failed to fetch metrics");
 
-        const data = await res.json().catch(() => ({}));
+        const data: MetricsResponse = await res.json();
 
-        if (!res.ok) {
-          throw new Error(data?.message || "Failed to fetch metrics");
-        }
-
-        const metrics = data as MetricsResponse;
-
-        setTotalPatients(metrics.totalPatients || 0);
-        setTotalAppointments(metrics.totalAppointments || 0);
-        setPendingAppointments(metrics.pendingAppointments || 0);
-        setCompletedAppointments(metrics.completedAppointments || 0);
+        setTotalPatients(data.totalPatients || 0);
+        setTotalAppointments(data.totalAppointments || 0);
+        setPendingAppointments(data.pendingAppointments || 0);
+        setCompletedAppointments(data.completedAppointments || 0);
       } catch (error) {
         console.error("Metrics fetch error:", error);
         setTotalPatients(0);
@@ -308,26 +313,24 @@ export default function ClinicDashboard() {
       }
     };
 
-    void fetchMetrics();
-  }, [clinicId]);
+    fetchMetrics();
+  }, [API, clinicId]);
 
+  /* ---------- FETCH APPOINTMENTS ---------- */
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
         setLoadingAppointments(true);
 
         const res = await fetch(
-          apiUrl(`/api/clinic/dashboard/appointments?clinic_id=${clinicId}`)
+          `${API}/clinic/dashboard/appointments?clinic_id=${clinicId}`
         );
+        if (!res.ok) throw new Error("Failed to fetch appointments");
 
-        const data = await res.json().catch(() => []);
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch appointments");
-        }
+        const data = (await res.json()) as RawAppointmentRow[];
 
         const normalized: AppointmentRow[] = Array.isArray(data)
-          ? (data as RawAppointmentRow[]).map((item) => ({
+          ? data.map((item) => ({
               id: Number(item.id || 0),
               patient: item.patient || item.full_name || "Unknown Patient",
               service: item.service || item.service_name || "General Checkup",
@@ -346,26 +349,24 @@ export default function ClinicDashboard() {
       }
     };
 
-    void fetchAppointments();
-  }, [clinicId]);
+    fetchAppointments();
+  }, [API, clinicId]);
 
+  /* ---------- FETCH PATIENTS ---------- */
   useEffect(() => {
     const fetchPatients = async () => {
       try {
         setLoadingPatients(true);
 
         const res = await fetch(
-          apiUrl(`/api/clinic/dashboard/patients?clinic_id=${clinicId}`)
+          `${API}/clinic/dashboard/patients?clinic_id=${clinicId}`
         );
+        if (!res.ok) throw new Error("Failed to fetch patients");
 
-        const data = await res.json().catch(() => []);
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch patients");
-        }
+        const data = (await res.json()) as RawPatientRow[];
 
         const normalized: PatientRow[] = Array.isArray(data)
-          ? (data as RawPatientRow[]).map((item) => ({
+          ? data.map((item) => ({
               id: Number(item.id || 0),
               full_name: item.full_name || item.name || "Unknown Patient",
               email: item.email || "No email",
@@ -383,26 +384,24 @@ export default function ClinicDashboard() {
       }
     };
 
-    void fetchPatients();
-  }, [clinicId]);
+    fetchPatients();
+  }, [API, clinicId]);
 
+  /* ---------- FETCH ACTIVITIES ---------- */
   useEffect(() => {
     const fetchActivities = async () => {
       try {
         setLoadingActivities(true);
 
         const res = await fetch(
-          apiUrl(`/api/clinic/dashboard/activities?clinic_id=${clinicId}`)
+          `${API}/clinic/dashboard/activities?clinic_id=${clinicId}`
         );
+        if (!res.ok) throw new Error("Failed to fetch activities");
 
-        const data = await res.json().catch(() => []);
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch activities");
-        }
+        const data = (await res.json()) as RawActivityItem[];
 
         const normalized: ActivityItem[] = Array.isArray(data)
-          ? (data as RawActivityItem[]).map((item, index) => ({
+          ? data.map((item, index) => ({
               id: String(item.id ?? index),
               type: item.type || "appointment",
               text: item.text || item.message || "No activity",
@@ -419,27 +418,32 @@ export default function ClinicDashboard() {
       }
     };
 
-    void fetchActivities();
-  }, [clinicId]);
+    fetchActivities();
+  }, [API, clinicId]);
 
   return (
-    <div className="clinic-dashboard-page clinic-dashboard-standalone">
-      <header className="clinic-dashboard-topbar">
-        <div>
-          <h1>Clinic Dashboard</h1>
-          <p>Overview of your clinic appointments, patients, and activities.</p>
-        </div>
-
-        <input
-          value={searchTerm}
-          onChange={(event) => setSearchTerm(event.target.value)}
-          placeholder="Search dashboard..."
-          className="clinic-dashboard-search"
-        />
-      </header>
+    <div
+      className={`ad-wrap clinic-dashboard-page ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      } ${
+        sidebarExpanded ? "modal-open" : ""
+      }`}
+    >
+      <SidebarClinic
+        sidebarExpanded={sidebarExpanded}
+        setSidebarExpanded={setSidebarExpanded}
+        profileOpen={profileOpen}
+        setProfileOpen={setProfileOpen}
+        headerProfileOpen={headerProfileOpen}
+        setHeaderProfileOpen={setHeaderProfileOpen}
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search dashboard..."
+      />
 
       <main className="ad-main">
         <section className="dash-layout">
+          {/* LEFT */}
           <div className="dash-maincol">
             <section className="dash-metrics">
               <div className="metric-card">
@@ -511,7 +515,10 @@ export default function ClinicDashboard() {
 
                   <div className="dash-panel-body">
                     <div className="quick-actions-grid">
-                      <Link to="/clinic/appointments" className="quick-action-btn">
+                      <Link
+                        to="/clinic/appointments"
+                        className="quick-action-btn"
+                      >
                         Appointments
                       </Link>
                       <Link to="/clinic/patients" className="quick-action-btn">
@@ -595,6 +602,7 @@ export default function ClinicDashboard() {
             </section>
           </div>
 
+          {/* RIGHT */}
           <aside className="dash-aside">
             <div className="dash-panel dash-right-top">
               <div className="dash-panel-title">Schedule</div>
@@ -672,9 +680,7 @@ export default function ClinicDashboard() {
           >
             <div className="clinic-dash-modal-head">
               <div>
-                <h3 id="clinicDashboardAppointmentTitle">
-                  Appointment Details
-                </h3>
+                <h3 id="clinicDashboardAppointmentTitle">Appointment Details</h3>
                 <p>
                   {selectedAppointment
                     ? `Appointment #${selectedAppointment.id}`
@@ -742,16 +748,12 @@ export default function ClinicDashboard() {
 
                     <div>
                       <span>Start</span>
-                      <strong>
-                        {fmtOptionalDateTime(selectedAppointment.start_at)}
-                      </strong>
+                      <strong>{fmtOptionalDateTime(selectedAppointment.start_at)}</strong>
                     </div>
 
                     <div>
                       <span>End</span>
-                      <strong>
-                        {fmtOptionalDateTime(selectedAppointment.end_at)}
-                      </strong>
+                      <strong>{fmtOptionalDateTime(selectedAppointment.end_at)}</strong>
                     </div>
                   </div>
 
@@ -759,31 +761,19 @@ export default function ClinicDashboard() {
                     <h4>Visit Information</h4>
                     <p>
                       <b>Purpose:</b>{" "}
-                      {fallbackText(
-                        selectedAppointment.purpose,
-                        "No purpose provided"
-                      )}
+                      {fallbackText(selectedAppointment.purpose, "No purpose provided")}
                     </p>
                     <p>
                       <b>Symptoms:</b>{" "}
-                      {fallbackText(
-                        selectedAppointment.symptoms,
-                        "No symptoms listed"
-                      )}
+                      {fallbackText(selectedAppointment.symptoms, "No symptoms listed")}
                     </p>
                     <p>
                       <b>Patient Note:</b>{" "}
-                      {fallbackText(
-                        selectedAppointment.patient_note,
-                        "No patient note"
-                      )}
+                      {fallbackText(selectedAppointment.patient_note, "No patient note")}
                     </p>
                     <p>
                       <b>Clinic Note:</b>{" "}
-                      {fallbackText(
-                        selectedAppointment.clinic_note,
-                        "No clinic note"
-                      )}
+                      {fallbackText(selectedAppointment.clinic_note, "No clinic note")}
                     </p>
                   </div>
 
@@ -800,9 +790,7 @@ export default function ClinicDashboard() {
                               <strong>
                                 {fallbackText(
                                   service.service_name_snapshot,
-                                  `Service #${
-                                    service.service_id ?? index + 1
-                                  }`
+                                  `Service #${service.service_id ?? index + 1}`
                                 )}
                               </strong>
                               <span>
@@ -811,9 +799,7 @@ export default function ClinicDashboard() {
                                   : "Duration not set"}
                                 {" | "}
                                 {service.price_snapshot
-                                  ? `PHP ${Number(
-                                      service.price_snapshot
-                                    ).toFixed(2)}`
+                                  ? `PHP ${Number(service.price_snapshot).toFixed(2)}`
                                   : "No price"}
                               </span>
                             </div>
