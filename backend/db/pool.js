@@ -13,7 +13,19 @@ const pgPool = new Pool({
 const normalizeSql = (sql) =>
   String(sql)
     .replace(/\bDATABASE\(\)/gi, "current_database()")
-    .replace(/TABLE_SCHEMA\s*=\s*current_database\(\)/gi, "table_schema = current_schema()");
+    .replace(/TABLE_SCHEMA\s*=\s*current_database\(\)/gi, "table_schema = current_schema()")
+    // MySQL date functions → PostgreSQL equivalents
+    .replace(/\bCURDATE\(\)/gi, "CURRENT_DATE")
+    .replace(/\bNOW\(\)/gi, "NOW()")
+    .replace(/\bDATE_FORMAT\s*\(\s*([^,]+),\s*'%Y-%m-%d'\s*\)/gi, "TO_CHAR($1, 'YYYY-MM-DD')")
+    .replace(/\bDATE_FORMAT\s*\(\s*([^,]+),\s*'%Y-%m-01'\s*\)/gi, "DATE_TRUNC('month', $1)")
+    .replace(/\bDATE_ADD\s*\(\s*([^,]+),\s*INTERVAL\s+(\d+)\s+(\w+)\s*\)/gi, "($1 + INTERVAL '$2 $3')")
+    .replace(/\bDATE_SUB\s*\(\s*([^,]+),\s*INTERVAL\s+(\d+)\s+(\w+)\s*\)/gi, "($1 - INTERVAL '$2 $3')")
+    // GROUP_CONCAT(col SEPARATOR 'x') → STRING_AGG(col, 'x')
+    .replace(/\bGROUP_CONCAT\s*\(\s*([\s\S]*?)\s+SEPARATOR\s+'([^']+)'\s*\)/gi, "STRING_AGG($1, '$2')")
+    // SUM(DATE(col) = CURDATE()) → SUM(CASE WHEN col::date = CURRENT_DATE THEN 1 ELSE 0 END)
+    .replace(/\bSUM\s*\(\s*DATE\s*\(\s*(\w+)\s*\)\s*=\s*CURRENT_DATE\s*\)/gi,
+      "SUM(CASE WHEN $1::date = CURRENT_DATE THEN 1 ELSE 0 END)");
 
 const convertPlaceholders = (sql, params = []) => {
   let index = 0;

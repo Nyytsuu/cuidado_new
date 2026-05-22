@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import SidebarClinic from "./SidebarClinic";
 import "./ClinicDashboard.css";
@@ -286,7 +286,11 @@ export default function ClinicDashboard() {
   );
 
   /* ---------- BODY/HTML HEIGHT FIX ---------- */
+  const isMounted = useRef(false);
   useLayoutEffect(() => {
+    if (isMounted.current) return;
+    isMounted.current = true;
+
     const html = document.documentElement;
     const body = document.body;
     const root = document.getElementById("root");
@@ -319,6 +323,7 @@ export default function ClinicDashboard() {
     }
 
     return () => {
+      isMounted.current = false;
       html.style.height = previous.htmlHeight;
       html.style.overflowY = previous.htmlOverflowY;
       body.style.height = previous.bodyHeight;
