@@ -67,7 +67,6 @@ type Barangay = {
   name: string;
 };
 
-const API_BASE = getConfiguredBackendUrl();
 const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 const toUploadUrl = (value?: string | null) => {
