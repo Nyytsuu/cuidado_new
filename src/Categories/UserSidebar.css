@@ -285,17 +285,18 @@
   right: auto !important;
 }
 
-/* Nav: margin-left:auto pushes it all the way to the right edge.
-   Gap is kept small so Bell + Home + Appointments + Profile + Avatar
-   all fit without crowding. */
+/* Nav: margin-left:auto pushes group right; margin-right shifts it
+   back left so it doesn't hug the edge. Gap gives Home / Appointments /
+   Profile / Avatar comfortable breathing room. */
 .user-layout .user-site-header .header-nav {
   display: flex !important;
   flex: 0 0 auto !important;
   align-items: center !important;
-  gap: clamp(4px, 0.7vw, 10px) !important;
+  gap: clamp(14px, 1.4vw, 22px) !important;
   height: 100% !important;
   overflow: visible !important;
   margin-left: auto !important;
+  margin-right: 48px !important;
 }
 
 /* Nav links / profile button */
