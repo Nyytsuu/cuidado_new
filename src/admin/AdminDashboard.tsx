@@ -456,7 +456,7 @@ export default function AdminDashboard() {
 
   return (
     <div
-      className={`admin-dashboard-page ad-wrap ${
+      className={`admin-dashboard-page admin-wrap ${
         sidebarExpanded ? "sidebar-expanded" : ""
       }`}
     >
@@ -467,7 +467,7 @@ export default function AdminDashboard() {
         setProfileOpen={setProfileOpen}
       />
 
-      <main className="ad-main">
+      <main className="admin-main">
         <header className="app-header">
           <div className="header-left">
             <img src={logo} alt="CUIDADO logo" className="brand-logo" />

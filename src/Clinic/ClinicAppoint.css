@@ -880,3 +880,184 @@ body {
   font-size: 0.92rem !important;
   line-height: 1.35 !important;
 }
+
+/* ======================================================
+   CONFIRM / REJECT GUARD MODALS
+   ====================================================== */
+.appoint-guard-modal {
+  width: min(460px, 94vw);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 32px 28px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  border: 1px solid #d9ebe8;
+  text-align: center;
+}
+
+.appoint-guard-modal h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f2433;
+}
+
+.guard-modal-sub {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7f8e;
+}
+
+/* icon circle */
+.guard-modal-icon {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.guard-icon-confirm {
+  background: #e6f7f5;
+  color: #0f8f83;
+  box-shadow: 0 8px 22px rgba(15, 143, 131, 0.22);
+}
+
+.guard-icon-reject {
+  background: #fff1f0;
+  color: #c0392b;
+  box-shadow: 0 8px 22px rgba(192, 57, 43, 0.2);
+}
+
+/* patient card */
+.guard-patient-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f4faf9;
+  border: 1px solid #d0e9e6;
+  border-radius: 12px;
+  padding: 14px 18px;
+  width: 100%;
+  text-align: left;
+}
+
+.guard-patient-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #0f8f83;
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.guard-avatar-danger {
+  background: #c0392b;
+}
+
+.guard-patient-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.guard-patient-info strong {
+  font-size: 0.97rem;
+  color: #0f2433;
+}
+
+.guard-patient-info span {
+  font-size: 0.82rem;
+  color: #6b7f8e;
+}
+
+/* detail grid */
+.guard-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+}
+
+.guard-detail-item {
+  background: #f8fbfb;
+  border: 1px solid #dde8e6;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+
+.guard-detail-item span {
+  font-size: 0.73rem;
+  color: #8a9aa5;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.guard-detail-item strong {
+  font-size: 0.88rem;
+  color: #0f2433;
+  font-weight: 600;
+}
+
+/* reject reason */
+.guard-reason-group {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guard-reason-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #3d4f5c;
+}
+
+.guard-reason-group label span {
+  font-weight: 400;
+  color: #9aabb5;
+}
+
+.guard-reason-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccdad8;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-family: "Poppins", sans-serif;
+  resize: vertical;
+  outline: none;
+  color: #0f2433;
+  background: #f9fbfb;
+  transition: border-color 0.2s;
+}
+
+.guard-reason-group textarea:focus {
+  border-color: #0f8f83;
+}
+
+/* action row */
+.guard-modal-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: flex-end;
+  margin-top: 4px;
+}

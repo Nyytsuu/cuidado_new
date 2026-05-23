@@ -476,7 +476,7 @@ export default function ClinicDashboard() {
 
   return (
     <div
-  className={`ad-wrap clinic-dashboard-page ${
+  className={`clinic-wrap clinic-dashboard-page ${
     sidebarExpanded ? "sidebar-expanded" : ""
   }`}
 >
@@ -492,7 +492,7 @@ export default function ClinicDashboard() {
         searchPlaceholder="Search dashboard..."
       />
 
-      <main className="ad-main">
+      <main className="clinic-main">
         <section className="dash-layout">
           {/* LEFT */}
           <div className="dash-maincol">

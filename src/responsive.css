@@ -954,7 +954,7 @@ button {
   right: auto !important;
 }
 
-.clinic-dashboard-page .ad-main {
+.clinic-dashboard-page .clinic-main {
   width: auto !important;
   max-width: none !important;
   margin-right: 0 !important;
@@ -992,7 +992,7 @@ button {
   overflow-x: auto !important;
 }
 
-.clinic-dashboard-page.sidebar-expanded .ad-main {
+.clinic-dashboard-page.sidebar-expanded .clinic-main {
   margin-left: var(--sidebar-width-expanded) !important;
 }
 

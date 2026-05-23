@@ -30,7 +30,7 @@
   left: var(--sidebar-width-expanded);
 }
 
-.clinic-dashboard-page .ad-main {
+.clinic-dashboard-page .clinic-main {
   flex: 1;
   min-width: 0;
   margin-left: 70px;
@@ -623,7 +623,7 @@
 }
 
 @media (max-width: 900px) {
-  .clinic-dashboard-page .ad-main {
+  .clinic-dashboard-page .clinic-main {
     padding: 78px 18px 22px;
   }
 
@@ -637,7 +637,7 @@
 }
 
 @media (max-width: 640px) {
-  .clinic-dashboard-page .ad-main {
+  .clinic-dashboard-page .clinic-main {
     margin-left: 0;
     width: 100%;
     padding: 78px 14px 18px;

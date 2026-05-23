@@ -122,6 +122,12 @@ export default function ClinicAppoint() {
   const [savingAction, setSavingAction] = useState(false);
   const [rescheduleSuccessOpen, setRescheduleSuccessOpen] = useState(false);
 
+  /* ── confirm / reject guard modals ── */
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [rejectModalOpen, setRejectModalOpen]   = useState(false);
+  const [pendingActionRow, setPendingActionRow]  = useState<AppointmentRow | null>(null);
+  const [rejectReason, setRejectReason]          = useState("");
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false); 
   const navigate = useNavigate();
@@ -341,12 +347,52 @@ export default function ClinicAppoint() {
     }
   };
 
-  const handleConfirm = async (id: string) => {
-    await updateAppointmentStatus(id, "confirmed");
+  /* open guard modals */
+  const handleConfirm = (id: string) => {
+    const row = appointments.find((a) => a.id === id) ?? null;
+    setPendingActionRow(row);
+    setConfirmModalOpen(true);
   };
 
-  const handleReject = async (id: string) => {
-    await updateAppointmentStatus(id, "cancelled");
+  const handleReject = (id: string) => {
+    const row = appointments.find((a) => a.id === id) ?? null;
+    setPendingActionRow(row);
+    setRejectReason("");
+    setRejectModalOpen(true);
+  };
+
+  /* actual API calls after confirmation */
+  const doConfirm = async () => {
+    if (!pendingActionRow) return;
+    setConfirmModalOpen(false);
+    await updateAppointmentStatus(pendingActionRow.id, "confirmed");
+    setPendingActionRow(null);
+  };
+
+  const doReject = async () => {
+    if (!pendingActionRow) return;
+    setRejectModalOpen(false);
+    try {
+      setSavingAction(true);
+      const res = await fetch(`${API}/clinic/appointments/${pendingActionRow.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "cancelled",
+          cancelled_by: "clinic",
+          cancel_reason: rejectReason.trim() || null,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await loadAppointments();
+    } catch (error) {
+      console.error("Reject appointment error:", error);
+      alert(`Failed to reject appointment: ${String(error)}`);
+    } finally {
+      setSavingAction(false);
+      setPendingActionRow(null);
+      setRejectReason("");
+    }
   };
 
   const handleComplete = async (id: string) => {
@@ -822,6 +868,126 @@ export default function ClinicAppoint() {
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CONFIRM GUARD MODAL ── */}
+      {confirmModalOpen && pendingActionRow && (
+        <div className="appoint-modal-overlay" onClick={() => setConfirmModalOpen(false)}>
+          <div className="appoint-guard-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="guard-modal-icon guard-icon-confirm">✓</div>
+            <h3>Confirm Appointment?</h3>
+            <p className="guard-modal-sub">You are about to confirm the following appointment:</p>
+
+            <div className="guard-patient-card">
+              <div className="guard-patient-avatar">
+                {pendingActionRow.patientName.charAt(0).toUpperCase()}
+              </div>
+              <div className="guard-patient-info">
+                <strong>{pendingActionRow.patientName}</strong>
+                <span>{pendingActionRow.patientPhone || "No phone provided"}</span>
+              </div>
+            </div>
+
+            <div className="guard-detail-grid">
+              <div className="guard-detail-item">
+                <span>Service</span>
+                <strong>{pendingActionRow.serviceType}</strong>
+              </div>
+              <div className="guard-detail-item">
+                <span>Date</span>
+                <strong>{pendingActionRow.date}</strong>
+              </div>
+              <div className="guard-detail-item">
+                <span>Time</span>
+                <strong>{pendingActionRow.time}</strong>
+              </div>
+            </div>
+
+            <div className="guard-modal-actions">
+              <button
+                type="button"
+                className="pill pill-gray"
+                onClick={() => { setConfirmModalOpen(false); setPendingActionRow(null); }}
+                disabled={savingAction}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="pill pill-success"
+                onClick={doConfirm}
+                disabled={savingAction}
+              >
+                {savingAction ? "Confirming…" : "Yes, Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REJECT GUARD MODAL ── */}
+      {rejectModalOpen && pendingActionRow && (
+        <div className="appoint-modal-overlay" onClick={() => setRejectModalOpen(false)}>
+          <div className="appoint-guard-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="guard-modal-icon guard-icon-reject">✕</div>
+            <h3>Reject Appointment?</h3>
+            <p className="guard-modal-sub">This will cancel the appointment for:</p>
+
+            <div className="guard-patient-card">
+              <div className="guard-patient-avatar guard-avatar-danger">
+                {pendingActionRow.patientName.charAt(0).toUpperCase()}
+              </div>
+              <div className="guard-patient-info">
+                <strong>{pendingActionRow.patientName}</strong>
+                <span>{pendingActionRow.patientPhone || "No phone provided"}</span>
+              </div>
+            </div>
+
+            <div className="guard-detail-grid">
+              <div className="guard-detail-item">
+                <span>Service</span>
+                <strong>{pendingActionRow.serviceType}</strong>
+              </div>
+              <div className="guard-detail-item">
+                <span>Date</span>
+                <strong>{pendingActionRow.date}</strong>
+              </div>
+              <div className="guard-detail-item">
+                <span>Time</span>
+                <strong>{pendingActionRow.time}</strong>
+              </div>
+            </div>
+
+            <div className="guard-reason-group">
+              <label>Reason for rejection <span>(optional)</span></label>
+              <textarea
+                rows={3}
+                placeholder="E.g. Doctor unavailable, slot fully booked…"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+            </div>
+
+            <div className="guard-modal-actions">
+              <button
+                type="button"
+                className="pill pill-gray"
+                onClick={() => { setRejectModalOpen(false); setPendingActionRow(null); setRejectReason(""); }}
+                disabled={savingAction}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="pill pill-danger"
+                onClick={doReject}
+                disabled={savingAction}
+              >
+                {savingAction ? "Rejecting…" : "Yes, Reject"}
+              </button>
             </div>
           </div>
         </div>
