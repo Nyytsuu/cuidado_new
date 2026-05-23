@@ -238,32 +238,27 @@
 }
 
 /* ================= HEADER ================= */
-/* !important needed on most props to beat the bare .app-header rules
-   that AdminHeader.css injects globally via the Vite bundle. */
 .SidebarClinic .app-header {
-  background: var(--sidebar-bg) !important;
-  padding: 0 24px !important;
+  background: var(--sidebar-bg);
+  padding: 0 24px;
 
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  flex-direction: row !important;
-  gap: clamp(18px, 2vw, 30px) !important;
-  box-sizing: border-box !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(18px, 2vw, 30px);
+  box-sizing: border-box;
 
-  box-shadow: none !important;
+  box-shadow: none;
 
-  position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
+  position: fixed;
+  top: 0;
+  right: 0;
   left: var(--sidebar-width-collapsed) !important;
   width: auto !important;
   max-width: none !important;
-  height: var(--header-height) !important;
-  min-height: var(--header-height) !important;
+  height: var(--header-height);
 
-  z-index: 999 !important;
-  font-family: inherit !important;
+  z-index: 999;
 }
 
 /* shift header when sidebar expanded */

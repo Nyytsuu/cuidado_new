@@ -225,43 +225,70 @@
 }
 
 /* ================= HEADER ================= */
-/* Use !important here so the bare .app-header rules in AdminHeader.css
-   (which is bundled globally) cannot override user-layout styles.
-   Two-class specificity (.user-layout .app-header) beats one-class
-   (.app-header) when both use !important. */
 .user-layout .app-header {
-  position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
+  position: fixed;
+  top: 0;
+  right: 0;
   left: var(--sidebar-width-collapsed) !important;
-  height: var(--header-height) !important;
-  min-height: var(--header-height) !important;
-  background: #f7f7f7 !important;
-  border-bottom: 1px solid #dddddd !important;
-  box-shadow: none !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  flex-direction: row !important;
-  gap: clamp(14px, 2vw, 28px) !important;
-  padding: 0 26px 0 18px !important;
-  z-index: 999 !important;
-  transition: left 0.25s ease !important;
-  box-sizing: border-box !important;
-  font-family: inherit !important;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-direction: row;
+  gap: clamp(14px, 2vw, 28px);
+  padding: 0 20px 0 18px;
+  z-index: 999;
+  transition: left 0.25s ease;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 .user-layout.sidebar-expanded .app-header {
   left: var(--sidebar-width-expanded) !important;
 }
 
-/* left section */
+/* left section — must use !important to beat AdminHeader.css's
+   display:grid !important which otherwise turns this flex into a grid */
+.user-layout .app-header .header-left {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  align-items: center !important;
+  gap: 20px !important;
+  min-width: 0 !important;
+  grid-template-columns: none !important;
+  position: static !important;
+  right: auto !important;
+}
+
 .user-layout .header-left {
   display: flex;
   align-items: center;
   gap: 20px;
   min-width: 0;
   flex: 1 1 auto;
+}
+
+/* keep header-nav visible and not crowded at all screen widths */
+.user-layout .app-header .header-nav {
+  flex: 0 0 auto !important;
+  gap: clamp(14px, 2vw, 26px) !important;
+  height: 100% !important;
+  overflow: visible !important;
+}
+
+/* keep nav-link / profile-btn height matching the actual header height */
+.user-layout .app-header .nav-link,
+.user-layout .app-header .profile-btn {
+  height: var(--header-height) !important;
+}
+
+/* ensure the profile avatar is never clipped */
+.user-layout .app-header .profile-menu {
+  position: relative !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  overflow: visible !important;
 }
 
 .user-layout .brand-logo {
