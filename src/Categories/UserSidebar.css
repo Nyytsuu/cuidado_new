@@ -245,8 +245,6 @@
   transition: left 0.25s ease !important;
   box-sizing: border-box !important;
   overflow: visible !important;
-  background: var(--header-bg, #ffffff) !important;
-  box-shadow: 0 1px 0 #e5eaed !important;
 }
 
 .user-layout.sidebar-expanded .user-site-header {
@@ -280,19 +278,21 @@
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
-  width: min(400px, 38vw) !important;
-  max-width: 420px !important;
-  min-width: 160px !important;
+  width: min(340px, 30vw) !important;
+  max-width: 360px !important;
+  min-width: 140px !important;
   flex: none !important;
   right: auto !important;
 }
 
-/* Nav: margin-left:auto pushes it all the way to the right edge */
+/* Nav: margin-left:auto pushes it all the way to the right edge.
+   Gap is kept small so Bell + Home + Appointments + Profile + Avatar
+   all fit without crowding. */
 .user-layout .user-site-header .header-nav {
   display: flex !important;
   flex: 0 0 auto !important;
   align-items: center !important;
-  gap: clamp(8px, 1vw, 16px) !important;
+  gap: clamp(4px, 0.7vw, 10px) !important;
   height: 100% !important;
   overflow: visible !important;
   margin-left: auto !important;
@@ -329,8 +329,8 @@
   min-height: 36px !important;
   border-radius: 50% !important;
   background: #c8e6e5 !important;
-  border: 2px solid rgba(0, 80, 80, 0.18) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14) !important;
+  border: 2px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
   text-decoration: none !important;
   cursor: pointer !important;
 }
@@ -492,9 +492,9 @@
 
 .user-layout .header-notification-button {
   position: relative;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
