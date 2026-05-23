@@ -225,35 +225,38 @@
 }
 
 /* ================= HEADER ================= */
+/* All properties use !important so AdminHeader.css (which applies a bare
+   .app-header rule globally) cannot override user-layout header styles. */
 .user-layout .app-header {
-  position: fixed;
-  top: 0;
-  right: 0;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
   left: var(--sidebar-width-collapsed) !important;
-  height: var(--header-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-direction: row;
-  gap: clamp(14px, 2vw, 28px);
-  padding: 0 20px 0 18px;
-  z-index: 999;
-  transition: left 0.25s ease;
-  box-sizing: border-box;
-  overflow: visible;
+  height: var(--header-height) !important;
+  min-height: var(--header-height) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+  gap: 0 !important;
+  padding: 0 16px 0 18px !important;
+  z-index: 999 !important;
+  transition: left 0.25s ease !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
 }
 
 .user-layout.sidebar-expanded .app-header {
   left: var(--sidebar-width-expanded) !important;
 }
 
-/* left section — must use !important to beat AdminHeader.css's
-   display:grid !important which otherwise turns this flex into a grid */
+/* header-left only holds the logo — shrinks to logo width so the
+   search bar can be centered independently */
 .user-layout .app-header .header-left {
   display: flex !important;
-  flex: 1 1 auto !important;
+  flex: 0 0 auto !important;
   align-items: center !important;
-  gap: 20px !important;
+  gap: 0 !important;
   min-width: 0 !important;
   grid-template-columns: none !important;
   position: static !important;
@@ -268,26 +271,49 @@
   flex: 1 1 auto;
 }
 
-/* keep header-nav visible and not crowded at all screen widths */
-.user-layout .app-header .header-nav {
-  flex: 0 0 auto !important;
-  gap: clamp(14px, 2vw, 26px) !important;
-  height: 100% !important;
-  overflow: visible !important;
+/* search bar is absolutely centered in the header */
+.user-layout .app-header .header-search {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(420px, 38vw) !important;
+  max-width: 460px !important;
+  min-width: 180px !important;
+  flex: none !important;
+  right: auto !important;
 }
 
-/* keep nav-link / profile-btn height matching the actual header height */
+/* nav sits at the right, never grows, never shrinks */
+.user-layout .app-header .header-nav {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  gap: clamp(12px, 1.6vw, 22px) !important;
+  height: 100% !important;
+  overflow: visible !important;
+  margin-left: auto !important;
+}
+
+/* nav-link / profile-btn — match the actual 58px header height */
 .user-layout .app-header .nav-link,
 .user-layout .app-header .profile-btn {
   height: var(--header-height) !important;
+  font-size: 0.88rem !important;
+  font-weight: 500 !important;
 }
 
-/* ensure the profile avatar is never clipped */
+/* profile-menu container never clips the avatar */
 .user-layout .app-header .profile-menu {
   position: relative !important;
   height: 100% !important;
   display: flex !important;
   align-items: center !important;
+  overflow: visible !important;
+}
+
+/* avatar always fully visible, never clipped */
+.user-layout .app-header .header-avatar {
+  flex-shrink: 0 !important;
   overflow: visible !important;
 }
 
