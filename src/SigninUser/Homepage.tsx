@@ -465,18 +465,6 @@ useEffect(() => {
                           <span>Logout</span>
                         </button>
 
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/logout")}
-                        >
-                          <div className="mini-service-icon logout-lock-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M17 8h-1V6a4 4 0 1 0-8 0v2H7c-1.1 0-2 .9-2 2v10h14V10c0-1.1-.9-2-2-2zm-7-2a2 2 0 1 1 4 0v2h-4z"></path>
-                            </svg>
-                          </div>
-                          <span>Logout</span>
-                        </button>
                       </div>
                     </div>
                   </div>
