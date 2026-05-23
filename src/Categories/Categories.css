@@ -8,16 +8,16 @@
   --header-height: 55px;
 }
 
-/* ✅ ONE SCROLLBAR ONLY (important) */
-html,
-body,
-#root {
+/* ✅ ONE SCROLLBAR ONLY — scoped to Categories page so it doesn't break other pages */
+html:has(.categories-page),
+body:has(.categories-page),
+body:has(.categories-page) #root {
   height: 100%;
   margin: 0;
 }
 
-body {
-  overflow: hidden; /* ✅ remove browser scrollbar */
+body:has(.categories-page) {
+  overflow: hidden; /* ✅ remove browser scrollbar on Categories page only */
 }
 
 /* RESET */

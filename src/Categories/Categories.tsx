@@ -26,7 +26,7 @@ export default function Categories() {
   };
 
   return (
-    <div className={`with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
+    <div className={`with-sidebar categories-page ${isPopupOpen ? "modal-open" : ""}`}>
       <Sidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
