@@ -19,13 +19,22 @@ const normalizeSql = (sql) =>
     .replace(/\bNOW\(\)/gi, "NOW()")
     .replace(/\bDATE_FORMAT\s*\(\s*([^,]+),\s*'%Y-%m-%d'\s*\)/gi, "TO_CHAR($1, 'YYYY-MM-DD')")
     .replace(/\bDATE_FORMAT\s*\(\s*([^,]+),\s*'%Y-%m-01'\s*\)/gi, "DATE_TRUNC('month', $1)")
+    .replace(/\bDATE_FORMAT\s*\(\s*([^,]+),\s*'%Y-%m'\s*\)/gi, "TO_CHAR($1, 'YYYY-MM')")
     .replace(/\bDATE_ADD\s*\(\s*([^,]+),\s*INTERVAL\s+(\d+)\s+(\w+)\s*\)/gi, "($1 + INTERVAL '$2 $3')")
     .replace(/\bDATE_SUB\s*\(\s*([^,]+),\s*INTERVAL\s+(\d+)\s+(\w+)\s*\)/gi, "($1 - INTERVAL '$2 $3')")
+    // TIME_FORMAT(col, '%H:%i') → TO_CHAR(col, 'HH24:MI')
+    .replace(/\bTIME_FORMAT\s*\(\s*([^,]+?)\s*,\s*'%H:%i'\s*\)/gi, "TO_CHAR($1, 'HH24:MI')")
     // GROUP_CONCAT(col SEPARATOR 'x') → STRING_AGG(col, 'x')
     .replace(/\bGROUP_CONCAT\s*\(\s*([\s\S]*?)\s+SEPARATOR\s+'([^']+)'\s*\)/gi, "STRING_AGG($1, '$2')")
     // SUM(DATE(col) = CURDATE()) → SUM(CASE WHEN col::date = CURRENT_DATE THEN 1 ELSE 0 END)
     .replace(/\bSUM\s*\(\s*DATE\s*\(\s*(\w+)\s*\)\s*=\s*CURRENT_DATE\s*\)/gi,
-      "SUM(CASE WHEN $1::date = CURRENT_DATE THEN 1 ELSE 0 END)");
+      "SUM(CASE WHEN $1::date = CURRENT_DATE THEN 1 ELSE 0 END)")
+    // SUM(col = 'value') → SUM(CASE WHEN col = 'value' THEN 1 ELSE 0 END)
+    .replace(/\bSUM\s*\(\s*(\w+(?:\.\w+)?)\s*=\s*'([^']*)'\s*\)/gi,
+      "SUM(CASE WHEN $1 = '$2' THEN 1 ELSE 0 END)")
+    // SUM(col IN ('a','b',...)) → SUM(CASE WHEN col IN ('a','b',...) THEN 1 ELSE 0 END)
+    .replace(/\bSUM\s*\(\s*(\w+(?:\.\w+)?)\s+IN\s*\(([^)]+)\)\s*\)/gi,
+      "SUM(CASE WHEN $1 IN ($2) THEN 1 ELSE 0 END)");
 
 const convertPlaceholders = (sql, params = []) => {
   let index = 0;

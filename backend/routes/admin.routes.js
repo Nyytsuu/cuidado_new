@@ -177,8 +177,8 @@ router.get("/clinics/:id", async (req, res) => {
         ap.last_appointment_at,
         ap.next_appointment_at,
         GREATEST(
-          COALESCE(c.created_at, '1970-01-01'),
-          COALESCE(ap.last_appointment_request_at, '1970-01-01')
+          COALESCE(c.created_at, '1970-01-01'::timestamp),
+          COALESCE(ap.last_appointment_request_at, '1970-01-01'::timestamp)
         ) AS last_activity_at
       FROM clinics c
       LEFT JOIN (
@@ -518,16 +518,15 @@ router.get("/reports/summary", async (req, res) => {
     const [[appt]] = await pool.query(`
       SELECT
         COUNT(*) AS total_all,
-        SUM(DATE(start_at) = CURDATE()) AS total_today,
-        SUM(status='pending') AS pending,
-        SUM(status='confirmed') AS confirmed,
-        SUM(status='cancelled') AS cancelled,
-        SUM(status='completed') AS completed,
-        SUM(status='no_show') AS no_show,
-
-        SUM(start_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-            AND start_at <  DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
-        ) AS this_month
+        SUM(CASE WHEN start_at::date = CURRENT_DATE THEN 1 ELSE 0 END) AS total_today,
+        SUM(CASE WHEN status = 'pending'   THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN status = 'no_show'   THEN 1 ELSE 0 END) AS no_show,
+        SUM(CASE WHEN start_at >= DATE_TRUNC('month', CURRENT_DATE)
+                  AND start_at <  DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+                 THEN 1 ELSE 0 END) AS this_month
       FROM appointments
     `);
 
@@ -535,8 +534,8 @@ router.get("/reports/summary", async (req, res) => {
       SELECT c.clinic_name, COUNT(a.id) AS total
       FROM appointments a
       JOIN clinics c ON c.id = a.clinic_id
-      WHERE a.start_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-      GROUP BY a.clinic_id
+      WHERE a.start_at >= CURRENT_DATE - INTERVAL '30 days'
+      GROUP BY a.clinic_id, c.clinic_name
       ORDER BY total DESC
       LIMIT 1
     `);
@@ -544,7 +543,7 @@ router.get("/reports/summary", async (req, res) => {
     const [[newUsers]] = await pool.query(`
       SELECT COUNT(*) AS total
       FROM users
-      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      WHERE created_at >= NOW() - INTERVAL '7 days'
     `);
 
     res.json({
@@ -577,19 +576,19 @@ router.get("/reports/export/pdf", async (req, res) => {
     const [[appt]] = await pool.query(`
       SELECT
         COUNT(*) AS total_all,
-        SUM(DATE(start_at) = CURDATE()) AS total_today,
-        SUM(status='pending') AS pending,
-        SUM(status='confirmed') AS confirmed,
-        SUM(status='cancelled') AS cancelled,
-        SUM(status='completed') AS completed,
-        SUM(status='no_show') AS no_show
+        SUM(CASE WHEN start_at::date = CURRENT_DATE THEN 1 ELSE 0 END) AS total_today,
+        SUM(CASE WHEN status = 'pending'   THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN status = 'no_show'   THEN 1 ELSE 0 END) AS no_show
       FROM appointments
     `);
 
     const [monthly] = await pool.query(`
-      SELECT DATE_FORMAT(start_at, '%Y-%m') AS month, COUNT(*) AS total
+      SELECT TO_CHAR(start_at, 'YYYY-MM') AS month, COUNT(*) AS total
       FROM appointments
-      GROUP BY DATE_FORMAT(start_at, '%Y-%m')
+      GROUP BY TO_CHAR(start_at, 'YYYY-MM')
       ORDER BY month DESC
       LIMIT 6
     `);
@@ -598,7 +597,7 @@ router.get("/reports/export/pdf", async (req, res) => {
       SELECT c.clinic_name, COUNT(a.id) AS totalBookings
       FROM clinics c
       LEFT JOIN appointments a ON a.clinic_id = c.id
-      GROUP BY c.id
+      GROUP BY c.id, c.clinic_name
       ORDER BY totalBookings DESC
       LIMIT 5
     `);
@@ -648,22 +647,22 @@ router.get("/reports/export/csv", async (req, res) => {
     const [[appt]] = await pool.query(`
       SELECT
         COUNT(*) AS total_all,
-        SUM(DATE(start_at) = CURDATE()) AS total_today,
-        SUM(status='pending') AS pending,
-        SUM(status='confirmed') AS confirmed,
-        SUM(status='cancelled') AS cancelled,
-        SUM(status='completed') AS completed,
-        SUM(status='no_show') AS no_show,
-        SUM(start_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-            AND start_at <  DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
-        ) AS this_month
+        SUM(CASE WHEN start_at::date = CURRENT_DATE THEN 1 ELSE 0 END) AS total_today,
+        SUM(CASE WHEN status = 'pending'   THEN 1 ELSE 0 END) AS pending,
+        SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed,
+        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed,
+        SUM(CASE WHEN status = 'no_show'   THEN 1 ELSE 0 END) AS no_show,
+        SUM(CASE WHEN start_at >= DATE_TRUNC('month', CURRENT_DATE)
+                  AND start_at <  DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+                 THEN 1 ELSE 0 END) AS this_month
       FROM appointments
     `);
 
     const [monthly] = await pool.query(`
-      SELECT DATE_FORMAT(start_at, '%Y-%m') AS month, COUNT(*) AS total
+      SELECT TO_CHAR(start_at, 'YYYY-MM') AS month, COUNT(*) AS total
       FROM appointments
-      GROUP BY DATE_FORMAT(start_at, '%Y-%m')
+      GROUP BY TO_CHAR(start_at, 'YYYY-MM')
       ORDER BY month DESC
       LIMIT 6
     `);
@@ -672,7 +671,7 @@ router.get("/reports/export/csv", async (req, res) => {
       SELECT c.clinic_name, COUNT(a.id) AS totalBookings
       FROM clinics c
       LEFT JOIN appointments a ON a.clinic_id = c.id
-      GROUP BY c.id
+      GROUP BY c.id, c.clinic_name
       ORDER BY totalBookings DESC
       LIMIT 10
     `);
@@ -751,41 +750,7 @@ router.get("/reports/export/csv", async (req, res) => {
     res.status(500).json({ message: "Failed to export CSV" });
   }
 });
-router.get("/reports/summary", async (req, res) => {
-  try {
-    const [[apptMonth]] = await pool.query(`
-      SELECT COUNT(*) AS total
-      FROM appointments
-      WHERE start_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')
-        AND start_at < DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)
-    `);
-
-    const [[topClinic]] = await pool.query(`
-      SELECT c.clinic_name, COUNT(a.id) AS total
-      FROM appointments a
-      JOIN clinics c ON c.id = a.clinic_id
-      WHERE a.start_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-      GROUP BY a.clinic_id
-      ORDER BY total DESC
-      LIMIT 1
-    `);
-
-    const [[newUsers]] = await pool.query(`
-      SELECT COUNT(*) AS total
-      FROM users
-      WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-    `);
-
-    res.json({
-      totalAppointmentsThisMonth: apptMonth.total || 0,
-      mostActiveClinic: topClinic?.clinic_name || "—",
-      newUsersThisWeek: newUsers.total || 0,
-    });
-  } catch (err) {
-    console.error("Reports summary error:", err);
-    res.status(500).json({ message: "Failed to load report summary" });
-  }
-});
+// (duplicate route removed — handled above)
 router.get("/reports/ping", (req, res) => res.send("REPORTS PONG"));
 
 module.exports = router;

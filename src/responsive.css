@@ -2922,3 +2922,524 @@ button {
     font-size: 11px !important;
   }
 }
+
+/* ================================================================
+   ADMIN + CLINIC SHARED RESPONSIVE LAYER
+   Covers all admin pages (.admin-UserClinics, .admin-Userpage,
+   .admin-UserAppoint, .admin-UserServices, .admin-UserReport)
+   and clinic pages (.clinic-dashboard-page, .ClinicAppoint, etc.)
+   for consistent cross-device behavior.
+   ================================================================ */
+
+/* ── Shared selector shorthands ─────────────────────────────── */
+.admin-UserClinics.with-sidebar,
+.admin-Userpage.with-sidebar,
+.admin-UserAppoint.with-sidebar,
+.admin-UserServices.with-sidebar,
+.admin-UserReport.with-sidebar {
+  overflow-x: hidden;
+}
+
+/* Tables in all admin pages always scroll horizontally so they
+   never burst out of the viewport at any size. */
+.admin-UserClinics .clinics-table-wrap,
+.admin-Userpage .users-table-wrap,
+.admin-UserAppoint .appoint-table-wrap,
+.admin-UserServices .services-table-wrap,
+.admin-UserReport .report-table-wrap,
+.admin-UserClinics .admin-table-card,
+.admin-Userpage .admin-table-card,
+.admin-UserAppoint .admin-table-card,
+.admin-UserServices .admin-table-card,
+.admin-UserReport .admin-table-card {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Wide monitors (≥1440px) ─────────────────────────────────── */
+@media (min-width: 1440px) {
+  /* Give admin/clinic content a bit more breathing room */
+  .admin-dashboard-page .admin-main {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+
+  .admin-UserClinics .admin-content,
+  .admin-Userpage .admin-content,
+  .admin-UserAppoint .admin-content,
+  .admin-UserServices .admin-content,
+  .admin-UserReport .admin-content {
+    padding-left: 36px !important;
+    padding-right: 36px !important;
+  }
+
+  .clinic-dashboard-page .clinic-main {
+    padding-left: 36px !important;
+    padding-right: 36px !important;
+  }
+}
+
+/* ── Ultra-wide (≥1920px): lock to comfortable reading width ── */
+@media (min-width: 1920px) {
+  .admin-dashboard-page .admin-main {
+    max-width: 1840px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .admin-UserClinics .admin-content-inner,
+  .admin-Userpage .admin-content-inner,
+  .admin-UserAppoint .admin-content-inner,
+  .admin-UserServices .admin-content-inner,
+  .admin-UserReport .admin-content-inner {
+    max-width: 1760px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .clinic-dashboard-page .clinic-main {
+    max-width: 1760px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+/* ── Laptop (≤1280px): Admin grids collapse to single column ── */
+@media (max-width: 1280px) {
+  /* Aside drops below the main table on smaller laptops */
+  .admin-UserClinics .admin-grid,
+  .admin-Userpage .admin-grid,
+  .admin-UserAppoint .admin-grid,
+  .admin-UserServices .admin-grid,
+  .admin-UserReport .admin-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Aside panels become a 2-col mini-grid when stacked below */
+  .admin-UserClinics .dash-aside,
+  .admin-Userpage .dash-aside,
+  .admin-UserAppoint .dash-aside,
+  .admin-UserServices .dash-aside,
+  .admin-UserReport .dash-aside {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 16px;
+  }
+}
+
+/* ── Tablet (≤1024px): clinic header search adapts ─────────── */
+@media (max-width: 1024px) {
+  .SidebarClinic .header-search {
+    flex: 1 1 auto !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+
+  /* Clinic dashboard stat row: 2 cols */
+  .clinic-dashboard-page .stats-row,
+  .clinic-dashboard-page .stat-cards-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ── Small laptop / tablet landscape (≤820px) ───────────────── */
+@media (max-width: 820px) {
+  /* ─ Admin: force sidebar collapsed even when "expanded" ─ */
+  .admin-UserClinics.with-sidebar,
+  .admin-UserClinics.with-sidebar.sidebar-expanded,
+  .admin-Userpage.with-sidebar,
+  .admin-Userpage.with-sidebar.sidebar-expanded,
+  .admin-UserAppoint.with-sidebar,
+  .admin-UserAppoint.with-sidebar.sidebar-expanded,
+  .admin-UserServices.with-sidebar,
+  .admin-UserServices.with-sidebar.sidebar-expanded,
+  .admin-UserReport.with-sidebar,
+  .admin-UserReport.with-sidebar.sidebar-expanded {
+    padding-left: 70px !important;
+  }
+
+  /* Sidebar stays narrow — expanded state is overlay only */
+  .admin-UserClinics .sidebar.expanded,
+  .admin-Userpage .sidebar.expanded,
+  .admin-UserAppoint .sidebar.expanded,
+  .admin-UserServices .sidebar.expanded,
+  .admin-UserReport .sidebar.expanded {
+    width: 220px;
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.18);
+    z-index: 1200;
+  }
+
+  /* ─ Admin: header stacks vertically on narrow screens ─ */
+  .admin-UserClinics .app-header,
+  .admin-Userpage .app-header,
+  .admin-UserAppoint .app-header,
+  .admin-UserServices .app-header,
+  .admin-UserReport .app-header {
+    left: 70px !important;
+    height: auto !important;
+    min-height: 100px !important;
+    padding: 10px 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .admin-UserClinics .header-left,
+  .admin-UserClinics .header-nav,
+  .admin-Userpage .header-left,
+  .admin-Userpage .header-nav,
+  .admin-UserAppoint .header-left,
+  .admin-UserAppoint .header-nav,
+  .admin-UserServices .header-left,
+  .admin-UserServices .header-nav,
+  .admin-UserReport .header-left,
+  .admin-UserReport .header-nav {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+
+  .admin-UserClinics .header-search,
+  .admin-Userpage .header-search,
+  .admin-UserAppoint .header-search,
+  .admin-UserServices .header-search,
+  .admin-UserReport .header-search {
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* ─ Admin: content clears the taller stacked header ─ */
+  .admin-UserClinics .admin-content,
+  .admin-Userpage .admin-content,
+  .admin-UserAppoint .admin-content,
+  .admin-UserServices .admin-content,
+  .admin-UserReport .admin-content {
+    padding-top: 124px !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* ─ Clinic: same sidebar override ─ */
+  .clinic-dashboard-page.sidebar-expanded .SidebarClinic .app-header,
+  .ClinicAppoint.sidebar-expanded .SidebarClinic .app-header,
+  .Patient.sidebar-expanded .SidebarClinic .app-header,
+  .services.sidebar-expanded .SidebarClinic .app-header,
+  .Schedule.sidebar-expanded .SidebarClinic .app-header,
+  .ClinicProfile.sidebar-expanded .SidebarClinic .app-header,
+  .clinic-settings-page.sidebar-expanded .SidebarClinic .app-header {
+    left: var(--sidebar-width-collapsed) !important;
+  }
+
+  .clinic-dashboard-page.sidebar-expanded .clinic-main {
+    margin-left: 0 !important;
+  }
+
+  .ClinicAppoint.with-sidebar.sidebar-expanded,
+  .Patient.with-sidebar.sidebar-expanded,
+  .services.with-sidebar.sidebar-expanded,
+  .Schedule.with-sidebar.sidebar-expanded,
+  .ClinicProfile.with-sidebar.sidebar-expanded,
+  .clinic-settings-page.sidebar-expanded {
+    padding-left: var(--sidebar-width-collapsed) !important;
+  }
+
+  /* Clinic header stacks on narrow screens */
+  .SidebarClinic .app-header {
+    height: auto !important;
+    min-height: 108px !important;
+    padding: 10px 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .SidebarClinic .header-left,
+  .SidebarClinic .header-nav {
+    width: 100% !important;
+    gap: 16px !important;
+  }
+
+  .SidebarClinic .header-search {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Clinic content clears stacked header */
+  .clinic-dashboard-page .clinic-main {
+    padding-top: 130px !important;
+  }
+
+  .ClinicAppoint .admin-content,
+  .Patient .admin-content,
+  .services .admin-content,
+  .Schedule .admin-content {
+    padding-top: 128px !important;
+  }
+
+  /* Clinic dashboard stats: 2 columns */
+  .clinic-dashboard-page .stats-row,
+  .clinic-dashboard-page .stat-cards-row,
+  .clinic-dashboard-page .dashboard-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* ── Tablet portrait / large phone (≤640px) ─────────────────── */
+@media (max-width: 640px) {
+  /* ─ Admin sidebar: narrow to 58px ─ */
+  .admin-UserClinics.with-sidebar,
+  .admin-UserClinics.with-sidebar.sidebar-expanded,
+  .admin-Userpage.with-sidebar,
+  .admin-Userpage.with-sidebar.sidebar-expanded,
+  .admin-UserAppoint.with-sidebar,
+  .admin-UserAppoint.with-sidebar.sidebar-expanded,
+  .admin-UserServices.with-sidebar,
+  .admin-UserServices.with-sidebar.sidebar-expanded,
+  .admin-UserReport.with-sidebar,
+  .admin-UserReport.with-sidebar.sidebar-expanded {
+    padding-left: 58px !important;
+  }
+
+  .admin-UserClinics .sidebar,
+  .admin-Userpage .sidebar,
+  .admin-UserAppoint .sidebar,
+  .admin-UserServices .sidebar,
+  .admin-UserReport .sidebar {
+    width: 58px !important;
+  }
+
+  .admin-UserClinics .sidebar.expanded,
+  .admin-Userpage .sidebar.expanded,
+  .admin-UserAppoint .sidebar.expanded,
+  .admin-UserServices .sidebar.expanded,
+  .admin-UserReport .sidebar.expanded {
+    width: 220px !important;
+  }
+
+  .admin-UserClinics .app-header,
+  .admin-Userpage .app-header,
+  .admin-UserAppoint .app-header,
+  .admin-UserServices .app-header,
+  .admin-UserReport .app-header {
+    left: 58px !important;
+    min-height: 110px !important;
+  }
+
+  .admin-UserClinics .admin-content,
+  .admin-Userpage .admin-content,
+  .admin-UserAppoint .admin-content,
+  .admin-UserServices .admin-content,
+  .admin-UserReport .admin-content {
+    padding-top: 134px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Hide sidebar labels in collapsed state */
+  .SidebarAdmin .sidebar:not(.expanded) .sidebar-item a span,
+  .SidebarAdmin .sidebar:not(.expanded) .sidebar-label,
+  .SidebarAdmin .sidebar:not(.expanded) .logout-btn span {
+    display: none !important;
+  }
+
+  /* Admin title font */
+  .admin-UserClinics .admin-title h2,
+  .admin-Userpage .admin-title h2,
+  .admin-UserAppoint .admin-title h2,
+  .admin-UserServices .admin-title h2,
+  .admin-UserReport .admin-title h2 {
+    font-size: 22px !important;
+  }
+
+  /* Aside becomes single column */
+  .admin-UserClinics .dash-aside,
+  .admin-Userpage .dash-aside,
+  .admin-UserAppoint .dash-aside,
+  .admin-UserServices .dash-aside,
+  .admin-UserReport .dash-aside {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Table action buttons stack vertically */
+  .clinics-actions,
+  .users-actions,
+  .appoint-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    min-width: 120px;
+  }
+
+  .pill-wide {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Modals fill screen */
+  .modal-card,
+  .clinic-edit-popup-card,
+  .clinic-status-popup-card {
+    width: calc(100vw - 24px) !important;
+    max-width: none !important;
+    margin: 0 auto !important;
+  }
+
+  /* ─ Clinic sidebar: same narrow treatment ─ */
+  .ClinicAppoint.with-sidebar,
+  .ClinicAppoint.with-sidebar.sidebar-expanded,
+  .Patient.with-sidebar,
+  .Patient.with-sidebar.sidebar-expanded,
+  .services.with-sidebar,
+  .services.with-sidebar.sidebar-expanded,
+  .Schedule.with-sidebar,
+  .Schedule.with-sidebar.sidebar-expanded {
+    padding-left: 58px !important;
+  }
+
+  .clinic-dashboard-page .clinic-main {
+    padding-top: 134px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .ClinicAppoint .admin-content,
+  .Patient .admin-content,
+  .services .admin-content,
+  .Schedule .admin-content {
+    padding-top: 134px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Clinic guard modals (confirm/reject appointments) */
+  .appoint-guard-modal {
+    width: calc(100vw - 20px) !important;
+    max-width: none !important;
+  }
+
+  /* Clinic stats: 1 column */
+  .clinic-dashboard-page .stats-row,
+  .clinic-dashboard-page .stat-cards-row,
+  .clinic-dashboard-page .dashboard-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Clinic appointment table scrolls */
+  .ClinicAppoint .admin-table-card,
+  .Patient .admin-table-card,
+  .Schedule .admin-table-card {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── Mobile (≤480px) ─────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Admin sidebar: 52px */
+  .admin-UserClinics.with-sidebar,
+  .admin-UserClinics.with-sidebar.sidebar-expanded,
+  .admin-Userpage.with-sidebar,
+  .admin-Userpage.with-sidebar.sidebar-expanded,
+  .admin-UserAppoint.with-sidebar,
+  .admin-UserAppoint.with-sidebar.sidebar-expanded,
+  .admin-UserServices.with-sidebar,
+  .admin-UserServices.with-sidebar.sidebar-expanded,
+  .admin-UserReport.with-sidebar,
+  .admin-UserReport.with-sidebar.sidebar-expanded {
+    padding-left: 52px !important;
+  }
+
+  .admin-UserClinics .sidebar,
+  .admin-Userpage .sidebar,
+  .admin-UserAppoint .sidebar,
+  .admin-UserServices .sidebar,
+  .admin-UserReport .sidebar {
+    width: 52px !important;
+  }
+
+  .admin-UserClinics .sidebar.expanded,
+  .admin-Userpage .sidebar.expanded,
+  .admin-UserAppoint .sidebar.expanded,
+  .admin-UserServices .sidebar.expanded,
+  .admin-UserReport .sidebar.expanded {
+    width: 200px !important;
+  }
+
+  .admin-UserClinics .app-header,
+  .admin-Userpage .app-header,
+  .admin-UserAppoint .app-header,
+  .admin-UserServices .app-header,
+  .admin-UserReport .app-header {
+    left: 52px !important;
+    padding: 8px 12px !important;
+    min-height: 116px !important;
+  }
+
+  .admin-UserClinics .admin-content,
+  .admin-Userpage .admin-content,
+  .admin-UserAppoint .admin-content,
+  .admin-UserServices .admin-content,
+  .admin-UserReport .admin-content {
+    padding-top: 140px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .admin-UserClinics .admin-title h2,
+  .admin-Userpage .admin-title h2,
+  .admin-UserAppoint .admin-title h2,
+  .admin-UserServices .admin-title h2,
+  .admin-UserReport .admin-title h2 {
+    font-size: 20px !important;
+  }
+
+  /* Admin nav links: hide text, keep icons */
+  .admin-UserClinics .header-nav > a:not(.profile-btn),
+  .admin-Userpage .header-nav > a:not(.profile-btn),
+  .admin-UserAppoint .header-nav > a:not(.profile-btn),
+  .admin-UserServices .header-nav > a:not(.profile-btn),
+  .admin-UserReport .header-nav > a:not(.profile-btn) {
+    font-size: 13px !important;
+  }
+
+  /* Clinic: same narrow sidebar */
+  .ClinicAppoint.with-sidebar,
+  .ClinicAppoint.with-sidebar.sidebar-expanded,
+  .Patient.with-sidebar,
+  .Patient.with-sidebar.sidebar-expanded,
+  .services.with-sidebar,
+  .services.with-sidebar.sidebar-expanded,
+  .Schedule.with-sidebar,
+  .Schedule.with-sidebar.sidebar-expanded {
+    padding-left: 52px !important;
+  }
+
+  .clinic-dashboard-page .clinic-main {
+    padding-top: 140px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .ClinicAppoint .admin-content,
+  .Patient .admin-content,
+  .services .admin-content,
+  .Schedule .admin-content {
+    padding-top: 140px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  /* Modals: truly full-width on small phones */
+  .modal-card,
+  .clinic-edit-popup-card,
+  .clinic-status-popup-card,
+  .appoint-guard-modal {
+    width: calc(100vw - 16px) !important;
+    max-width: none !important;
+    border-radius: 16px !important;
+  }
+}
+
