@@ -225,8 +225,8 @@
 }
 
 /* ================= HEADER ================= */
-/* All properties use !important so AdminHeader.css (which applies a bare
-   .app-header rule globally) cannot override user-layout header styles. */
+/* CSS Grid layout gives each section a fixed column — the nav can
+   never overflow into the right padding regardless of content width. */
 .user-layout .app-header {
   position: fixed !important;
   top: 0 !important;
@@ -234,12 +234,14 @@
   left: var(--sidebar-width-collapsed) !important;
   height: var(--header-height) !important;
   min-height: var(--header-height) !important;
-  display: flex !important;
+  /* 3-column grid: logo | search | nav */
+  display: grid !important;
+  grid-template-columns: 155px minmax(180px, 400px) auto !important;
+  column-gap: 16px !important;
+  row-gap: 0 !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  flex-direction: row !important;
-  gap: 0 !important;
-  padding: 0 28px 0 18px !important;
+  justify-items: stretch !important;
+  padding: 0 20px 0 18px !important;
   z-index: 999 !important;
   transition: left 0.25s ease !important;
   box-sizing: border-box !important;
@@ -250,19 +252,12 @@
   left: var(--sidebar-width-expanded) !important;
 }
 
-/* header-left only holds the logo — shrinks to logo width so the
-   search bar can be centered independently */
+/* Dissolve header-left — logo + search become direct grid children */
 .user-layout .app-header .header-left {
-  display: flex !important;
-  flex: 0 0 auto !important;
-  align-items: center !important;
-  gap: 0 !important;
-  min-width: 0 !important;
-  grid-template-columns: none !important;
-  position: static !important;
-  right: auto !important;
+  display: contents !important;
 }
 
+/* keep a plain flex fallback outside .app-header */
 .user-layout .header-left {
   display: flex;
   align-items: center;
@@ -271,38 +266,54 @@
   flex: 1 1 auto;
 }
 
-/* search bar is absolutely centered in the header */
-.user-layout .app-header .header-search {
-  position: absolute !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  width: min(420px, 38vw) !important;
-  max-width: 460px !important;
-  min-width: 180px !important;
+/* Logo → grid column 1 */
+.user-layout .app-header .brand-logo {
+  width: 145px !important;
+  height: auto !important;
+  max-height: 52px !important;
+  object-fit: contain !important;
+  display: block !important;
+  justify-self: start !important;
+  align-self: center !important;
+  position: static !important;
   flex: none !important;
-  right: auto !important;
 }
 
-/* nav sits at the right, never grows, never shrinks */
+/* Search → grid column 2, centered within its cell */
+.user-layout .app-header .header-search {
+  position: static !important;
+  left: auto !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex: none !important;
+  right: auto !important;
+  justify-self: center !important;
+  align-self: center !important;
+}
+
+/* Nav → grid column 3, shrinks to content, flush right */
 .user-layout .app-header .header-nav {
   display: flex !important;
   flex: 0 0 auto !important;
   align-items: center !important;
-  gap: clamp(12px, 1.6vw, 22px) !important;
+  gap: clamp(10px, 1.2vw, 18px) !important;
   height: 100% !important;
   overflow: visible !important;
-  /* no margin-left: auto — space-between already handles positioning */
+  justify-self: end !important;
 }
 
-/* nav-link / profile-btn — match the actual 58px header height */
+/* nav-link / profile-btn height + text */
 .user-layout .app-header .nav-link,
 .user-layout .app-header .profile-btn {
   height: var(--header-height) !important;
   font-size: 0.88rem !important;
   font-weight: 500 !important;
+  white-space: nowrap !important;
 }
 
-/* profile-menu container never clips the avatar */
+/* profile-menu: relative so dropdown positions correctly */
 .user-layout .app-header .profile-menu {
   position: relative !important;
   height: 100% !important;
@@ -311,22 +322,22 @@
   overflow: visible !important;
 }
 
-/* avatar button — always circular, always visible, even with profile-btn class */
-.user-layout .app-header .header-avatar,
-.user-layout .app-header .profile-menu .header-avatar {
+/* Avatar — always a visible circle */
+.user-layout .app-header .header-avatar {
   flex-shrink: 0 !important;
   overflow: hidden !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  min-height: 38px !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
   border-radius: 50% !important;
   background: #c8e6e5 !important;
-  border: 2px solid rgba(255, 255, 255, 0.75) !important;
-  padding: 0 !important;
+  border: 2px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  text-decoration: none !important;
   cursor: pointer !important;
 }
 

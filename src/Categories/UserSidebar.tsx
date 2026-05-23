@@ -536,19 +536,17 @@ export default function UserSidebar({
           </Link>
 
           <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-            {/* Avatar IS the trigger — clicking opens the dropdown */}
             <button
               type="button"
-              className={`header-avatar profile-btn ${
+              className={`nav-link profile-btn ${
                 location.pathname === "/profile" ||
                 location.pathname === "/notifications"
                   ? "active"
                   : ""
               }`}
               onClick={() => setHeaderProfileOpen((v) => !v)}
-              aria-label="Open profile menu"
             >
-              <img src={headerProfileImage} alt="Profile" />
+              Profile
             </button>
 
             <div className="profile-dropdown">
@@ -584,6 +582,17 @@ export default function UserSidebar({
               </button>
             </div>
           </div>
+
+          <Link
+            to="/profile"
+            className={`header-avatar ${
+              location.pathname === "/profile" ? "active" : ""
+            }`}
+            aria-label="Open profile"
+            onClick={() => setHeaderProfileOpen(false)}
+          >
+            <img src={headerProfileImage} alt="Profile" />
+          </Link>
         </nav>
       </header>
 
