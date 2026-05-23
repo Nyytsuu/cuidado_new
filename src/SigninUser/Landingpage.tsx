@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Landingpage.css";
 import logo from "../img/logo.png";
 import doctorImage from "../img/doc.png";
 import patientImage from "../img/doc-patient.png";
+import { getActiveAuthDestination } from "../authSession";
 
 const SUPPORT_EMAIL = "cuidadosupport@gmail.com";
 
@@ -95,11 +96,21 @@ const statItems = [
 ];
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const countedStatsRef = useRef(false);
   const [isEmailPopupOpen, setIsEmailPopupOpen] = useState(false);
   const [animatedStats, setAnimatedStats] = useState(() =>
     statItems.map(() => 0)
   );
+
+  // If the user has an active "keep me logged in" session, skip the landing
+  // page entirely and send them straight to their dashboard/homepage.
+  useEffect(() => {
+    const destination = getActiveAuthDestination();
+    if (destination) {
+      navigate(destination, { replace: true });
+    }
+  }, [navigate]);
 
   const handleSupportEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
