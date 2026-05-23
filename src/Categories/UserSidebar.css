@@ -291,7 +291,7 @@
   gap: clamp(12px, 1.6vw, 22px) !important;
   height: 100% !important;
   overflow: visible !important;
-  margin-left: auto !important;
+  /* no margin-left: auto — space-between already handles positioning */
 }
 
 /* nav-link / profile-btn — match the actual 58px header height */
@@ -311,10 +311,12 @@
   overflow: visible !important;
 }
 
-/* avatar always fully visible, never clipped */
+/* avatar: keep circular overflow:hidden so the image clips correctly;
+   flex-shrink:0 ensures it never gets squeezed out */
 .user-layout .app-header .header-avatar {
   flex-shrink: 0 !important;
-  overflow: visible !important;
+  overflow: hidden !important;
+  display: flex !important;
 }
 
 .user-layout .brand-logo {
