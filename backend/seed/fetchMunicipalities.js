@@ -1,8 +1,19 @@
+/**
+ * fetchMunicipalities.js
+ * Reads provinces.csv and fetches all cities/municipalities for each province.
+ * Metro Manila (NCR) uses a different PSGC endpoint (region, not province).
+ * Writes the result to municipalities.csv.
+ *
+ * Run AFTER fetchProvinces.js:
+ *   node fetchMunicipalities.js
+ */
+
 const fs = require("fs");
 const axios = require("axios");
 const csv = require("csv-parser");
 
-const BASE = "https://psgc.gitlab.io/api/provinces";
+const BASE = "https://psgc.gitlab.io/api";
+const NCR_CODE = "130000000";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function run() {
@@ -15,7 +26,11 @@ async function run() {
       let out = "id,province_id,name\n";
 
       for (const p of provinces) {
-        const url = `${BASE}/${p.id}/cities-municipalities.json`;
+        // Metro Manila cities come from the regions endpoint, not provinces
+        const url =
+          p.id === NCR_CODE
+            ? `${BASE}/regions/${NCR_CODE}/cities-municipalities/`
+            : `${BASE}/provinces/${p.id}/cities-municipalities.json`;
 
         try {
           const { data } = await axios.get(url);
@@ -30,11 +45,11 @@ async function run() {
           console.log(`✖ ${p.id} ${p.name} -> ${e.response?.status || e.message}`);
         }
 
-        await sleep(150); // be nice to the API
+        await sleep(150);
       }
 
       fs.writeFileSync("municipalities.csv", out, "utf8");
-      console.log("municipalities.csv created ✅");
+      console.log("\nmunicipalities.csv created ✅");
       process.exit(0);
     });
 }
