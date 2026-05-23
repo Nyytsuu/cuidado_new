@@ -2924,6 +2924,93 @@ button {
 }
 
 /* ================================================================
+   USER-FACING SIDEBAR OFFSET FIX
+   UserSidebar.css defines --sidebar-width-collapsed: 74px and
+   --sidebar-width-expanded: 270px, but several page CSS files still
+   use old hardcoded 64px/250px/70px values, causing content to
+   overlap the sidebar on all laptop/desktop screens.
+   This block corrects those offsets for screens ≥ 1025px where the
+   sidebar is actually 74px wide in collapsed state.
+   ================================================================ */
+@media (min-width: 1025px) {
+  /* Homepage */
+  .homepage .homepage-content {
+    margin-left: 74px !important;
+    width: calc(100% - 74px) !important;
+  }
+  .homepage.sidebar-expanded .homepage-content {
+    margin-left: 270px !important;
+    width: calc(100% - 270px) !important;
+  }
+
+  /* Browse Health / Cardio (share same class) */
+  .browse-health-page .browse-page-content {
+    margin-left: 74px !important;
+    width: calc(100% - 74px) !important;
+  }
+  .browse-health-page.sidebar-expanded .browse-page-content {
+    margin-left: 270px !important;
+    width: calc(100% - 270px) !important;
+  }
+  /* Browse Health index variant */
+  .browse-health-page.browse-health-index-page .browse-page-content {
+    margin-left: 74px !important;
+    width: calc(100% - 74px) !important;
+  }
+  .browse-health-page.browse-health-index-page.sidebar-expanded .browse-page-content {
+    margin-left: 270px !important;
+    width: calc(100% - 270px) !important;
+  }
+
+  /* Find Clinic */
+  .findclinic-page .findclinic-content {
+    margin-left: 74px !important;
+  }
+
+  /* Notifications */
+  .notification-page .browse-page-content {
+    margin-left: 74px !important;
+    width: calc(100% - 74px) !important;
+  }
+  .notification-page.sidebar-expanded .browse-page-content {
+    margin-left: 270px !important;
+    width: calc(100% - 270px) !important;
+  }
+
+  /* Settings (user) */
+  .settings-page .settings-main {
+    margin-left: 74px !important;
+  }
+  .settings-page.sidebar-expanded .settings-main {
+    margin-left: 270px !important;
+  }
+
+  /* User Profile / Health app */
+  .profile-page .health-app {
+    margin-left: 74px !important;
+  }
+  .profile-page.sidebar-expanded .health-app {
+    margin-left: 270px !important;
+  }
+
+  /* Emergency */
+  .emergency-page .emergency-main {
+    margin-left: 74px !important;
+  }
+  .emergency-page.sidebar-expanded .emergency-main {
+    margin-left: 270px !important;
+  }
+
+  /* Help */
+  .user-help-page .user-help-main {
+    margin-left: 74px !important;
+  }
+  .user-help-page.sidebar-expanded .user-help-main {
+    margin-left: 270px !important;
+  }
+}
+
+/* ================================================================
    ADMIN + CLINIC SHARED RESPONSIVE LAYER
    Covers all admin pages (.admin-UserClinics, .admin-Userpage,
    .admin-UserAppoint, .admin-UserServices, .admin-UserReport)

@@ -1,7 +1,7 @@
 .app-header {
   position: fixed !important;
   top: 0 !important;
-  left: 7px !important;
+  left: 70px !important;
   right: 0 !important;
   z-index: 999 !important;
   height: 68px !important;
@@ -20,6 +20,15 @@
 
 .sidebar-expanded .app-header {
   left: 220px !important;
+}
+
+/* Ensure all admin page content clears the 68px fixed header */
+.admin-UserClinics .admin-content,
+.admin-Userpage .admin-content,
+.admin-UserAppoint .admin-content,
+.admin-UserServices .admin-content,
+.admin-UserReport .admin-content {
+  padding-top: 90px !important;
 }
 
 .app-header .header-left {
@@ -190,14 +199,37 @@
   background: #eef7f6 !important;
 }
 
-@media (max-width: 980px) {
+/* ── 1366px laptop: tighten gaps to prevent overflow ── */
+@media (max-width: 1366px) {
+  .app-header {
+    gap: 20px !important;
+    padding: 0 22px !important;
+  }
+
+  .app-header .header-left {
+    grid-template-columns: 140px minmax(240px, 400px) minmax(0, 1fr) !important;
+    gap: 18px !important;
+  }
+
+  .app-header .brand-logo {
+    width: 120px !important;
+  }
+
+  .app-header .header-nav {
+    gap: 24px !important;
+  }
+}
+
+/* ── 1280px laptop: tighten further ── */
+@media (max-width: 1280px) {
   .app-header {
     gap: 16px !important;
     padding: 0 18px !important;
   }
 
   .app-header .header-left {
-    grid-template-columns: 120px minmax(220px, 1fr) !important;
+    grid-template-columns: 120px minmax(200px, 360px) minmax(0, 1fr) !important;
+    gap: 14px !important;
   }
 
   .app-header .brand-logo {
@@ -206,5 +238,52 @@
 
   .app-header .header-nav {
     gap: 18px !important;
+  }
+}
+
+/* ── 1140px: collapse to 2-col header-left ── */
+@media (max-width: 1140px) {
+  .app-header .header-left {
+    grid-template-columns: 110px minmax(180px, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .app-header .brand-logo {
+    width: 100px !important;
+  }
+
+  .app-header .header-nav {
+    gap: 14px !important;
+  }
+
+  .app-header .nav-link,
+  .app-header .profile-btn {
+    font-size: 13px !important;
+  }
+}
+
+/* ── 980px: further compact ── */
+@media (max-width: 980px) {
+  .app-header {
+    gap: 12px !important;
+    padding: 0 14px !important;
+  }
+
+  .app-header .header-left {
+    grid-template-columns: 100px minmax(160px, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .app-header .brand-logo {
+    width: 96px !important;
+  }
+
+  .app-header .header-nav {
+    gap: 12px !important;
+  }
+
+  .app-header .nav-link,
+  .app-header .profile-btn {
+    font-size: 12px !important;
   }
 }
