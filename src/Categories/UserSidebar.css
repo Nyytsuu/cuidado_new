@@ -225,9 +225,10 @@
 }
 
 /* ================= HEADER ================= */
-/* Flex layout: header-left fixed-width on left, nav pushed right
-   via margin-left:auto. NO space-between (combining both caused overflow). */
-.user-layout .app-header {
+/* Uses .user-site-header (unique class) so AdminHeader.css cannot interfere.
+   AdminHeader targets .app-header only — we keep that class on the element
+   purely for the profile-dropdown styles it provides. All layout rules go here. */
+.user-layout .user-site-header {
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
@@ -238,43 +239,43 @@
   flex-direction: row !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  padding: 0 20px 0 18px !important;
+  padding: 0 24px 0 18px !important;
   gap: 0 !important;
   z-index: 999 !important;
   transition: left 0.25s ease !important;
   box-sizing: border-box !important;
   overflow: visible !important;
+  background: var(--header-bg, #ffffff) !important;
+  box-shadow: 0 1px 0 #e5eaed !important;
 }
 
-.user-layout.sidebar-expanded .app-header {
+.user-layout.sidebar-expanded .user-site-header {
   left: var(--sidebar-width-expanded) !important;
 }
 
-/* header-left: fixed 155px, holds logo only (search is absolute) */
-.user-layout .app-header .header-left {
-  flex: 0 0 155px !important;
-  width: 155px !important;
-  max-width: 155px !important;
+/* header-left: natural width — logo size dictates it */
+.user-layout .user-site-header .header-left {
+  flex: 0 0 auto !important;
   display: flex !important;
   align-items: center !important;
   overflow: visible !important;
   position: static !important;
-  grid-template-columns: none !important;
 }
 
-/* keep a plain flex fallback outside .app-header */
-.user-layout .header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  min-width: 0;
-  flex: 1 1 auto;
+/* Brand logo: fixed size — beats AdminHeader's responsive shrinks */
+.user-layout .user-site-header .brand-logo {
+  width: 140px !important;
+  height: auto !important;
+  max-height: 46px !important;
+  object-fit: contain !important;
+  display: block !important;
+  flex-shrink: 0 !important;
 }
 
 /* Search: absolutely centered in the header.
-   header-left is position:static so the search is relative to
-   the header (position:fixed), which is what we want. */
-.user-layout .app-header .header-search {
+   header-left is position:static, so position:absolute is relative
+   to the fixed header — which is exactly what we want. */
+.user-layout .user-site-header .header-search {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
@@ -286,29 +287,28 @@
   right: auto !important;
 }
 
-/* Nav: margin-left:auto pushes it to the far right.
-   Its right edge == header content right == viewport right - 20px. */
-.user-layout .app-header .header-nav {
+/* Nav: margin-left:auto pushes it all the way to the right edge */
+.user-layout .user-site-header .header-nav {
   display: flex !important;
   flex: 0 0 auto !important;
   align-items: center !important;
-  gap: clamp(10px, 1.2vw, 18px) !important;
+  gap: clamp(8px, 1vw, 16px) !important;
   height: 100% !important;
   overflow: visible !important;
   margin-left: auto !important;
 }
 
-/* nav-link / profile-btn */
-.user-layout .app-header .nav-link,
-.user-layout .app-header .profile-btn {
+/* Nav links / profile button */
+.user-layout .user-site-header .nav-link,
+.user-layout .user-site-header .profile-btn {
   height: var(--header-height) !important;
   font-size: 0.88rem !important;
   font-weight: 500 !important;
   white-space: nowrap !important;
 }
 
-/* profile-menu: relative so dropdown positions correctly */
-.user-layout .app-header .profile-menu {
+/* Profile menu wrapper */
+.user-layout .user-site-header .profile-menu {
   position: relative !important;
   height: 100% !important;
   display: flex !important;
@@ -316,8 +316,8 @@
   overflow: visible !important;
 }
 
-/* Avatar — always a visible circle */
-.user-layout .app-header .header-avatar {
+/* Avatar — always a visible 36 px circle at the right edge of the nav */
+.user-layout .user-site-header .header-avatar {
   flex-shrink: 0 !important;
   overflow: hidden !important;
   display: flex !important;
@@ -329,13 +329,13 @@
   min-height: 36px !important;
   border-radius: 50% !important;
   background: #c8e6e5 !important;
-  border: 2px solid rgba(255, 255, 255, 0.85) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18) !important;
+  border: 2px solid rgba(0, 80, 80, 0.18) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14) !important;
   text-decoration: none !important;
   cursor: pointer !important;
 }
 
-.user-layout .app-header .header-avatar img {
+.user-layout .user-site-header .header-avatar img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
@@ -344,7 +344,7 @@
 }
 
 .user-layout .brand-logo {
-  width: 150px;
+  width: 140px;
   height: auto;
   display: block;
   object-fit: contain;
@@ -763,7 +763,8 @@
     overflow-x: hidden;
   }
 
-  .user-layout .app-header {
+  .user-layout .app-header,
+  .user-layout .user-site-header {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;

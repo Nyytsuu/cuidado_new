@@ -482,7 +482,7 @@ export default function UserSidebar({
         </form>
       </header>
 
-      <header className="app-header">
+      <header className="app-header user-site-header">
         <div className="header-left">
           <img src={logo} alt="CUIDADO logo" className="brand-logo" />
 
