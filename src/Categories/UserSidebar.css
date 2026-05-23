@@ -225,21 +225,34 @@
 }
 
 /* ================= HEADER ================= */
+/* Use !important here so the bare .app-header rules in AdminHeader.css
+   (which is bundled globally) cannot override user-layout styles.
+   Two-class specificity (.user-layout .app-header) beats one-class
+   (.app-header) when both use !important. */
 .user-layout .app-header {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: var(--header-height);
-  background: #f7f7f7;
-  border-bottom: 1px solid #dddddd;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: clamp(14px, 2vw, 28px);
-  padding: 0 26px 0 18px;
-  z-index: 999;
-  transition: left 0.25s ease;
-  box-sizing: border-box;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: var(--sidebar-width-collapsed) !important;
+  height: var(--header-height) !important;
+  min-height: var(--header-height) !important;
+  background: #f7f7f7 !important;
+  border-bottom: 1px solid #dddddd !important;
+  box-shadow: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+  gap: clamp(14px, 2vw, 28px) !important;
+  padding: 0 26px 0 18px !important;
+  z-index: 999 !important;
+  transition: left 0.25s ease !important;
+  box-sizing: border-box !important;
+  font-family: inherit !important;
+}
+
+.user-layout.sidebar-expanded .app-header {
+  left: var(--sidebar-width-expanded) !important;
 }
 
 /* left section */
