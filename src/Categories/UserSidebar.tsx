@@ -23,7 +23,6 @@ import {
   TriangleAlert,
   CircleHelp,
   LogOut,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -537,17 +536,19 @@ export default function UserSidebar({
           </Link>
 
           <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
+            {/* Avatar IS the trigger — clicking opens the dropdown */}
             <button
               type="button"
-              className={`nav-link profile-btn ${
+              className={`header-avatar profile-btn ${
                 location.pathname === "/profile" ||
                 location.pathname === "/notifications"
                   ? "active"
                   : ""
               }`}
               onClick={() => setHeaderProfileOpen((v) => !v)}
+              aria-label="Open profile menu"
             >
-              Profile <ChevronDown size={14} strokeWidth={2.2} aria-hidden="true" />
+              <img src={headerProfileImage} alt="Profile" />
             </button>
 
             <div className="profile-dropdown">
@@ -583,17 +584,6 @@ export default function UserSidebar({
               </button>
             </div>
           </div>
-
-          <Link
-            to="/profile"
-            className={`header-avatar ${
-              location.pathname === "/profile" ? "active" : ""
-            }`}
-            aria-label="Open profile"
-            onClick={() => setHeaderProfileOpen(false)}
-          >
-            <img src={headerProfileImage} alt="Profile" />
-          </Link>
         </nav>
       </header>
 

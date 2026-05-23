@@ -311,12 +311,31 @@
   overflow: visible !important;
 }
 
-/* avatar: keep circular overflow:hidden so the image clips correctly;
-   flex-shrink:0 ensures it never gets squeezed out */
-.user-layout .app-header .header-avatar {
+/* avatar button — always circular, always visible, even with profile-btn class */
+.user-layout .app-header .header-avatar,
+.user-layout .app-header .profile-menu .header-avatar {
   flex-shrink: 0 !important;
   overflow: hidden !important;
   display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  border-radius: 50% !important;
+  background: #c8e6e5 !important;
+  border: 2px solid rgba(255, 255, 255, 0.75) !important;
+  padding: 0 !important;
+  cursor: pointer !important;
+}
+
+.user-layout .app-header .header-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 50% !important;
 }
 
 .user-layout .brand-logo {
