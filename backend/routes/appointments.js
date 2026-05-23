@@ -1,8 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
+const { verifyToken } = require("../middleware/auth");
 
 console.log("✅ LOADED appointments.js");
+
+// All appointment routes require a valid JWT
+router.use(verifyToken);
 
 router.get("/test", (req, res) => {
   res.json({ message: "appointments route works" });

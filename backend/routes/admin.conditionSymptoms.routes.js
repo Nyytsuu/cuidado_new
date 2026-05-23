@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
+const { verifyToken, requireRole } = require("../middleware/auth");
+
+router.use(verifyToken, requireRole("admin"));
 
 const ensureHealthLinkColumns = async () => {
   const [symptomColumns] = await pool.query(

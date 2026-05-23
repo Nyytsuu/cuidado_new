@@ -6,6 +6,22 @@ const multer = require("multer");
 const path = require("path");
 const pool = require("../db/pool");
 const db = pool;
+const { verifyToken, requireRole } = require("../middleware/auth");
+
+// Clinic signup is public; everything else requires a valid clinic (or admin) JWT
+const CLINIC_PUBLIC_PATHS = new Set(["/clinic/signup", "/signup"]);
+
+router.use((req, res, next) => {
+  if (req.method === "POST" && CLINIC_PUBLIC_PATHS.has(req.path)) return next();
+  return verifyToken(req, res, next);
+});
+
+router.use((req, res, next) => {
+  if (req.method === "POST" && CLINIC_PUBLIC_PATHS.has(req.path)) return next();
+  if (!req.user) return next(); // verifyToken already rejected if no user
+  if (req.user.role === "clinic" || req.user.role === "admin") return next();
+  return res.status(403).json({ message: "Access denied." });
+});
 
 /* ================= MULTER SETUP ================= */
 const storage = multer.diskStorage({

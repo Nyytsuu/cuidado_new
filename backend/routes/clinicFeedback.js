@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
+const { verifyToken } = require("../middleware/auth");
+
+// Feedback can be submitted by any logged-in user
+router.use(verifyToken);
 
 const ensureClinicFeedbackTable = async () => {
   await pool.query(`

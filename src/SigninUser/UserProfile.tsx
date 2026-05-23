@@ -134,6 +134,15 @@ export default function UserProfile() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+  const [verifyEmailModalOpen, setVerifyEmailModalOpen] = useState(false);
+  const [verifyCode, setVerifyCode] = useState("");
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+  const [verifySent, setVerifySent] = useState(false);
+  const [passwordVerified, setPasswordVerified] = useState(false);
 
   const [voicePopupOpen, setVoicePopupOpen] = useState(false);
   const [voiceStep, setVoiceStep] = useState<VoiceStep>("idle");
@@ -609,6 +618,48 @@ export default function UserProfile() {
     }
   };
 
+  const handleSendVerifyCode = async () => {
+    try {
+      setVerifyLoading(true);
+      setVerifyError("");
+      const res = await fetch(apiUrl(`/api/users/${userId}/send-verify-email`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to send verification code.");
+      setVerifySent(true);
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : "Failed to send verification code.");
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleVerifyEmailCode = async () => {
+    try {
+      setVerifyLoading(true);
+      setVerifyError("");
+      const res = await fetch(apiUrl(`/api/users/${userId}/verify-email-code`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: verifyCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Invalid or expired verification code.");
+      setPasswordVerified(true);
+      setShowCurrentPassword(true);
+      setVerifyEmailModalOpen(false);
+      setVerifyCode("");
+      setVerifyError("");
+      setVerifySent(false);
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : "Invalid or expired code.");
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
   return (
     <div className={`profile-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
@@ -680,10 +731,11 @@ export default function UserProfile() {
             <div className="sidebar-card">
               <div className="sidebar-card-title">💡 Did You Know?</div>
               <p>
-                A healthy lifestyle, including a balanced diet and regular exercise,
-                can reduce the risk of heart disease by up to 80%.
+                Keeping your profile updated helps clinics confirm appointments
+                and reach you with accurate health reminders.
               </p>
             </div>
+
           </aside>
 
           <header className="topbar">
@@ -692,10 +744,6 @@ export default function UserProfile() {
                 <span className="path-active">My Profile</span>
               </div>
             </div>
-
-            <button className="edit-button" type="button" onClick={handleSaveProfile}>
-              Save Profile
-            </button>
           </header>
 
           <div className="content-grid">
@@ -703,6 +751,21 @@ export default function UserProfile() {
               {loading && <p>Loading profile...</p>}
               {error && <div className="booking-error">{error}</div>}
               {message && <div className="booking-success">{message}</div>}
+
+              <div className="profile-summary-top">
+                <div className="profile-summary-avatar">
+                  <img src={displayProfilePicture} alt="Profile" />
+                </div>
+                <div className="profile-summary-body">
+                  <p className="profile-summary-heading">Profile Summary</p>
+                  <div className="profile-summary-fields">
+                    <span><strong>Name</strong>{fullName || "--"}</span>
+                    <span><strong>Email</strong>{email || "--"}</span>
+                    <span><strong>Phone</strong>{phone || "--"}</span>
+                    <span className={`profile-summary-status ${status}`}>{status}</span>
+                  </div>
+                </div>
+              </div>
 
               <h2>Account</h2>
 
@@ -873,7 +936,7 @@ export default function UserProfile() {
                     <button
                       className="primary-btn"
                       type="button"
-                      onClick={handleSaveProfile}
+                      onClick={() => setShowSaveConfirm(true)}
                       disabled={profileSaving}
                     >
                       {profileSaving ? "Saving..." : "Save Changes"}
@@ -897,7 +960,15 @@ export default function UserProfile() {
                     <button
                       type="button"
                       className="current-btn"
-                      onClick={() => setShowCurrentPassword((prev) => !prev)}
+                      title={passwordVerified ? "Toggle password visibility" : "Verify email to reveal password"}
+                      onClick={() => {
+                        if (!passwordVerified) {
+                          setVerifyEmailModalOpen(true);
+                          handleSendVerifyCode();
+                        } else {
+                          setShowCurrentPassword((prev) => !prev);
+                        }
+                      }}
                     >
                       {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
@@ -946,7 +1017,7 @@ export default function UserProfile() {
                   <button
                     className="update-btn"
                     type="button"
-                    onClick={handleUpdatePassword}
+                    onClick={() => setShowPasswordConfirm(true)}
                     disabled={passwordSaving}
                   >
                     {passwordSaving ? "Updating..." : "Update Password"}
@@ -954,31 +1025,8 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              <footer className="footer-links">
-                <a href="/">About Us</a>
-                <a href="/">Contact</a>
-                <a href="/">Privacy Policy</a>
-                <a href="/">Terms of Service</a>
-              </footer>
             </section>
 
-            <aside className="right-panel">
-              <div className="side-widget info-widget">
-                <h3>Profile Summary</h3>
-                <p><strong>Name:</strong> {fullName || "--"}</p>
-                <p><strong>Email:</strong> {email || "--"}</p>
-                <p><strong>Phone:</strong> {phone || "--"}</p>
-                <p><strong>Status:</strong> {status}</p>
-              </div>
-
-              <div className="side-widget did-you-know-card">
-                <div className="did-you-know-title">💡 Did You Know?</div>
-                <p>
-                  Keep your account details updated so clinics can reach you correctly for
-                  appointment confirmations and reminders.
-                </p>
-              </div>
-            </aside>
           </div>
         </main>
 
@@ -1123,6 +1171,121 @@ export default function UserProfile() {
           <div className="logout-popup">
             <div className="logout-icon">✓</div>
             <p>Logged out successfully</p>
+          </div>
+        </div>
+      )}
+
+      {/* Save profile confirmation */}
+      {showSaveConfirm && (
+        <div className="logout-confirm-overlay">
+          <div className="logout-confirm-modal">
+            <h3>Save changes?</h3>
+            <p>Are you sure you want to update your profile information?</p>
+            <div className="logout-actions">
+              <button className="btn-cancel" onClick={() => setShowSaveConfirm(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn-confirm"
+                onClick={() => { setShowSaveConfirm(false); handleSaveProfile(); }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update password confirmation */}
+      {showPasswordConfirm && (
+        <div className="logout-confirm-overlay">
+          <div className="logout-confirm-modal">
+            <h3>Update password?</h3>
+            <p>Are you sure you want to change your password?</p>
+            <div className="logout-actions">
+              <button className="btn-cancel" onClick={() => setShowPasswordConfirm(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn-confirm"
+                onClick={() => { setShowPasswordConfirm(false); handleUpdatePassword(); }}
+              >
+                Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Email verification modal — reveals current password */}
+      {verifyEmailModalOpen && (
+        <div className="logout-confirm-overlay">
+          <div className="verify-email-modal">
+            <button
+              className="verify-modal-close"
+              type="button"
+              onClick={() => {
+                setVerifyEmailModalOpen(false);
+                setVerifyCode("");
+                setVerifyError("");
+                setVerifySent(false);
+              }}
+            >
+              ×
+            </button>
+
+            <div className="verify-modal-icon">✉️</div>
+            <h3 className="verify-modal-title">Verify Your Email</h3>
+            <p className="verify-modal-desc">
+              {verifyLoading && !verifySent
+                ? "Sending code…"
+                : <>A 6-digit code has been sent to<br /><strong>{email}</strong></>}
+            </p>
+
+            {verifyError && <div className="verify-error">{verifyError}</div>}
+
+            <input
+              className="verify-code-input"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              placeholder="• • • • • •"
+              value={verifyCode}
+              onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))}
+              autoFocus
+            />
+
+            <div className="verify-modal-actions">
+              <button
+                className="btn-cancel"
+                type="button"
+                onClick={() => {
+                  setVerifyEmailModalOpen(false);
+                  setVerifyCode("");
+                  setVerifyError("");
+                  setVerifySent(false);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-confirm"
+                type="button"
+                onClick={handleVerifyEmailCode}
+                disabled={verifyLoading || verifyCode.length < 6}
+              >
+                {verifyLoading && verifyCode.length >= 6 ? "Verifying…" : "Verify"}
+              </button>
+            </div>
+
+            <button
+              className="verify-resend-btn"
+              type="button"
+              onClick={() => { setVerifyCode(""); setVerifySent(false); handleSendVerifyCode(); }}
+              disabled={verifyLoading}
+            >
+              {verifyLoading && !verifySent ? "Sending…" : "Resend Code"}
+            </button>
           </div>
         </div>
       )}

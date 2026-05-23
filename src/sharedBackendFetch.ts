@@ -91,25 +91,103 @@ export const apiUrl = (path: string) => {
   return `${getConfiguredBackendUrl()}${normalizedPath}`;
 };
 
+// Public endpoints that should NEVER trigger auto-logout on 401
+const PUBLIC_PATHS = [
+  "/api/login",
+  "/api/mobile/login",
+  "/api/signup",
+  "/api/auth/",
+  "/api/clinic/signup",
+];
+
+const isPublicEndpoint = (url: string): boolean =>
+  PUBLIC_PATHS.some((p) => url.includes(p));
+
+// Guards against duplicate logout redirects if several requests 401 at once
+let _loggingOut = false;
+
+const STORED_AUTH_KEYS = [
+  "token", "role", "user", "userId", "keepLoggedIn",
+  "admin_token", "clinic_token", "user_token",
+];
+
 const originalFetch = window.fetch.bind(window);
 
-window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const configuredBackendUrl = getConfiguredBackendUrl();
+
+  // Resolve the full URL string for inspection
+  const rawUrl =
+    input instanceof URL
+      ? input.href
+      : typeof input === "string"
+      ? input
+      : "";
+
+  const isBackendCall =
+    rawUrl.startsWith(DEFAULT_BACKEND_URL) ||
+    rawUrl.startsWith(configuredBackendUrl);
+
+  if (!isBackendCall) {
+    return originalFetch(input, init);
+  }
+
+  // Normalise localhost → configured URL
+  let normalizedInput: RequestInfo | URL = input;
   if (typeof input === "string" && input.startsWith(DEFAULT_BACKEND_URL)) {
-    const configuredBackendUrl = getConfiguredBackendUrl();
-    return originalFetch(
-      input.replace(DEFAULT_BACKEND_URL, configuredBackendUrl),
-      init
-    );
+    normalizedInput = input.replace(DEFAULT_BACKEND_URL, configuredBackendUrl);
+  } else if (input instanceof URL && input.href.startsWith(DEFAULT_BACKEND_URL)) {
+    normalizedInput = new URL(input.href.replace(DEFAULT_BACKEND_URL, configuredBackendUrl));
   }
 
-  if (input instanceof URL && input.href.startsWith(DEFAULT_BACKEND_URL)) {
-    const configuredBackendUrl = getConfiguredBackendUrl();
+  // Auto-attach Authorization header when a token is present
+  try {
+    const token =
+      typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
 
-    return originalFetch(
-      new URL(input.href.replace(DEFAULT_BACKEND_URL, configuredBackendUrl)),
-      init
-    );
+    if (token) {
+      const isFormData = init?.body instanceof FormData;
+      const existing = init?.headers;
+
+      // Build a fresh Headers object so we can check for existing Authorization
+      const headers = existing instanceof Headers
+        ? new Headers(existing)
+        : new Headers(existing as Record<string, string> | undefined);
+
+      if (!headers.has("Authorization")) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+
+      // Only set Content-Type automatically for non-FormData JSON requests
+      if (!isFormData && !headers.has("Content-Type")) {
+        headers.set("Content-Type", "application/json");
+      }
+
+      init = { ...init, headers };
+    }
+  } catch {
+    // localStorage unavailable (SSR / incognito edge cases) — carry on
   }
 
-  return originalFetch(input, init);
+  return originalFetch(normalizedInput, init).then((response) => {
+    // Auto-logout on token expiry / invalid token (skip public auth endpoints)
+    if (
+      response.status === 401 &&
+      !isPublicEndpoint(rawUrl) &&
+      !_loggingOut
+    ) {
+      _loggingOut = true;
+      try {
+        STORED_AUTH_KEYS.forEach((k) => localStorage.removeItem(k));
+        sessionStorage.removeItem("authSessionActive");
+      } catch {
+        // ignore storage errors
+      }
+      // Small delay so the current response can finish before redirect
+      setTimeout(() => {
+        window.location.href = "/signin";
+      }, 100);
+    }
+    return response;
+  });
 };

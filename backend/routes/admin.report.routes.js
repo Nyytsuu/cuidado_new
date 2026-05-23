@@ -1,7 +1,10 @@
 const express = require("express");
-const pool = require("../db/pool"); // <-- change if your db file name is different
+const pool = require("../db/pool");
+const { verifyToken, requireRole } = require("../middleware/auth");
 
 const router = express.Router();
+
+router.use(verifyToken, requireRole("admin"));
 
 // ✅ GET /api/admin/reports/summary
 router.get("/summary", async (req, res) => {

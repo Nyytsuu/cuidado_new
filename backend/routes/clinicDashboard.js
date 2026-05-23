@@ -2,6 +2,9 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
+const { verifyToken, requireRole } = require("../middleware/auth");
+
+router.use(verifyToken, requireRole("clinic", "admin"));
 
 const getClinicId = (req) => {
   return Number(req.query.clinic_id || req.body?.clinic_id || req.user?.clinic_id || req.user?.id);

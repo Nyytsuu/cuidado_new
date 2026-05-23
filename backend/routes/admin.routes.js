@@ -3,6 +3,10 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
 const PDFDocument = require("pdfkit");
+const { verifyToken, requireRole } = require("../middleware/auth");
+
+// All admin routes require a valid admin JWT
+router.use(verifyToken, requireRole("admin"));
 
 const csvEscape = (value) => {
   if (value === null || value === undefined) return "";

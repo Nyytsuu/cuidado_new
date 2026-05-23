@@ -7,6 +7,7 @@ const cors = require("cors");
 const path = require("path");
 
 const pool = require("./db/pool");
+const { verifyToken, requireRole } = require("./middleware/auth");
 
 const adminRoutes = require("./routes/admin.routes");
 const clinicRoutes = require("./routes/clinic.routes");
@@ -26,9 +27,22 @@ const clinicDashboardRoutes = require("./routes/clinicDashboard");
 
 const app = express();
 
+// CORS — restrict to known origins in production; allow all in development
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : null; // null = allow all (dev mode)
+
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, same-origin)
+      if (!origin) return callback(null, true);
+      // Dev mode: ALLOWED_ORIGINS not set → allow everything
+      if (!ALLOWED_ORIGINS) return callback(null, true);
+      // Prod mode: only allow listed origins
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
@@ -58,7 +72,7 @@ app.get("/api/test", (req, res) => {
 });
 
 /* ADMIN DASHBOARD METRICS */
-app.get("/api/admin/dashboard-metrics", async (req, res) => {
+app.get("/api/admin/dashboard-metrics", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const [[usersCount]] = await pool.query(
       'SELECT COUNT(*) AS "totalUsers" FROM users'
@@ -140,7 +154,7 @@ app.get("/api/admin/dashboard-metrics", async (req, res) => {
 });
 
 /* ADMIN DB CHECK */
-app.get("/api/admin/db-check", async (req, res) => {
+app.get("/api/admin/db-check", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const [[db]] = await pool.query("SELECT current_database() AS db");
     const [[u]] = await pool.query("SELECT COUNT(*) AS c FROM users");
@@ -161,7 +175,7 @@ app.get("/api/admin/db-check", async (req, res) => {
 });
 
 /* ADMIN RECENT ACTIVITY */
-app.get("/api/admin/recent-activity", async (req, res) => {
+app.get("/api/admin/recent-activity", verifyToken, requireRole("admin"), async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit || 10), 30);
 
@@ -210,7 +224,7 @@ app.get("/api/admin/recent-activity", async (req, res) => {
 });
 
 /* CLINIC PATIENTS */
-app.get("/api/clinic/patients", async (req, res) => {
+app.get("/api/clinic/patients", verifyToken, requireRole("clinic", "admin"), async (req, res) => {
   try {
     const clinicId = Number(req.query.clinic_id);
 

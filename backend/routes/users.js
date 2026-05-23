@@ -5,8 +5,27 @@ const multer = require("multer");
 const path = require("path");
 const nodemailer = require("nodemailer");
 const pool = require("../db/pool");
+const { verifyToken } = require("../middleware/auth");
 
 const router = express.Router();
+
+// /meta/* routes are public (used during signup — no account yet)
+// All /:userId/* routes require a valid JWT
+router.use((req, res, next) => {
+  if (req.path.startsWith("/meta/")) return next();
+  return verifyToken(req, res, next);
+});
+
+// Ownership guard: a user can only access their OWN data.
+// Admins can access any user's data.
+router.param("userId", (req, res, next, userId) => {
+  if (!req.user) return res.status(401).json({ message: "Authentication required." });
+  if (req.user.role === "admin") return next();
+  if (String(req.user.id) !== String(userId)) {
+    return res.status(403).json({ message: "Access denied." });
+  }
+  next();
+});
 
 const NOTIFICATION_CATEGORIES = new Set(["Appointments", "System", "Promotions"]);
 const SUPPORT_TOPICS = new Set([
@@ -1036,6 +1055,127 @@ router.put(
     }
   }
 );
+
+/**
+ * POST /api/users/:userId/send-verify-email
+ * Sends a 6-digit code to the user's registered email for identity verification.
+ */
+router.post("/:userId/send-verify-email", async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+
+    const [rows] = await pool.query(
+      "SELECT email FROM users WHERE id = ? LIMIT 1",
+      [userId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const email = rows[0].email;
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const bcrypt = require("bcrypt");
+    const codeHash = await bcrypt.hash(code, 10);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 min
+
+    await pool.query(
+      `DELETE FROM otp_requests WHERE email = ? AND purpose = ?`,
+      [email, "password_view"]
+    );
+
+    await pool.query(
+      `INSERT INTO otp_requests (email, otp_hash, purpose, expires_at) VALUES (?, ?, ?, ?)`,
+      [email, codeHash, "password_view", expiresAt]
+    );
+
+    if (reminderMailer) {
+      await reminderMailer.sendMail({
+        from: MAIL_FROM,
+        to: email,
+        subject: "Cuidado Medihelp — Password View Verification",
+        html: `
+          <div style="font-family:Arial,sans-serif;line-height:1.5;">
+            <h2 style="color:#004d40;">Password View Verification</h2>
+            <p>Use this 6-digit code to verify your identity and view your current password:</p>
+            <div style="font-size:28px;font-weight:700;letter-spacing:6px;margin:12px 0;color:#111;">
+              ${code}
+            </div>
+            <p>This code expires in <b>5 minutes</b>.</p>
+            <p style="font-size:12px;color:#6b7280;">If you did not request this, ignore this email.</p>
+          </div>
+        `,
+      });
+    }
+
+    return res.json({ message: "Verification code sent." });
+  } catch (error) {
+    console.error("POST /send-verify-email error:", error);
+    res.status(500).json({ message: "Failed to send verification code." });
+  }
+});
+
+/**
+ * POST /api/users/:userId/verify-email-code
+ * Verifies the 6-digit code sent to the user's email.
+ */
+router.post("/:userId/verify-email-code", async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    const code = String(req.body.code || "").trim();
+
+    if (!code || code.length !== 6) {
+      return res.status(400).json({ message: "A 6-digit code is required." });
+    }
+
+    const [userRows] = await pool.query(
+      "SELECT email FROM users WHERE id = ? LIMIT 1",
+      [userId]
+    );
+
+    if (!userRows.length) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const email = userRows[0].email;
+    const bcrypt = require("bcrypt");
+
+    const [rows] = await pool.query(
+      `SELECT * FROM otp_requests WHERE email = ? AND purpose = ? ORDER BY id DESC LIMIT 1`,
+      [email, "password_view"]
+    );
+
+    if (!rows.length) {
+      return res.status(400).json({ message: "No verification request found. Please request a new code." });
+    }
+
+    const record = rows[0];
+
+    if (new Date(record.expires_at).getTime() < Date.now()) {
+      await pool.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
+      return res.status(400).json({ message: "Code expired. Please request a new one." });
+    }
+
+    if ((record.attempts || 0) >= 5) {
+      await pool.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
+      return res.status(429).json({ message: "Too many attempts. Please request a new code." });
+    }
+
+    const ok = await bcrypt.compare(code, record.otp_hash);
+
+    if (!ok) {
+      await pool.query("UPDATE otp_requests SET attempts = COALESCE(attempts, 0) + 1 WHERE id = ?", [record.id]);
+      return res.status(400).json({ message: "Invalid code. Please try again." });
+    }
+
+    await pool.query("DELETE FROM otp_requests WHERE id = ?", [record.id]);
+
+    return res.json({ message: "Verified successfully." });
+  } catch (error) {
+    console.error("POST /verify-email-code error:", error);
+    res.status(500).json({ message: "Failed to verify code." });
+  }
+});
 
 /**
  * PUT /api/users/:userId/password
