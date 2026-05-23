@@ -535,6 +535,10 @@ body,
   background: linear-gradient(135deg, #7fd6cf, #42aaa4);
 }
 
+.profile-mini-icon {
+  background: linear-gradient(135deg, #5bc8c0, #2a9d95);
+}
+
 .mini-service-item:hover span {
   color: #17807d;
 }

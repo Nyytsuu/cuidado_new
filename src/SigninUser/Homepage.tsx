@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { clearStoredAuth } from "../authSession";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -164,6 +165,8 @@ export default function Homepage() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [siteSearchQuery, setSiteSearchQuery] = useState("");
@@ -455,7 +458,20 @@ useEffect(() => {
                         <button
                           type="button"
                           className="mini-service-item"
-                          onClick={() => handleNavigate("/logout")}
+                          onClick={() => handleNavigate("/profile")}
+                        >
+                          <div className="mini-service-icon profile-mini-icon">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v2h20v-2c0-3.33-6.67-5-10-5z"></path>
+                            </svg>
+                          </div>
+                          <span>My Profile</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className="mini-service-item"
+                          onClick={() => setShowLogoutConfirm(true)}
                         >
                           <div className="mini-service-icon logout-icon">
                             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -593,6 +609,41 @@ useEffect(() => {
           </div>
         </main>
       </div>
+
+      {/* Logout confirmation modal */}
+      {showLogoutConfirm && (
+        <div className="logout-confirm-overlay">
+          <div className="logout-confirm-modal">
+            <h3>Log out?</h3>
+            <p>Are you sure you want to log out of your account?</p>
+            <div className="logout-actions">
+              <button className="btn-cancel" onClick={() => setShowLogoutConfirm(false)}>
+                No
+              </button>
+              <button
+                className="btn-confirm"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  clearStoredAuth();
+                  setShowLogoutSuccess(true);
+                  setTimeout(() => navigate("/signin"), 1500);
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLogoutSuccess && (
+        <div className="logout-popup-overlay">
+          <div className="logout-popup">
+            <div className="logout-icon">✓</div>
+            <p>Logged out successfully</p>
+          </div>
+        </div>
+      )}
 
       {selectedArticle && (
         <div

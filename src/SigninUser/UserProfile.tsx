@@ -7,16 +7,19 @@ import profileImg from "../img/profile1.jpg";
 import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
 import VoiceAssistantResult from "./VoiceAssistantResult";
 import { apiUrl, getConfiguredBackendUrl } from "../sharedBackendFetch";
+import { useNavigate } from "react-router-dom";
+import { clearStoredAuth } from "../authSession";
+
 const menuItems = [
-  { label: "Home", icon: "⌂" },
-  { label: "Health Topics", icon: "♡" },
-  { label: "My Profile", icon: "👨‍⚕️", active: true },
-  { label: "Find Clinics", icon: "📍" },
+  { label: "Home",         icon: "⌂",  path: "/homepage"     },
+  { label: "Health Topics",icon: "♡",  path: "/browse-health"},
+  { label: "My Profile",   icon: "👨‍⚕️", path: "/profile",  active: true },
+  { label: "Find Clinics", icon: "📍", path: "/find-clinic"  },
 ];
 
 const generalItems = [
-  { label: "Emergency Guide", icon: "🚑" },
-  { label: "Log Out", icon: "⏻" },
+  { label: "Emergency Guide", icon: "🚑", path: "/emergency" },
+  { label: "Log Out",          icon: "⏻", path: "__logout__" },
 ];
 
 type VoiceStep =
@@ -124,9 +127,13 @@ export default function UserProfile() {
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
   const userId = currentUser?.id;
 
-  const [sidebarExpanded, setSidebarExpanded] = useState(false); // FIXED
+  const navigate = useNavigate();
+
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
 
   const [voicePopupOpen, setVoicePopupOpen] = useState(false);
   const [voiceStep, setVoiceStep] = useState<VoiceStep>("idle");
@@ -632,6 +639,7 @@ export default function UserProfile() {
                   key={item.label}
                   className={`nav-item ${item.active ? "active" : ""}`}
                   type="button"
+                  onClick={() => navigate(item.path)}
                 >
                   <span className="nav-left">
                     <span className="icon">{item.icon}</span>
@@ -648,7 +656,18 @@ export default function UserProfile() {
 
             <nav className="nav-section">
               {generalItems.map((item) => (
-                <button key={item.label} className="nav-item" type="button">
+                <button
+                  key={item.label}
+                  className="nav-item"
+                  type="button"
+                  onClick={() => {
+                    if (item.path === "__logout__") {
+                      setShowLogoutConfirm(true);
+                    } else {
+                      navigate(item.path);
+                    }
+                  }}
+                >
                   <span className="nav-left">
                     <span className="icon">{item.icon}</span>
                     {item.label}
@@ -1072,6 +1091,41 @@ export default function UserProfile() {
           </div>
         )}
       </div>
+
+      {/* Logout confirmation modal */}
+      {showLogoutConfirm && (
+        <div className="logout-confirm-overlay">
+          <div className="logout-confirm-modal">
+            <h3>Log out?</h3>
+            <p>Are you sure you want to log out of your account?</p>
+            <div className="logout-actions">
+              <button className="btn-cancel" onClick={() => setShowLogoutConfirm(false)}>
+                No
+              </button>
+              <button
+                className="btn-confirm"
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  clearStoredAuth();
+                  setShowLogoutSuccess(true);
+                  setTimeout(() => navigate("/signin"), 1500);
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLogoutSuccess && (
+        <div className="logout-popup-overlay">
+          <div className="logout-popup">
+            <div className="logout-icon">✓</div>
+            <p>Logged out successfully</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
