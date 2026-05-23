@@ -9,7 +9,7 @@ import Categories from "./Categories/Categories";
 import VerifyOtp from "./SigninUser/VerifyOtp";
 import BrowseHealth from "./SigninUser/BrowseHealth";
 import BodySystemDetails from "./SigninUser/BodySystemDetails";
-import SympCheck from "./SigninUser/SympCheck";
+import SympCheck from "./SigninUser/SympCheck"; 
 import UserAppointment from "./SigninUser/UserAppointment";
 import FindClinic from "./SigninUser/FindClinic";
 import Homepage from "./SigninUser/Homepage";
