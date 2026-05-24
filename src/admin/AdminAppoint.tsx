@@ -71,7 +71,7 @@ const handleLogout = () => {
   // optional: clear session cookie via API
   // await fetch("/api/logout", { method: "POST", credentials: "include" });
 
-  navigate("/login");
+  navigate("/signin");
 };
  const loadActivity = async () => {
     try {

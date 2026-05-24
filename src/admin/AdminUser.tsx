@@ -72,7 +72,7 @@ export default function AdminUsers() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    navigate("/signin");
   };
 
   const getUserStatus = (

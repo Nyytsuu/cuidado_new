@@ -88,7 +88,7 @@ export default function AdminClinics() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    navigate("/login");
+    navigate("/signin");
   };
 
   const formatDateTime = (value?: string | null) => {
