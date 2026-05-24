@@ -955,11 +955,11 @@ export default function UserProfile() {
                       type={showCurrentPassword ? "text" : "password"}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Enter current password"
+                      placeholder={passwordVerified ? "Type your password — it's now visible" : "Enter current password"}
                     />
                     <button
                       type="button"
-                      className="current-btn"
+                      className={`current-btn${passwordVerified ? " verified" : ""}`}
                       title={passwordVerified ? "Toggle password visibility" : "Verify email to reveal password"}
                       onClick={() => {
                         if (!passwordVerified) {
@@ -973,6 +973,11 @@ export default function UserProfile() {
                       {showCurrentPassword ? <FiEyeOff /> : <FiEye />}
                     </button>
                   </div>
+                  {passwordVerified && (
+                    <p className="verify-success-hint">
+                      ✓ Identity verified — your password is now visible as you type.
+                    </p>
+                  )}
                 </div>
 
                 <div className="security-row2">

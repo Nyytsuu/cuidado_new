@@ -1130,3 +1130,16 @@ textarea {
   cursor: not-allowed;
   text-decoration: none;
 }
+
+/* Success hint shown after email verification */
+.verify-success-hint {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: #2d7a72;
+  font-weight: 500;
+}
+
+/* Eye button turns teal once identity is verified */
+.current-btn.verified {
+  color: #3aafa9;
+}
