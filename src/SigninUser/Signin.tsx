@@ -6,7 +6,7 @@ import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getConfiguredBackendUrl, isNativeMobileRuntime } from "../sharedBackendFetch";
 import { getActiveAuthDestination } from "../authSession";
-
+import logo from "../img/logo.png";
 import ForgotPassword from "./Forgetpass";
 import OtpPopup from "../SigninUser/OtpPopup";
 import Changepass from "../SigninUser/Changepass";
@@ -319,7 +319,7 @@ console.log("CAPTCHA KEY:", siteKey);
       <div className="right-side">
         <div className="right-content">
           <div className="brand">
-            <img src="/src/img/logo.png" alt="logo" />
+            <img src={logo} alt="logo" />
           </div>
 
           <div className="bottom-text">
