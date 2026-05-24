@@ -1062,12 +1062,34 @@ router.put(
   }
 );
 
+const ensureOtpRequestsTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS otp_requests (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) NOT NULL,
+      otp_hash TEXT NOT NULL,
+      purpose VARCHAR(80) NOT NULL DEFAULT 'forgot_password',
+      expires_at TIMESTAMPTZ NOT NULL,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_otp_requests_email_purpose
+    ON otp_requests (email, purpose)
+  `);
+  // Add columns if missing (for existing tables created before these columns existed)
+  await pool.query(`ALTER TABLE otp_requests ADD COLUMN IF NOT EXISTS purpose VARCHAR(80) NOT NULL DEFAULT 'forgot_password'`);
+  await pool.query(`ALTER TABLE otp_requests ADD COLUMN IF NOT EXISTS attempts INTEGER NOT NULL DEFAULT 0`);
+};
+
 /**
  * POST /api/users/:userId/send-verify-email
  * Sends a 6-digit code to the user's registered email for identity verification.
  */
 router.post("/:userId/send-verify-email", async (req, res) => {
   try {
+    await ensureOtpRequestsTable();
     const userId = Number(req.params.userId);
 
     const [rows] = await pool.query(
