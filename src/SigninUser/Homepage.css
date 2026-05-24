@@ -182,18 +182,18 @@ body,
   height: 100%;
   padding: 0 22px;
   border: none;
-  border-left: 1px solid #e5e7eb;
-  background: #ffffff;
-  color: #17807d;
+  background: linear-gradient(135deg, #18817d, #0d6763);
+  color: #ffffff;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.18s ease;
+  border-radius: 0 999px 999px 0;
+  transition: opacity 0.18s ease;
 }
 
 .hero-search-btn:hover {
-  background: #f0faf9;
+  opacity: 0.88;
 }
 
 /* ────────────────────────────────────────
@@ -699,13 +699,14 @@ body,
 .homepage-voice-box {
   background: #ffffff;
   border-radius: 20px;
-  padding: 16px 20px;
+  padding: 16px 22px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
   border: 1px solid #e8edf0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
   margin-bottom: 24px;
+  max-width: 580px;
 }
 
 .voice-left {
@@ -758,6 +759,7 @@ body,
   color: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
+  margin-left: auto;
   box-shadow: 0 6px 18px rgba(24, 129, 125, 0.3);
   display: flex;
   align-items: center;
@@ -811,11 +813,13 @@ body,
   background: #ffffff;
   border-left: 1px solid #e0eaec;
   padding: 20px 16px;
-  position: sticky;
+  position: fixed;
   top: 60px;
-  max-height: calc(100vh - 60px);
+  right: 0;
+  bottom: 0;
+  width: 290px;
+  z-index: 50;
   overflow-y: auto;
-  align-self: start;
 }
 
 .health-articles-aside h3 {
@@ -1133,6 +1137,7 @@ body,
 
   .health-articles-aside {
     position: static;
+    width: auto;
     max-height: none;
     border-left: none;
     border-top: 1px solid #e0eaec;
