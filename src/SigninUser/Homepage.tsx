@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { clearStoredAuth } from "../authSession";
+import { apiUrl } from "../sharedBackendFetch";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -159,6 +160,13 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function Homepage() {
   const navigate = useNavigate();
 
@@ -174,6 +182,7 @@ export default function Homepage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
   const [articlesError, setArticlesError] = useState("");
+  const [userName, setUserName] = useState("");
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -181,16 +190,13 @@ export default function Homepage() {
 
   const handleSiteSearch = (value: string) => {
     const keyword = value.trim().toLowerCase();
-
     if (!keyword) return;
-
     const target = siteSearchTargets.find((item) =>
       item.keywords.some(
         (targetKeyword) =>
           targetKeyword.includes(keyword) || keyword.includes(targetKeyword)
       )
     );
-
     navigate(
       target
         ? target.path
@@ -200,7 +206,6 @@ export default function Homepage() {
 
   const handleHealthTopicSearch = () => {
     const keyword = healthTopicSearchQuery.trim();
-
     navigate(
       keyword
         ? `/browse-health?search=${encodeURIComponent(keyword)}`
@@ -212,18 +217,12 @@ export default function Homepage() {
     try {
       setArticlesLoading(true);
       setArticlesError("");
-
       const finalQuery = (query || "health").trim();
-
-      const res = await fetch(
-        `http://localhost:5000/api/articles?q=${encodeURIComponent(finalQuery)}`
-      );
+      const res = await fetch(apiUrl(`/api/articles?q=${encodeURIComponent(finalQuery)}`));
       const data = await res.json();
-
       if (!res.ok) {
         throw new Error(data.message || "Failed to load articles.");
       }
-
       setArticles(Array.isArray(data) ? data : []);
     } catch (err) {
       setArticlesError(
@@ -238,21 +237,18 @@ export default function Homepage() {
   useEffect(() => {
     loadArticles("health");
   }, []);
-const [userName, setUserName] = useState("");
 
-useEffect(() => {
-  const storedUser = localStorage.getItem("user");
-
-  if (storedUser) {
-    const user = JSON.parse(storedUser);
-
-    if (user?.full_name) {
-      setUserName(user.full_name);
-    } else if (user?.name) {
-      setUserName(user.name);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      if (user?.full_name) {
+        setUserName(user.full_name);
+      } else if (user?.name) {
+        setUserName(user.name);
+      }
     }
-  }
-}, []);
+  }, []);
 
   return (
     <div className={`homepage ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -273,33 +269,50 @@ useEffect(() => {
         <main className="homepage-main">
           <div className="homepage-layout">
             <section className="homepage-left">
-              <div className="welcome-box">
-                <h1>Welcome back, {userName} </h1>
-                <p>What are you looking for?</p>
+
+              {/* ── Welcome Hero ── */}
+              <div className="welcome-hero">
+                <div className="welcome-hero-inner">
+                  <div className="welcome-tag">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.27 2 8.5 2 5.41 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.41 22 8.5c0 3.77-3.4 6.86-8.55 11.53L12 21.35z"/>
+                    </svg>
+                    <span>Cuidado MediHelp</span>
+                  </div>
+                  <h1 className="welcome-greeting">
+                    {getGreeting()}{userName ? `, ${userName}` : ""}!
+                  </h1>
+                  <p className="welcome-sub">How can we help you feel better today?</p>
+                  <div className="hero-search">
+                    <svg className="hero-search-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Search health topics..."
+                      value={healthTopicSearchQuery}
+                      onChange={(e) => setHealthTopicSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleHealthTopicSearch();
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="hero-search-btn"
+                      onClick={handleHealthTopicSearch}
+                    >
+                      Search
+                    </button>
+                  </div>
+                </div>
+                <div className="welcome-hero-deco" aria-hidden="true">
+                  <div className="deco-circle deco-1" />
+                  <div className="deco-circle deco-2" />
+                  <div className="deco-circle deco-3" />
+                </div>
               </div>
 
-            <div className="main-search">
-  <input
-    type="text"
-    placeholder="Search health topics..."
-    value={healthTopicSearchQuery}
-    onChange={(e) => setHealthTopicSearchQuery(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === "Enter") {
-        handleHealthTopicSearch();
-      }
-    }}
-  />
-  <button
-    aria-label="Search"
-    type="button"
-    className="main-search-btn"
-    onClick={handleHealthTopicSearch}
-  >
-    Search
-  </button>
-</div>
-
+              {/* ── Top Services ── */}
               <div className="services-grid">
                 {topServices.map((item) => (
                   <button
@@ -314,14 +327,12 @@ useEffect(() => {
                           <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zM13 19h-2v-4H7v-2h4V9h2v4h4v2h-4v4z" />
                         </svg>
                       )}
-
                       {item.iconType === "diagnostics" && (
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                           <path d="M9 2v2H5v16h14V4h-4V2h6v20H3V2zm2 7h2v6h-2zm-4 2h2v4H7zm8-3h2v7h-2z" />
                         </svg>
                       )}
                     </div>
-
                     <div className="service-text">
                       <h3>{item.title}</h3>
                       <p>{item.subtitle}</p>
@@ -330,173 +341,220 @@ useEffect(() => {
                 ))}
               </div>
 
-              <div className="section quick-other-section">
-                <div className="section-header">
-                  <h2>Quick Actions</h2>
-                  <button
-                    type="button"
-                    className="see-all-btn"
-                    onClick={() => handleNavigate("/appointments")}
-                  >
-                    See All
-                  </button>
-                </div>
+              {/* ── Quick Actions + Map ── */}
+              <div className="content-grid-section">
 
-                <div className="quick-map-other-layout">
-                  <div className="quick-other-left">
-                    <div className="quick-grid">
-                      {quickActions.map((item) => (
+                {/* Left column */}
+                <div className="content-grid-left">
+                  <div className="section-header">
+                    <h2>Quick Actions</h2>
+                    <button
+                      type="button"
+                      className="see-all-btn"
+                      onClick={() => handleNavigate("/appointments")}
+                    >
+                      See All
+                    </button>
+                  </div>
+
+                  <div className="quick-grid">
+                    {quickActions.map((item) => (
+                      <button
+                        key={item.title}
+                        type="button"
+                        className="quick-card clickable-card"
+                        onClick={() => handleNavigate(item.path)}
+                      >
+                        <div className={`quick-icon ${item.iconType}-icon`}>
+                          {item.iconType === "calendar" && (
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M5 20V8h14V6v14z"></path>
+                              <path d="M7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm-8 4h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"></path>
+                            </svg>
+                          )}
+                          {item.iconType === "symptom" && (
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M4 19V5h16v14z"></path>
+                              <path d="M13 8h5v2h-5zm-5 .59L6.96 7.54 5.54 8.96 8 11.41l3.46-3.45-1.42-1.42zM13 14h5v2h-5zm-5 .59-1.04-1.05-1.42 1.42L8 17.41l3.46-3.45-1.42-1.42z"></path>
+                            </svg>
+                          )}
+                          {item.iconType === "healthtips" && (
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M9 21h6v-1H9zM12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.89 11.32-.89.63V16h-4v-2.05l-.89-.63A4.98 4.98 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.17-2.11 4.32z"></path>
+                            </svg>
+                          )}
+                        </div>
+                        <div className="quick-text">
+                          <h3>{item.title}</h3>
+                          <p>{item.subtitle}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="other-services-wrap">
+                    <h2>Other Services</h2>
+                    <div className="other-grid">
+                      {otherServices.map((item) => (
                         <button
                           key={item.title}
                           type="button"
-                          className="quick-card clickable-card"
+                          className="other-card clickable-card"
                           onClick={() => handleNavigate(item.path)}
                         >
-                          <div className={`quick-icon ${item.iconType}-icon`}>
-                            {item.iconType === "calendar" && (
+                          <div className={`other-icon ${item.iconType}-other-icon`}>
+                            {item.iconType === "hospital" && (
                               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M19 4h-2V2h-2v2H9V2H7v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2M5 20V8h14V6v14z"></path>
-                                <path d="M7 11h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2zm-8 4h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"></path>
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zM13 19h-2v-4H7v-2h4V9h2v4h4v2h-4v4z"></path>
                               </svg>
                             )}
-
-                            {item.iconType === "symptom" && (
+                            {item.iconType === "bmi" && (
                               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M20 3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2M4 19V5h16v14z"></path>
-                                <path d="M13 8h5v2h-5zm-5 .59L6.96 7.54 5.54 8.96 8 11.41l3.46-3.45-1.42-1.42zM13 14h5v2h-5zm-5 .59-1.04-1.05-1.42 1.42L8 17.41l3.46-3.45-1.42-1.42z"></path>
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zm-7 14c-2.76 0-5-2.24-5-5 0-.7.15-1.36.41-1.95L12 12l4.59-1.95c.26.59.41 1.25.41 1.95 0 2.76-2.24 5-5 5zm0-7L8.5 8.5 12 6l3.5 2.5L12 10z"></path>
                               </svg>
                             )}
-
-                            {item.iconType === "healthtips" && (
+                            {item.iconType === "stress" && (
                               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                                 <path d="M9 21h6v-1H9zM12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.89 11.32-.89.63V16h-4v-2.05l-.89-.63A4.98 4.98 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.17-2.11 4.32z"></path>
                               </svg>
                             )}
                           </div>
-
-                          <div className="quick-text">
+                          <div className="other-text">
                             <h3>{item.title}</h3>
                             <p>{item.subtitle}</p>
                           </div>
                         </button>
                       ))}
                     </div>
+                  </div>
 
-                    <div className="other-services-wrap">
-                      <h2>Other Services</h2>
-
-                      <div className="other-grid">
-                        {otherServices.map((item) => (
-                          <button
-                            key={item.title}
-                            type="button"
-                            className="other-card clickable-card"
-                            onClick={() => handleNavigate(item.path)}
-                          >
-                            <div className={`other-icon ${item.iconType}-other-icon`}>
-                              {item.iconType === "hospital" && (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zM13 19h-2v-4H7v-2h4V9h2v4h4v2h-4v4z"></path>
-                                </svg>
-                              )}
-
-                              {item.iconType === "bmi" && (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M19 3H5c-1.1 0-2 .9-2 2v16h18V5c0-1.1-.9-2-2-2zm-7 14c-2.76 0-5-2.24-5-5 0-.7.15-1.36.41-1.95L12 12l4.59-1.95c.26.59.41 1.25.41 1.95 0 2.76-2.24 5-5 5zm0-7L8.5 8.5 12 6l3.5 2.5L12 10z"></path>
-                                </svg>
-                              )}
-
-                              {item.iconType === "stress" && (
-                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M9 21h6v-1H9zM12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.89 11.32-.89.63V16h-4v-2.05l-.89-.63A4.98 4.98 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.17-2.11 4.32z"></path>
-                                </svg>
-                              )}
-                            </div>
-
-                            <div className="other-text">
-                              <h3>{item.title}</h3>
-                              <p>{item.subtitle}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
+                  {/* Mini Services */}
+                  <div className="mini-services-panel">
+                    <div className="mini-services-title-row">
+                      <div className="mini-services-title-icon"></div>
+                      <h3>Mini Services</h3>
                     </div>
+                    <div className="mini-services-grid">
+                      <button
+                        type="button"
+                        className="mini-service-item"
+                        onClick={() => handleNavigate("/emergency")}
+                      >
+                        <div className="mini-service-icon emergency-icon">
+                          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2 1 21h22L12 2zm1 14h-2v2h2zm0-6h-2v5h2z"></path>
+                          </svg>
+                        </div>
+                        <span>Emergency</span>
+                      </button>
 
-                    <div className="mini-services-panel">
-                      <div className="mini-services-title-row">
-                        <div className="mini-services-title-icon"></div>
-                        <h3>Mini Services</h3>
-                      </div>
+                      <button
+                        type="button"
+                        className="mini-service-item"
+                        onClick={() => handleNavigate("/help")}
+                      >
+                        <div className="mini-service-icon help-icon">
+                          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 17h-2v-2h2zm1.07-7.75-.9.92c-.72.73-1.17 1.33-1.17 2.83h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26a2 2 0 1 0-3.41-1.41H6a4 4 0 1 1 8 0c0 .88-.36 1.68-.93 2.25z"></path>
+                          </svg>
+                        </div>
+                        <span>Help</span>
+                      </button>
 
-                      <div className="mini-services-grid">
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/emergency")}
-                        >
-                          <div className="mini-service-icon emergency-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M12 2 1 21h22L12 2zm1 14h-2v2h2zm0-6h-2v5h2z"></path>
-                            </svg>
-                          </div>
-                          <span>Emergency</span>
-                        </button>
+                      <button
+                        type="button"
+                        className="mini-service-item"
+                        onClick={() => handleNavigate("/profile")}
+                      >
+                        <div className="mini-service-icon profile-mini-icon">
+                          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v2h20v-2c0-3.33-6.67-5-10-5z"></path>
+                          </svg>
+                        </div>
+                        <span>My Profile</span>
+                      </button>
 
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/help")}
-                        >
-                          <div className="mini-service-icon help-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10 10-4.49 10-10S17.51 2 12 2zm0 17h-2v-2h2zm1.07-7.75-.9.92c-.72.73-1.17 1.33-1.17 2.83h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26a2 2 0 1 0-3.41-1.41H6a4 4 0 1 1 8 0c0 .88-.36 1.68-.93 2.25z"></path>
-                            </svg>
-                          </div>
-                          <span>Help</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => handleNavigate("/profile")}
-                        >
-                          <div className="mini-service-icon profile-mini-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0 2c-3.33 0-10 1.67-10 5v2h20v-2c0-3.33-6.67-5-10-5z"></path>
-                            </svg>
-                          </div>
-                          <span>My Profile</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="mini-service-item"
-                          onClick={() => setShowLogoutConfirm(true)}
-                        >
-                          <div className="mini-service-icon logout-icon">
-                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                              <path d="M13 3h-2v10h2zm-1 19C6.48 22 2 17.52 2 12c0-3.53 1.84-6.63 4.61-8.4l1.01 1.73A7.96 7.96 0 0 0 4 12c0 4.41 3.59 8 8 8s8-3.59 8-8c0-2.8-1.45-5.27-3.64-6.69l1.01-1.73A9.96 9.96 0 0 1 22 12c0 5.52-4.48 10-10 10z"></path>
-                            </svg>
-                          </div>
-                          <span>Logout</span>
-                        </button>
-
-                      </div>
+                      <button
+                        type="button"
+                        className="mini-service-item"
+                        onClick={() => setShowLogoutConfirm(true)}
+                      >
+                        <div className="mini-service-icon logout-icon">
+                          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M13 3h-2v10h2zm-1 19C6.48 22 2 17.52 2 12c0-3.53 1.84-6.63 4.61-8.4l1.01 1.73A7.96 7.96 0 0 0 4 12c0 4.41 3.59 8 8 8s8-3.59 8-8c0-2.8-1.45-5.27-3.64-6.69l1.01-1.73A9.96 9.96 0 0 1 22 12c0 5.52-4.48 10-10 10z"></path>
+                          </svg>
+                        </div>
+                        <span>Logout</span>
+                      </button>
                     </div>
                   </div>
                 </div>
+
+                {/* Right column — Map */}
+                <div className="map-card">
+                  <div className="map-card-header">
+                    <div className="map-card-title">
+                      <div className="map-pin-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/>
+                        </svg>
+                      </div>
+                      <span>Nearby Clinics</span>
+                    </div>
+                  </div>
+                  <div className="leaflet-map-wrap">
+                    <MapContainer
+                      center={[14.4591, 120.9398]}
+                      zoom={13}
+                      scrollWheelZoom={false}
+                      className="leaflet-map"
+                    >
+                      <TileLayer
+                        attribution="&copy; OpenStreetMap contributors"
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      {clinicMarkers.map((clinic) => (
+                        <Marker key={clinic.id} position={clinic.position}>
+                          <Popup>
+                            <strong>{clinic.name}</strong>
+                            <br />
+                            {clinic.address}
+                            <br />
+                            <button
+                              type="button"
+                              className="popup-route-btn"
+                              onClick={() => handleNavigate("/find-clinic")}
+                            >
+                              View clinics
+                            </button>
+                          </Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
+                  </div>
+                  <button
+                    type="button"
+                    className="find-clinic-btn"
+                    onClick={() => handleNavigate("/find-clinic")}
+                  >
+                    Find Clinics Nearby
+                  </button>
+                </div>
               </div>
 
+              {/* ── Voice Assistant ── */}
               <div className="homepage-voice-box">
                 <div className="voice-left">
                   <div className="voice-search-icon">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M10 2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12zm-.5 3h2v3.59l2.7 2.7-1.4 1.41L9.5 11.4z"></path>
+                      <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
                     </svg>
                   </div>
-                  <span>Your health, just a voice away</span>
+                  <div className="voice-text-group">
+                    <span className="voice-title">Voice Assistant</span>
+                    <span className="voice-sub">Ask anything — hands-free</span>
+                  </div>
                 </div>
-
                 <VoiceAssistantPopup className="voice-btn">
                   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
@@ -504,29 +562,28 @@ useEffect(() => {
                 </VoiceAssistantPopup>
               </div>
 
+              {/* ── Footer ── */}
               <div className="footer-links">
                 <span onClick={() => handleNavigate("/about")}>About Us</span>
-                <span>|</span>
+                <span className="footer-sep">·</span>
                 <span onClick={() => handleNavigate("/contact")}>Contact</span>
-                <span>|</span>
+                <span className="footer-sep">·</span>
                 <span onClick={() => handleNavigate("/privacy-policy")}>Privacy Policy</span>
-                <span>|</span>
-                <span onClick={() => handleNavigate("/terms-of-service")}>
-                  Terms of Service
-                </span>
+                <span className="footer-sep">·</span>
+                <span onClick={() => handleNavigate("/terms-of-service")}>Terms of Service</span>
               </div>
             </section>
 
+            {/* ── Health Articles Aside ── */}
             <aside className="health-articles-aside">
               <h3>Health Articles</h3>
-
               <div className="articles-list">
                 {articlesLoading ? (
-                  <p>Loading articles...</p>
+                  <p className="articles-status">Loading articles...</p>
                 ) : articlesError ? (
-                  <p>{articlesError}</p>
+                  <p className="articles-status articles-error">{articlesError}</p>
                 ) : articles.length === 0 ? (
-                  <p>No articles found.</p>
+                  <p className="articles-status">No articles found.</p>
                 ) : (
                   articles.slice(0, 5).map((article) => (
                     <div
@@ -552,8 +609,7 @@ useEffect(() => {
                               }
                             : undefined
                         }
-                      ></div>
-
+                      />
                       <div className="article-text">
                         <h4>{article.title}</h4>
                         <p>{article.subtitle}</p>
@@ -634,7 +690,6 @@ useEffect(() => {
                     : ""}
                 </small>
               </div>
-
               <button
                 className="article-close-btn"
                 onClick={() => setSelectedArticle(null)}
@@ -642,13 +697,11 @@ useEffect(() => {
                 ✕
               </button>
             </div>
-
             <div className="article-modal-body">
               <div className="article-section">
                 <h4>Article Summary</h4>
                 <p>{selectedArticle.content}</p>
               </div>
-
               {selectedArticle.url && (
                 <div className="article-tip-box">
                   <a
