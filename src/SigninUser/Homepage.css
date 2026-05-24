@@ -180,16 +180,18 @@ body,
 }
 
 .hero-search-btn {
-  height: 100%;
-  padding: 0 22px;
+  height: 36px;
+  padding: 0 18px;
+  margin: 0 7px;
   border: none;
+  border-radius: 999px;
   background: linear-gradient(135deg, #18817d, #0d6763);
   color: #ffffff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
-  border-radius: 0 999px 999px 0;
+  white-space: nowrap;
   transition: opacity 0.18s ease;
 }
 
