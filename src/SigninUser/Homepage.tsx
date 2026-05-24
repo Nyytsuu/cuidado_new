@@ -148,6 +148,44 @@ const siteSearchTargets = [
   },
 ];
 
+const healthTips = [
+  {
+    tip: "Drink at least 8 glasses of water daily to maintain hydration and boost your energy levels.",
+    source: "WHO Health Guidelines",
+  },
+  {
+    tip: "A 30-minute walk each day reduces your risk of heart disease by up to 35%.",
+    source: "American Heart Association",
+  },
+  {
+    tip: "Getting 7–9 hours of sleep helps your immune system fight infections more effectively.",
+    source: "National Sleep Foundation",
+  },
+  {
+    tip: "Eating 5 servings of fruits and vegetables daily lowers your risk of chronic disease.",
+    source: "CDC Nutrition Guide",
+  },
+  {
+    tip: "Deep breathing for just 5 minutes a day can significantly reduce stress and anxiety.",
+    source: "Mayo Clinic",
+  },
+  {
+    tip: "Regular handwashing for 20 seconds is one of the most effective ways to prevent illness.",
+    source: "WHO Prevention",
+  },
+  {
+    tip: "Limit screen time before bed — blue light suppresses melatonin and disrupts sleep quality.",
+    source: "Sleep Health Foundation",
+  },
+];
+
+function getDailyTip() {
+  const dayOfYear = Math.floor(
+    (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  return healthTips[dayOfYear % healthTips.length];
+}
+
 const DefaultIcon = L.icon({
   iconRetinaUrl: markerIcon2x,
   iconUrl: markerIcon,
@@ -542,24 +580,40 @@ export default function Homepage() {
                 </div>
               </div>
 
-              {/* ── Voice Assistant ── */}
-              <div className="homepage-voice-box">
-                <div className="voice-left">
-                  <div className="voice-search-icon">
+              {/* ── Voice Assistant + Health Tip ── */}
+              <div className="voice-tip-row">
+                <div className="homepage-voice-box">
+                  <div className="voice-left">
+                    <div className="voice-search-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
+                      </svg>
+                    </div>
+                    <div className="voice-text-group">
+                      <span className="voice-title">Voice Assistant</span>
+                      <span className="voice-sub">Ask anything — hands-free</span>
+                    </div>
+                  </div>
+                  <VoiceAssistantPopup className="voice-btn">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
                     </svg>
-                  </div>
-                  <div className="voice-text-group">
-                    <span className="voice-title">Voice Assistant</span>
-                    <span className="voice-sub">Ask anything — hands-free</span>
-                  </div>
+                  </VoiceAssistantPopup>
                 </div>
-                <VoiceAssistantPopup className="voice-btn">
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 14a3 3 0 0 0 3-3V7a3 3 0 1 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11z"></path>
-                  </svg>
-                </VoiceAssistantPopup>
+
+                {/* Daily health tip */}
+                <div className="health-tip-card">
+                  <div className="tip-header">
+                    <div className="tip-icon">
+                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M9 21h6v-1H9zM12 2C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.89 11.32-.89.63V16h-4v-2.05l-.89-.63A4.98 4.98 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.17-2.11 4.32z"/>
+                      </svg>
+                    </div>
+                    <span className="tip-label">Health Tip of the Day</span>
+                  </div>
+                  <p className="tip-text">"{getDailyTip().tip}"</p>
+                  <p className="tip-source">— {getDailyTip().source}</p>
+                </div>
               </div>
 
               {/* ── Footer ── */}

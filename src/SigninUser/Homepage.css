@@ -148,7 +148,8 @@ body,
   background: #ffffff;
   border-radius: 999px;
   overflow: hidden;
-  max-width: 480px;
+  width: 100%;
+  max-width: 520px;
   height: 50px;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
@@ -694,19 +695,81 @@ body,
 }
 
 /* ────────────────────────────────────────
-   VOICE ASSISTANT BOX
+   VOICE ASSISTANT + TIP ROW
 ──────────────────────────────────────── */
+.voice-tip-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
 .homepage-voice-box {
   background: #ffffff;
   border-radius: 20px;
-  padding: 16px 22px;
+  padding: 18px 22px;
   display: flex;
   align-items: center;
   gap: 16px;
   border: 1px solid #e8edf0;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
-  margin-bottom: 24px;
-  max-width: 580px;
+}
+
+/* Health tip card */
+.health-tip-card {
+  background: linear-gradient(135deg, #f0faf9 0%, #e2f5f3 100%);
+  border-radius: 20px;
+  padding: 18px 20px;
+  border: 1px solid #c8eae7;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tip-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tip-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #5ec4be, #18817d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.tip-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tip-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #18817d;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tip-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e3a38;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.tip-source {
+  font-size: 11px;
+  color: #5a8b87;
+  margin: 0;
 }
 
 .voice-left {
@@ -759,7 +822,7 @@ body,
   color: #ffffff;
   cursor: pointer;
   flex-shrink: 0;
-  margin-left: auto;
+  margin-left: auto; /* push button to right edge of voice box */
   box-shadow: 0 6px 18px rgba(24, 129, 125, 0.3);
   display: flex;
   align-items: center;
@@ -1179,6 +1242,10 @@ body,
   }
 
   .services-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .voice-tip-row {
     grid-template-columns: 1fr;
   }
 
