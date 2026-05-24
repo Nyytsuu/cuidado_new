@@ -568,7 +568,7 @@ body:has(.lp) {
 .lp-about {
   width: 100%;
   max-width: none;
-  padding: 76px max(20px, calc((100vw - 1180px) / 2)) 100px;
+  padding: 76px max(20px, calc((100vw - 1180px) / 2)) 60px;
   display: grid;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
   gap: 26px;
@@ -613,24 +613,26 @@ body:has(.lp) {
 
 .lp-about-card img {
   width: 100%;
-  height: 100%;
-  min-height: 260px;
-  max-height: 420px;
+  height: 200px;
+  min-height: 0;
+  max-height: 200px;
   display: block;
   object-fit: cover;
+  object-position: center top;
   border-radius: 8px;
   background: #dff3f1;
+  align-self: start;
 }
 
 .lp-about-list {
   display: grid;
-  gap: 12px;
-  align-content: center;
+  gap: 8px;
+  align-content: start;
 }
 
 .lp-about-list div {
-  min-height: 92px;
-  padding: 16px;
+  min-height: auto;
+  padding: 10px 14px;
   border: 1px solid var(--lp-line);
   border-radius: 8px;
   background: #f8fdfc;
@@ -638,7 +640,7 @@ body:has(.lp) {
 
 .lp-about-list span {
   display: inline-flex;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   color: var(--lp-teal-dark);
   font-size: 0.78rem;
   font-weight: 900;
@@ -647,17 +649,13 @@ body:has(.lp) {
 .lp-about-list strong {
   display: block;
   color: var(--lp-ink);
-  font-size: 0.96rem;
+  font-size: 0.94rem;
   font-weight: 900;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
 .lp-about-list p {
-  margin: 6px 0 0;
-  color: var(--lp-muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1.45;
+  display: none;
 }
 
 .lp-contact {
