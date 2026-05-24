@@ -1031,6 +1031,47 @@ body:has(.lp) {
   line-height: 1.5;
 }
 
+@media (max-width: 420px) {
+  .lp-hero h1 {
+    font-size: 2rem;
+  }
+
+  .lp-hero p {
+    font-size: 0.95rem;
+  }
+
+  .lp-login-btn,
+  .lp-signup-btn {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.78rem;
+  }
+
+  .lp-hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lp-primary-btn,
+  .lp-secondary-btn {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .lp-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .lp-section-heading h2,
+  .lp-feature-copy h2,
+  .lp-about-copy h2,
+  .lp-trust-card h2,
+  .lp-contact h2 {
+    font-size: 1.7rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lp-animate,
   .lp-animate.is-visible,
@@ -1111,24 +1152,34 @@ body:has(.lp) {
   }
 
   .lp-hero {
-    min-height: calc(100vh - 92px);
+    min-height: auto;
+    padding-bottom: 40px;
+    overflow: hidden;
+  }
+
+  /* Disable parallax on mobile — the transform causes overflow into next sections */
+  .lp-hero-bg {
+    transform: none !important;
+    transition: none !important;
   }
 
   .lp-hero-inner {
-    padding: 54px 0 92px;
+    padding: 48px 0 60px;
   }
 
   .lp-hero h1 {
-    font-size: 3rem;
+    font-size: 2.4rem;
+    max-width: 100%;
   }
 
   .lp-hero p {
     font-size: 1rem;
+    max-width: 100%;
   }
 
+  /* Hide doctor image on mobile — it overlaps the text */
   .lp-hero-doctor {
-    width: 72vw;
-    right: -36px;
+    display: none;
   }
 
   .lp-stats,

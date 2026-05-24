@@ -409,3 +409,72 @@ button:disabled {
 .toast-info { background: #2563eb; }
 .toast-success { background: #16a34a; }
 .toast-error { background: #dc2626; }
+
+/* ─── Mobile Responsive ─── */
+@media (max-width: 768px) {
+  /* Remove the bg image (it has promotional text that bleeds through the form) */
+  .bgimg {
+    background-image: none;
+    background-color: #e8f5f1;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 20px 16px 32px;
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  /* Hide the decorative green sidebar bar */
+  .left-bg {
+    display: none;
+  }
+
+  /* Override the absolute positioning completely */
+  .signup-container {
+    position: static !important;
+    transform: none !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    border-radius: 16px;
+    padding: 24px 16px;
+    box-shadow: 0 4px 24px rgba(0, 77, 64, 0.12);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  .signup-form {
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  /* Stack all .row groups vertically */
+  .row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Prevent iOS from zooming in on input focus */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="date"],
+  input[type="tel"],
+  select {
+    font-size: 16px !important;
+  }
+
+  .Sign {
+    font-size: 20px;
+  }
+
+  p {
+    font-size: 16px;
+  }
+
+  button {
+    font-size: 15px;
+  }
+}
