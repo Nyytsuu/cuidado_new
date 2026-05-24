@@ -180,8 +180,9 @@ body,
 }
 
 .hero-search-btn {
+  flex: 0 0 88px;   /* grow=0, shrink=0, fixed basis=88px */
+  width: 88px;
   height: 36px;
-  padding: 0 18px;
   margin: 0 7px;
   border: none;
   border-radius: 999px;
@@ -190,7 +191,6 @@ body,
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  flex-shrink: 0;
   white-space: nowrap;
   transition: opacity 0.18s ease;
 }
