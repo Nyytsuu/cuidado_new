@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "r
 import SidebarAdmin from "./SidebarAdmin";
 import "./AdminDashboard.css";
 import "./AdminHeader.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer,
   LineChart,
@@ -134,6 +134,7 @@ const toStatusLabel = (status: string, compact = false) => {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -370,7 +371,7 @@ export default function AdminDashboard() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    window.location.href = "/signin";
+    navigate("/signin", { replace: true });
   };
 
   const updateClinicStatus = async (id: number, status: "approved" | "rejected") => {
