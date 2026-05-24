@@ -577,7 +577,8 @@ body:has(.lp) {
 }
 
 .lp-about-copy {
-  align-self: center;
+  align-self: start;
+  padding-top: 12px;
 }
 
 .lp-about-copy p,
