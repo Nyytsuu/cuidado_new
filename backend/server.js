@@ -284,7 +284,6 @@ app.use("/api/clinic/dashboard", clinicDashboardRoutes);
     /api/clinic/appointments
     /api/clinic/services
 */
-app.use("/api", clinicRoutes);
 app.use("/api/clinic", clinicRoutes);
 
 app.use("/api/admin", adminRoutes);
