@@ -60,7 +60,7 @@ const quickActions = [
 
 const otherServices = [
   {
-    title: "Hospital Locator",
+    title: "Clinic Locator",
     subtitle: "Find a nearby health center",
     iconType: "hospital",
     path: "/find-clinic",
@@ -483,48 +483,6 @@ useEffect(() => {
 
                       </div>
                     </div>
-                  </div>
-
-                  <div className="map-card">
-                    <div className="leaflet-map-wrap">
-                      <MapContainer
-                        center={[14.4591, 120.9398]}
-                        zoom={13}
-                        scrollWheelZoom={false}
-                        className="leaflet-map"
-                      >
-                        <TileLayer
-                          attribution="&copy; OpenStreetMap contributors"
-                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
-
-                        {clinicMarkers.map((clinic) => (
-                          <Marker key={clinic.id} position={clinic.position}>
-                            <Popup>
-                              <strong>{clinic.name}</strong>
-                              <br />
-                              {clinic.address}
-                              <br />
-                              <button
-                                type="button"
-                                className="popup-route-btn"
-                                onClick={() => handleNavigate("/find-clinic")}
-                              >
-                                View clinics
-                              </button>
-                            </Popup>
-                          </Marker>
-                        ))}
-                      </MapContainer>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="find-clinic-btn"
-                      onClick={() => handleNavigate("/find-clinic")}
-                    >
-                      Find Clinics Nearby
-                    </button>
                   </div>
                 </div>
               </div>
