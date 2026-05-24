@@ -21,7 +21,13 @@ router.use((req, res, next) => {
 router.param("userId", (req, res, next, userId) => {
   if (!req.user) return res.status(401).json({ message: "Authentication required." });
   if (req.user.role === "admin") return next();
-  if (String(req.user.id) !== String(userId)) {
+
+  const jwtId = String(req.user.id ?? req.user.userId ?? "");
+  const paramId = String(userId ?? "");
+
+  console.log(`[ownership] jwt.id=${JSON.stringify(req.user.id)} jwt.userId=${JSON.stringify(req.user.userId)} param=${JSON.stringify(userId)} role=${req.user.role}`);
+
+  if (!jwtId || jwtId !== paramId) {
     return res.status(403).json({ message: "Access denied." });
   }
   next();
