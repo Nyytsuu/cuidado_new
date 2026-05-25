@@ -135,7 +135,7 @@ export default function VoiceAssistantPopup({
       case "retry":
         return {
           title: "Could not process",
-          subtitle: voiceError || "Please try again.",
+          subtitle: "Please try again.",
           micClass: "error",
         };
       case "unsupported":
@@ -214,6 +214,16 @@ export default function VoiceAssistantPopup({
       setVoiceStep("retry");
     };
 
+    recognition.onend = () => {
+      setVoiceStep((prev) => {
+        if (prev === "idle" || prev === "listening") {
+          setVoiceError("Speech recognition stopped unexpectedly. Please try again.");
+          return "retry";
+        }
+        return prev;
+      });
+    };
+
     try {
       recognition.start();
     } catch {
@@ -245,7 +255,11 @@ export default function VoiceAssistantPopup({
               x
             </button>
 
-            <div className={`voice-popup-mic ${voiceContent.micClass}`}>
+            <div
+              className={`voice-popup-mic ${voiceContent.micClass}`}
+              onClick={voiceStep === "idle" ? startVoiceAssistant : undefined}
+              style={voiceStep === "idle" ? { cursor: "pointer" } : undefined}
+            >
               <img src={micIcon} alt="Mic" />
             </div>
 
