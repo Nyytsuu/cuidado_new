@@ -21,6 +21,7 @@ import {
   FaPlus,
   FaEnvelope,
 } from "react-icons/fa";
+import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
 type ClinicService = {
   id: number;
@@ -77,14 +78,16 @@ type ProfileForm = {
 };
 
 const API = "http://localhost:5000/api";
-const API_BASE = "http://localhost:5000";
 const ACCEPTED_PROFILE_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 const toUploadUrl = (value?: string | null) => {
   const path = String(value || "").trim();
   if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE}/${path.replace(/^\/+/, "")}`;
+  const backendUrl = getConfiguredBackendUrl();
+  if (/^https?:\/\//i.test(path)) {
+    return path.replace("http://localhost:5000", backendUrl);
+  }
+  return `${backendUrl}/${path.replace(/^\/+/, "")}`;
 };
 
 const matchesSearch = (
