@@ -1020,6 +1020,7 @@ function UserAppointmentsContent({
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
+  const [respondingId, setRespondingId] = useState<number | null>(null);
 
   const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "All">(
     "upcoming"
@@ -1526,6 +1527,7 @@ function UserAppointmentsContent({
       }
 
       setActionMessage("");
+      setRespondingId(appointment.id);
 
       const res = await fetch(
         apiUrl(`/api/appointments/${appointment.id}/reschedule-response`),
@@ -1549,7 +1551,7 @@ function UserAppointmentsContent({
 
       setActionMessage(
         action === "accept"
-          ? "New schedule accepted. Your appointment was updated."
+          ? "✓ New schedule accepted. Your appointment has been confirmed."
           : "Reschedule declined. The appointment was cancelled."
       );
       await loadAppointments();
@@ -1559,6 +1561,8 @@ function UserAppointmentsContent({
           ? err.message
           : "Failed to update reschedule request."
       );
+    } finally {
+      setRespondingId(null);
     }
   };
 
@@ -1945,9 +1949,10 @@ function UserAppointmentsContent({
                         "appointment-item",
                         needsAppointmentResponse(item) ? "needs-action" : "",
                         isRecentAppointment(item) ? "is-new" : "",
+                        item.status === "reschedule_requested" ? "reschedule-layout" : "",
                       ]
-                        .join(" ")
-                        .trim()}
+                        .filter(Boolean)
+                        .join(" ")}
                       key={item.id}
                     >
                       <div className="appointment-time">
@@ -1990,19 +1995,6 @@ function UserAppointmentsContent({
                                 .join(", ")}
                             </small>
                           )}
-
-                          {item.status === "reschedule_requested" && (
-                            <div className="reschedule-request-box">
-                              <strong>Clinic proposed a new schedule</strong>
-                              <span>
-                                {formatDate(item.proposed_start_at)} at{" "}
-                                {formatTime(item.proposed_start_at)}
-                              </span>
-                              {item.reschedule_reason && (
-                                <small>{item.reschedule_reason}</small>
-                              )}
-                            </div>
-                          )}
                         </div>
                       </div>
 
@@ -2018,6 +2010,23 @@ function UserAppointmentsContent({
                         {formatStatus(item.status)}
                       </div>
 
+                      {/* Full-width reschedule proposal banner */}
+                      {item.status === "reschedule_requested" && (
+                        <div className="appointment-reschedule-row">
+                          <div className="reschedule-row-icon">🗓️</div>
+                          <div className="reschedule-row-body">
+                            <strong>Clinic proposed a new schedule</strong>
+                            <span>
+                              {formatDate(item.proposed_start_at)} at{" "}
+                              {formatTime(item.proposed_start_at)}
+                            </span>
+                            {item.reschedule_reason && (
+                              <small>{item.reschedule_reason}</small>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="appointment-more">
                         <button type="button" className="more-btn" aria-label="More options">
                           <MoreVertical size={18} />
@@ -2030,21 +2039,23 @@ function UserAppointmentsContent({
                             <button
                               className="mini-action-btn accept"
                               type="button"
+                              disabled={respondingId === item.id}
                               onClick={() =>
                                 handleClinicRescheduleResponse(item, "accept")
                               }
                             >
-                              Accept New Time
+                              {respondingId === item.id ? "Saving…" : "Accept New Time"}
                             </button>
 
                             <button
                               className="mini-action-btn danger"
                               type="button"
+                              disabled={respondingId === item.id}
                               onClick={() =>
                                 handleClinicRescheduleResponse(item, "cancel")
                               }
                             >
-                              Decline and Cancel
+                              {respondingId === item.id ? "Saving…" : "Decline and Cancel"}
                             </button>
                           </>
                         ) : item.status === "completed" ? (

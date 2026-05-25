@@ -598,27 +598,56 @@
   border: 1px solid #bfece8;
 }
 
-.user-layout .reschedule-request-box {
-  margin-top: 10px;
-  padding: 10px 12px;
+/* ── Full-width reschedule proposal row (inside reschedule-layout items) ── */
+.user-layout .appointment-item.reschedule-layout .appointment-reschedule-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fff7ed;
   border: 1px solid #fed7aa;
   border-radius: 12px;
-  background: #fff7ed;
   color: #7c2d12;
-  display: grid;
-  gap: 4px;
-  max-width: 100%;
 }
 
-.user-layout .reschedule-request-box strong {
+.user-layout .reschedule-row-icon {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.user-layout .reschedule-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.user-layout .reschedule-row-body strong {
   font-size: 13px;
+  font-weight: 800;
   line-height: 1.25;
 }
 
-.user-layout .reschedule-request-box span,
-.user-layout .reschedule-request-box small {
+.user-layout .reschedule-row-body span,
+.user-layout .reschedule-row-body small {
   font-size: 12px;
   line-height: 1.35;
+}
+
+/* Make the action buttons span the full card width for reschedule items */
+.user-layout .appointment-item.reschedule-layout .appointment-actions {
+  grid-column: 1 / -1;
+  border-top: 1px solid #e7edf2;
+  padding-top: 12px;
+  margin-top: 2px;
+}
+
+/* Legacy reschedule-request-box (kept for backwards compat, hidden in new layout) */
+.user-layout .reschedule-request-box {
+  display: none;
 }
 
 .user-layout .appointment-date {
@@ -1275,11 +1304,16 @@
 
 .booking-success {
   margin-top: 12px;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
   background: #dcfce7;
+  border: 1px solid #86efac;
   color: #166534;
   font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .small-modal {
