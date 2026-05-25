@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import { apiUrl } from "../sharedBackendFetch";
 import "./BMICalculator.css";
@@ -307,6 +308,9 @@ function getClinicInitials(name: string): string {
 }
 
 function isClinicOpenNow(clinic: Clinic): boolean {
+  if (clinic.account_status !== "active" || clinic.status !== "approved") {
+    return false;
+  }
   const now = new Date();
   const closure = getClosureMessageForDate(clinic, now);
   if (closure) return false;
@@ -986,7 +990,7 @@ const bmiCheckupAdvice = useMemo(() => {
 )}
           </footer>
 
-          {profileClinic && (
+          {profileClinic && createPortal(
             <div className="clinic-profile-overlay" onClick={closeClinicProfile}>
               <div
                 className="clinic-profile-modal"
@@ -1013,7 +1017,7 @@ const bmiCheckupAdvice = useMemo(() => {
                     disabled={booking}
                     aria-label="Close clinic profile"
                   >
-                    x
+                    ×
                   </button>
                 </div>
 
@@ -1215,14 +1219,15 @@ const bmiCheckupAdvice = useMemo(() => {
                           onClick={handleBookAppointment}
                           disabled={booking || !canBookSelectedClinic}
                         >
-                          {booking ? "Booking..." : "Confirm Booking"}
+                          {booking ? "Booking..." : !canBookSelectedClinic ? "Unavailable" : "Confirm Booking"}
                         </button>
                       </div>
                     </section>
                   </>
                 )}
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </main>
       </div>

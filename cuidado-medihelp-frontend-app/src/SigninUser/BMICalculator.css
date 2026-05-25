@@ -652,7 +652,7 @@ body {
 .clinic-profile-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 100000;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -722,9 +722,14 @@ body {
   border-radius: 10px;
   background: #e8eef2;
   color: #30444f;
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .clinic-profile-loading {
