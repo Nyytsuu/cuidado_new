@@ -65,6 +65,12 @@ const ensureAppointmentsSchema = async () => {
         CREATE INDEX IF NOT EXISTS idx_appt_services_appt
         ON appointment_services (appointment_id)
       `);
+      // appointment_services is a snapshot table — service_id is for reference only.
+      // Drop the FK on service_id (fk_as_service) if it exists: clinic_services IDs
+      // don't match whatever table the FK pointed to, causing a 500 on every booking.
+      await pool.query(
+        `ALTER TABLE appointment_services DROP CONSTRAINT IF EXISTS fk_as_service`
+      ).catch(() => {});
 
       // Create the appointments table with the full new schema if it doesn't exist
       await pool.query(`
