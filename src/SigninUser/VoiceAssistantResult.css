@@ -311,31 +311,114 @@
 }
 
 .voice-analysis-result.compact {
-  gap: 10px;
+  gap: 8px;
 }
 
 .voice-analysis-result.compact .voice-analysis-hero {
-  padding: 14px;
-  border-radius: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  gap: 12px;
 }
 
 .voice-analysis-result.compact .voice-analysis-hero h4 {
-  font-size: 18px;
+  font-size: 17px;
+  margin: 8px 0 4px;
+}
+
+.voice-analysis-result.compact .voice-analysis-hero p {
+  font-size: 12px;
+}
+
+.voice-analysis-result.compact .voice-urgency-pill {
+  font-size: 11px;
+  padding: 4px 9px;
 }
 
 .voice-analysis-result.compact .voice-analysis-score {
-  width: 68px;
-  height: 68px;
-  border-radius: 18px;
+  width: 62px;
+  height: 62px;
+  border-radius: 15px;
 }
 
 .voice-analysis-result.compact .voice-analysis-score strong {
-  font-size: 19px;
+  font-size: 18px;
+}
+
+.voice-analysis-result.compact .voice-analysis-score span {
+  font-size: 10px;
+}
+
+.voice-analysis-result.compact .voice-analysis-stats {
+  gap: 6px;
+}
+
+.voice-analysis-result.compact .voice-analysis-stats div {
+  padding: 8px 10px;
+  border-radius: 11px;
+}
+
+.voice-analysis-result.compact .voice-analysis-stats span {
+  font-size: 15px;
+}
+
+.voice-analysis-result.compact .voice-analysis-stats small {
+  font-size: 10px;
 }
 
 .voice-analysis-result.compact .voice-analysis-panel,
 .voice-analysis-result.compact .voice-analysis-advice {
-  padding: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.voice-analysis-result.compact .voice-analysis-panel-title {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.voice-analysis-result.compact .voice-analysis-condition {
+  padding: 10px 11px;
+  border-radius: 11px;
+}
+
+.voice-analysis-result.compact .voice-analysis-condition-list {
+  gap: 7px;
+}
+
+.voice-analysis-result.compact .voice-analysis-condition-top strong {
+  font-size: 13px;
+}
+
+.voice-analysis-result.compact .voice-analysis-condition-top span {
+  font-size: 12px;
+}
+
+.voice-analysis-result.compact .voice-analysis-condition-meta em,
+.voice-analysis-result.compact .voice-analysis-condition-meta small {
+  font-size: 10px;
+  padding: 3px 7px;
+}
+
+.voice-analysis-result.compact .voice-analysis-match-bar {
+  height: 5px;
+  margin-top: 7px;
+}
+
+.voice-analysis-result.compact .voice-analysis-advice p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.voice-analysis-result.compact .voice-analysis-chip {
+  font-size: 12px;
+  padding: 4px 9px;
+  min-height: 26px;
+}
+
+.voice-analysis-result.compact .voice-analysis-note {
+  font-size: 11px;
+  color: #8fa0aa;
+  line-height: 1.4;
 }
 
 @media (max-width: 560px) {

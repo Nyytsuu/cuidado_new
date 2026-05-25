@@ -260,21 +260,23 @@ export default function VoiceAssistantPopup({
             className={`voice-popup-card ${voiceStep === "result" ? "has-result" : ""}`}
             onClick={(event) => event.stopPropagation()}
           >
-            <button className="voice-popup-close" type="button" onClick={closeVoicePopup}>
-              x
+            <button className="voice-popup-close" type="button" onClick={closeVoicePopup} aria-label="Close">
+              ×
             </button>
 
-            <div
-              className={`voice-popup-mic ${voiceContent.micClass}`}
-              onClick={voiceStep === "idle" ? startVoiceAssistant : undefined}
-              style={voiceStep === "idle" ? { cursor: "pointer" } : undefined}
-            >
-              <img src={micIcon} alt="Mic" />
-            </div>
+            <div className="voice-popup-header">
+              <div
+                className={`voice-popup-mic ${voiceContent.micClass}`}
+                onClick={voiceStep === "idle" ? startVoiceAssistant : undefined}
+                style={voiceStep === "idle" ? { cursor: "pointer" } : undefined}
+              >
+                <img src={micIcon} alt="Mic" />
+              </div>
 
-            <div className="voice-popup-text">
-              <h3>{voiceContent.title}</h3>
-              <p>{voiceContent.subtitle}</p>
+              <div className="voice-popup-text">
+                <h3>{voiceContent.title}</h3>
+                <p>{voiceContent.subtitle}</p>
+              </div>
             </div>
 
             {voiceTranscript && voiceStep !== "result" && (
