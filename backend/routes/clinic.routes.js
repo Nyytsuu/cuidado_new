@@ -20,6 +20,8 @@ router.use((req, res, next) => {
   if (req.method === "POST" && CLINIC_PUBLIC_PATHS.has(req.path)) return next();
   if (!req.user) return next(); // verifyToken already rejected if no user
   if (req.user.role === "clinic" || req.user.role === "admin") return next();
+  // Regular users need read access to clinic data (profile, schedule, services) for booking
+  if (req.user.role === "user" && req.method === "GET") return next();
   return res.status(403).json({ message: "Access denied." });
 });
 
