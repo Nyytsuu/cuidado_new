@@ -230,6 +230,12 @@ export default function ClinicProfile() {
     profilePicturePreview || toUploadUrl(profile?.profile_picture);
 
   const loadProfile = useCallback(async () => {
+    if (!clinicId) {
+      setLoading(false);
+      setError("No clinic account found. Please log in again.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
