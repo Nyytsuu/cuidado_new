@@ -146,27 +146,32 @@ const ensureAppointmentRescheduleColumns = async () => {
 
 const ensureClinicFeedbackTable = async () => {
   if (!clinicFeedbackSchemaPromise) {
-    clinicFeedbackSchemaPromise = pool
-      .query(`
+    clinicFeedbackSchemaPromise = (async () => {
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS clinic_feedback (
-          id INT NOT NULL AUTO_INCREMENT,
+          id SERIAL PRIMARY KEY,
           appointment_id INT NOT NULL,
           clinic_id INT NOT NULL,
           user_id INT NOT NULL,
-          rating TINYINT NOT NULL,
+          rating SMALLINT NOT NULL,
           feedback TEXT NULL,
-          created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (id),
-          UNIQUE KEY unique_feedback_appointment_user (appointment_id, user_id),
-          KEY idx_clinic_feedback_clinic (clinic_id),
-          KEY idx_clinic_feedback_user (user_id)
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT unique_feedback_appointment_user UNIQUE (appointment_id, user_id)
         )
-      `)
-      .catch((error) => {
-        clinicFeedbackSchemaPromise = null;
-        throw error;
-      });
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_clinic_feedback_clinic
+        ON clinic_feedback (clinic_id)
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_clinic_feedback_user
+        ON clinic_feedback (user_id)
+      `);
+    })().catch((error) => {
+      clinicFeedbackSchemaPromise = null;
+      throw error;
+    });
   }
 
   return clinicFeedbackSchemaPromise;
@@ -174,30 +179,32 @@ const ensureClinicFeedbackTable = async () => {
 
 const ensureClinicNotificationsTable = async () => {
   if (!clinicNotificationsSchemaPromise) {
-    clinicNotificationsSchemaPromise = pool
-      .query(`
+    clinicNotificationsSchemaPromise = (async () => {
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS clinic_notifications (
-          id INT NOT NULL AUTO_INCREMENT,
+          id SERIAL PRIMARY KEY,
           clinic_id INT NOT NULL,
           unique_key VARCHAR(160) NOT NULL,
           title VARCHAR(180) NOT NULL,
           message TEXT NOT NULL,
           category VARCHAR(80) NOT NULL DEFAULT 'Appointments',
           icon VARCHAR(40) NOT NULL DEFAULT 'calendar',
-          is_read TINYINT(1) NOT NULL DEFAULT 0,
+          is_read SMALLINT NOT NULL DEFAULT 0,
           appointment_id INT DEFAULT NULL,
-          read_at DATETIME DEFAULT NULL,
-          created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          PRIMARY KEY (id),
-          UNIQUE KEY unique_clinic_notification (clinic_id, unique_key),
-          INDEX idx_clinic_notifications_clinic (clinic_id, is_read, created_at)
+          read_at TIMESTAMP DEFAULT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT unique_clinic_notification UNIQUE (clinic_id, unique_key)
         )
-      `)
-      .catch((error) => {
-        clinicNotificationsSchemaPromise = null;
-        throw error;
-      });
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_clinic_notifications_clinic
+        ON clinic_notifications (clinic_id, is_read, created_at)
+      `);
+    })().catch((error) => {
+      clinicNotificationsSchemaPromise = null;
+      throw error;
+    });
   }
 
   return clinicNotificationsSchemaPromise;
@@ -206,16 +213,16 @@ const ensureClinicNotificationsTable = async () => {
 const ensureScheduleTables = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_weekly_schedules (
-      id INT NOT NULL AUTO_INCREMENT,
+      id SERIAL PRIMARY KEY,
       clinic_id INT NOT NULL,
-      day_of_week ENUM('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday') NOT NULL,
-      is_working TINYINT(1) NOT NULL DEFAULT 1,
+      day_of_week VARCHAR(10) NOT NULL
+        CHECK (day_of_week IN ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')),
+      is_working SMALLINT NOT NULL DEFAULT 1,
       opening_time TIME DEFAULT NULL,
       closing_time TIME DEFAULT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_day (clinic_id, day_of_week),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_clinic_day UNIQUE (clinic_id, day_of_week),
       CONSTRAINT fk_clinic_weekly_schedules_clinic
         FOREIGN KEY (clinic_id) REFERENCES clinics(id)
         ON DELETE CASCADE
@@ -224,13 +231,12 @@ const ensureScheduleTables = async () => {
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS clinic_blocked_dates (
-      id INT NOT NULL AUTO_INCREMENT,
+      id SERIAL PRIMARY KEY,
       clinic_id INT NOT NULL,
       blocked_date DATE NOT NULL,
       reason VARCHAR(255) NOT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_clinic_blocked_date (clinic_id, blocked_date),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_clinic_blocked_date UNIQUE (clinic_id, blocked_date),
       CONSTRAINT fk_clinic_blocked_dates_clinic
         FOREIGN KEY (clinic_id) REFERENCES clinics(id)
         ON DELETE CASCADE
@@ -545,6 +551,7 @@ router.post("/book", async (req, res) => {
         updated_at
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, NULL, 'pending', ?, ?, ?, NOW(), NOW())
+      RETURNING id
       `,
       [
         user_id,
@@ -631,12 +638,12 @@ router.post("/book", async (req, res) => {
         created_at
       )
       VALUES (?, ?, ?, ?, 'Appointments', 'calendar', ?, NOW())
-      ON DUPLICATE KEY UPDATE
-        title = VALUES(title),
-        message = VALUES(message),
-        category = VALUES(category),
-        icon = VALUES(icon),
-        appointment_id = VALUES(appointment_id),
+      ON CONFLICT (clinic_id, unique_key) DO UPDATE SET
+        title = EXCLUDED.title,
+        message = EXCLUDED.message,
+        category = EXCLUDED.category,
+        icon = EXCLUDED.icon,
+        appointment_id = EXCLUDED.appointment_id,
         updated_at = NOW()
       `,
       [
