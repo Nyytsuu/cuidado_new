@@ -2091,6 +2091,8 @@ router.get("/appointments", (req, res) => {
       clinic_id,
       start_at,
       end_at,
+      proposed_start_at,
+      proposed_end_at,
       purpose,
       symptoms,
       patient_note,
@@ -2099,6 +2101,9 @@ router.get("/appointments", (req, res) => {
       cancelled_at,
       cancelled_by,
       cancel_reason,
+      reschedule_reason,
+      reschedule_requested_by,
+      reschedule_requested_at,
       completed_at,
       patient_name_snapshot,
       patient_phone_snapshot,
@@ -2178,41 +2183,53 @@ router.patch("/appointments/:id/status", (req, res) => {
   });
 });
 
-// RESCHEDULE appointment
+// RESCHEDULE appointment (clinic proposes a new time — patient must accept/decline)
 router.patch("/appointments/:id/reschedule", (req, res) => {
   const { id } = req.params;
-  const { start_at } = req.body;
+  const { start_at, end_at, reason } = req.body;
 
   if (!start_at) {
     return res.status(400).json({ message: "start_at is required." });
   }
 
-  const startDate = new Date(start_at);
+  const startDate = new Date(String(start_at).replace(" ", "T"));
   if (Number.isNaN(startDate.getTime())) {
     return res.status(400).json({ message: "Invalid start_at value." });
   }
 
-  const endDate = new Date(startDate.getTime() + 30 * 60000);
+  // Use provided end_at or default to start + 30 min
+  let endDate;
+  if (end_at) {
+    endDate = new Date(String(end_at).replace(" ", "T"));
+    if (Number.isNaN(endDate.getTime())) endDate = new Date(startDate.getTime() + 30 * 60000);
+  } else {
+    endDate = new Date(startDate.getTime() + 30 * 60000);
+  }
 
   const pad = (n) => String(n).padStart(2, "0");
-  const toMysqlDatetime = (d) =>
+  const toDatetime = (d) =>
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
       d.getHours()
     )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
+  // Store the proposed times and mark status as reschedule_requested
+  // The original start_at/end_at are preserved until the patient accepts
   const sql = `
     UPDATE appointments
     SET
-      start_at = ?,
-      end_at = ?,
-      status = 'pending',
+      proposed_start_at = ?,
+      proposed_end_at = ?,
+      reschedule_reason = ?,
+      reschedule_requested_by = 'clinic',
+      reschedule_requested_at = NOW(),
+      status = 'reschedule_requested',
       updated_at = NOW()
     WHERE id = ?
   `;
 
   db.query(
     sql,
-    [toMysqlDatetime(startDate), toMysqlDatetime(endDate), Number(id)],
+    [toDatetime(startDate), toDatetime(endDate), reason || null, Number(id)],
     (err, result) => {
       if (err) {
         console.error("RESCHEDULE APPOINTMENT ERROR:", err);
@@ -2223,7 +2240,7 @@ router.patch("/appointments/:id/reschedule", (req, res) => {
         return res.status(404).json({ message: "Appointment not found." });
       }
 
-      res.json({ message: "Appointment rescheduled successfully." });
+      res.json({ message: "Reschedule request sent successfully." });
     }
   );
 });
