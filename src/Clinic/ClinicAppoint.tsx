@@ -73,6 +73,23 @@ type RescheduleForm = {
   reason: string;
 };
 
+type DayKey =
+  | "Monday" | "Tuesday" | "Wednesday" | "Thursday"
+  | "Friday" | "Saturday" | "Sunday";
+
+type ClinicDaySchedule = {
+  day: DayKey;
+  working: boolean;
+  open: string;
+  close: string;
+};
+
+type ClinicBlockedDate = {
+  id: number;
+  date: string;
+  reason: string;
+};
+
 const emptyRescheduleForm: RescheduleForm = {
   date: "",
   time: "",
@@ -129,7 +146,12 @@ export default function ClinicAppoint() {
   const [rejectReason, setRejectReason]          = useState("");
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false); 
+  const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+
+  /* ── clinic schedule (used to validate reschedule times) ── */
+  const [clinicSchedule, setClinicSchedule] = useState<ClinicDaySchedule[]>([]);
+  const [clinicBlockedDates, setClinicBlockedDates] = useState<ClinicBlockedDate[]>([]);
+
   const navigate = useNavigate();
 
   const mapDbStatusToUi = (
@@ -256,6 +278,22 @@ export default function ClinicAppoint() {
   useEffect(() => {
     loadAppointments();
   }, [loadAppointments]);
+
+  /* Fetch clinic schedule once so we can validate reschedule times client-side */
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      try {
+        const res = await fetch(`${API}/clinic/schedule?clinic_id=${clinicId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (Array.isArray(data.schedule))     setClinicSchedule(data.schedule);
+        if (Array.isArray(data.blockedDates)) setClinicBlockedDates(data.blockedDates);
+      } catch {
+        // fail silently — backend will still validate on submit
+      }
+    };
+    fetchSchedule();
+  }, [API, clinicId]);
 
   const statusClass = (status: AppointmentStatus) => {
     switch (status) {
@@ -407,6 +445,11 @@ export default function ClinicAppoint() {
       return;
     }
 
+    if (rescheduleError) {
+      alert(rescheduleError);
+      return;
+    }
+
     const startDate = new Date(
       `${rescheduleForm.date}T${rescheduleForm.time}:00`
     );
@@ -467,6 +510,53 @@ export default function ClinicAppoint() {
       setSavingAction(false);
     }
   };
+
+  /* Real-time validation for the reschedule form */
+  const rescheduleError = useMemo(() => {
+    const { date, time } = rescheduleForm;
+    if (!date || !time) return "";
+
+    const selectedDT = new Date(`${date}T${time}:00`);
+    if (Number.isNaN(selectedDT.getTime())) return "Invalid date or time.";
+    if (selectedDT.getTime() <= Date.now()) return "Please choose a future date and time.";
+
+    // Blocked date check
+    if (clinicBlockedDates.some((bd) => bd.date === date)) {
+      return "This date is blocked on your schedule. Please choose another day.";
+    }
+
+    // Day-of-week schedule check
+    const dayName = selectedDT.toLocaleDateString("en-US", { weekday: "long" }) as DayKey;
+    const day = clinicSchedule.find((s) => s.day === dayName);
+
+    if (day) {
+      if (!day.working) {
+        return `Your clinic is closed on ${dayName}. Please choose another day.`;
+      }
+
+      // Normalise to "HH:MM" (handle "HH:MM:SS" format from DB)
+      const toMin = (t: string) => {
+        const parts = String(t || "").slice(0, 5).split(":").map(Number);
+        return (parts[0] || 0) * 60 + (parts[1] || 0);
+      };
+
+      if (day.open && day.close) {
+        const durationMs = selectedAppointment
+          ? getRescheduleDuration(selectedAppointment)
+          : 30 * 60 * 1000;
+        const startMin = toMin(time);
+        const endMin   = startMin + Math.round(durationMs / 60000);
+        const openMin  = toMin(day.open);
+        const closeMin = toMin(day.close);
+
+        if (startMin < openMin || endMin > closeMin) {
+          return `Outside clinic hours for ${dayName} (${day.open.slice(0, 5)}–${day.close.slice(0, 5)}). Please choose a time within opening hours.`;
+        }
+      }
+    }
+
+    return "";
+  }, [rescheduleForm, clinicSchedule, clinicBlockedDates, selectedAppointment]);
 
   const filteredAppointments = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
@@ -767,6 +857,7 @@ export default function ClinicAppoint() {
                       <input
                         type="date"
                         value={rescheduleForm.date}
+                        min={new Date().toISOString().split("T")[0]}
                         onChange={(e) =>
                           setRescheduleForm((prev) => ({
                             ...prev,
@@ -790,6 +881,10 @@ export default function ClinicAppoint() {
                       />
                     </div>
                   </div>
+
+                  {rescheduleError && (
+                    <p className="appoint-reschedule-error">{rescheduleError}</p>
+                  )}
 
                   <div className="form-group">
                     <label>Message for patient</label>
@@ -862,7 +957,8 @@ export default function ClinicAppoint() {
                     type="button"
                     className="pill pill-success"
                     onClick={handleRescheduleSave}
-                    disabled={savingAction}
+                    disabled={savingAction || Boolean(rescheduleError)}
+                    title={rescheduleError || undefined}
                   >
                     {savingAction ? "Sending..." : "Send Request"}
                   </button>
