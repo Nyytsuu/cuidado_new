@@ -77,6 +77,7 @@ export default function VoiceAssistantPopup({
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
+  const [textInput, setTextInput] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const effectiveUserId = useMemo(() => userId ?? getStoredUserId(), [userId]);
@@ -161,6 +162,14 @@ export default function VoiceAssistantPopup({
     setVoiceTranscript("");
     setVoiceError("");
     setSymptomResult(null);
+    setTextInput("");
+  };
+
+  const submitTextInput = () => {
+    const trimmed = textInput.trim();
+    if (!trimmed) return;
+    setTextInput("");
+    void analyzeVoiceSymptoms(trimmed);
   };
 
   const startVoiceAssistant = () => {
@@ -276,6 +285,30 @@ export default function VoiceAssistantPopup({
 
             {voiceError && voiceStep === "retry" && (
               <div className="voice-error-text">{voiceError}</div>
+            )}
+
+            {voiceStep === "retry" && (
+              <div className="voice-text-fallback">
+                <p className="voice-text-fallback-label">Or type your symptoms instead:</p>
+                <div className="voice-text-fallback-row">
+                  <input
+                    type="text"
+                    className="voice-text-fallback-input"
+                    placeholder="e.g. headache, fever, cough..."
+                    value={textInput}
+                    onChange={(e) => setTextInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") submitTextInput(); }}
+                  />
+                  <button
+                    type="button"
+                    className="voice-text-fallback-btn"
+                    onClick={submitTextInput}
+                    disabled={!textInput.trim()}
+                  >
+                    Analyze
+                  </button>
+                </div>
+              </div>
             )}
 
             {voiceStep === "result" && symptomResult && (

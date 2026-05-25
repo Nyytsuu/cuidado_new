@@ -280,6 +280,64 @@
   line-height: 1.4;
 }
 
+.voice-assistant-popup .voice-text-fallback {
+  width: 100%;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #dce8e8;
+}
+
+.voice-assistant-popup .voice-text-fallback-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #556672;
+  text-align: left;
+}
+
+.voice-assistant-popup .voice-text-fallback-row {
+  display: flex;
+  gap: 8px;
+}
+
+.voice-assistant-popup .voice-text-fallback-input {
+  flex: 1;
+  min-width: 0;
+  height: 40px;
+  border: 1.5px solid #c8d8dc;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #273842;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 0 12px;
+  outline: none;
+}
+
+.voice-assistant-popup .voice-text-fallback-input:focus {
+  border-color: #3dbfb8;
+  box-shadow: 0 0 0 3px rgba(61, 191, 184, 0.15);
+}
+
+.voice-assistant-popup .voice-text-fallback-btn {
+  height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 10px;
+  background: #005747;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.voice-assistant-popup .voice-text-fallback-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 @keyframes micPulse {
   0% {
     transform: scale(1);
