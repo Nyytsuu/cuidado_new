@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
+const axios = require("axios");
 const nodemailer = require("nodemailer");
 const pool = require("../db/pool");
 const { verifyToken } = require("../middleware/auth");
@@ -48,6 +49,14 @@ const PROFILE_UPLOAD_DIR = path.join("uploads", "profile-pictures");
 const PROFILE_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const PROFILE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+
+// Supabase Storage — set SUPABASE_URL + SUPABASE_SERVICE_KEY in env to enable cloud storage.
+// Without these, the server falls back to local disk (dev-only; Render will wipe local files on restart).
+const SUPABASE_URL = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
+const SUPABASE_BUCKET = "profile-pictures";
+const USE_SUPABASE_STORAGE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_KEY);
+
 const MAIL_USER = process.env.MAIL_USER || process.env.EMAIL_USER;
 const MAIL_PASS = process.env.MAIL_PASS || process.env.EMAIL_PASS;
 const MAIL_FROM = process.env.MAIL_FROM || MAIL_USER;
@@ -62,20 +71,27 @@ const reminderMailer =
       })
     : null;
 
-fs.mkdirSync(PROFILE_UPLOAD_DIR, { recursive: true });
+// Only create the local uploads directory when NOT using Supabase Storage (i.e. local dev).
+if (!USE_SUPABASE_STORAGE) {
+  fs.mkdirSync(PROFILE_UPLOAD_DIR, { recursive: true });
+}
 
-const profilePictureStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, PROFILE_UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const extension = path.extname(file.originalname || "").toLowerCase();
-    const baseName = path
-      .basename(file.originalname || "profile", extension)
-      .replace(/[^a-zA-Z0-9_-]/g, "_")
-      .slice(0, 40);
+// Use in-memory multer when Supabase Storage is configured so there is nothing to write to disk.
+// Fall back to disk storage for local development.
+const profilePictureStorage = USE_SUPABASE_STORAGE
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, PROFILE_UPLOAD_DIR),
+      filename: (_req, file, cb) => {
+        const extension = path.extname(file.originalname || "").toLowerCase();
+        const baseName = path
+          .basename(file.originalname || "profile", extension)
+          .replace(/[^a-zA-Z0-9_-]/g, "_")
+          .slice(0, 40);
 
-    cb(null, `user-${Date.now()}-${baseName || "profile"}${extension}`);
-  },
-});
+        cb(null, `user-${Date.now()}-${baseName || "profile"}${extension}`);
+      },
+    });
 
 const profilePictureUpload = multer({
   storage: profilePictureStorage,
@@ -1035,11 +1051,53 @@ router.put(
         return res.status(404).json({ message: "User not found." });
       }
 
-      const profilePicturePath = path.posix.join(
-        "uploads",
-        "profile-pictures",
-        req.file.filename
-      );
+      let profilePicturePath;
+
+      if (USE_SUPABASE_STORAGE) {
+        // --- Cloud storage path (Render production) ---
+        const ext =
+          path.extname(req.file.originalname || "").toLowerCase() || ".jpg";
+        const safeName = path
+          .basename(req.file.originalname || "profile", ext)
+          .replace(/[^a-zA-Z0-9_-]/g, "_")
+          .slice(0, 40) || "profile";
+        const fileName = `user-${userId}-${Date.now()}-${safeName}${ext}`;
+
+        try {
+          await axios.post(
+            `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${fileName}`,
+            req.file.buffer,
+            {
+              headers: {
+                Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+                "Content-Type": req.file.mimetype,
+                "x-upsert": "true",
+              },
+              maxBodyLength: Infinity,
+              maxContentLength: Infinity,
+            }
+          );
+        } catch (uploadErr) {
+          const detail =
+            uploadErr?.response?.data?.message ||
+            uploadErr?.message ||
+            "Unknown error";
+          console.error("Supabase Storage upload error:", detail);
+          return res
+            .status(500)
+            .json({ message: "Failed to upload profile picture to storage." });
+        }
+
+        // Public URL — bucket must be set to "Public" in Supabase dashboard
+        profilePicturePath = `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${fileName}`;
+      } else {
+        // --- Local disk fallback (development only) ---
+        profilePicturePath = path.posix.join(
+          "uploads",
+          "profile-pictures",
+          req.file.filename
+        );
+      }
 
       await pool.query(
         `
