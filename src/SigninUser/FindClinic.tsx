@@ -1002,7 +1002,8 @@ export default function FindClinic() {
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.message || "Failed to book appointment");
+        const detail = result.error_detail ? ` (${result.error_detail})` : "";
+        throw new Error((result.message || "Failed to book appointment") + detail);
       }
 
       const clinicName = selectedClinic.clinic_name;

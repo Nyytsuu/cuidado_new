@@ -66,7 +66,37 @@ const ensureAppointmentsSchema = async () => {
         ON appointment_services (appointment_id)
       `);
 
-      // Add any missing columns to the appointments table (PostgreSQL-safe)
+      // Create the appointments table with the full new schema if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS appointments (
+          id SERIAL PRIMARY KEY,
+          user_id INT NOT NULL,
+          clinic_id INT NOT NULL,
+          start_at TIMESTAMP NULL,
+          end_at TIMESTAMP NULL,
+          proposed_start_at TIMESTAMP NULL,
+          proposed_end_at TIMESTAMP NULL,
+          purpose TEXT NULL,
+          symptoms TEXT NULL,
+          patient_note TEXT NULL,
+          clinic_note TEXT NULL,
+          status VARCHAR(30) NOT NULL DEFAULT 'pending',
+          cancel_reason TEXT NULL,
+          cancelled_at TIMESTAMP NULL,
+          cancelled_by VARCHAR(20) NULL,
+          completed_at TIMESTAMP NULL,
+          reschedule_reason TEXT NULL,
+          reschedule_requested_by VARCHAR(20) NULL,
+          reschedule_requested_at TIMESTAMP NULL,
+          patient_name_snapshot VARCHAR(150) NULL,
+          patient_phone_snapshot VARCHAR(50) NULL,
+          clinic_name_snapshot VARCHAR(150) NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Add any missing columns to an existing appointments table (PostgreSQL-safe)
       const columnDefs = [
         ['start_at',                'TIMESTAMP NULL'],
         ['end_at',                  'TIMESTAMP NULL'],
@@ -92,6 +122,16 @@ const ensureAppointmentsSchema = async () => {
         await pool.query(
           `ALTER TABLE appointments ADD COLUMN IF NOT EXISTS ${col} ${type}`
         );
+      }
+
+      // If the table was migrated from MySQL it may have old NOT NULL columns
+      // (appointment_date, appointment_time, service) that block inserts.
+      // Drop those NOT NULL constraints so existing rows aren't affected.
+      const oldNotNullCols = ['appointment_date', 'appointment_time', 'service'];
+      for (const col of oldNotNullCols) {
+        await pool.query(
+          `ALTER TABLE appointments ALTER COLUMN ${col} DROP NOT NULL`
+        ).catch(() => { /* column doesn't exist or already nullable — ignore */ });
       }
     })().catch((error) => {
       appointmentsSchemaPromise = null;
@@ -172,6 +212,19 @@ const ensureClinicNotificationsTable = async () => {
         CREATE INDEX IF NOT EXISTS idx_clinic_notifications_clinic
         ON clinic_notifications (clinic_id, is_read, created_at)
       `);
+
+      // Add columns that may be missing if the table existed before schema updates
+      const notifColDefs = [
+        ['appointment_id', 'INT DEFAULT NULL'],
+        ['is_read',        'SMALLINT NOT NULL DEFAULT 0'],
+        ['read_at',        'TIMESTAMP DEFAULT NULL'],
+        ['updated_at',     'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'],
+      ];
+      for (const [col, type] of notifColDefs) {
+        await pool.query(
+          `ALTER TABLE clinic_notifications ADD COLUMN IF NOT EXISTS ${col} ${type}`
+        );
+      }
     })().catch((error) => {
       clinicNotificationsSchemaPromise = null;
       throw error;
@@ -610,13 +663,7 @@ router.post("/book", async (req, res) => {
         created_at
       )
       VALUES (?, ?, ?, ?, 'Appointments', 'calendar', ?, NOW())
-      ON CONFLICT (clinic_id, unique_key) DO UPDATE SET
-        title = EXCLUDED.title,
-        message = EXCLUDED.message,
-        category = EXCLUDED.category,
-        icon = EXCLUDED.icon,
-        appointment_id = EXCLUDED.appointment_id,
-        updated_at = NOW()
+      ON CONFLICT DO NOTHING
       `,
       [
         clinic_id,
