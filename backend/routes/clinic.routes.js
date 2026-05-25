@@ -939,7 +939,7 @@ router.patch("/clinic/notifications/:id/read", async (req, res) => {
    PUT /api/clinic/profile
 ================================================= */
 
-router.get("/clinic/profile", async (req, res) => {
+router.get(["/profile", "/clinic/profile"], async (req, res) => {
   try {
     const clinicId = Number(req.query.clinic_id);
 
@@ -1561,7 +1561,7 @@ const toScheduleResponse = (rows) =>
    DELETE /api/clinic/schedule/blocked-dates/:id?clinic_id=1
 ================================================= */
 
-router.get("/clinic/schedule", async (req, res) => {
+router.get(["/schedule", "/clinic/schedule"], async (req, res) => {
   try {
     const clinicId = Number(req.query.clinic_id);
 
