@@ -25,116 +25,87 @@ const DAYS_BY_INDEX = [
 let appointmentRescheduleSchemaPromise = null;
 let clinicFeedbackSchemaPromise = null;
 let clinicNotificationsSchemaPromise = null;
+let appointmentsSchemaPromise = null;
+
+const ensureAppointmentsSchema = async () => {
+  if (!appointmentsSchemaPromise) {
+    appointmentsSchemaPromise = (async () => {
+      // Create appointment_status_history table if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS appointment_status_history (
+          id SERIAL PRIMARY KEY,
+          appointment_id INT NOT NULL,
+          old_status VARCHAR(30) NULL,
+          new_status VARCHAR(30) NOT NULL DEFAULT 'pending',
+          changed_by VARCHAR(20) NOT NULL DEFAULT 'system',
+          changed_by_id INT NULL,
+          note TEXT NULL,
+          changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_appt_status_history_appt
+        ON appointment_status_history (appointment_id)
+      `);
+
+      // Create appointment_services table if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS appointment_services (
+          id SERIAL PRIMARY KEY,
+          appointment_id INT NOT NULL,
+          service_id INT NULL,
+          service_name_snapshot VARCHAR(150) NULL,
+          price_snapshot NUMERIC(10,2) NOT NULL DEFAULT 0,
+          duration_minutes_snapshot INT NOT NULL DEFAULT 0,
+          description TEXT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_appt_services_appt
+        ON appointment_services (appointment_id)
+      `);
+
+      // Add any missing columns to the appointments table (PostgreSQL-safe)
+      const columnDefs = [
+        ['start_at',                'TIMESTAMP NULL'],
+        ['end_at',                  'TIMESTAMP NULL'],
+        ['proposed_start_at',       'TIMESTAMP NULL'],
+        ['proposed_end_at',         'TIMESTAMP NULL'],
+        ['purpose',                 'TEXT NULL'],
+        ['symptoms',                'TEXT NULL'],
+        ['patient_note',            'TEXT NULL'],
+        ['clinic_note',             'TEXT NULL'],
+        ['cancel_reason',           'TEXT NULL'],
+        ['cancelled_at',            'TIMESTAMP NULL'],
+        ['cancelled_by',            'VARCHAR(20) NULL'],
+        ['completed_at',            'TIMESTAMP NULL'],
+        ['reschedule_reason',       'TEXT NULL'],
+        ['reschedule_requested_by', 'VARCHAR(20) NULL'],
+        ['reschedule_requested_at', 'TIMESTAMP NULL'],
+        ['patient_name_snapshot',   'VARCHAR(150) NULL'],
+        ['patient_phone_snapshot',  'VARCHAR(50) NULL'],
+        ['clinic_name_snapshot',    'VARCHAR(150) NULL'],
+      ];
+
+      for (const [col, type] of columnDefs) {
+        await pool.query(
+          `ALTER TABLE appointments ADD COLUMN IF NOT EXISTS ${col} ${type}`
+        );
+      }
+    })().catch((error) => {
+      appointmentsSchemaPromise = null;
+      throw error;
+    });
+  }
+  return appointmentsSchemaPromise;
+};
 
 const ensureAppointmentRescheduleColumns = async () => {
   if (!appointmentRescheduleSchemaPromise) {
     appointmentRescheduleSchemaPromise = (async () => {
-      const [columns] = await pool.query(
-        `
-        SELECT column_name AS "COLUMN_NAME", data_type AS "COLUMN_TYPE"
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE table_schema = 'public'
-          AND TABLE_NAME = 'appointments'
-          AND COLUMN_NAME IN (
-            'status',
-            'proposed_start_at',
-            'proposed_end_at',
-            'reschedule_reason',
-            'reschedule_requested_by',
-            'reschedule_requested_at'
-          )
-        `
-      );
-
-      const existing = new Map(
-        columns.map((column) => [column.COLUMN_NAME, column.COLUMN_TYPE])
-      );
-
-      if (!existing.has("proposed_start_at")) {
-        await pool.query(`
-          ALTER TABLE appointments
-          ADD COLUMN proposed_start_at DATETIME NULL AFTER end_at
-        `);
-      }
-
-      if (!existing.has("proposed_end_at")) {
-        await pool.query(`
-          ALTER TABLE appointments
-          ADD COLUMN proposed_end_at DATETIME NULL AFTER proposed_start_at
-        `);
-      }
-
-      if (!existing.has("reschedule_reason")) {
-        await pool.query(`
-          ALTER TABLE appointments
-          ADD COLUMN reschedule_reason TEXT NULL AFTER cancel_reason
-        `);
-      }
-
-      if (!existing.has("reschedule_requested_by")) {
-        await pool.query(`
-          ALTER TABLE appointments
-          ADD COLUMN reschedule_requested_by VARCHAR(20) NULL AFTER reschedule_reason
-        `);
-      }
-
-      if (!existing.has("reschedule_requested_at")) {
-        await pool.query(`
-          ALTER TABLE appointments
-          ADD COLUMN reschedule_requested_at DATETIME NULL AFTER reschedule_requested_by
-        `);
-      }
-
-      const statusType = String(existing.get("status") || "");
-      if (
-        statusType.toLowerCase().startsWith("enum(") &&
-        !statusType.includes("'reschedule_requested'")
-      ) {
-        await pool.query(`
-          ALTER TABLE appointments
-          MODIFY COLUMN status ENUM(
-            'pending',
-            'confirmed',
-            'reschedule_requested',
-            'cancelled',
-            'completed',
-            'no_show'
-          ) NOT NULL DEFAULT 'pending'
-        `);
-      }
-
-      const [historyColumns] = await pool.query(
-        `
-        SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE
-        FROM INFORMATION_SCHEMA.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-          AND TABLE_NAME = 'appointment_status_history'
-          AND COLUMN_NAME IN ('old_status', 'new_status')
-        `
-      );
-
-      for (const column of historyColumns) {
-        const columnType = String(column.COLUMN_TYPE || "");
-        if (
-          columnType.toLowerCase().startsWith("enum(") &&
-          !columnType.includes("'reschedule_requested'")
-        ) {
-          const nullability =
-            column.IS_NULLABLE === "NO" ? "NOT NULL" : "NULL";
-
-          await pool.query(`
-            ALTER TABLE appointment_status_history
-            MODIFY COLUMN ${column.COLUMN_NAME} ENUM(
-              'pending',
-              'confirmed',
-              'reschedule_requested',
-              'cancelled',
-              'completed',
-              'no_show'
-            ) ${nullability}
-          `);
-        }
-      }
+      // All columns and tables are managed by ensureAppointmentsSchema
+      await ensureAppointmentsSchema();
     })().catch((error) => {
       appointmentRescheduleSchemaPromise = null;
       throw error;
@@ -477,6 +448,7 @@ router.post("/book", async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
+    await ensureAppointmentsSchema();
     await ensureClinicNotificationsTable();
 
     const {
