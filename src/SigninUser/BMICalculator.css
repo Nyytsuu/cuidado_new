@@ -594,19 +594,22 @@ body {
   z-index: 10000;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 34px 18px;
+  align-items: center;
+  padding: 20px 18px;
   background: rgba(15, 23, 42, 0.5);
   overflow-y: auto;
 }
 
 .clinic-profile-modal {
   width: min(980px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
   background: #f8fbfc;
   border-radius: 18px;
   box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
   padding: 22px;
   color: #273842;
+  flex-shrink: 0;
 }
 
 .clinic-profile-head {
@@ -1439,8 +1442,15 @@ body {
     font-size: 9.5px !important;
   }
 
+  .clinic-profile-overlay {
+    align-items: flex-start !important;
+    padding: 12px 10px !important;
+  }
+
   .clinic-profile-modal {
-    padding: 16px;
+    max-height: calc(100dvh - 24px) !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
   }
 
   .clinic-profile-grid,
