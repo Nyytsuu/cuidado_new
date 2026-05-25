@@ -336,11 +336,27 @@ const getScheduleConflict = async (
   endAt,
   clinic
 ) => {
-  const normalizedStart = String(startAt || "").replace(" ", "T");
+  // pg driver returns TIMESTAMP columns as JS Date objects, not strings.
+  // Normalise to "YYYY-MM-DD HH:MM:SS" so the slice-based parsing below works
+  // regardless of whether the caller passes a Date or a string.
+  const toDatetimeStr = (v) => {
+    if (!v) return "";
+    if (v instanceof Date) {
+      const pad = (n) => String(n).padStart(2, "0");
+      // Use UTC getters — Render runs in UTC so stored local time = UTC time
+      return `${v.getUTCFullYear()}-${pad(v.getUTCMonth() + 1)}-${pad(v.getUTCDate())} ${pad(v.getUTCHours())}:${pad(v.getUTCMinutes())}:${pad(v.getUTCSeconds())}`;
+    }
+    return String(v);
+  };
+
+  const startAtStr = toDatetimeStr(startAt);
+  const endAtStr   = toDatetimeStr(endAt);
+
+  const normalizedStart = startAtStr.replace(" ", "T");
   const startDate = parseLocalDateTime(normalizedStart);
-  const appointmentDate = String(startAt || "").slice(0, 10);
-  const startTime = String(startAt || "").slice(11, 16);
-  const endTime = String(endAt || "").slice(11, 16);
+  const appointmentDate = startAtStr.slice(0, 10);
+  const startTime = startAtStr.slice(11, 16);
+  const endTime   = endAtStr.slice(11, 16);
 
   if (
     !startDate ||
