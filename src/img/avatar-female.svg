@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="50" fill="#EC4899"/>
+  <!-- head -->
+  <circle cx="50" cy="36" r="17" fill="white" fill-opacity="0.92"/>
+  <!-- dress silhouette -->
+  <path d="M32 62 Q50 58 68 62 L78 90 L22 90 Z" fill="white" fill-opacity="0.92"/>
+</svg>

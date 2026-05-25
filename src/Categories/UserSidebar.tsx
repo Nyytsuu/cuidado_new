@@ -29,7 +29,9 @@ import {
 
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
-import userIcon from "../img/friends.png";
+import avatarMale from "../img/avatar-male.svg";
+import avatarFemale from "../img/avatar-female.svg";
+import avatarNeutral from "../img/avatar-neutral.svg";
 import { clearStoredAuth } from "../authSession";
 import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
@@ -39,6 +41,7 @@ type HeaderUser = {
   name?: string | null;
   email?: string | null;
   profile_picture?: string | null;
+  gender?: string | null;
 };
 
 type HeaderNotification = {
@@ -111,8 +114,15 @@ export default function UserSidebar({
 
   const headerDisplayEmail = headerUser?.email || "View account";
 
+  const defaultAvatar = (() => {
+    const g = (headerUser?.gender || "").toLowerCase();
+    if (g === "male") return avatarMale;
+    if (g === "female") return avatarFemale;
+    return avatarNeutral;
+  })();
+
   const headerProfileImage =
-    fixImageUrl(headerUser?.profile_picture) || userIcon;
+    fixImageUrl(headerUser?.profile_picture) || defaultAvatar;
 
   const storedHeaderUser = useMemo(() => {
     try {

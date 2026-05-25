@@ -3,7 +3,9 @@ import "./UserProfile.css";
 import UserSidebar from "../Categories/UserSidebar";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import micIcon from "../img/mic.png";
-import profileImg from "../img/profile1.jpg";
+import avatarMale from "../img/avatar-male.svg";
+import avatarFemale from "../img/avatar-female.svg";
+import avatarNeutral from "../img/avatar-neutral.svg";
 import { analyzeVoiceTranscript, type SymptomResult } from "./voiceAssistantApi";
 import VoiceAssistantResult from "./VoiceAssistantResult";
 import { apiUrl, getConfiguredBackendUrl } from "../sharedBackendFetch";
@@ -184,8 +186,15 @@ export default function UserProfile() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const defaultAvatar = (() => {
+    const g = (gender || "").toLowerCase();
+    if (g === "male") return avatarMale;
+    if (g === "female") return avatarFemale;
+    return avatarNeutral;
+  })();
+
   const displayProfilePicture =
-    profilePicturePreview || toUploadUrl(profilePicture) || profileImg;
+    profilePicturePreview || toUploadUrl(profilePicture) || defaultAvatar;
 
   useEffect(() => {
     return () => {
