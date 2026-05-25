@@ -417,8 +417,7 @@ body {
   padding: 9px 11px;
 }
 
-.condition-guide-list span,
-.condition-support-card span {
+.condition-guide-list span {
   display: block;
   margin-bottom: 3px;
   color: #72838b;
@@ -591,20 +590,94 @@ body {
   gap: 12px;
 }
 
+/* ── Support card shell ── */
 .condition-support-card {
-  min-height: 126px;
-  border: 1px solid #e6ebed;
+  min-height: 88px;
+  border: 1.5px solid #e4ebed;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.55);
-  padding: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 16px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(20, 44, 55, 0.04);
 }
 
-.condition-support-card p {
+/* ── Coloured icon badge ── */
+.support-card-icon {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.support-card-icon span {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  line-height: 1;
+}
+
+.support-card-icon--care  { background: #ceeee9; color: #1e7a73; }
+.support-card-icon--help  { background: #fde7c8; color: #a05a18; }
+.support-card-icon--body  { background: #e0daf5; color: #5849a0; }
+
+/* ── Text area ── */
+.support-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.support-card-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8fa0aa;
+  margin-bottom: 5px;
+}
+
+.support-card-value {
   margin: 0;
-  color: #42545d;
-  font-size: 14px;
-  line-height: 1.45;
+  font-size: 13.5px;
   font-weight: 700;
+  color: #1e2e38;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Body system name gets slightly larger treatment */
+.support-card-value--system {
+  font-size: 15px;
+  font-weight: 800;
+  color: #1c2d38;
+}
+
+/* ── Open button ── */
+.support-card-open {
+  flex-shrink: 0;
+  height: 28px;
+  min-width: 52px;
+  border: 1.5px solid #3dbfb8;
+  border-radius: 999px;
+  background: transparent;
+  color: #1f8a84;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 13px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.support-card-open:hover {
+  background: #e5f7f5;
 }
 
 .mini-preview {
@@ -836,4 +909,203 @@ body {
   .voice-fab {
     align-self: flex-start;
   }
+}
+
+/* ════════════════════════════════════════
+   Support-card popup / modal
+   ════════════════════════════════════════ */
+
+.support-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99900;
+  background: rgba(10, 26, 34, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.support-popup {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 32px 28px 28px;
+  box-shadow: 0 24px 60px rgba(10, 26, 34, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.support-popup-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 999px;
+  background: #f0f3f4;
+  color: #5a6b74;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.support-popup-close:hover {
+  background: #e2e8ea;
+}
+
+/* Icon badge (reuses the same colour modifiers from the card) */
+.support-popup-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.support-popup-icon span {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  line-height: 1;
+}
+
+.support-popup-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a2c35;
+  line-height: 1.1;
+}
+
+.support-popup-subtitle {
+  margin: 0 0 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a9098;
+}
+
+.support-popup-body {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.support-popup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f5f9f9;
+  border: 1px solid #e0e9eb;
+  border-radius: 11px;
+  padding: 11px 14px;
+}
+
+.support-popup-row span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7a9098;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.support-popup-row strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e7a73;
+}
+
+.support-popup-text {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #3d5260;
+  font-weight: 500;
+}
+
+/* Red-flag list inside When to Seek Help popup */
+.support-popup-flags {
+  background: #fff6f6;
+  border: 1.5px solid #f0cece;
+  border-radius: 11px;
+  padding: 13px 14px;
+}
+
+.support-popup-flags-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #c0524e;
+  margin-bottom: 8px;
+}
+
+.support-popup-flags ul {
+  margin: 0;
+  padding: 0 0 0 16px;
+  list-style: disc;
+}
+
+.support-popup-flags li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #7a3a38;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+/* Body system hero row */
+.support-popup-system-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f4f8f8;
+  border: 1px solid #dde8e9;
+  border-radius: 13px;
+  padding: 14px 16px;
+}
+
+.support-popup-system-icon {
+  font-size: 38px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.support-popup-system-hero strong {
+  font-size: 17px;
+  font-weight: 800;
+  color: #1a2c35;
+}
+
+/* CTA button at the bottom of the popup */
+.support-popup-action {
+  width: 100%;
+  height: 46px;
+  border: none;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #3dbfb8 0%, #1fa099 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: opacity 0.15s ease;
+}
+
+.support-popup-action:hover {
+  opacity: 0.92;
 }

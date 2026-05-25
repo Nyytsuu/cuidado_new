@@ -86,6 +86,7 @@ export default function ConditionDetails() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [supportPopup, setSupportPopup] = useState<"care" | "help" | "body" | null>(null);
 
   const [bodySystems, setBodySystems] = useState<BodySystemMenuItem[]>([]);
   const [condition, setCondition] = useState<ConditionDetailsType | null>(null);
@@ -248,27 +249,6 @@ export default function ConditionDetails() {
   const redFlagSymptoms = symptoms.filter((item) => Number(item.is_red_flag) === 1);
   const hasSymptomSearch = search.trim().length > 0;
   const symptomsToShow = hasSymptomSearch ? filteredSymptoms : symptoms;
-  const supportCards = [
-    {
-      title: "Care Guidance",
-      value:
-        condition?.advice_level && condition.advice_level !== "general"
-          ? `Advice level: ${adviceLabel}`
-          : "Monitor symptoms and use the symptom checker when details are unclear.",
-    },
-    {
-      title: "When To Seek Help",
-      value:
-        condition?.when_to_seek_help ||
-        "Contact a clinic if symptoms worsen, last longer than expected, or affect breathing, hydration, or daily activity.",
-    },
-    {
-      title: "Related Body System",
-      value:
-        condition?.body_system_description ||
-        `This topic is grouped under ${bodySystemName}.`,
-    },
-  ];
 
   return (
     <div
@@ -513,12 +493,68 @@ export default function ConditionDetails() {
                     </div>
 
                     <div className="condition-support-grid">
-                      {supportCards.map((card) => (
-                        <div className="condition-support-card" key={card.title}>
-                          <span>{card.title}</span>
-                          <p>{card.value}</p>
+                      {/* ── Care Guidance ── */}
+                      <div className="condition-support-card">
+                        <div className="support-card-icon support-card-icon--care">
+                          <span>CARE</span>
                         </div>
-                      ))}
+                        <div className="support-card-body">
+                          <span className="support-card-label">Care Guidance</span>
+                          <p className="support-card-value">
+                            {condition?.advice_level
+                              ? `Advice level: ${adviceLabel}`
+                              : "Monitor symptoms and use the symptom checker."}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="support-card-open"
+                          onClick={() => setSupportPopup("care")}
+                        >
+                          Open
+                        </button>
+                      </div>
+
+                      {/* ── When to Seek Help ── */}
+                      <div className="condition-support-card">
+                        <div className="support-card-icon support-card-icon--help">
+                          <span>HELP</span>
+                        </div>
+                        <div className="support-card-body">
+                          <span className="support-card-label">When to Seek Help</span>
+                          <p className="support-card-value">
+                            {condition?.when_to_seek_help ||
+                              "Contact a clinic if symptoms worsen or last longer than expected."}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="support-card-open"
+                          onClick={() => setSupportPopup("help")}
+                        >
+                          Open
+                        </button>
+                      </div>
+
+                      {/* ── Related Body System ── */}
+                      <div className="condition-support-card">
+                        <div className="support-card-icon support-card-icon--body">
+                          <span>BODY</span>
+                        </div>
+                        <div className="support-card-body">
+                          <span className="support-card-label">Related Body System</span>
+                          <p className="support-card-value support-card-value--system">
+                            {bodySystemName}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          className="support-card-open"
+                          onClick={() => setSupportPopup("body")}
+                        >
+                          Open
+                        </button>
+                      </div>
                     </div>
 
                     <div className="symptoms-card">
@@ -591,6 +627,136 @@ export default function ConditionDetails() {
           </div>
         </main>
       </div>
+
+      {/* ── Support-card popup overlay ── */}
+      {supportPopup !== null && condition && (
+        <div
+          className="support-popup-backdrop"
+          onClick={() => setSupportPopup(null)}
+        >
+          <div
+            className="support-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              className="support-popup-close"
+              onClick={() => setSupportPopup(null)}
+              aria-label="Close"
+            >
+              ✕
+            </button>
+
+            {/* ── Care Guidance popup ── */}
+            {supportPopup === "care" && (
+              <>
+                <div className="support-popup-icon support-card-icon--care">
+                  <span>CARE</span>
+                </div>
+                <h2 className="support-popup-title">Care Guidance</h2>
+                <p className="support-popup-subtitle">
+                  {condition.condition_name}
+                </p>
+                <div className="support-popup-body">
+                  <div className="support-popup-row">
+                    <span>Advice level</span>
+                    <strong>{adviceLabel}</strong>
+                  </div>
+                  <p className="support-popup-text">
+                    {condition.advice_level === "self_care" || condition.advice_level === "self care"
+                      ? "This condition can generally be managed at home with rest, hydration, and over-the-counter remedies. Monitor your symptoms and seek help if they worsen or do not improve within a few days."
+                      : condition.advice_level === "see_doctor" || condition.advice_level === "see doctor"
+                      ? "It is recommended to consult a healthcare professional for this condition. A doctor can provide a proper diagnosis and treatment plan tailored to your needs."
+                      : condition.advice_level === "emergency"
+                      ? "This condition may require immediate medical attention. Go to the nearest emergency room or call emergency services if you or someone else is experiencing severe symptoms."
+                      : "Follow general health guidance and use the symptom checker for a more personalised assessment. Contact a clinic if you are unsure about your symptoms."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="support-popup-action"
+                  onClick={() => { setSupportPopup(null); navigate("/symptom-checker"); }}
+                >
+                  Check Symptoms
+                </button>
+              </>
+            )}
+
+            {/* ── When to Seek Help popup ── */}
+            {supportPopup === "help" && (
+              <>
+                <div className="support-popup-icon support-card-icon--help">
+                  <span>HELP</span>
+                </div>
+                <h2 className="support-popup-title">When to Seek Help</h2>
+                <p className="support-popup-subtitle">
+                  {condition.condition_name}
+                </p>
+                <div className="support-popup-body">
+                  <p className="support-popup-text">
+                    {condition.when_to_seek_help ||
+                      "Contact a clinic if symptoms worsen, last longer than expected, or begin to affect your breathing, hydration, or daily activities. Red flag symptoms such as chest pain, difficulty breathing, or sudden changes in consciousness require immediate emergency care."}
+                  </p>
+                  {redFlagSymptoms.length > 0 && (
+                    <div className="support-popup-flags">
+                      <span className="support-popup-flags-label">Red flag symptoms</span>
+                      <ul>
+                        {redFlagSymptoms.map((s) => (
+                          <li key={s.symptom_id}>{s.symptom_name}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="support-popup-action"
+                  onClick={() => { setSupportPopup(null); navigate("/find-clinic"); }}
+                >
+                  Find a Clinic
+                </button>
+              </>
+            )}
+
+            {/* ── Related Body System popup ── */}
+            {supportPopup === "body" && (
+              <>
+                <div className="support-popup-icon support-card-icon--body">
+                  <span>BODY</span>
+                </div>
+                <h2 className="support-popup-title">Related Body System</h2>
+                <p className="support-popup-subtitle">
+                  {condition.condition_name}
+                </p>
+                <div className="support-popup-body">
+                  <div className="support-popup-system-hero">
+                    <span className="support-popup-system-icon">
+                      {condition.body_system_icon || "🫀"}
+                    </span>
+                    <strong>{bodySystemName}</strong>
+                  </div>
+                  <p className="support-popup-text">
+                    {condition.body_system_description ||
+                      `${condition.condition_name} is grouped under the ${bodySystemName} body system. Explore related conditions and learn more about how this system affects your overall health.`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="support-popup-action"
+                  onClick={() => {
+                    setSupportPopup(null);
+                    condition.body_system_slug &&
+                      navigate(`/health/body-system/${condition.body_system_slug}`);
+                  }}
+                >
+                  View Body System
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

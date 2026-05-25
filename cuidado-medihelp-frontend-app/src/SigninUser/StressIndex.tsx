@@ -30,23 +30,71 @@ const dassOptions = [
   "Applied to me very much",
 ];
 
-const quickCards: { id: string; Icon: LucideIcon; title: string }[] = [
+type QuickCardId = "learn" | "tips" | "manage";
+
+type QuickCard = {
+  id: QuickCardId;
+  Icon: LucideIcon;
+  title: string;
+  shortText: string;
+};
+
+const quickCards: QuickCard[] = [
   {
     id: "learn",
     Icon: BookOpen,
     title: "Learn about stress",
+    shortText: "Understand what your score means.",
   },
   {
     id: "tips",
     Icon: Lightbulb,
     title: "See some tips",
+    shortText: "Small actions for today.",
   },
   {
     id: "manage",
     Icon: CalendarDays,
     title: "Manage your stress",
+    shortText: "Build a simple plan.",
   },
 ];
+
+const quickDetails: Record<
+  QuickCardId,
+  { title: string; body: string; items: string[] }
+> = {
+  learn: {
+    title: "About the DASS-21 stress score",
+    body:
+      "This tool estimates recent stress symptoms from seven DASS-21 stress items. It can help you notice patterns, but it is not a diagnosis.",
+    items: [
+      "Normal or mild scores can still feel uncomfortable.",
+      "Moderate or higher scores are worth tracking closely.",
+      "Persistent or worsening stress should be discussed with a professional.",
+    ],
+  },
+  tips: {
+    title: "Quick reset ideas",
+    body:
+      "Use one short, practical action first. The goal is to lower pressure enough to think clearly.",
+    items: [
+      "Take five slow breaths and relax your shoulders.",
+      "Step away from the screen for two minutes.",
+      "Drink water, eat if needed, and write down the next smallest task.",
+    ],
+  },
+  manage: {
+    title: "Simple stress plan",
+    body:
+      "A useful plan is small and repeatable. Pick one habit for the next few days, then review if it helped.",
+    items: [
+      "Schedule sleep and meals before adding extra tasks.",
+      "Break stressful work into 15-minute blocks.",
+      "Ask for support if stress affects sleep, mood, appetite, or safety.",
+    ],
+  },
+};
 
 const scoreMap: Record<string, number> = {
   "Did not apply to me at all": 0,
@@ -59,6 +107,7 @@ export default function StressIndex() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
+  const [activeQuickCard, setActiveQuickCard] = useState<QuickCardId>("learn");
 
   const [answers, setAnswers] = useState<Record<number, string>>({
     1: "Did not apply to me at all",
@@ -71,6 +120,7 @@ export default function StressIndex() {
   });
 
   const [showResultPopup, setShowResultPopup] = useState(false);
+  const activeQuickDetail = quickDetails[activeQuickCard];
 
   const handleAnswerChange = (questionId: number, option: string) => {
     setAnswers((prev) => ({
@@ -204,21 +254,44 @@ export default function StressIndex() {
 
             <div className="stress-right">
               <div className="stress-side-card">
-                <p>
-                  This self-check helps estimate your current stress level using a
-                  standard questionnaire.
-                </p>
+                <div className="stress-side-head">
+                  <span>Live Summary</span>
+                  <strong>{stressResult.level}</strong>
+                  <small>Score {stressResult.score}</small>
+                </div>
 
                 <div className="stress-quick-grid">
                   {quickCards.map((card) => (
-                    <button key={card.id} className="stress-quick-card" type="button">
+                    <button
+                      key={card.id}
+                      className={`stress-quick-card ${
+                        activeQuickCard === card.id ? "active" : ""
+                      }`}
+                      type="button"
+                      aria-pressed={activeQuickCard === card.id}
+                      onClick={() => setActiveQuickCard(card.id)}
+                    >
                       <div className="stress-quick-icon">
                         <card.Icon size={22} strokeWidth={2.2} />
                       </div>
-                      <span>{card.title}</span>
+                      <span className="stress-quick-copy">
+                        <span>{card.title}</span>
+                        <small>{card.shortText}</small>
+                      </span>
                     </button>
                   ))}
                 </div>
+
+                <div className="stress-detail-card">
+                  <h2>{activeQuickDetail.title}</h2>
+                  <p>{activeQuickDetail.body}</p>
+                  <ul>
+                    {activeQuickDetail.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
               </div>
             </div>
           </section>

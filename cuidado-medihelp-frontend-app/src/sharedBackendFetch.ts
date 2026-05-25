@@ -105,18 +105,52 @@ export const apiUrl = (path: string) => {
 const originalFetch = window.fetch.bind(window);
 
 window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+  const configuredBackendUrl = getConfiguredBackendUrl();
+
+  // Normalise localhost → configured URL
+  let normalizedInput: RequestInfo | URL = input;
   if (typeof input === "string" && input.startsWith(DEFAULT_BACKEND_URL)) {
-    const configuredBackendUrl = getConfiguredBackendUrl();
-    return originalFetch(input.replace(DEFAULT_BACKEND_URL, configuredBackendUrl), init);
+    normalizedInput = input.replace(DEFAULT_BACKEND_URL, configuredBackendUrl);
+  } else if (input instanceof URL && input.href.startsWith(DEFAULT_BACKEND_URL)) {
+    normalizedInput = new URL(input.href.replace(DEFAULT_BACKEND_URL, configuredBackendUrl));
   }
 
-  if (input instanceof URL && input.href.startsWith(DEFAULT_BACKEND_URL)) {
-    const configuredBackendUrl = getConfiguredBackendUrl();
-    return originalFetch(
-      new URL(input.href.replace(DEFAULT_BACKEND_URL, configuredBackendUrl)),
-      init
-    );
+  // Check if this is a backend call so we can attach auth headers
+  const rawUrl =
+    normalizedInput instanceof URL
+      ? normalizedInput.href
+      : typeof normalizedInput === "string"
+      ? normalizedInput
+      : "";
+
+  const isBackendCall = rawUrl.startsWith(configuredBackendUrl);
+
+  if (isBackendCall) {
+    try {
+      const token =
+        typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
+
+      if (token) {
+        const existing = init?.headers;
+        const headers =
+          existing instanceof Headers
+            ? new Headers(existing)
+            : new Headers(existing as Record<string, string> | undefined);
+
+        if (!headers.has("Authorization")) {
+          headers.set("Authorization", `Bearer ${token}`);
+        }
+
+        if (!(init?.body instanceof FormData) && !headers.has("Content-Type")) {
+          headers.set("Content-Type", "application/json");
+        }
+
+        init = { ...init, headers };
+      }
+    } catch {
+      // localStorage unavailable — carry on
+    }
   }
 
-  return originalFetch(input, init);
+  return originalFetch(normalizedInput, init);
 };

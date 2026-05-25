@@ -81,6 +81,7 @@ body,
   display: flex;
   flex-direction: column;
   gap: 18px;
+  min-width: 0;
 }
 
 .health-content-card {
@@ -107,6 +108,24 @@ body,
 
 .sidebar-box {
   padding: 18px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.body-system-box {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+.body-system-box .system-list {
+  flex: 1;
+  min-height: 300px;
+}
+
+.sidebar-empty-state {
+  min-height: 180px;
+  font-size: 14px;
 }
 
 .sidebar-header-box {
@@ -123,9 +142,13 @@ body,
 
 .category-section-box {
   padding-bottom: 24px;
-  min-height: 530px;
+  min-height: 0;
+  max-height: 560px;
   background: #ffffff;
   border: 1px solid #e3e6ea;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .section-title,
@@ -205,6 +228,25 @@ body,
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
+}
+
+.system-list {
+  max-height: min(620px, calc(100vh - 260px));
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #b7d5d2 transparent;
+}
+
+.system-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.system-list::-webkit-scrollbar-thumb {
+  background: #b7d5d2;
+  border-radius: 999px;
 }
 
 .system-item,
@@ -416,10 +458,51 @@ body,
 }
 
 .recent-title {
-  margin: 0 0 18px;
+  margin: 0;
   font-size: 18px;
   color: #263745;
   font-weight: 700;
+}
+
+.health-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.topic-list-bound {
+  min-height: 260px;
+  max-height: 440px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 6px 4px 0;
+  border-top: 1px solid #edf1f3;
+}
+
+.topic-list-bound::-webkit-scrollbar {
+  width: 8px;
+}
+
+.topic-list-bound::-webkit-scrollbar-thumb {
+  background: #c9dcda;
+  border-radius: 999px;
+}
+
+.health-topic-state {
+  min-height: 240px;
+  margin: 0;
+  border: 1px dashed #d5e3e4;
+  border-radius: 18px;
+  background: #f8fbfb;
+  color: #263745;
+  font-size: 16px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  text-align: center;
 }
 
 .topic-grid {
@@ -635,31 +718,146 @@ body,
     display: none !important;
   }
 
-  .browse-health-page .health-mobile-layout {
-    display: flex !important;
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
-    max-width: 100%;
-  }
+  /* Use compound class (.browse-health-page.browse-health-index-page = specificity 0,2,0)
+     to beat responsive.css rules that have specificity 0,1,0 on .browse-health-page alone.
+     responsive.css is loaded AFTER BrowseHealth.css so we need higher specificity to win. */
 
-  .browse-health-page {
+  .browse-health-page.browse-health-index-page {
+    display: block !important;
+    overflow: visible !important;
     background: #f7fafb !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
-  .browse-health-page .browse-page-content,
-  .browse-health-page.sidebar-expanded .browse-page-content {
+  /* Use specificity 0,3,0 to beat responsive.css's 0,2,0 on .browse-health-page .browse-page-content */
+  .browse-health-page.browse-health-index-page .browse-page-content,
+  .browse-health-page.browse-health-index-page.sidebar-expanded .browse-page-content {
+    display: block !important;
     margin-left: 0 !important;
-    width: 100vw !important;
-    max-width: 100vw !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    height: auto !important;
+    transition: none !important;
   }
 
-  .browse-health-page .browse-health-main {
-    width: 100vw !important;
-    min-height: calc(100vh - var(--mobile-header-height));
-    padding: calc(var(--mobile-header-height) + 9px) 18px calc(var(--mobile-bottom-nav-height) + 22px) !important;
+  /* specificity 0,3,0 > responsive.css 0,2,0 for .browse-health-page .browse-health-main */
+  .browse-health-page.browse-health-index-page .browse-health-main {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    padding: calc(var(--mobile-header-height, 120px) + 12px) 16px calc(var(--mobile-bottom-nav-height, 58px) + 24px) !important;
     background: #f7fafb !important;
-    overflow-x: hidden;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+
+  /* specificity 0,3,0 > responsive.css 0,2,0 for .browse-health-page .health-mobile-layout
+     Removes the fixed height + overflow:hidden that clips the body system list */
+  .browse-health-page.browse-health-index-page .health-mobile-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Override responsive.css's mobile-browse-topics fixed height */
+  .browse-health-page.browse-health-index-page .mobile-browse-topics {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 9px !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Override responsive.css's mobile-system-list height:100% + flex.
+     Fixed max-height so the list is compact and scrollable, not page-length tall. */
+  .browse-health-page.browse-health-index-page .mobile-system-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: clamp(260px, calc(100dvh - 520px), 420px) !important;
+    min-height: 120px !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    flex: none !important;
+    padding-right: 2px !important;
+  }
+
+  /* Override responsive.css's flex:1 1 0 + min-height:0 that compresses each item */
+  .browse-health-page.browse-health-index-page .mobile-system-item {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+    flex: none !important;
+    min-height: auto !important;
+    grid-template-columns: none !important;
+  }
+
+  /* Collapse user-layout to zero footprint.
+     IMPORTANT: do NOT set position:fixed here – that would create a stacking
+     context and trap the header's z-index:12400 inside it (so content would
+     paint over the header). Leave it as position:static so fixed children
+     (.user-mobile-header, bottom-nav) keep their z-index in the root context. */
+  .browse-health-page > .user-layout {
+    width: 0 !important;
+    height: 0 !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* On the index page the sidebar is hidden, so the header can safely sit at
+     99999 to stay above all page content.
+     On other pages (ConditionDetails, BodySystemDetails …) keep the header at
+     its natural z-index (12400) so the sidebar (13000) can slide over it. */
+  .browse-health-page.browse-health-index-page .user-layout .user-mobile-header {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100vw !important;
+    z-index: 99999 !important;
+  }
+
+  /* Suppress sidebar on the browse INDEX page only (not ConditionDetails etc.)
+     The index page has no visible sidebar – it uses a custom mobile layout.
+     Other browse-health-page pages (condition, body-system) need a working sidebar. */
+  .browse-health-page.browse-health-index-page .user-layout .sidebar,
+  .browse-health-page.browse-health-index-page .user-layout .sidebar.collapsed,
+  .browse-health-page.browse-health-index-page .user-layout .sidebar.expanded {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    transform: translate3d(-110%, 0, 0) !important;
   }
 
   .browse-health-page .mobile-health-head h1 {
@@ -924,51 +1122,25 @@ body,
     font-size: 11px;
   }
 
-  .browse-health-page .mobile-system-list {
-    overflow: hidden;
-    border: 1px solid #e6ecef;
-    border-radius: 10px;
-    background: #ffffff;
-    box-shadow: 0 8px 18px rgba(30, 48, 67, 0.05);
+  .browse-health-page .health-mobile-layout .mobile-system-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
   }
 
-  .browse-health-page .mobile-system-item {
+  .browse-health-page .health-mobile-layout .mobile-system-item {
+    -webkit-appearance: none;
+    appearance: none;
     width: 100%;
-    min-height: 42px;
-    padding: 8px 12px;
+    padding: 0;
     border: none;
-    border-bottom: 1px solid #eef2f4;
-    background: #ffffff;
-    display: grid;
-    grid-template-columns: 24px minmax(0, 1fr) 14px;
-    align-items: center;
-    gap: 10px;
+    background: transparent;
+    box-shadow: none;
+    display: block;
     text-align: left;
     cursor: pointer;
-  }
-
-  .browse-health-page .mobile-system-item:last-child {
-    border-bottom: none;
-  }
-
-  .browse-health-page .mobile-system-item span {
-    font-size: 20px;
-    line-height: 1;
-    text-align: center;
-  }
-
-  .browse-health-page .mobile-system-item strong {
-    font-size: 11px;
-    line-height: 1.1;
-    font-weight: 800;
-    color: #26364a;
-  }
-
-  .browse-health-page .mobile-system-item b {
-    color: #81909b;
-    font-size: 18px;
-    line-height: 1;
-    text-align: right;
+    box-sizing: border-box;
   }
 
   .browse-health-page .mobile-health-state {
@@ -979,12 +1151,7 @@ body,
   }
 
   .browse-health-page .mobile-health-note {
-    margin: 0 auto;
-    max-width: 230px;
-    color: #8a98a4;
-    font-size: 8px;
-    line-height: 1.25;
-    text-align: center;
+    display: none;
   }
 
   .browse-health-page .mobile-common-section {
@@ -1423,8 +1590,137 @@ body,
   .browse-health-page .health-mobile-layout {
     display: flex !important;
   }
+}
 
-  .browse-health-page .browse-health-main {
-    padding: calc(var(--mobile-header-height) + 9px) 18px calc(var(--mobile-bottom-nav-height) + 22px) !important;
+@media (min-width: 761px) {
+  .browse-health-page.browse-health-index-page {
+    min-height: 100vh;
+    height: auto !important;
+    align-items: flex-start;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    background: #eef2f1 !important;
+  }
+
+  .browse-health-page.browse-health-index-page .browse-page-content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    height: auto !important;
+    margin-left: 64px;
+    width: calc(100% - 64px);
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .browse-health-page.browse-health-index-page.sidebar-expanded .browse-page-content {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+  }
+
+  .browse-health-page.browse-health-index-page .browse-health-main {
+    width: 100%;
+    min-height: 100vh;
+    height: auto !important;
+    padding: 100px 22px 32px !important;
+    display: block;
+    background: #f1f2f4 !important;
+    overflow: visible !important;
+  }
+
+  .browse-health-page.browse-health-index-page .health-browser-layout {
+    display: grid !important;
+    grid-template-columns: minmax(320px, 360px) minmax(0, 1fr) !important;
+    gap: 22px;
+    width: 100%;
+    max-width: 1440px;
+    height: auto !important;
+    min-height: 0;
+    margin: 0 auto;
+    align-items: start !important;
+  }
+
+  .browse-health-page.browse-health-index-page .health-sidebar-card {
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 132px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 8px 28px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #b7d5d2 transparent;
+  }
+
+  .browse-health-page.browse-health-index-page .health-content-card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-bottom: 0 !important;
+  }
+
+  .browse-health-page.browse-health-index-page .body-system-box {
+    min-height: clamp(330px, calc(100vh - 310px), 470px);
+    overflow: hidden !important;
+  }
+
+  .browse-health-page.browse-health-index-page .body-system-box .system-list {
+    flex: 1;
+    min-height: 260px;
+    max-height: none;
+  }
+
+  .browse-health-page.browse-health-index-page .quick-actions-box .quick-action-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .browse-health-page.browse-health-index-page .quick-actions-box .quick-action-btn {
+    min-height: 54px;
+    padding: 13px 15px;
+  }
+
+  .browse-health-page.browse-health-index-page .category-section-box {
+    height: min(690px, calc(100vh - 248px));
+    min-height: 520px;
+    max-height: 690px;
+    overflow: hidden !important;
+  }
+
+  .browse-health-page.browse-health-index-page .topic-list-bound {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 4px 8px 16px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #b7d5d2 transparent;
+  }
+
+  .browse-health-page.browse-health-index-page .voice-search-card {
+    position: static !important;
+    width: 100% !important;
+    margin: 0;
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+    align-items: center;
+    gap: 18px;
+  }
+
+  .browse-health-page.browse-health-index-page .health-note {
+    position: static !important;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    margin: 0;
+    padding: 14px 16px;
+    border-top: 1px solid #d9e6e6;
+    text-align: center;
+    background: transparent;
   }
 }

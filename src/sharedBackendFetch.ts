@@ -57,8 +57,11 @@ const shouldUseAndroidEmulatorBackend = (envBackendUrl: string) => {
     return false;
   }
 
-  if (isAndroidNativeRuntime()) {
-    return true;
+  // Physical device with ADB reverse (adb reverse tcp:5000 tcp:5000) can reach
+  // localhost:5000 directly — only use the emulator address (10.0.2.2) when
+  // running inside the Android emulator without a native Capacitor runtime.
+  if (isNativeMobileRuntime()) {
+    return false;
   }
 
   return (

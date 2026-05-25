@@ -40,6 +40,8 @@ type Clinic = {
   today_closing_time?: string | null;
   weekly_schedule?: WeeklyScheduleDay[];
   blocked_dates?: BlockedDate[];
+  average_rating?: number | string | null;
+  rating_count?: number | string | null;
 };
 
 type ClinicService = {
@@ -295,6 +297,28 @@ function getClinicDistanceLabel(clinic: Clinic): string {
   return Number.isFinite(distance) ? `${distance.toFixed(1)} km away` : "Nearby";
 }
 
+function getClinicInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function isClinicOpenNow(clinic: Clinic): boolean {
+  const now = new Date();
+  const closure = getClosureMessageForDate(clinic, now);
+  if (closure) return false;
+  const { openTime, closeTime } = getScheduleHoursForDate(clinic, now);
+  const openParts = parseClockTime(openTime);
+  const closeParts = parseClockTime(closeTime);
+  if (!openParts || !closeParts) return false;
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return nowMinutes >= openParts[0] * 60 + openParts[1] &&
+    nowMinutes < closeParts[0] * 60 + closeParts[1];
+}
+
 function splitServices(value?: string | null): string[] {
   return String(value || "")
     .split(",")
@@ -534,7 +558,7 @@ const bmiCheckupAdvice = useMemo(() => {
     try {
       setClinicProfileLoading(true);
 
-      const res = await fetch(apiUrl(`/api/clinic/profile?clinic_id=${clinic.id}`));
+      const res = await fetch(apiUrl(`/api/clinics/${clinic.id}`));
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
@@ -841,34 +865,65 @@ const bmiCheckupAdvice = useMemo(() => {
                   <p>No clinics found.</p>
                 ) : (
                   <div className="clinic-list">
-                    {displayedClinics.map((clinic) => (
-                      <div key={clinic.id} className="clinic-item">
-                        <div className="clinic-left">
-                          <div className="clinic-avatar">👨‍⚕️</div>
+                    {displayedClinics.map((clinic) => {
+                      const initials = getClinicInitials(clinic.clinic_name);
+                      const isOpen = isClinicOpenNow(clinic);
+                      const rating = Number(clinic.average_rating);
+                      const ratingCount = Number(clinic.rating_count ?? 0);
+                      const hasRating = Number.isFinite(rating) && rating > 0;
 
-                          <div className="clinic-info">
-                            <h4>{clinic.clinic_name}</h4>
-                            <p className="clinic-summary">{getClinicSummary(clinic)}</p>
-                            <p className="clinic-address">{clinic.address || "Address unavailable"}</p>
+                      return (
+                        <div key={clinic.id} className="clinic-item">
+                          <div className="clinic-left">
+                            <div className="clinic-avatar clinic-avatar--initials">
+                              {initials}
+                            </div>
 
-                            <div className="clinic-meta">
-                              <span>📞 {clinic.phone || "No phone available"}</span>
+                            <div className="clinic-info">
+                              <h4>{clinic.clinic_name}</h4>
+                              <p className="clinic-summary">{getClinicSummary(clinic)}</p>
+                              <p className="clinic-address">
+                                {clinic.address || "Address unavailable"}
+                              </p>
+
+                              <div className="clinic-meta">
+                                <span className="clinic-rating-row">
+                                  <span className="clinic-star">★</span>
+                                  {hasRating ? (
+                                    <>
+                                      <span className="clinic-rating-val">{rating.toFixed(1)}</span>
+                                      <span className="clinic-rating-count">
+                                        {ratingCount} {ratingCount === 1 ? "rating" : "ratings"}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span className="clinic-no-rating">No rating</span>
+                                  )}
+                                </span>
+                                <span className="clinic-phone-row">
+                                  <span className="clinic-phone-icon">📞</span>
+                                  {clinic.phone || "No phone"}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="clinic-right">
-                          <span className="clinic-distance">{getClinicDistanceLabel(clinic)}</span>
-                          <button
-                            type="button"
-                            className="near-btn"
-                            onClick={() => openClinicProfile(clinic)}
-                          >
-                            View Clinic
-                          </button>
+                          <div className="clinic-right">
+                            <span className="clinic-distance">{getClinicDistanceLabel(clinic)}</span>
+                            <span className={`clinic-status-badge ${isOpen ? "open" : "closed"}`}>
+                              {isOpen ? "Open" : "Closed"}
+                            </span>
+                            <button
+                              type="button"
+                              className="near-btn"
+                              onClick={() => openClinicProfile(clinic)}
+                            >
+                              View Clinic
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

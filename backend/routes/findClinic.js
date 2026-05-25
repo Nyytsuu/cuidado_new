@@ -234,4 +234,146 @@ router.get("/", async (req, res) => {
   }
 });
 
+/* =================================================
+   PUBLIC CLINIC DETAIL
+   Final route: GET /api/clinics/:id
+   Accessible by all authenticated users (no role restriction).
+================================================= */
+
+router.get("/:id", async (req, res) => {
+  try {
+    const clinicId = Number(req.params.id);
+
+    if (!clinicId) {
+      return res.status(400).json({ message: "clinic_id is required." });
+    }
+
+    await ensureScheduleTables();
+
+    const [[clinic]] = await pool.query(
+      `
+      SELECT
+        c.id,
+        c.clinic_name,
+        c.email,
+        c.phone,
+        c.address,
+        c.specialization,
+        c.services_offered,
+        c.years_operation,
+        to_char(c.opening_time, 'HH24:MI') AS opening_time,
+        to_char(c.closing_time, 'HH24:MI') AS closing_time,
+        c.operating_days,
+        c.status,
+        c.account_status,
+        c.latitude,
+        c.longitude,
+        p.province_name,
+        m.name AS municipality_name,
+        b.name AS barangay_name
+      FROM clinics c
+      LEFT JOIN provinces p ON p.id = c.province_id
+      LEFT JOIN municipalities m ON m.id = c.municipality_id
+      LEFT JOIN barangays b ON b.id = c.barangay_id
+      WHERE c.id = ? AND c.status = 'approved'
+      LIMIT 1
+      `,
+      [clinicId]
+    );
+
+    if (!clinic) {
+      return res.status(404).json({ message: "Clinic not found." });
+    }
+
+    const [weeklySchedule] = await pool.query(
+      `
+      SELECT
+        clinic_id,
+        day_of_week,
+        is_working,
+        to_char(opening_time, 'HH24:MI') AS opening_time,
+        to_char(closing_time, 'HH24:MI') AS closing_time
+      FROM clinic_weekly_schedules
+      WHERE clinic_id = ?
+      ORDER BY CASE day_of_week
+        WHEN 'Monday' THEN 1
+        WHEN 'Tuesday' THEN 2
+        WHEN 'Wednesday' THEN 3
+        WHEN 'Thursday' THEN 4
+        WHEN 'Friday' THEN 5
+        WHEN 'Saturday' THEN 6
+        WHEN 'Sunday' THEN 7
+        ELSE 8
+      END
+      `,
+      [clinicId]
+    );
+
+    const [blockedDates] = await pool.query(
+      `
+      SELECT
+        id,
+        clinic_id,
+        to_char(blocked_date, 'YYYY-MM-DD') AS date,
+        reason
+      FROM clinic_blocked_dates
+      WHERE clinic_id = ? AND blocked_date >= CURRENT_DATE
+      ORDER BY blocked_date ASC
+      `,
+      [clinicId]
+    );
+
+    const [services] = await pool.query(
+      `
+      SELECT
+        id,
+        name,
+        description,
+        price,
+        duration_minutes,
+        is_active
+      FROM clinic_services
+      WHERE clinic_id = ?
+      ORDER BY name ASC
+      `,
+      [clinicId]
+    );
+
+    await ensureClinicFeedbackTable();
+
+    const [[ratingSummary]] = await pool.query(
+      `
+      SELECT
+        ROUND(AVG(rating), 1) AS average_rating,
+        COUNT(*) AS rating_count
+      FROM clinic_feedback
+      WHERE clinic_id = ?
+      `,
+      [clinicId]
+    );
+
+    const locationParts = [
+      clinic.address,
+      clinic.barangay_name,
+      clinic.municipality_name,
+      clinic.province_name,
+    ].filter(Boolean);
+
+    return res.json({
+      ...clinic,
+      average_rating: ratingSummary?.average_rating
+        ? Number(ratingSummary.average_rating)
+        : null,
+      rating_count: ratingSummary ? Number(ratingSummary.rating_count || 0) : 0,
+      location_text: locationParts.join(", "),
+      services,
+      weekly_schedule: weeklySchedule,
+      blocked_dates: blockedDates,
+    });
+  } catch (err) {
+    console.error("Load clinic details error:", err);
+    return res.status(500).json({ message: "Failed to load clinic details." });
+  }
+});
+
 module.exports = router;

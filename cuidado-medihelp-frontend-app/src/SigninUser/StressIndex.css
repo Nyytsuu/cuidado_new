@@ -225,60 +225,150 @@ body {
 }
 
 .stress-side-card {
-  padding: 26px 20px;
-  min-height: 248px;
+  padding: 18px;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-}
-
-.stress-side-card p {
-  margin: 0 0 18px;
-  text-align: center;
-  font-size: 17px;
-  line-height: 1.5;
-  color: #516672;
-  font-weight: 700;
+  gap: 14px;
+  justify-content: flex-start;
 }
 
 .stress-quick-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  grid-template-columns: 1fr;
+  gap: 10px;
 }
 
 .stress-quick-card {
   border: 1px solid #d9e2e8;
-  border-radius: 16px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.78);
-  min-height: 150px;   /* dati 110px */
-  min-width: 160px;    /* dagdag lapad */
-  padding: 20px 14px;  /* mas malaking loob */
+  min-height: 76px;
+  min-width: 0;
+  padding: 12px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 14px;
+  justify-content: flex-start;
+  gap: 12px;
   cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.stress-quick-card:hover,
+.stress-quick-card.active {
+  border-color: #58aea8;
+  box-shadow: 0 10px 22px rgba(16, 42, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.stress-quick-card.active {
+  background: #effafa;
 }
 
 .stress-quick-icon {
-  width: 60px;   /* dati 48px */
-  height: 60px;  /* dati 48px */
-  border-radius: 16px;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
   background: #d9f0f4;
+  color: #0b8a84;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 30px; /* mas malaking icon */
+  flex: 0 0 auto;
 }
 
-.stress-quick-card span {
-  text-align: center;
-  font-size: 16px;
-  line-height: 1.35;
+.stress-quick-copy {
+  min-width: 0;
+  display: block;
+}
+
+.stress-quick-copy span {
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.25;
   color: #536772;
   font-weight: 700;
+}
+
+.stress-quick-copy small {
+  display: block;
+  margin-top: 3px;
+  color: #6a7d7d;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stress-side-head {
+  padding: 14px;
+  border: 1px solid #cce9e6;
+  border-radius: 8px;
+  background: #effafa;
+}
+
+.stress-side-head span,
+.stress-side-head small {
+  display: block;
+  color: #5f7373;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.stress-side-head strong {
+  display: block;
+  margin: 6px 0 3px;
+  color: #0b6f69;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.stress-detail-card {
+  padding: 14px;
+  border: 1px solid #d9e2e8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.stress-detail-card h2 {
+  margin: 0 0 8px;
+  color: #102a2a;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.stress-detail-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #526672;
+  font-weight: 600;
+}
+
+.stress-detail-card ul {
+  margin: 12px 0 0;
+  padding-left: 18px;
+  color: #526672;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.stress-detail-card li + li {
+  margin-top: 7px;
+}
+
+.stress-side-result-btn {
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #46a8bb 0%, #348aa0 100%);
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 .stress-footer {
@@ -640,15 +730,22 @@ body {
   .stress-side-card {
     min-height: 0;
     padding: 2px 0 0;
+    gap: 8px;
   }
 
-  .stress-side-card p {
-    max-width: 265px;
-    margin: 0 auto 8px;
-    font-size: 10px;
-    line-height: 1.2;
-    color: #526671;
-    font-weight: 800;
+  .stress-side-head {
+    padding: 9px 12px;
+    border-radius: 8px;
+  }
+
+  .stress-side-head span,
+  .stress-side-head small {
+    font-size: 9px;
+  }
+
+  .stress-side-head strong {
+    font-size: 16px;
+    margin: 3px 0 2px;
   }
 
   .stress-quick-grid {
@@ -662,7 +759,16 @@ body {
     padding: 0;
     border: none;
     background: transparent;
+    flex-direction: column;
     gap: 5px;
+    box-shadow: none;
+    text-align: center;
+    transform: none !important;
+  }
+
+  .stress-quick-card.active {
+    background: transparent;
+    border-color: transparent;
     box-shadow: none;
   }
 
@@ -675,11 +781,49 @@ body {
     font-size: 0;
   }
 
-  .stress-quick-card span {
+  .stress-quick-copy {
+    text-align: center;
+  }
+
+  .stress-quick-copy span {
     font-size: 8px;
     line-height: 1.1;
     color: #455762;
     font-weight: 800;
+  }
+
+  .stress-quick-copy small {
+    display: none;
+  }
+
+  .stress-detail-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-color: #dfeaec;
+  }
+
+  .stress-detail-card h2 {
+    font-size: 12px;
+    margin-bottom: 5px;
+  }
+
+  .stress-detail-card p {
+    font-size: 10px;
+    line-height: 1.3;
+  }
+
+  .stress-detail-card ul {
+    font-size: 10px;
+    margin-top: 7px;
+    padding-left: 14px;
+  }
+
+  .stress-side-result-btn {
+    min-height: 31px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 900;
   }
 
   .stress-footer {
@@ -772,19 +916,31 @@ body {
     font-size: 12.5px;
   }
 
-  .stress-side-card p {
-    max-width: 300px;
-    font-size: 11.2px;
-    line-height: 1.3;
-  }
-
   .stress-quick-icon {
     width: 48px;
     height: 34px;
   }
 
-  .stress-quick-card span {
+  .stress-quick-copy span {
     font-size: 9.5px;
     line-height: 1.15;
+  }
+
+  .stress-side-head strong {
+    font-size: 18px;
+  }
+
+  .stress-detail-card h2 {
+    font-size: 13px;
+  }
+
+  .stress-detail-card p,
+  .stress-detail-card ul {
+    font-size: 11px;
+  }
+
+  .stress-side-result-btn {
+    min-height: 36px;
+    font-size: 11.5px;
   }
 }
