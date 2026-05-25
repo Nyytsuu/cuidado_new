@@ -827,7 +827,7 @@ router.patch("/clinics/:id", (req, res) => {
    PATCH /api/clinic/notifications/mark-all-read
 ================================================= */
 
-router.get("/clinic/notifications", async (req, res) => {
+router.get(["/notifications", "/clinic/notifications"], async (req, res) => {
   try {
     const clinicId = Number(req.query.clinic_id);
 
@@ -873,7 +873,7 @@ TO_CHAR(updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at
   }
 });
 
-router.patch("/clinic/notifications/mark-all-read", async (req, res) => {
+router.patch(["/notifications/mark-all-read", "/clinic/notifications/mark-all-read"], async (req, res) => {
   try {
     const clinicId = Number(req.body.clinic_id || req.query.clinic_id);
 
@@ -899,7 +899,7 @@ router.patch("/clinic/notifications/mark-all-read", async (req, res) => {
   }
 });
 
-router.patch("/clinic/notifications/:id/read", async (req, res) => {
+router.patch(["/notifications/:id/read", "/clinic/notifications/:id/read"], async (req, res) => {
   try {
     const clinicId = Number(req.body.clinic_id || req.query.clinic_id);
     const notificationId = Number(req.params.id);
@@ -1086,7 +1086,7 @@ END
   }
 });
 
-router.put("/clinic/profile", async (req, res) => {
+router.put(["/profile", "/clinic/profile"], async (req, res) => {
   try {
     const clinicId = Number(req.body.clinic_id);
     const normalizedClinicName = cleanText(req.body.clinic_name);
@@ -1229,7 +1229,7 @@ router.put("/clinic/profile", async (req, res) => {
 });
 
 router.put(
-  "/clinic/profile-picture",
+  ["/profile-picture", "/clinic/profile-picture"],
   uploadProfilePicture,
   async (req, res) => {
     try {
@@ -1290,7 +1290,7 @@ router.put(
   }
 );
 
-router.put("/clinic/password", async (req, res) => {
+router.put(["/password", "/clinic/password"], async (req, res) => {
   try {
     const clinicId = Number(req.body.clinic_id);
     const currentPassword = String(req.body.current_password || "");
@@ -1679,7 +1679,7 @@ router.get(["/schedule", "/clinic/schedule"], async (req, res) => {
   }
 });;
 
-router.put("/clinic/schedule", async (req, res) => {
+router.put(["/schedule", "/clinic/schedule"], async (req, res) => {
   const connection = await pool.getConnection();
 
   try {
@@ -1768,7 +1768,7 @@ router.put("/clinic/schedule", async (req, res) => {
   }
 });
 
-router.post("/clinic/schedule/blocked-dates", async (req, res) => {
+router.post(["/schedule/blocked-dates", "/clinic/schedule/blocked-dates"], async (req, res) => {
   try {
     const clinicId = Number(req.body.clinic_id);
     const date = String(req.body.date || "").trim();
@@ -1821,7 +1821,7 @@ router.post("/clinic/schedule/blocked-dates", async (req, res) => {
   }
 });
 
-router.delete("/clinic/schedule/blocked-dates/:id", async (req, res) => {
+router.delete(["/schedule/blocked-dates/:id", "/clinic/schedule/blocked-dates/:id"], async (req, res) => {
   try {
     const clinicId = Number(req.query.clinic_id);
     const blockedDateId = Number(req.params.id);
