@@ -89,11 +89,17 @@ const handleLogin = (req, res) => {
     return res.status(400).json({ message: "Email and password are required." });
   }
 
+  // Tables that have a status column and support reactivation
+  const STATUS_TABLES = new Set(["users", "clinics"]);
+
   const tryLogin = (table, role, nameCol) =>
     new Promise((resolve, reject) => {
       const normalizedEmail = String(email || "").trim().toLowerCase();
+      const hasStatus = STATUS_TABLES.has(table);
+      const statusCol = hasStatus ? ", status" : "";
+
       db.query(
-        `SELECT id, ${nameCol} AS name, email, password_hash, status
+        `SELECT id, ${nameCol} AS name, email, password_hash${statusCol}
          FROM ${table}
          WHERE LOWER(email) = ?
          LIMIT 1`,
@@ -106,12 +112,12 @@ const handleLogin = (req, res) => {
           const ok = await bcrypt.compare(String(password || "").trim(), acc.password_hash);
           if (!ok) return resolve("bad_password");
 
-          // Reactivate disabled accounts on login (Facebook-style)
-          if (acc.status === "disabled") {
+          // Reactivate disabled accounts on login (Facebook-style) — users & clinics only
+          if (hasStatus && acc.status === "disabled") {
             await dbQuery(`UPDATE ${table} SET status = 'active' WHERE id = ?`, [acc.id]);
           }
 
-          resolve({ id: acc.id, email: acc.email, name: acc.name, role, status: "active" });
+          resolve({ id: acc.id, email: acc.email, name: acc.name, role, status: hasStatus ? "active" : undefined });
         }
       );
     });
