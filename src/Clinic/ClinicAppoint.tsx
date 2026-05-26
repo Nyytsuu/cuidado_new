@@ -770,7 +770,7 @@ export default function ClinicAppoint() {
               </div>
             </div>
             <div className="admin-grid">
-              <section className="admin-card admin-table-card">
+              <div className="table-col">
                 <div className="appoint-toolbar">
                   {!showArchived && (
                     <div className="appoint-filter-pills">
@@ -808,7 +808,8 @@ export default function ClinicAppoint() {
                   </button>
                 </div>
 
-                <div className="users-table">
+                <section className="admin-card admin-table-card">
+                  <div className="users-table">
                   <div className="users-row users-header">
                     <button type="button" className="users-cell sort-header" onClick={() => handleSort("patientName")}>
                       Patient {sortArrow("patientName")}
@@ -960,8 +961,9 @@ export default function ClinicAppoint() {
                         </div>
                     ))
                   )}
-                </div>
-              </section>
+                  </div>
+                </section>
+              </div>
 
               <ClinicScheduleAside apiBase={API} clinicId={clinicId} />
             </div>
