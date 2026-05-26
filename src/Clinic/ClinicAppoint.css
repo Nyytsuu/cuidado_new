@@ -806,6 +806,7 @@ body {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  align-self: flex-start;
   transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
 }
 .ClinicAppoint .appoint-archive-toggle:hover {
