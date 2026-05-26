@@ -702,115 +702,133 @@ body {
   min-width: 0;
 }
 
-/* ── STATUS FILTER TOOLBAR ── */
+/* ── TOOLBAR (filter pills + archive toggle) ── */
+.ClinicAppoint .appoint-toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2eeeb;
+  box-shadow: 0 2px 8px rgba(15, 66, 66, 0.06);
+  flex-wrap: wrap;
+}
 .ClinicAppoint .appoint-filter-pills {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
 }
 .ClinicAppoint .appoint-filter-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 13px;
+  gap: 5px;
+  padding: 5px 12px;
   border-radius: 999px;
-  border: 1.5px solid #cde2df;
-  background: #ffffff;
+  border: 1.5px solid #dde8e6;
+  background: #f1f6f5;
   color: #3d5e5b;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(15, 66, 66, 0.07);
-  transition: all 0.15s ease;
+  white-space: nowrap;
+  width: auto;
+  flex-shrink: 0;
+  transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
 }
 .ClinicAppoint .appoint-filter-pill:hover {
-  border-color: #9ca3af;
-  background: #f3f4f6;
+  border-color: #109c85;
+  background: #e8f5f3;
+  color: #0a7a68;
 }
 .ClinicAppoint .appoint-filter-pill.active {
   border-color: #0b8a84;
   background: #0b8a84;
   color: #fff;
+  box-shadow: 0 2px 6px rgba(11, 138, 132, 0.28);
 }
 .ClinicAppoint .appoint-filter-pill.pill-warning.active {
-  background: #b7791f;
-  border-color: #b7791f;
+  background: #d97706;
+  border-color: #d97706;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.28);
 }
 .ClinicAppoint .appoint-filter-pill.pill-resched.active {
-  background: #c05621;
-  border-color: #c05621;
+  background: #ea580c;
+  border-color: #ea580c;
+  box-shadow: 0 2px 6px rgba(234, 88, 12, 0.28);
 }
 .ClinicAppoint .appoint-filter-pill.pill-success.active {
-  background: #276749;
-  border-color: #276749;
+  background: #059669;
+  border-color: #059669;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.28);
 }
 .ClinicAppoint .appoint-filter-pill.pill-gray.active {
   background: #4b5563;
   border-color: #4b5563;
+  box-shadow: 0 2px 6px rgba(75, 85, 99, 0.28);
 }
 .ClinicAppoint .appoint-filter-pill.pill-danger.active {
-  background: #c53030;
-  border-color: #c53030;
+  background: #dc2626;
+  border-color: #dc2626;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.28);
 }
 .ClinicAppoint .appoint-filter-count {
-  background: rgba(255,255,255,0.28);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
-  padding: 1px 7px;
-  font-size: 11px;
+  padding: 1px 6px;
+  font-size: 10.5px;
   font-weight: 700;
-  min-width: 20px;
-  text-align: center;
+  min-width: 18px;
+  line-height: 1.4;
+  background: rgba(255, 255, 255, 0.30);
 }
 .ClinicAppoint .appoint-filter-pill:not(.active) .appoint-filter-count {
-  background: #e5e7eb;
-  color: #6b7280;
-}
-
-/* ── TOOLBAR (filter pills + archive toggle) ── */
-.ClinicAppoint .appoint-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 0 2px;
+  background: #dde8e6;
+  color: #5d7f7c;
 }
 .ClinicAppoint .appoint-archive-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 6px 16px;
+  gap: 6px;
+  padding: 5px 14px;
   border-radius: 999px;
-  border: 1.5px solid #cde2df;
-  background: #ffffff;
-  color: #374151;
-  font-size: 13px;
+  border: 1.5px solid #dde8e6;
+  background: #f1f6f5;
+  color: #4b5563;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(15, 66, 66, 0.07);
-  transition: all 0.15s ease;
+  transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
 }
 .ClinicAppoint .appoint-archive-toggle:hover {
   border-color: #9ca3af;
-  background: #f3f4f6;
+  background: #e5e7eb;
+  color: #1f2937;
 }
 .ClinicAppoint .appoint-archive-toggle.active {
   background: #374151;
   border-color: #374151;
   color: #fff;
+  box-shadow: 0 2px 6px rgba(55, 65, 81, 0.28);
 }
 .ClinicAppoint .appoint-archive-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 6px 12px;
   background: #fef9c3;
-  border: 1px solid #fde047;
-  border-radius: 10px;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
   color: #78350f;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
   flex: 1;
 }
