@@ -139,6 +139,13 @@ export default function UserProfile() {
   const [showSaveConfirm, setShowSaveConfirm] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
+  // deactivate account flow
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [deactivateStep, setDeactivateStep] = useState<1 | 2>(1);
+  const [deactivateReason, setDeactivateReason] = useState("");
+  const [deactivating, setDeactivating] = useState(false);
+  const [deactivateError, setDeactivateError] = useState("");
+
   const [verifyEmailModalOpen, setVerifyEmailModalOpen] = useState(false);
   const [verifyCode, setVerifyCode] = useState("");
   const [verifyLoading, setVerifyLoading] = useState(false);
@@ -669,6 +676,44 @@ export default function UserProfile() {
     }
   };
 
+  const handleDeactivateAccount = async () => {
+    try {
+      if (!userId) throw new Error("No logged-in user found.");
+      setDeactivating(true);
+      setDeactivateError("");
+
+      const res = await fetch(apiUrl(`/api/users/${userId}/deactivate`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "disabled" }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to deactivate account.");
+
+      clearStoredAuth();
+      navigate("/signin");
+    } catch (err) {
+      setDeactivateError(err instanceof Error ? err.message : "Failed to deactivate account.");
+      setDeactivating(false);
+    }
+  };
+
+  const openDeactivateModal = () => {
+    setDeactivateStep(1);
+    setDeactivateReason("");
+    setDeactivateError("");
+    setShowDeactivateModal(true);
+  };
+
+  const closeDeactivateModal = () => {
+    if (deactivating) return;
+    setShowDeactivateModal(false);
+    setDeactivateStep(1);
+    setDeactivateReason("");
+    setDeactivateError("");
+  };
+
   return (
     <div className={`profile-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
@@ -864,17 +909,6 @@ export default function UserProfile() {
                   </div>
 
                   <div>
-                    <label>Status:</label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as "active" | "disabled")}
-                    >
-                      <option value="active">Active</option>
-                      <option value="disabled">Disabled</option>
-                    </select>
-                  </div>
-
-                  <div>
                     <label>Province:</label>
                     <select
                       value={provinceId}
@@ -954,7 +988,7 @@ export default function UserProfile() {
                 </div>
               </div>
 
-              <h2>Security</h2>
+              <h2 style={{ marginTop: 28 }}>Security</h2>
 
               <div className="security-card">
                 <div className="security-row1">
@@ -1037,6 +1071,29 @@ export default function UserProfile() {
                     {passwordSaving ? "Updating..." : "Update Password"}
                   </button>
                 </div>
+              </div>
+
+              {/* ── Deactivate Account ── */}
+              <h2 style={{ marginTop: 28 }}>Account Management</h2>
+
+              <div className="deactivate-card">
+                <div className="deactivate-card-left">
+                  <div className="deactivate-card-icon">⚠️</div>
+                  <div>
+                    <h3 className="deactivate-card-title">Deactivate Account</h3>
+                    <p className="deactivate-card-desc">
+                      Temporarily deactivate your account. Your profile will be hidden and your appointments paused.
+                      You can reactivate at any time by simply logging back in.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className="deactivate-open-btn"
+                  type="button"
+                  onClick={openDeactivateModal}
+                >
+                  Deactivate
+                </button>
               </div>
 
             </section>
@@ -1227,6 +1284,116 @@ export default function UserProfile() {
                 Update
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Deactivate Account modal ── */}
+      {showDeactivateModal && (
+        <div className="logout-confirm-overlay" onClick={closeDeactivateModal}>
+          <div className="deactivate-modal" onClick={(e) => e.stopPropagation()}>
+            {!deactivating && (
+              <button
+                className="deactivate-modal-close"
+                type="button"
+                onClick={closeDeactivateModal}
+              >
+                ×
+              </button>
+            )}
+
+            {/* Step 1: choose reason */}
+            {deactivateStep === 1 && (
+              <>
+                <div className="deactivate-modal-icon">😔</div>
+                <h3 className="deactivate-modal-title">We're sorry to see you go</h3>
+                <p className="deactivate-modal-subtitle">
+                  Please tell us why you want to deactivate your account:
+                </p>
+
+                <div className="deactivate-reasons">
+                  {[
+                    "I need a break",
+                    "Privacy concerns",
+                    "Too many notifications",
+                    "I have another account",
+                    "Other reason",
+                  ].map((reason) => (
+                    <label
+                      key={reason}
+                      className={`deactivate-reason-row ${deactivateReason === reason ? "selected" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        name="deactivate-reason"
+                        value={reason}
+                        checked={deactivateReason === reason}
+                        onChange={() => setDeactivateReason(reason)}
+                      />
+                      <span>{reason}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className="deactivate-modal-actions">
+                  <button
+                    className="btn-cancel"
+                    type="button"
+                    onClick={closeDeactivateModal}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="deactivate-next-btn"
+                    type="button"
+                    disabled={!deactivateReason}
+                    onClick={() => setDeactivateStep(2)}
+                  >
+                    Continue
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Step 2: final confirmation */}
+            {deactivateStep === 2 && (
+              <>
+                <div className="deactivate-modal-icon">⚠️</div>
+                <h3 className="deactivate-modal-title">Deactivate your account?</h3>
+
+                <div className="deactivate-warning-box">
+                  <ul>
+                    <li>Your profile will be <strong>hidden</strong> from other users</li>
+                    <li>Your upcoming appointments will be <strong>paused</strong></li>
+                    <li>You will be <strong>logged out</strong> immediately</li>
+                    <li>You can <strong>reactivate</strong> anytime by logging back in</li>
+                  </ul>
+                </div>
+
+                {deactivateError && (
+                  <p className="deactivate-error">{deactivateError}</p>
+                )}
+
+                <div className="deactivate-modal-actions">
+                  <button
+                    className="btn-cancel"
+                    type="button"
+                    onClick={() => setDeactivateStep(1)}
+                    disabled={deactivating}
+                  >
+                    Go Back
+                  </button>
+                  <button
+                    className="deactivate-confirm-btn"
+                    type="button"
+                    onClick={handleDeactivateAccount}
+                    disabled={deactivating}
+                  >
+                    {deactivating ? "Deactivating…" : "Deactivate Account"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

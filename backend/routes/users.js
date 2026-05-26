@@ -1014,6 +1014,32 @@ router.put("/:userId/profile", async (req, res) => {
 });
 
 /**
+ * PATCH /api/users/:userId/deactivate
+ * Deactivates (or reactivates) the account without requiring full profile fields.
+ */
+router.patch("/:userId/deactivate", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { status } = req.body;
+
+    const allowed = ["active", "disabled"];
+    if (!status || !allowed.includes(status)) {
+      return res.status(400).json({ message: "Invalid status value." });
+    }
+
+    await pool.query(
+      "UPDATE users SET status = ? WHERE id = ?",
+      [status, userId]
+    );
+
+    res.json({ message: "Account status updated." });
+  } catch (error) {
+    console.error("PATCH /deactivate error:", error);
+    res.status(500).json({ message: "Failed to update account status." });
+  }
+});
+
+/**
  * PUT /api/users/:userId/profile-picture
  */
 router.put(

@@ -1143,3 +1143,247 @@ textarea {
 .current-btn.verified {
   color: #3aafa9;
 }
+
+/* ─────────────────────────────────────────────
+   DEACTIVATE ACCOUNT — section card
+───────────────────────────────────────────── */
+.deactivate-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff8f8;
+  border: 1.5px solid #fecaca;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 32px;
+}
+
+.deactivate-card-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+}
+
+.deactivate-card-icon {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.deactivate-card-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.deactivate-card-desc {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.deactivate-open-btn {
+  flex-shrink: 0;
+  padding: 9px 22px;
+  border-radius: 8px;
+  border: 1.5px solid #ef4444;
+  background: #fff;
+  color: #ef4444;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.deactivate-open-btn:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* ─────────────────────────────────────────────
+   DEACTIVATE MODAL
+───────────────────────────────────────────── */
+.deactivate-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 18px;
+  padding: 32px 28px 28px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  animation: deact-in 0.2s ease;
+}
+
+@keyframes deact-in {
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.deactivate-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: background 0.12s, color 0.12s;
+}
+.deactivate-modal-close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.deactivate-modal-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.deactivate-modal-title {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+}
+
+.deactivate-modal-subtitle {
+  margin: 0 0 20px;
+  font-size: 13.5px;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Reason radio list */
+.deactivate-reasons {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.deactivate-reason-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.deactivate-reason-row:hover {
+  border-color: #ef4444;
+  background: #fff8f8;
+}
+
+.deactivate-reason-row.selected {
+  border-color: #ef4444;
+  background: #fff1f1;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.deactivate-reason-row input[type="radio"] {
+  accent-color: #ef4444;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Warning bullet list */
+.deactivate-warning-box {
+  width: 100%;
+  background: #fff7ed;
+  border: 1.5px solid #fed7aa;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+}
+
+.deactivate-warning-box ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deactivate-warning-box li {
+  font-size: 13.5px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.deactivate-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+/* Action row shared by both steps */
+.deactivate-modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.deactivate-modal-actions .btn-cancel,
+.deactivate-next-btn,
+.deactivate-confirm-btn {
+  flex: 1;
+  padding: 11px 0;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  border: 1.5px solid transparent;
+}
+
+.deactivate-next-btn {
+  background: #374151;
+  color: #fff;
+  border-color: #374151;
+}
+.deactivate-next-btn:hover:not(:disabled) {
+  background: #1f2937;
+  border-color: #1f2937;
+}
+.deactivate-next-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.deactivate-confirm-btn {
+  background: #ef4444;
+  color: #fff;
+  border-color: #ef4444;
+}
+.deactivate-confirm-btn:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+.deactivate-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
