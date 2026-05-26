@@ -21,7 +21,7 @@ body {
 .ClinicAppoint.with-sidebar {
   display: flex;
   height: 100vh;
-  background: #ffffff;
+  background: #eef3f2;
   padding-left: var(--sidebar-width-collapsed);
   overflow: hidden;
 }
@@ -184,26 +184,130 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .ClinicAppoint .admin-content {
-  padding: calc(var(--header-height) + 20px) 24px 110px;
+  padding: calc(var(--header-height) + 24px) 28px 80px;
+}
+
+/* Override global admin-content-inner padding so we don't double-indent */
+.ClinicAppoint .admin-content-inner {
+  padding: 0;
+}
+
+/* ── PAGE HEADER ── */
+.ClinicAppoint .admin-title {
+  margin-bottom: 0;
+}
+
+.ClinicAppoint .appt-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .ClinicAppoint .admin-title h2 {
   font-size: 28px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: #0f172a;
+}
+
+.ClinicAppoint .admin-title-sub {
+  margin: 0;
+  color: #7a9996;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.ClinicAppoint .appt-today-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #cfe8e4;
+  color: #0f4242;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(15, 66, 66, 0.07);
+  flex-shrink: 0;
+}
+
+/* ── STAT CARDS ── */
+.ClinicAppoint .appt-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.ClinicAppoint .appt-stat-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 18px 20px 16px;
+  border: 1px solid #e2eeeb;
+  box-shadow: 0 2px 10px rgba(15, 66, 66, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-align: left;
+  font-family: inherit;
+}
+
+.ClinicAppoint .appt-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(15, 66, 66, 0.12);
+}
+
+/* left color stripe */
+.ClinicAppoint .appt-stat-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 16px 0 0 16px;
+}
+
+.ClinicAppoint .appt-stat-total::before    { background: #109c85; }
+.ClinicAppoint .appt-stat-pending::before  { background: #f59e0b; }
+.ClinicAppoint .appt-stat-today::before    { background: #6366f1; }
+.ClinicAppoint .appt-stat-confirmed::before { background: #10b981; }
+
+.ClinicAppoint .appt-stat-value {
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #0f172a;
+  display: block;
+}
+
+.ClinicAppoint .appt-stat-label {
+  font-size: 0.72rem;
   font-weight: 700;
-  margin: 0 0 18px;
-  color: #000;
+  color: #7a9996;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
 }
 
 .ClinicAppoint .admin-grid {
   display: grid;
   grid-template-columns: 1fr 360px;
-  gap: 26px;
+  gap: 20px;
   align-items: start;
 }
 
 .ClinicAppoint .admin-card {
-  background: #d9d9d9;
-  border-radius: 10px;
+  background: #ffffff;
+  border-radius: 16px;
 }
 
 .ClinicAppoint .admin-right {
@@ -217,34 +321,27 @@ body {
     padding: 26px 26px 30px;
     min-height: calc(100vh - 120px);
 }
-.ClinicAppoint .small-card {
-  height: 120px;
-}
-
-.ClinicAppoint .big-card {
-  height: 430px;
-  background: #8f8f8f;
-}
+/* legacy unused cards removed */
 
 .ClinicAppoint .admin-table-card {
-  min-height: 520px;
-  height: min(680px, calc(100vh - 150px));
-  padding: 0 18px 28px;
+  height: auto;
+  max-height: calc(100vh - 140px);
+  min-height: 460px;
+  padding: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  border-radius: 26px;
+  border-radius: 20px;
   background: #ffffff;
-  border: 1px solid #d8ece8;
-  box-shadow: 0 18px 40px rgba(15, 66, 66, 0.08);
+  border: 1px solid #e0efec;
+  box-shadow: 0 4px 28px rgba(15, 66, 66, 0.07), 0 1px 4px rgba(15, 66, 66, 0.04);
   scrollbar-gutter: stable;
 }
 
 .ClinicAppoint .users-table {
   width: 100%;
-  max-width: 100%;
   min-width: 0;
   overflow: visible;
-  padding-bottom: 24px;
+  padding-bottom: 20px;
 }
 
 
@@ -252,202 +349,280 @@ body {
 .ClinicAppoint .users-row {
   display: grid;
   grid-template-columns:
-    minmax(130px, 1.3fr)
-    minmax(120px, 1.15fr)
-    minmax(78px, 0.55fr)
-    minmax(78px, 0.55fr)
-    minmax(132px, 0.85fr)
-    minmax(170px, 0.9fr);
+    minmax(160px, 2fr)
+    minmax(140px, 1.6fr)
+    minmax(110px, 1fr)
+    minmax(130px, 1fr)
+    minmax(140px, 0.85fr);
   align-items: center;
-  gap: 8px;
+  gap: 0;
   min-width: 0;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
-}
-.ClinicAppoint .users-cell,
-.ClinicAppoint .pills,
-.ClinicAppoint .users-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.ClinicAppoint .pills,
-.ClinicAppoint .users-name {
-  white-space: normal;
-  word-break: break-word;
+  padding: 0 22px;
+  border-bottom: 1px solid #f0f4f3;
+  transition: background 0.12s ease;
 }
 
-.ClinicAppoint .users-header {
-  font-weight: 800;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  min-height: 72px;
-  margin: 0 -18px;
-  padding-inline: 30px;
-  background: #109c85;
-  border-bottom: 1px solid rgba(7, 59, 54, 0.28);
-  box-shadow: 0 8px 16px rgba(15, 66, 66, 0.16);
-}
-
-.ClinicAppoint .users-header .users-cell {
-  color: white;
-  font-size: 1.2rem;
-  padding-left: 0;
+.ClinicAppoint .users-row:hover:not(.users-header) {
+  background: #f5fffd;
 }
 
 .ClinicAppoint .users-cell {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   position: relative;
+  padding: 14px 10px 14px 0;
 }
-.ClinicAppoint .users-row:not(.users-header) .users-cell {
-  padding-left: 6px;
+
+.ClinicAppoint .users-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 46px;
+  background: #f4f9f8;
+  border-bottom: 1px solid #daecea;
+  box-shadow: 0 2px 8px rgba(15, 66, 66, 0.05);
+}
+
+.ClinicAppoint .users-header .users-cell {
+  color: #5d7f7c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  /* inherits vertical padding from .users-cell so clicks are comfortable */
 }
 
 .ClinicAppoint .users-row:not(.users-header) {
-  min-height: 82px;
+  min-height: 68px;
 }
 
 .ClinicAppoint .users-row:last-child {
-  margin-bottom: 18px;
+  border-bottom: none;
 }
 
-/* first column no line + no padding */
+/* first column: no left padding */
 .ClinicAppoint .users-row .users-cell:first-child {
   padding-left: 0;
 }
 
-/* text style */
-.ClinicAppoint .users-name {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: black;
+/* last column: center actions */
+.ClinicAppoint .users-row .users-cell:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  padding-right: 0;
 }
 
-/* ================= PILL STYLES ================= */
+/* ── PATIENT NAME CELL ── */
+.ClinicAppoint .pt-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ClinicAppoint .pt-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #109c85 0%, #0a7a68 100%);
+  box-shadow: 0 3px 8px rgba(16, 156, 133, 0.24);
+  flex-shrink: 0;
+}
+
+.ClinicAppoint .pt-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* ── SERVICE TYPE ── */
+.ClinicAppoint .service-label {
+  font-size: 0.86rem;
+  color: #4b6b69;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
+}
+
+/* ── EMPTY / LOADING STATE ── */
+.ClinicAppoint .appt-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 24px;
+  color: #8aadaa;
+  text-align: center;
+}
+
+.ClinicAppoint .appt-empty-state .appt-empty-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.ClinicAppoint .appt-empty-state p {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #9ab8b5;
+}
+
+/* ── DATE & TIME STACKED ── */
+.ClinicAppoint .appt-datetime {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.ClinicAppoint .appt-date {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1a2e2b;
+}
+
+.ClinicAppoint .appt-time {
+  font-size: 0.78rem;
+  color: #6b8b88;
+  font-weight: 500;
+}
+
+/* ================= STATUS BADGE (table rows) ================= */
+.ClinicAppoint .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ClinicAppoint .status-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ClinicAppoint .status-badge.pill-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+.ClinicAppoint .status-badge.pill-warning::before { background: #f59e0b; }
+
+.ClinicAppoint .status-badge.pill-success {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+.ClinicAppoint .status-badge.pill-success::before { background: #10b981; }
+
+.ClinicAppoint .status-badge.pill-resched {
+  background: #ffedd5;
+  color: #9a3412;
+  border-color: #fdba74;
+}
+.ClinicAppoint .status-badge.pill-resched::before { background: #f97316; }
+
+.ClinicAppoint .status-badge.pill-gray {
+  background: #dbeafe;
+  color: #1e3a8a;
+  border-color: #93c5fd;
+}
+.ClinicAppoint .status-badge.pill-gray::before { background: #3b82f6; }
+
+.ClinicAppoint .status-badge.pill-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border-color: #fca5a5;
+}
+.ClinicAppoint .status-badge.pill-danger::before { background: #ef4444; }
+
+/* ================= PILL (modal footer buttons) ================= */
 .ClinicAppoint .pill {
   border: none;
-  color: white;
+  color: #fff;
   border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
+  padding: 0 18px;
+  min-height: 36px;
+  font-size: 0.88rem;
   font-weight: 600;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-
-  background: #5b5b5b;
-}
-.ClinicAppoint .pills {
-  border: none;
-  color: black;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
-  font-weight: 600;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.ClinicAppoint .pill-view {
-  background: rgb(16, 156, 133) !important;
   cursor: pointer;
+  background: #374151;
+  transition: filter 0.15s ease;
 }
 
-.ClinicAppoint .pill-danger {
-  background: #c62828;
-  cursor: pointer;
-}
-
-.ClinicAppoint .pill-success {
-  background: gray;
-  cursor: pointer;
-}
-
-.ClinicAppoint .pill-warning {
-  background: #b7791f;
-}
 .ClinicAppoint .pill:focus,
 .ClinicAppoint .pill:active {
   outline: none;
   box-shadow: none;
 }
 
-/* View button style */
-.ClinicAppoint .pill-view {
-  background: #5b5b5b;
-  color: #fff;
-  cursor: pointer;
-}
+.ClinicAppoint .pill:hover { filter: brightness(0.9); }
 
-/* Optional: completed pill */
-.SidebarClinic .pill-gray {
-  background: green;
-  color: #fff;
-}
-/* ✅ Completed status */
-.ClinicAppoint .pill-gray {
-  background: #2e7d32;
-  color: #fff;
-  cursor: pointer;
-}
+.SidebarClinic .pill-gray { background: green; color: #fff; }
 
-/* ✅ Reschedule button */
-.ClinicAppoint .pill-done {
-  background: #177245 !important;
-  color: #fff;
-  cursor: pointer;
-}
+.ClinicAppoint .pill-view    { background: #109c85; cursor: pointer; }
+.ClinicAppoint .pill-danger  { background: #dc2626; cursor: pointer; }
+.ClinicAppoint .pill-success { background: #059669; cursor: pointer; }
+.ClinicAppoint .pill-warning { background: #d97706; }
+.ClinicAppoint .pill-gray    { background: #374151; color: #fff; cursor: pointer; }
+.ClinicAppoint .pill-done    { background: #0d9488; color: #fff; cursor: pointer; }
+.ClinicAppoint .pill-resched { background: #0891b2; color: #fff; cursor: pointer; }
+.ClinicAppoint .pill.pill-gray.and-danger { background: #dc2626 !important; color: #fff; cursor: pointer; }
 
-.ClinicAppoint .pill-resched {
-  background: rgb(18, 151, 129) !important;
-  color: #fff;
-  cursor: pointer;
-}
-
-.ClinicAppoint .users-row .users-cell:last-child {
-  display: flex;
-  justify-content: center;
-  overflow: visible;
-  padding-left: 0;
-}
-
+/* ================= ICON ACTION BUTTONS ================= */
 .ClinicAppoint .users-actions {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: auto;
-  max-width: 170px;
-  min-width: 0;
-  margin-inline: auto;
+  gap: 5px;
   flex-wrap: nowrap;
 }
 
 .ClinicAppoint .icon-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
   padding: 0;
   border: none;
-  border-radius: 999px;
+  border-radius: 8px;
   color: #ffffff;
   display: inline-flex;
   align-items: center;
@@ -455,82 +630,57 @@ body {
   font-size: 0;
   line-height: 1;
   cursor: pointer;
-  transition: transform 0.16s ease, filter 0.16s ease;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
 }
 
 .ClinicAppoint .icon-btn svg {
-  width: 15px;
-  height: 15px;
-  font-size: 15px;
+  width: 13px;
+  height: 13px;
+  font-size: 13px;
   flex: 0 0 auto;
 }
 
 .ClinicAppoint .icon-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(0.96);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 
-.ClinicAppoint .users-row .users-cell:nth-child(5) .pill {
-  width: 100%;
-  max-width: 132px;
-  min-height: 34px;
-  padding: 0 9px;
-  font-size: 0.72rem;
-  letter-spacing: 0;
-}
+.ClinicAppoint .icon-btn.pill-view    { background: #3b82f6; }
+.ClinicAppoint .icon-btn.pill-success { background: #10b981; }
+.ClinicAppoint .icon-btn.pill-danger  { background: #ef4444; }
+.ClinicAppoint .icon-btn.pill-resched { background: #f59e0b; }
+.ClinicAppoint .icon-btn.pill-done    { background: #0d9488; }
+.ClinicAppoint .icon-btn.pill-archive { background: #6b7280; }
+.ClinicAppoint .icon-btn.pill-restore { background: #0d9488; }
 
-.ClinicAppoint .users-header .users-cell:nth-child(6) {
-  display: flex;
-  justify-content: center;
-  text-align: center;
-  padding-left: 0;
-}
-
-.ClinicAppoint .users-cell:nth-child(3),
-.ClinicAppoint .users-cell:nth-child(4) {
-  text-align: center;
-}
-
-.ClinicAppoint .users-cell:nth-child(3) .pills,
-.ClinicAppoint .users-cell:nth-child(4) .pills {
-  justify-content: center;
-  padding-left: 0;
-  padding-right: 0;
-}
-.ClinicAppoint .pill.pill-gray.and-danger {
-  background: #c62828 !important;
-  color: #fff;
-  cursor: pointer;
-}
-.ClinicAppoint .users-header .users-cell:nth-child(4) {
-  padding-left: 20px;   /* lower value = more left */
-}
-.ClinicAppoint .users-header .users-cell:nth-child(5) {
-  padding-left: 10px; 
-    /* lower value = more left */
-}
-.ClinicAppoint .users-header .users-cell:nth-child(6) {
-  padding-left: 10px;
-}
+.ClinicAppoint .icon-btn.pill-view:hover    { background: #2563eb; }
+.ClinicAppoint .icon-btn.pill-success:hover { background: #059669; }
+.ClinicAppoint .icon-btn.pill-danger:hover  { background: #dc2626; }
+.ClinicAppoint .icon-btn.pill-resched:hover { background: #d97706; }
+.ClinicAppoint .icon-btn.pill-done:hover    { background: #0a7a68; }
+.ClinicAppoint .icon-btn.pill-archive:hover { background: #4b5563; }
+.ClinicAppoint .icon-btn.pill-restore:hover { background: #0a7a68; }
 
 /* ── SORT HEADERS ── */
 .ClinicAppoint .sort-header {
   background: transparent;
   border: none;
-  color: #fff;
-  font-size: 1.2rem;
-  font-weight: 800;
+  color: #5d7f7c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   padding: 0;
   text-align: left;
   width: 100%;
   font-family: inherit;
 }
 .ClinicAppoint .sort-header:hover {
-  opacity: 0.85;
+  color: #0f4242;
 }
 .ClinicAppoint .sort-arrow {
   font-size: 0.85rem;
@@ -541,7 +691,7 @@ body {
 }
 .ClinicAppoint .sort-arrow.active {
   opacity: 1;
-  color: #a7f3d0;
+  color: #109c85;
 }
 
 /* ── STATUS FILTER TOOLBAR ── */
@@ -554,12 +704,12 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 14px;
+  padding: 5px 13px;
   border-radius: 999px;
-  border: 1.5px solid #d1d5db;
-  background: #f9fafb;
-  color: #374151;
-  font-size: 13px;
+  border: 1.5px solid #d4e6e3;
+  background: #f4f8f8;
+  color: #3d5e5b;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -614,9 +764,8 @@ body {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin: 0 -18px;
-  padding: 14px 18px 12px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 14px 22px 12px;
+  border-bottom: 1px solid #edf2f1;
 }
 .ClinicAppoint .appoint-archive-toggle {
   display: inline-flex;
@@ -657,21 +806,7 @@ body {
   flex: 1;
 }
 
-/* ── ARCHIVE / RESTORE ICON BUTTONS ── */
-.ClinicAppoint .icon-btn.pill-archive {
-  background: #4b5563;
-  color: #fff;
-}
-.ClinicAppoint .icon-btn.pill-archive:hover {
-  background: #374151;
-}
-.ClinicAppoint .icon-btn.pill-restore {
-  background: #0b8a84;
-  color: #fff;
-}
-.ClinicAppoint .icon-btn.pill-restore:hover {
-  background: #076e69;
-}
+/* archive / restore icon colors defined in ICON ACTION BUTTONS block above */
 
 /* ── ROW HIGHLIGHTS ── */
 /* Use box-shadow inset instead of border-left so grid columns stay aligned */
@@ -698,9 +833,20 @@ body {
 }
 
 /* RESPONSIVE */
-@media screen and (max-width: 900px) {
+@media screen and (max-width: 1100px) {
   .ClinicAppoint .admin-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .ClinicAppoint .appt-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ClinicAppoint .appt-page-header {
+    flex-direction: column;
+    gap: 10px;
   }
 
   .ClinicAppoint .header-search {

@@ -620,6 +620,28 @@ export default function ClinicAppoint() {
     [appointments, archivedIds]
   );
 
+  const statsTotal = useMemo(
+    () => appointments.filter((r) => !archivedIds.has(r.id)).length,
+    [appointments, archivedIds]
+  );
+
+  const statsPending = useMemo(
+    () => appointments.filter((r) => r.status === "Pending" && !archivedIds.has(r.id)).length,
+    [appointments, archivedIds]
+  );
+
+  const statsToday = useMemo(() => {
+    const todayStr = new Date().toLocaleDateString("en-US", {
+      month: "2-digit", day: "2-digit", year: "2-digit",
+    });
+    return appointments.filter((r) => r.date === todayStr && !archivedIds.has(r.id)).length;
+  }, [appointments, archivedIds]);
+
+  const statsConfirmed = useMemo(
+    () => appointments.filter((r) => r.status === "Confirmed" && !archivedIds.has(r.id)).length,
+    [appointments, archivedIds]
+  );
+
   const filteredAppointments = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
@@ -697,7 +719,55 @@ export default function ClinicAppoint() {
         <section className="admin-content">
           <div className="admin-content-inner">
             <div className="admin-title">
-              <h2>Appointments</h2>
+              <div className="appt-page-header">
+                <div>
+                  <h2>Appointments</h2>
+                  <p className="admin-title-sub">Review and manage all patient bookings</p>
+                </div>
+                <span className="appt-today-badge">
+                  <FaCalendarAlt />
+                  {new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                </span>
+              </div>
+
+              <div className="appt-stats-row">
+                <button
+                  type="button"
+                  className="appt-stat-card appt-stat-total"
+                  onClick={() => { setStatusFilter("All"); setShowArchived(false); }}
+                  title="Show all appointments"
+                >
+                  <span className="appt-stat-value">{statsTotal}</span>
+                  <span className="appt-stat-label">Total</span>
+                </button>
+                <button
+                  type="button"
+                  className="appt-stat-card appt-stat-pending"
+                  onClick={() => { setStatusFilter("Pending"); setShowArchived(false); }}
+                  title="Filter by Pending"
+                >
+                  <span className="appt-stat-value">{statsPending}</span>
+                  <span className="appt-stat-label">Pending</span>
+                </button>
+                <button
+                  type="button"
+                  className="appt-stat-card appt-stat-today"
+                  onClick={() => { setStatusFilter("All"); setShowArchived(false); }}
+                  title="Appointments today"
+                >
+                  <span className="appt-stat-value">{statsToday}</span>
+                  <span className="appt-stat-label">Today</span>
+                </button>
+                <button
+                  type="button"
+                  className="appt-stat-card appt-stat-confirmed"
+                  onClick={() => { setStatusFilter("Confirmed"); setShowArchived(false); }}
+                  title="Filter by Confirmed"
+                >
+                  <span className="appt-stat-value">{statsConfirmed}</span>
+                  <span className="appt-stat-label">Confirmed</span>
+                </button>
+              </div>
             </div>
             <div className="admin-grid">
               <section className="admin-card admin-table-card">
@@ -741,15 +811,14 @@ export default function ClinicAppoint() {
                 <div className="users-table">
                   <div className="users-row users-header">
                     <button type="button" className="users-cell sort-header" onClick={() => handleSort("patientName")}>
-                      Patient Name {sortArrow("patientName")}
+                      Patient {sortArrow("patientName")}
                     </button>
                     <button type="button" className="users-cell sort-header" onClick={() => handleSort("serviceType")}>
-                      Service Type {sortArrow("serviceType")}
+                      Service {sortArrow("serviceType")}
                     </button>
                     <button type="button" className="users-cell sort-header" onClick={() => handleSort("date")}>
-                      Date {sortArrow("date")}
+                      Date & Time {sortArrow("date")}
                     </button>
-                    <div className="users-cell">Time</div>
                     <button type="button" className="users-cell sort-header" onClick={() => handleSort("status")}>
                       Status {sortArrow("status")}
                     </button>
@@ -757,44 +826,38 @@ export default function ClinicAppoint() {
                   </div>
 
                   {loadingAppointments ? (
-                    <div className="users-row">
-                      <div
-                        className="users-cell"
-                        style={{ gridColumn: "1 / -1" }}
-                      >
-                        Loading appointments...
-                      </div>
+                    <div className="appt-empty-state">
+                      <span className="appt-empty-icon">⏳</span>
+                      <p>Loading appointments…</p>
                     </div>
                   ) : filteredAppointments.length === 0 ? (
-                    <div className="users-row">
-                      <div
-                        className="users-cell"
-                        style={{ gridColumn: "1 / -1" }}
-                      >
-                        No appointments found.
-                      </div>
+                    <div className="appt-empty-state">
+                      <span className="appt-empty-icon">📋</span>
+                      <p>{showArchived ? "No archived appointments." : "No appointments match this filter."}</p>
                     </div>
                   ) : (
                     filteredAppointments.map((row) => (
                       <div className={`users-row ${rowHighlightClass(row.status)}`} key={row.id}>
-                        <div className="users-cell users-name">
-                          {row.patientName}
+                        <div className="users-cell">
+                          <div className="pt-row">
+                            <div className="pt-avatar">{row.patientName.charAt(0).toUpperCase()}</div>
+                            <span className="pt-name">{row.patientName}</span>
+                          </div>
                         </div>
 
                         <div className="users-cell">
-                          <span className="pills">{row.serviceType}</span>
+                          <span className="service-label">{row.serviceType}</span>
                         </div>
 
                         <div className="users-cell">
-                          <span className="pills">{row.date}</span>
+                          <div className="appt-datetime">
+                            <span className="appt-date">{row.date}</span>
+                            <span className="appt-time">{row.time}</span>
+                          </div>
                         </div>
 
                         <div className="users-cell">
-                          <span className="pills">{row.time}</span>
-                        </div>
-
-                        <div className="users-cell">
-                          <span className={`pill ${statusClass(row.status)}`}>
+                          <span className={`status-badge ${statusClass(row.status)}`}>
                             {row.status}
                           </span>
                         </div>
