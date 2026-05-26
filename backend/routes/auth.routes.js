@@ -91,18 +91,19 @@ const handleLogin = (req, res) => {
 
   const tryLogin = (table, role, nameCol) =>
     new Promise((resolve, reject) => {
+      const normalizedEmail = String(email || "").trim().toLowerCase();
       db.query(
         `SELECT id, ${nameCol} AS name, email, password_hash
          FROM ${table}
-         WHERE email = ?
+         WHERE LOWER(email) = ?
          LIMIT 1`,
-        [email],
+        [normalizedEmail],
         async (err, rows) => {
           if (err) return reject(err);
           if (!rows.length) return resolve(null);
 
           const acc = rows[0];
-          const ok = await bcrypt.compare(password, acc.password_hash);
+          const ok = await bcrypt.compare(String(password || "").trim(), acc.password_hash);
           if (!ok) return resolve("bad_password");
 
           resolve({ id: acc.id, email: acc.email, name: acc.name, role });
@@ -115,34 +116,38 @@ const handleLogin = (req, res) => {
       const loginAs = String(req.body.loginAs || "").toLowerCase(); // "user" | "clinic" | "admin" | ""
 
       if (isMobileLogin || loginAs === "user") {
-        // ── User-only login ──
-        const found = await tryLogin("users", "user", "full_name");
+        // ── User / Admin login (mobile only allows user) ──
+        let found = await tryLogin("users", "user", "full_name");
 
         if (found === "bad_password") {
           return res.status(401).json({ message: "Invalid email or password." });
         }
 
-        if (!found) {
-          // Tell the caller if the email belongs to a different account type
-          const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
-          const accountType = accounts?.[0]?.account_type;
+        if (!found && !isMobileLogin) {
+          // Not a regular user — check if it's an admin and allow admin login
+          // from the standard /signin page (admins share the same login page).
+          found = await tryLogin("admins", "admin", "full_name");
 
-          if (accountType === "clinic") {
-            return res.status(403).json({
-              message: "This email is registered as a clinic account. Please use the Clinic Login page.",
-            });
-          }
-
-          if (accountType === "admin") {
-            return res.status(403).json({
-              message: "This email is an admin account.",
-            });
-          }
-
-          if (isMobileLogin) {
+          if (found === "bad_password") {
             return res.status(401).json({ message: "Invalid email or password." });
           }
 
+          if (!found) {
+            // Check if the email belongs to a clinic so we can give a helpful message
+            const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
+            const accountType = accounts?.[0]?.account_type;
+
+            if (accountType === "clinic") {
+              return res.status(403).json({
+                message: "This email is registered as a clinic account. Please use the Clinic Login page.",
+              });
+            }
+
+            return res.status(401).json({ message: "Invalid email or password." });
+          }
+        }
+
+        if (!found) {
           return res.status(401).json({ message: "Invalid email or password." });
         }
 
