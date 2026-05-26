@@ -57,6 +57,24 @@ const findAccountByEmail = (email) =>
     [email, email, email]
   );
 
+const ensureOtpRequestsTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS otp_requests (
+      id        SERIAL PRIMARY KEY,
+      email     VARCHAR(255) NOT NULL,
+      otp_hash  VARCHAR(255) NOT NULL,
+      purpose   VARCHAR(80)  NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      attempts  INTEGER      NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_otp_requests_email_purpose
+    ON otp_requests (email, purpose)
+  `);
+};
+
 const ensureEmailVerificationTokensTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS email_verification_tokens (
@@ -96,7 +114,11 @@ const handleLogin = (req, res) => {
     new Promise((resolve, reject) => {
       const normalizedEmail = String(email || "").trim().toLowerCase();
       const hasStatus = STATUS_TABLES.has(table);
-      const statusCol = hasStatus ? ", status" : "";
+      // clinics uses account_status for the disabled/active flag;
+      // users uses status for the same purpose
+      const isClinics = table === "clinics";
+      const disableCol = isClinics ? "account_status" : "status";
+      const statusCol = hasStatus ? `, ${disableCol}` : "";
 
       db.query(
         `SELECT id, ${nameCol} AS name, email, password_hash${statusCol}
@@ -113,8 +135,9 @@ const handleLogin = (req, res) => {
           if (!ok) return resolve("bad_password");
 
           // Reactivate disabled accounts on login (Facebook-style) — users & clinics only
-          if (hasStatus && acc.status === "disabled") {
-            await dbQuery(`UPDATE ${table} SET status = 'active' WHERE id = ?`, [acc.id]);
+          const disableVal = isClinics ? acc.account_status : acc.status;
+          if (hasStatus && disableVal === "disabled") {
+            await dbQuery(`UPDATE ${table} SET ${disableCol} = 'active' WHERE id = ?`, [acc.id]);
           }
 
           resolve({ id: acc.id, email: acc.email, name: acc.name, role, status: hasStatus ? "active" : undefined });
@@ -135,30 +158,39 @@ const handleLogin = (req, res) => {
         }
 
         if (!found && !isMobileLogin) {
-          // Not a regular user — check if it's an admin and allow admin login
-          // from the standard /signin page (admins share the same login page).
+          // All roles (user, admin, clinic) share the same login page on the website.
+          // Try admins next…
           found = await tryLogin("admins", "admin", "full_name");
 
           if (found === "bad_password") {
             return res.status(401).json({ message: "Invalid email or password." });
           }
 
+          // …then clinics
           if (!found) {
-            // Check if the email belongs to a clinic so we can give a helpful message
-            const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
-            const accountType = accounts?.[0]?.account_type;
+            found = await tryLogin("clinics", "clinic", "clinic_name");
 
-            if (accountType === "clinic") {
-              return res.status(403).json({
-                message: "This email is registered as a clinic account. Please use the Clinic Login page.",
-              });
+            if (found === "bad_password") {
+              return res.status(401).json({ message: "Invalid email or password." });
             }
+          }
 
+          if (!found) {
             return res.status(401).json({ message: "Invalid email or password." });
           }
         }
 
         if (!found) {
+          // Give clinic users a helpful message instead of a cryptic error
+          if (isMobileLogin) {
+            const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
+            const accountType = accounts?.[0]?.account_type;
+            if (accountType === "clinic") {
+              return res.status(403).json({
+                message: "Clinic accounts must log in through the Cuidado Medihelp website, not the mobile app.",
+              });
+            }
+          }
           return res.status(401).json({ message: "Invalid email or password." });
         }
 
@@ -346,6 +378,8 @@ const crypto = require("crypto");
 // ✅ SEND OTP (Forgot Password)
 router.post("/auth/otp/send", async (req, res) => {
   try {
+    await ensureOtpRequestsTable();
+
     const purpose = String(req.body.purpose || "forgot_password").trim();
     const email = String(req.body.identifier || "").trim().toLowerCase();
 
@@ -561,7 +595,9 @@ router.post("/auth/otp/send-legacy-disabled", async (req, res) => {
 });
 
 // ✅ VERIFY OTP (returns resetToken)
-router.post("/auth/otp/verify", (req, res) => {
+router.post("/auth/otp/verify", async (req, res) => {
+  await ensureOtpRequestsTable();
+
   const { identifier, otp } = req.body;
   const purpose = String(req.body.purpose || "forgot_password").trim();
   const email = String(identifier || "").trim().toLowerCase();

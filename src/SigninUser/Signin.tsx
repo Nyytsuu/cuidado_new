@@ -100,13 +100,13 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     const data = await login(email, password, captchaToken || undefined, "user");
     const role = String(data?.user?.role || "").toLowerCase();
 
-    if (role === "clinic") {
-      throw new Error("This email is registered as a clinic account. Please use the Clinic Login page.");
-    }
-
     if (isNativeMobileRuntime() && role !== "user") {
       throw new Error("Only user accounts can log in to the mobile app.");
     }
+
+    // Wipe any leftover keys from a previous session (different role/user)
+    ["token", "role", "user", "userId", "keepLoggedIn",
+     "admin_token", "clinic_token", "user_token"].forEach((k) => localStorage.removeItem(k));
 
     localStorage.setItem("token", data.token);
     localStorage.setItem("role", role);

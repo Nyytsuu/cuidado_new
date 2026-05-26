@@ -22,6 +22,10 @@ export default function Signin() {
         throw new Error("This email is not registered as a clinic account. Please use the User Login page.");
       }
 
+      // Wipe any leftover keys from a previous session (different role/user)
+      ["token", "role", "user", "userId", "keepLoggedIn",
+       "admin_token", "clinic_token", "user_token"].forEach((k) => localStorage.removeItem(k));
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", role);
       localStorage.setItem("user", JSON.stringify(data.user));
