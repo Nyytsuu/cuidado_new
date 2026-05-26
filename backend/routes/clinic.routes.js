@@ -1720,10 +1720,10 @@ router.put(["/schedule", "/clinic/schedule"], async (req, res) => {
         INSERT INTO clinic_weekly_schedules
           (clinic_id, day_of_week, is_working, opening_time, closing_time)
         VALUES (?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          is_working = VALUES(is_working),
-          opening_time = VALUES(opening_time),
-          closing_time = VALUES(closing_time)
+        ON CONFLICT (clinic_id, day_of_week) DO UPDATE SET
+          is_working   = EXCLUDED.is_working,
+          opening_time = EXCLUDED.opening_time,
+          closing_time = EXCLUDED.closing_time
         `,
         [
           clinicId,
