@@ -114,11 +114,7 @@ const handleLogin = (req, res) => {
     new Promise((resolve, reject) => {
       const normalizedEmail = String(email || "").trim().toLowerCase();
       const hasStatus = STATUS_TABLES.has(table);
-      // clinics uses account_status for the disabled/active flag;
-      // users uses status for the same purpose
-      const isClinics = table === "clinics";
-      const disableCol = isClinics ? "account_status" : "status";
-      const statusCol = hasStatus ? `, ${disableCol}` : "";
+      const statusCol = hasStatus ? ", status" : "";
 
       db.query(
         `SELECT id, ${nameCol} AS name, email, password_hash${statusCol}
@@ -134,10 +130,10 @@ const handleLogin = (req, res) => {
           const ok = await bcrypt.compare(String(password || "").trim(), acc.password_hash);
           if (!ok) return resolve("bad_password");
 
-          // Reactivate disabled accounts on login (Facebook-style) — users & clinics only
-          const disableVal = isClinics ? acc.account_status : acc.status;
-          if (hasStatus && disableVal === "disabled") {
-            await dbQuery(`UPDATE ${table} SET ${disableCol} = 'active' WHERE id = ?`, [acc.id]);
+          // Reactivate disabled accounts on login (Facebook-style) — users only
+          // (clinics use a separate account_status column managed by admin)
+          if (hasStatus && acc.status === "disabled") {
+            await dbQuery(`UPDATE ${table} SET status = 'active' WHERE id = ?`, [acc.id]);
           }
 
           resolve({ id: acc.id, email: acc.email, name: acc.name, role, status: hasStatus ? "active" : undefined });
@@ -151,7 +147,9 @@ const handleLogin = (req, res) => {
 
       if (isMobileLogin || loginAs === "user") {
         // ── User / Admin login (mobile only allows user) ──
+        console.log("[LOGIN] path=user/mobile, email:", String(email).trim().toLowerCase(), "isMobile:", isMobileLogin);
         let found = await tryLogin("users", "user", "full_name");
+        console.log("[LOGIN] users result:", found === null ? "not found" : found === "bad_password" ? "bad_password" : "found");
 
         if (found === "bad_password") {
           return res.status(401).json({ message: "Invalid email or password." });
@@ -161,6 +159,7 @@ const handleLogin = (req, res) => {
           // All roles (user, admin, clinic) share the same login page on the website.
           // Try admins next…
           found = await tryLogin("admins", "admin", "full_name");
+          console.log("[LOGIN] admins result:", found === null ? "not found" : found === "bad_password" ? "bad_password" : "found");
 
           if (found === "bad_password") {
             return res.status(401).json({ message: "Invalid email or password." });
@@ -169,6 +168,7 @@ const handleLogin = (req, res) => {
           // …then clinics
           if (!found) {
             found = await tryLogin("clinics", "clinic", "clinic_name");
+            console.log("[LOGIN] clinics result:", found === null ? "not found" : found === "bad_password" ? "bad_password" : "found");
 
             if (found === "bad_password") {
               return res.status(401).json({ message: "Invalid email or password." });
