@@ -17,7 +17,8 @@ type ApiPatientRow = {
 };
 
 type PatientRow = {
-  id: string;
+  id: string;       // row key (may duplicate user id for "someone else" rows)
+  userId: number;   // actual users.id — needed for history lookup
   name: string;
   age: number;
   contact: string;
@@ -64,14 +65,11 @@ export default function Patients() {
    const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
    const navigate = useNavigate();
 
-   const [historyPopup, setHistoryPopup] = useState<{
-  patient: PatientRow;
-  history: {
-    date: string;
-    service: string;
-    status: string;
-  }[];
-} | null>(null);
+  const [historyPopup, setHistoryPopup] = useState<{
+    patient: PatientRow;
+    history: { date: string; service: string; status: string }[];
+    loading: boolean;
+  } | null>(null);
 
   const isPopupOpen = Boolean(profilePopup || historyPopup);
 
@@ -125,8 +123,9 @@ export default function Patients() {
       const data = await res.json();
 
       const normalized: PatientRow[] = Array.isArray(data)
-        ? data.map((item: ApiPatientRow) => ({
-            id: String(item.id),
+        ? data.map((item: ApiPatientRow, idx: number) => ({
+            id: `${item.id}-${idx}`,          // unique key per row
+            userId: Number(item.id),
             name: item.name || "Unknown Patient",
             age: calculateAge(item.date_of_birth),
             contact: item.contact || "No contact",
@@ -167,30 +166,41 @@ export default function Patients() {
     // navigate(`/clinic/patients/${row.id}`);
   
 
- const viewHistory = (row: PatientRow) => {
-  setHistoryPopup({
-    patient: row,
-    history: [
-      {
-        date: "03/10/25",
-        service: "Dental Checkup",
-        status: "Completed",
-      },
-      {
-        date: "02/22/25",
-        service: "Teeth Cleaning",
-        status: "Cancelled",
-      },
-      {
-        date: "01/15/25",
-        service: "Consultation",
-        status: "Completed",
-      },
-    ],
-  });
-};
-    // later:
-    // navigate(`/clinic/patients/${row.id}/history`);
+  const viewHistory = async (row: PatientRow) => {
+    // Show modal immediately with loading state
+    setHistoryPopup({ patient: row, history: [], loading: true });
+
+    try {
+      const token = localStorage.getItem("token");
+      const params = new URLSearchParams({
+        clinic_id: String(clinicId),
+        user_id:   String(row.userId),
+        patient_name: row.name,
+      });
+
+      const res = await fetch(`${API}/clinic/patient-history?${params.toString()}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch history");
+
+      const data = await res.json();
+
+      const history = Array.isArray(data)
+        ? data.map((item: { date: string; service: string; status: string }) => ({
+            date: formatLastVisit(item.date),
+            service: item.service || "General Consultation",
+            status: item.status
+              ? item.status.charAt(0).toUpperCase() + item.status.slice(1).replace(/_/g, " ")
+              : "Unknown",
+          }))
+        : [];
+
+      setHistoryPopup({ patient: row, history, loading: false });
+    } catch {
+      setHistoryPopup({ patient: row, history: [], loading: false });
+    }
+  };
   
 
   return (
@@ -391,24 +401,26 @@ export default function Patients() {
 
         {/* TIMELINE LIST */}
         <div className="history-timeline">
-          {historyPopup.history.map((item, index) => (
-            <div className="timeline-item" key={index}>
-
-              <div className="timeline-dot" />
-
-              <div className="timeline-content">
-                <div className="timeline-top">
-                  <span className="timeline-service">{item.service}</span>
-                  <span className={`timeline-status ${item.status.toLowerCase()}`}>
-                    {item.status}
-                  </span>
+          {historyPopup.loading ? (
+            <p className="history-empty">Loading history…</p>
+          ) : historyPopup.history.length === 0 ? (
+            <p className="history-empty">No appointment history found.</p>
+          ) : (
+            historyPopup.history.map((item, index) => (
+              <div className="timeline-item" key={index}>
+                <div className="timeline-dot" />
+                <div className="timeline-content">
+                  <div className="timeline-top">
+                    <span className="timeline-service">{item.service}</span>
+                    <span className={`timeline-status ${item.status.toLowerCase().replace(/\s+/g, "_")}`}>
+                      {item.status}
+                    </span>
+                  </div>
+                  <span className="timeline-date">{item.date}</span>
                 </div>
-
-                <span className="timeline-date">{item.date}</span>
               </div>
-
-            </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* ACTION */}

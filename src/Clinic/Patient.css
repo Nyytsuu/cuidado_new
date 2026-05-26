@@ -867,3 +867,11 @@ body {
   justify-content: center;
   margin-bottom: 8px;
 }
+
+.history-empty {
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.85rem;
+  padding: 18px 0 8px;
+  margin: 0;
+}

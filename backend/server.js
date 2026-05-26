@@ -262,11 +262,45 @@ app.get("/api/clinic/patients", verifyToken, requireRole("clinic", "admin"), asy
     res.json(rows);
   } catch (err) {
     console.error("Clinic patients list error:", err);
-    res.status(500).json({
-      message: "Server error",
-      error: err.message,
+    res.status(500).json({ message: "Server error", error: err.message,
       code: err.code || null,
     });
+  }
+});
+
+/* CLINIC PATIENT HISTORY */
+app.get("/api/clinic/patient-history", verifyToken, requireRole("clinic", "admin"), async (req, res) => {
+  try {
+    const clinicId  = Number(req.query.clinic_id);
+    const userId    = Number(req.query.user_id);
+    const patientName = String(req.query.patient_name || "").trim();
+
+    if (!clinicId || !userId) {
+      return res.status(400).json({ message: "clinic_id and user_id are required" });
+    }
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        a.id,
+        a.start_at                                                                    AS date,
+        a.status,
+        COALESCE(s.service_name_snapshot, a.purpose, 'General Consultation')          AS service
+      FROM appointments a
+      LEFT JOIN appointment_services s ON s.appointment_id = a.id
+      WHERE a.clinic_id = ?
+        AND a.user_id   = ?
+        AND LOWER(TRIM(COALESCE(NULLIF(TRIM(a.patient_name_snapshot), ''), ''))) = LOWER(?)
+      ORDER BY a.start_at DESC NULLS LAST
+      LIMIT 20
+      `,
+      [clinicId, userId, patientName]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Patient history error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
