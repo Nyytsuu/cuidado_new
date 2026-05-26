@@ -15,15 +15,19 @@ export default function Signin() {
     setLoading(true);
 
     try {
-      const data = await login(email, password);
+      const data = await login(email, password, undefined, "clinic");
+      const role = String(data?.user?.role || "").toLowerCase();
+
+      if (role !== "clinic") {
+        throw new Error("This email is not registered as a clinic account. Please use the User Login page.");
+      }
+
       localStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.user.role);
+      localStorage.setItem("role", role);
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("userId", String(data.user.id));
 
-      if (data.user.role === "admin") navigate("/admin");
-      else if (data.user.role === "clinic") navigate("/clinic/dashboard");
-      else navigate("/dashboard");
+      navigate("/clinic/dashboard");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Login failed");
     } finally {

@@ -112,7 +112,10 @@ const handleLogin = (req, res) => {
 
   (async () => {
     try {
-      if (isMobileLogin) {
+      const loginAs = String(req.body.loginAs || "").toLowerCase(); // "user" | "clinic" | "admin" | ""
+
+      if (isMobileLogin || loginAs === "user") {
+        // ── User-only login ──
         const found = await tryLogin("users", "user", "full_name");
 
         if (found === "bad_password") {
@@ -120,13 +123,24 @@ const handleLogin = (req, res) => {
         }
 
         if (!found) {
+          // Tell the caller if the email belongs to a different account type
           const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
           const accountType = accounts?.[0]?.account_type;
 
-          if (accountType && accountType !== "user") {
+          if (accountType === "clinic") {
             return res.status(403).json({
-              message: "Only user accounts can log in to the mobile app.",
+              message: "This email is registered as a clinic account. Please use the Clinic Login page.",
             });
+          }
+
+          if (accountType === "admin") {
+            return res.status(403).json({
+              message: "This email is an admin account.",
+            });
+          }
+
+          if (isMobileLogin) {
+            return res.status(401).json({ message: "Invalid email or password." });
           }
 
           return res.status(401).json({ message: "Invalid email or password." });
@@ -150,11 +164,51 @@ const handleLogin = (req, res) => {
         });
       }
 
+      if (loginAs === "clinic") {
+        // ── Clinic-only login ──
+        const found = await tryLogin("clinics", "clinic", "clinic_name");
+
+        if (found === "bad_password") {
+          return res.status(401).json({ message: "Invalid email or password." });
+        }
+
+        if (!found) {
+          const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
+          const accountType = accounts?.[0]?.account_type;
+
+          if (accountType === "user") {
+            return res.status(403).json({
+              message: "This email is registered as a user account. Please use the User Login page.",
+            });
+          }
+
+          return res.status(401).json({ message: "Invalid email or password." });
+        }
+
+        const token = jwt.sign(
+          { id: found.id, role: found.role, email: found.email },
+          process.env.JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+
+        return res.json({
+          message: "Login successful ✅",
+          token,
+          user: {
+            id: found.id,
+            role: found.role,
+            email: found.email,
+            name: found.name,
+          },
+        });
+      }
+
+      // ── Fallback: try all tables in order (admin → clinic → user) ──
       // 1) admins
       let found = await tryLogin("admins", "admin", "full_name");
       if (found === "bad_password") return res.status(401).json({ message: "Invalid email or password." });
 
-      // 2) clinics (clinic_name column)
+      // 2) clinics
       if (!found) {
         found = await tryLogin("clinics", "clinic", "clinic_name");
         if (found === "bad_password") return res.status(401).json({ message: "Invalid email or password." });

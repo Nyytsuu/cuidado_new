@@ -97,8 +97,12 @@ const onLogin = async (e: React.FormEvent<HTMLFormElement>) => {
   console.log("CAPTCHA KEY:", siteKey);
 
   try {
-    const data = await login(email, password, captchaToken || undefined);
+    const data = await login(email, password, captchaToken || undefined, "user");
     const role = String(data?.user?.role || "").toLowerCase();
+
+    if (role === "clinic") {
+      throw new Error("This email is registered as a clinic account. Please use the Clinic Login page.");
+    }
 
     if (isNativeMobileRuntime() && role !== "user") {
       throw new Error("Only user accounts can log in to the mobile app.");

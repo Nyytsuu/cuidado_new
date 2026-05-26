@@ -3,7 +3,8 @@ import { apiUrl, isNativeMobileRuntime } from "../sharedBackendFetch";
 export async function login(
   email: string,
   password: string,
-  captchaToken?: string
+  captchaToken?: string,
+  loginAs?: "user" | "clinic" | "admin"
 ) {
   const loginPath = isNativeMobileRuntime() ? "/api/mobile/login" : "/api/login";
 
@@ -14,6 +15,7 @@ export async function login(
       email,
       password,
       captchaToken,
+      loginAs,
     }),
   });
 
