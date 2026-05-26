@@ -532,23 +532,19 @@ body {
 .ClinicAppoint .sort-header:hover {
   opacity: 0.85;
 }
-.sort-arrow {
+.ClinicAppoint .sort-arrow {
   font-size: 0.85rem;
   line-height: 1;
 }
-.sort-arrow.inactive {
+.ClinicAppoint .sort-arrow.inactive {
   opacity: 0.35;
 }
-.sort-arrow.active {
+.ClinicAppoint .sort-arrow.active {
   opacity: 1;
   color: #a7f3d0;
 }
 
 /* ── STATUS FILTER TOOLBAR ── */
-.ClinicAppoint .appoint-toolbar {
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid #e5e7eb;
-}
 .ClinicAppoint .appoint-filter-pills {
   display: flex;
   flex-wrap: wrap;
@@ -597,7 +593,7 @@ body {
   background: #c53030;
   border-color: #c53030;
 }
-.appoint-filter-count {
+.ClinicAppoint .appoint-filter-count {
   background: rgba(255,255,255,0.28);
   border-radius: 999px;
   padding: 1px 7px;
@@ -611,13 +607,16 @@ body {
   color: #6b7280;
 }
 
-/* ── ARCHIVE TOOLBAR ── */
+/* ── TOOLBAR (filter pills + archive toggle) ── */
 .ClinicAppoint .appoint-toolbar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  margin: 0 -18px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid #e5e7eb;
 }
 .ClinicAppoint .appoint-archive-toggle {
   display: inline-flex;
@@ -675,25 +674,26 @@ body {
 }
 
 /* ── ROW HIGHLIGHTS ── */
+/* Use box-shadow inset instead of border-left so grid columns stay aligned */
 .ClinicAppoint .users-row.row-hl-pending {
   background: linear-gradient(90deg, #fffbeb 0%, #fff 60%);
-  border-left: 3px solid #f6ad55;
+  box-shadow: inset 3px 0 0 #f6ad55;
 }
 .ClinicAppoint .users-row.row-hl-reschedule {
   background: linear-gradient(90deg, #fff7ed 0%, #fff 60%);
-  border-left: 3px solid #ed8936;
+  box-shadow: inset 3px 0 0 #ed8936;
 }
 .ClinicAppoint .users-row.row-hl-confirmed {
   background: linear-gradient(90deg, #f0fff4 0%, #fff 60%);
-  border-left: 3px solid #48bb78;
+  box-shadow: inset 3px 0 0 #48bb78;
 }
 .ClinicAppoint .users-row.row-hl-completed {
   background: linear-gradient(90deg, #f7fafc 0%, #fff 60%);
-  border-left: 3px solid #a0aec0;
+  box-shadow: inset 3px 0 0 #a0aec0;
 }
 .ClinicAppoint .users-row.row-hl-cancelled {
   background: linear-gradient(90deg, #fff5f5 0%, #fff 60%);
-  border-left: 3px solid #fc8181;
+  box-shadow: inset 3px 0 0 #fc8181;
   opacity: 0.85;
 }
 
