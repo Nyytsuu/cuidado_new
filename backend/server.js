@@ -243,7 +243,7 @@ app.get("/api/clinic/patients", verifyToken, requireRole("clinic", "admin"), asy
       FROM appointments a
       INNER JOIN users u ON u.id = a.user_id
       WHERE a.clinic_id = ?
-      GROUP BY u.id, u.full_name, u.phone, u.date_of_birth
+      GROUP BY u.id
       ORDER BY lastVisit DESC
       `,
       [clinicId]

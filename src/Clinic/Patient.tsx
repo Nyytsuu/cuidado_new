@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./Patient.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
@@ -108,39 +108,44 @@ export default function Patients() {
     });
   };
 
-  useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        setLoadingPatients(true);
+  const fetchPatients = useCallback(async () => {
+    try {
+      setLoadingPatients(true);
 
-        const res = await fetch(
-          `${API}/clinic/patients?clinic_id=${clinicId}`
-        );
-        if (!res.ok) throw new Error("Failed to fetch patients");
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${API}/clinic/patients?clinic_id=${clinicId}`,
+        {
+          cache: "no-store",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch patients");
 
-        const data = await res.json();
+      const data = await res.json();
 
-        const normalized: PatientRow[] = Array.isArray(data)
-          ? data.map((item: ApiPatientRow) => ({
-              id: String(item.id),
-              name: item.name || "Unknown Patient",
-              age: calculateAge(item.date_of_birth),
-              contact: item.contact || "No contact",
-              lastVisit: formatLastVisit(item.lastVisit),
-            }))
-          : [];
+      const normalized: PatientRow[] = Array.isArray(data)
+        ? data.map((item: ApiPatientRow) => ({
+            id: String(item.id),
+            name: item.name || "Unknown Patient",
+            age: calculateAge(item.date_of_birth),
+            contact: item.contact || "No contact",
+            lastVisit: formatLastVisit(item.lastVisit),
+          }))
+        : [];
 
-        setPatients(normalized);
-      } catch (error) {
-        console.error("Patients fetch error:", error);
-        setPatients([]);
-      } finally {
-        setLoadingPatients(false);
-      }
-    };
-
-    fetchPatients();
+      setPatients(normalized);
+    } catch (error) {
+      console.error("Patients fetch error:", error);
+      setPatients([]);
+    } finally {
+      setLoadingPatients(false);
+    }
   }, [API, clinicId]);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
 
   const rows = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();

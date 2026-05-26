@@ -38,10 +38,6 @@ body {
   overflow-x: hidden !important;
   min-width: 100%;
 }
-.Patient .admin-content-inner {
-  width: 100%;
-  max-width: 100%;
-}
 /* ================= SIDEBAR ================= */
 .Patient .sidebar {
   top: 0;
