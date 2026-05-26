@@ -707,14 +707,12 @@ body {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   padding: 10px 16px;
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e2eeeb;
   box-shadow: 0 2px 8px rgba(15, 66, 66, 0.06);
-  flex-wrap: wrap;
 }
 .ClinicAppoint .appoint-filter-pills {
   display: flex;
@@ -722,6 +720,8 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 .ClinicAppoint .appoint-filter-pill {
   display: inline-flex;
