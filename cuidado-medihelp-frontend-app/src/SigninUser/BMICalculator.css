@@ -1328,3 +1328,60 @@ body {
     flex-direction: column;
   }
 }
+
+
+/* ── Who is this for? toggle ── */
+.fc-for-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fc-for-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1.5px solid #d1d5db;
+  border-radius: 20px;
+  background: #fff;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.fc-for-btn.active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.fc-for-btn:hover:not(.active):not(:disabled) {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.fc-patient-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.fc-patient-summary span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fc-required-star {
+  color: #ef4444;
+}
+

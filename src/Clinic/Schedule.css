@@ -456,6 +456,207 @@ body {
   font-weight: 600;
 }
 
+/* ── Schedule Summary Card ── */
+.Schedule .small-card {
+  min-height: unset !important;
+  background:
+    linear-gradient(135deg, rgba(15, 143, 131, 0.10), rgba(47, 111, 168, 0.06)),
+    #ffffff;
+}
+
+.Schedule .sch-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.Schedule .sched-status-pill {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+
+.Schedule .sched-status-pill.open   { background: #18a370; }
+.Schedule .sched-status-pill.closed { background: #b42318; }
+
+.Schedule .sched-loading {
+  margin: 0;
+  color: #7a9e9a;
+  font-size: 0.85rem;
+}
+
+/* Today row */
+.Schedule .sched-today-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 11px;
+  background: #f0faf7;
+  border: 1px solid #cce8e3;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.Schedule .sched-today-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.81rem;
+  font-weight: 700;
+  color: #0f4242;
+}
+
+.Schedule .sched-today-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.Schedule .sched-today-dot.open   { background: #18a370; box-shadow: 0 0 0 3px rgba(24,163,112,0.2); }
+.Schedule .sched-today-dot.closed { background: #b42318; }
+
+.Schedule .sched-hours-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.Schedule .sched-hours-tag.open    { background: #daf5ee; color: #0b5d56; }
+.Schedule .sched-hours-tag.off     { background: #f1f5f9; color: #64748b; }
+.Schedule .sched-hours-tag.blocked { background: #fef3c7; color: #92400e; }
+
+/* Week dots */
+.Schedule .sched-week-grid {
+  display: flex;
+  gap: 5px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.Schedule .sched-week-dot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: default;
+  height: 28px;
+  max-width: 34px;
+}
+
+.Schedule .sched-week-dot.active { background: #109c85; color: #fff; }
+.Schedule .sched-week-dot.off    { background: #e8f0ef; color: #9eb8b4; }
+.Schedule .sched-week-dot.today  { outline: 2px solid #0f4242; outline-offset: 2px; }
+.Schedule .sched-week-dot.today.active { background: #0b5d56; }
+
+/* Stats row */
+.Schedule .sched-stats-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.Schedule .sched-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  gap: 1px;
+}
+
+.Schedule .sched-stat strong {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.Schedule .sched-stat.working       { background: #dcfce7; color: #166534; }
+.Schedule .sched-stat.off           { background: #f1f5f9; color: #475569; }
+.Schedule .sched-stat.blocked-count { background: #fff7ed; color: #92400e; }
+
+/* Summary text */
+.Schedule .sched-summary-text {
+  margin: 0;
+  font-size: 0.77rem;
+  color: #4e7a74;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Save button */
+.Schedule .sched-save-btn {
+  width: 100%;
+  margin-top: 4px;
+  min-height: 36px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+/* ── Blocked Dates Card header ── */
+.Schedule .blocked-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.Schedule .blocked-count-badge {
+  background: #b42318;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.Schedule .blocked-form-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4e7a74;
+  margin-bottom: -4px;
+}
+
+.Schedule .sched-block-btn {
+  width: 100%;
+  min-height: 36px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Empty state for blocked dates */
+.Schedule .blocked-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #637b78;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 16px;
+  border: 1px dashed #bcd8d3;
+  border-radius: 10px;
+  background: #f5faf9;
+  text-align: center;
+}
+
+.Schedule .blocked-empty span { font-size: 1.4rem; }
+.Schedule .blocked-empty p    { margin: 0; }
+
 /* blocked date button */
 .Schedule .block-btn {
   width: fit-content;

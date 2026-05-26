@@ -538,6 +538,9 @@ export default function FindClinic() {
       return null;
     }
   }, []);
+  const [bookingForSelf, setBookingForSelf] = useState(true);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successPopupMessage, setSuccessPopupMessage] = useState("");
 
@@ -891,6 +894,9 @@ export default function FindClinic() {
     setPatientNote("");
     setClinicServices([]);
     setSelectedServiceId("");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
   };
 
   const closeBookingModal = () => {
@@ -900,6 +906,9 @@ export default function FindClinic() {
     setClinicServices([]);
     setSelectedServiceId("");
     setBookingMessage("");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
   };
 
   const handleConfirmBooking = async () => {
@@ -941,9 +950,18 @@ export default function FindClinic() {
       setBookingMessage("");
 
       const user_id = currentUser.id;
-      const patient_name_snapshot =
-        currentUser.full_name || currentUser.name || "";
-      const patient_phone_snapshot = currentUser.phone || "";
+      const patient_name_snapshot = bookingForSelf
+        ? (currentUser.full_name || currentUser.name || "")
+        : guestName.trim();
+      const patient_phone_snapshot = bookingForSelf
+        ? (currentUser.phone || "")
+        : guestPhone.trim();
+
+      if (!bookingForSelf && !patient_name_snapshot) {
+        setBookingMessage("Please enter the patient's name.");
+        setBooking(false);
+        return;
+      }
 
       const start_at = `${appointmentDate} ${appointmentTime}:00`;
 
@@ -1500,20 +1518,64 @@ export default function FindClinic() {
                     Patient details
                   </h3>
 
-                  <div className="fc-patient-summary">
-                    <span>
-                      <UserRound size={15} />
-                      {patientDisplayName}
-                    </span>
-                    <span>
-                      <Phone size={15} />
-                      {patientDisplayPhone}
-                    </span>
-                    <span>
-                      <Mail size={15} />
-                      {patientDisplayEmail}
-                    </span>
+                  <div className="fc-for-toggle">
+                    <button
+                      type="button"
+                      className={`fc-for-btn${bookingForSelf ? " active" : ""}`}
+                      onClick={() => { setBookingForSelf(true); setGuestName(""); setGuestPhone(""); setBookingMessage(""); }}
+                      disabled={booking}
+                    >
+                      Myself
+                    </button>
+                    <button
+                      type="button"
+                      className={`fc-for-btn${!bookingForSelf ? " active" : ""}`}
+                      onClick={() => { setBookingForSelf(false); setBookingMessage(""); }}
+                      disabled={booking}
+                    >
+                      Someone else
+                    </button>
                   </div>
+
+                  {bookingForSelf ? (
+                    <div className="fc-patient-summary">
+                      <span>
+                        <UserRound size={15} />
+                        {patientDisplayName}
+                      </span>
+                      <span>
+                        <Phone size={15} />
+                        {patientDisplayPhone}
+                      </span>
+                      <span>
+                        <Mail size={15} />
+                        {patientDisplayEmail}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="fc-modal-grid">
+                      <div className="fc-modal-field">
+                        <label className="fc-required">Patient Name</label>
+                        <input
+                          type="text"
+                          value={guestName}
+                          onChange={(e) => { setGuestName(e.target.value); setBookingMessage(""); }}
+                          placeholder="Full name of the patient"
+                          disabled={booking}
+                        />
+                      </div>
+                      <div className="fc-modal-field">
+                        <label>Phone Number</label>
+                        <input
+                          type="text"
+                          value={guestPhone}
+                          onChange={(e) => { setGuestPhone(e.target.value.replace(/\D/g, "").slice(0, 11)); setBookingMessage(""); }}
+                          placeholder="Patient's phone number"
+                          disabled={booking}
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="fc-modal-field">
                     <label>Symptoms</label>

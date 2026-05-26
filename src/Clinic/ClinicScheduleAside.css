@@ -1,3 +1,4 @@
+/* ── Base card wrapper ── */
 .clinic-schedule-aside .admin-card {
   background: #ffffff;
   border: 1px solid #d9ebe8;
@@ -12,20 +13,27 @@
   box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
 }
 
+/* ── Small card (Summary) ── */
 .clinic-schedule-aside .small-card {
-  min-height: 120px;
+  min-height: unset;
+  padding: 16px 18px 18px;
 }
 
 .Patient .clinic-schedule-aside .small-card,
 .ClinicAppoint .clinic-schedule-aside .small-card,
 .services .clinic-schedule-aside .small-card {
-  min-height: 120px;
+  min-height: unset;
   height: auto;
 }
 
+/* ── Big card (Options) ── */
 .clinic-schedule-aside .big-card {
   min-height: 430px;
-  background: #f5fbfa;
+  padding: 16px 18px 18px;
+  background: #f7fdfb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .Patient .clinic-schedule-aside .big-card,
@@ -33,89 +41,190 @@
 .services .clinic-schedule-aside .big-card {
   min-height: 430px;
   height: auto;
-  background: #f5fbfa;
+  background: #f7fdfb;
 }
 
-.clinic-schedule-aside .admin-right-card p {
+/* ── Card header row (title + status pill) ── */
+.sch-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sch-card-header h3 {
   margin: 0;
-  color: #31514d;
-  font-size: 0.92rem;
-  line-height: 1.35;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f4242;
 }
 
+/* ── Open/Closed status pill ── */
 .clinic-current-status {
-  width: fit-content;
   border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 0.8rem;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.clinic-current-status.open   { background: #18a370; }
+.clinic-current-status.closed { background: #b42318; }
+
+/* ── Loading text ── */
+.sch-loading {
+  margin: 0;
+  color: #7a9e9a;
+  font-size: 0.85rem;
+}
+
+/* ── Today row ── */
+.sch-today-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f0faf7;
+  border: 1px solid #cce8e3;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.sch-today-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f4242;
+}
+
+.sch-today-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sch-today-dot.open   { background: #18a370; box-shadow: 0 0 0 3px rgba(24,163,112,0.2); }
+.sch-today-dot.closed { background: #b42318; }
+
+.sch-today-hours {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0b5d56;
+  background: #daf5ee;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.sch-hours-blocked {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.sch-hours-off {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+}
+
+/* ── Week overview dots ── */
+.sch-week-grid {
+  display: flex;
+  gap: 5px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sch-week-dot {
+  flex: 1;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.7rem;
   font-weight: 800;
+  cursor: default;
+  transition: transform 0.15s;
+  min-width: 0;
+  max-width: 32px;
+  height: 28px;
+}
+
+.sch-week-dot.active {
+  background: #109c85;
   color: #ffffff;
 }
 
-.clinic-current-status.open {
-  background: #28784e;
+.sch-week-dot.off {
+  background: #e8f0ef;
+  color: #9eb8b4;
 }
 
-.clinic-current-status.closed {
-  background: #b42318;
+.sch-week-dot.today {
+  outline: 2px solid #0f4242;
+  outline-offset: 2px;
 }
 
-.clinic-schedule-editor {
+.sch-week-dot.today.active {
+  background: #0b5d56;
+}
+
+/* ── Stats row ── */
+.sch-stats-row {
   display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.clinic-schedule-row {
-  display: grid;
-  grid-template-columns: 74px 1fr 1fr;
   gap: 8px;
+  margin-bottom: 6px;
+}
+
+.sch-stat-pill {
+  flex: 1;
+  display: flex;
   align-items: center;
-  padding: 8px;
-  border: 1px solid #d9ebe8;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 8px;
   border-radius: 8px;
-  background: #ffffff;
-}
-
-.clinic-schedule-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #0f4242;
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.clinic-schedule-toggle input {
-  width: 16px;
-  height: 16px;
-  accent-color: #109c85;
-}
-
-.clinic-schedule-row input[type="time"] {
-  width: 100%;
-  min-width: 0;
-  height: 32px;
-  border: 1px solid #c9e2df;
-  border-radius: 8px;
-  padding: 0 6px;
-  color: #0f4242;
-  background: #ffffff;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
-.clinic-schedule-row input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.sch-stat-pill span {
+  font-size: 1rem;
+  font-weight: 800;
 }
 
+.sch-stat-pill.working {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sch-stat-pill.off {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* ── Summary line ── */
+.sch-summary-line {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #4e7a74;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* ── Error message ── */
 .clinic-schedule-message {
   padding: 9px 10px;
   border-radius: 8px;
   font-size: 0.84rem;
   font-weight: 700;
   line-height: 1.3;
+  margin-top: 6px;
 }
 
 .clinic-schedule-message.schedule-error {
@@ -128,12 +237,166 @@
   color: #166534;
 }
 
+/* ── Big card heading ── */
+.clinic-schedule-aside .big-card h3 {
+  margin: 0 0 4px;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f4242;
+}
+
+/* ── Schedule editor rows ── */
+.clinic-schedule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+}
+
+.clinic-schedule-row {
+  display: grid;
+  grid-template-columns: 38px 38px 1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 10px;
+  border: 1px solid #cde8e4;
+  border-radius: 9px;
+  background: #ffffff;
+  transition: background 0.15s;
+}
+
+.clinic-schedule-row.sch-row-off {
+  background: #f8f8f8;
+  border-color: #e4eae9;
+}
+
+/* ── Toggle switch ── */
+.sch-toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  width: 32px;
+  height: 18px;
+}
+
+.sch-toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.sch-toggle-track {
+  width: 32px;
+  height: 18px;
+  background: #d1d5db;
+  border-radius: 999px;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.sch-toggle-switch input:checked + .sch-toggle-track {
+  background: #109c85;
+}
+
+.sch-toggle-switch input:disabled + .sch-toggle-track {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.sch-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  transition: transform 0.2s;
+}
+
+.sch-toggle-switch input:checked + .sch-toggle-track .sch-toggle-thumb {
+  transform: translateX(14px);
+}
+
+/* ── Day name label ── */
+.sch-day-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.sch-day-name.active { color: #0f4242; }
+.sch-day-name.dimmed { color: #adb9b7; }
+
+/* ── Time inputs ── */
+.sch-times {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sch-times input[type="time"] {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  border: 1px solid #c9e2df;
+  border-radius: 7px;
+  padding: 0 5px;
+  color: #0f4242;
+  background: #f8fefd;
+  font-size: 0.74rem;
+  font-weight: 700;
+  outline: none;
+}
+
+.sch-times input[type="time"]:focus {
+  border-color: #109c85;
+  box-shadow: 0 0 0 2px rgba(16, 156, 133, 0.15);
+}
+
+.sch-times input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sch-time-sep {
+  color: #9eb8b4;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Day off tag ── */
+.sch-day-off-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9ea8a6;
+  background: #eef0f0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+/* ── Save button ── */
 .clinic-schedule-aside .pill-save-schedule {
   width: 100%;
   background: #109c85 !important;
   color: #ffffff;
   border-radius: 8px;
   margin-top: auto;
+  min-height: 36px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: background 0.18s;
 }
 
 .Patient .clinic-schedule-aside .pill-save-schedule,
@@ -146,12 +409,11 @@
   margin-top: auto;
 }
 
+.clinic-schedule-aside .pill-save-schedule:hover:not(:disabled) {
+  background: #0b7a6a !important;
+}
+
 .clinic-schedule-aside .pill-save-schedule:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
-
-
-
-  

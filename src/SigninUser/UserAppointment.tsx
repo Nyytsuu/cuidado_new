@@ -1884,6 +1884,11 @@ function UserAppointmentsContent({
                             dayAppointments[0].clinic_name ||
                             "Clinic"}
                         </h4>
+                        {dayAppointments[0].patient_name_snapshot && (
+                          <span className="appt-for-tag">
+                            For: {dayAppointments[0].patient_name_snapshot}
+                          </span>
+                        )}
                         <p>
                           {dayAppointments[0].purpose ||
                             dayAppointments[0].specialization ||
@@ -2022,6 +2027,12 @@ function UserAppointmentsContent({
 
                         <div className="appointment-info">
                           <h3>{item.clinic_name_snapshot || item.clinic_name || "Clinic"}</h3>
+
+                          {item.patient_name_snapshot && (
+                            <span className="appt-for-tag">
+                              For: {item.patient_name_snapshot}
+                            </span>
+                          )}
 
                           {(needsAppointmentResponse(item) || isRecentAppointment(item)) && (
                             <div className="appointment-meta-badges">
@@ -2408,6 +2419,9 @@ function UserAppointmentsContent({
                   selectedAppointment.clinic_name ||
                   "Clinic"}
               </h4>
+              {selectedAppointment.patient_name_snapshot && (
+                <p className="summary-for-tag">For: {selectedAppointment.patient_name_snapshot}</p>
+              )}
               <small>
                 {formatDate(selectedAppointment.start_at)} at{" "}
                 {formatTime(selectedAppointment.start_at)}
@@ -2531,6 +2545,9 @@ function UserAppointmentsContent({
                   selectedAppointment.clinic_name ||
                   "Clinic"}
               </h4>
+              {selectedAppointment.patient_name_snapshot && (
+                <p className="summary-for-tag">For: {selectedAppointment.patient_name_snapshot}</p>
+              )}
               <small>
                 New schedule: {rescheduleDate || "--"} at {rescheduleTime || "--:--"}
               </small>

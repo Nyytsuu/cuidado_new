@@ -76,6 +76,15 @@ const toDateInputValue = (date: Date = new Date()) => {
 const getCurrentDay = (date: Date = new Date()) =>
   date.toLocaleDateString("en-US", { weekday: "long" }) as DayKey;
 
+const formatScheduleTime = (value: string) => {
+  const [hoursRaw, minutes = "00"] = value.split(":");
+  const hours = Number(hoursRaw);
+  if (Number.isNaN(hours)) return value;
+  const suffix = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${minutes} ${suffix}`;
+};
+
 const timeToMinutes = (value: string) => {
   const [hours, minutes] = value.split(":").map(Number);
 
@@ -186,6 +195,34 @@ const todayDate = toDateInputValue();
       )
     );
   }, [blockedDates, searchTerm]);
+
+  const openNow = useMemo(
+    () =>
+      !isBlockedDate(blockedDates, statusNow) &&
+      schedule.some((item) => isScheduleOpenNow(item, statusNow, blockedDates)),
+    [blockedDates, schedule, statusNow]
+  );
+
+  const blockedToday = useMemo(
+    () => isBlockedDate(blockedDates, statusNow),
+    [blockedDates, statusNow]
+  );
+
+  const scheduleSummary = useMemo(() => {
+    const openDays = schedule.filter((d) => d.working);
+    if (openDays.length === 0) return "Clinic is currently closed for all days.";
+    const first = openDays[0];
+    const sameHours = openDays.every((d) => d.open === first.open && d.close === first.close);
+    const dayLabel =
+      openDays.length === 7
+        ? "Daily"
+        : openDays.map((d) => d.day.slice(0, 3)).join(", ");
+    if (!sameHours) return `${dayLabel}. Hours vary by day.`;
+    return `${dayLabel}, ${formatScheduleTime(first.open)} – ${formatScheduleTime(first.close)}`;
+  }, [schedule]);
+
+  const workingCount = useMemo(() => schedule.filter((d) => d.working).length, [schedule]);
+  const offCount     = useMemo(() => schedule.filter((d) => !d.working).length, [schedule]);
 
   const loadSchedule = useCallback(async () => {
     try {
@@ -472,23 +509,95 @@ const [, setError] = useState("");
               </section>
 
               <aside className="admin-right">
+
+                {/* ── Schedule Summary Card ── */}
                 <div className="admin-card admin-right-card small-card">
-                  <h3>Schedule Options</h3>
-                  <p>Edit working days and clinic hours.</p>
+                  <div className="sch-card-header">
+                    <h3>Schedule Summary</h3>
+                    {!loading && (
+                      <span className={`sched-status-pill ${openNow ? "open" : "closed"}`}>
+                        {blockedToday ? "Blocked Today" : openNow ? "Open Now" : "Closed"}
+                      </span>
+                    )}
+                  </div>
+
+                  {loading ? (
+                    <p className="sched-loading">Loading…</p>
+                  ) : (
+                    <>
+                      {/* Today row */}
+                      <div className="sched-today-row">
+                        <div className="sched-today-label">
+                          <span className={`sched-today-dot ${openNow ? "open" : "closed"}`} />
+                          Today · {getCurrentDay(statusNow)}
+                        </div>
+                        {(() => {
+                          const todayRow = schedule.find((d) => d.day === getCurrentDay(statusNow));
+                          if (blockedToday)        return <span className="sched-hours-tag blocked">Blocked</span>;
+                          if (!todayRow?.working)  return <span className="sched-hours-tag off">Day Off</span>;
+                          return (
+                            <span className="sched-hours-tag open">
+                              {formatScheduleTime(todayRow.open)} – {formatScheduleTime(todayRow.close)}
+                            </span>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Week dots */}
+                      <div className="sched-week-grid">
+                        {schedule.map((day) => {
+                          const isToday = day.day === getCurrentDay(statusNow);
+                          return (
+                            <div
+                              key={day.day}
+                              className={["sched-week-dot", day.working ? "active" : "off", isToday ? "today" : ""].filter(Boolean).join(" ")}
+                              title={`${day.day}: ${day.working ? `${formatScheduleTime(day.open)} – ${formatScheduleTime(day.close)}` : "Day Off"}`}
+                            >
+                              {day.day.slice(0, 1)}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Stats */}
+                      <div className="sched-stats-row">
+                        <div className="sched-stat working">
+                          <strong>{workingCount}</strong><span>Working</span>
+                        </div>
+                        <div className="sched-stat off">
+                          <strong>{offCount}</strong><span>Day Off</span>
+                        </div>
+                        <div className="sched-stat blocked-count">
+                          <strong>{blockedDates.length}</strong><span>Blocked</span>
+                        </div>
+                      </div>
+
+                      {/* Summary text */}
+                      <p className="sched-summary-text">{scheduleSummary}</p>
+                    </>
+                  )}
+
                   <button
                     type="button"
-                    className="pill pill-success block-btn"
+                    className="pill pill-success sched-save-btn"
                     onClick={() => saveSchedule()}
                     disabled={loading || saving}
                   >
-                    {saving ? "Saving..." : "Save Schedule"}
+                    {saving ? "Saving…" : "Save Schedule"}
                   </button>
                 </div>
 
+                {/* ── Blocked Dates Card ── */}
                 <div className="admin-card admin-right-card big-card">
-                  <h3>Blocked Dates</h3>
+                  <div className="blocked-card-header">
+                    <h3>Blocked Dates</h3>
+                    {blockedDates.length > 0 && (
+                      <span className="blocked-count-badge">{blockedDates.length}</span>
+                    )}
+                  </div>
 
                   <div className="blocked-form">
+                    <label className="blocked-form-label">Date</label>
                     <input
                       type="date"
                       value={blockedDate}
@@ -496,45 +605,48 @@ const [, setError] = useState("");
                       onChange={(event) => setBlockedDate(event.target.value)}
                       disabled={saving}
                     />
+                    <label className="blocked-form-label">Reason</label>
                     <input
                       type="text"
                       value={blockedReason}
-                      placeholder="Reason"
+                      placeholder="e.g. Holiday, Staff training…"
                       onChange={(event) => setBlockedReason(event.target.value)}
                       disabled={saving}
                     />
                     <button
                       type="button"
-                      className="pill pill-danger block-btn"
+                      className="pill pill-danger sched-block-btn"
                       onClick={addBlockedDate}
                       disabled={saving}
                     >
-                      Block Date
+                      + Block Date
                     </button>
                   </div>
 
                   <div className="blocked-list">
-                    {visibleBlockedDates.length === 0 && (
-                      <div className="blocked-empty">No blocked dates.</div>
-                    )}
-
-                    {visibleBlockedDates.map((item) => (
-                      <div className="blocked-item" key={item.id}>
-                        <div className="blocked-left">
-                          <div className="blocked-date">{item.date}</div>
-                          <div className="blocked-reason">{item.reason}</div>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="pill pill-view blocked-remove"
-                          disabled={saving}
-                          onClick={() => removeBlockedDate(item.id)}
-                        >
-                          Remove
-                        </button>
+                    {visibleBlockedDates.length === 0 ? (
+                      <div className="blocked-empty">
+                        <span>📅</span>
+                        <p>No blocked dates set.</p>
                       </div>
-                    ))}
+                    ) : (
+                      visibleBlockedDates.map((item) => (
+                        <div className="blocked-item" key={item.id}>
+                          <div className="blocked-left">
+                            <div className="blocked-date">{item.date}</div>
+                            <div className="blocked-reason">{item.reason}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="pill pill-view blocked-remove"
+                            disabled={saving}
+                            onClick={() => removeBlockedDate(item.id)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </aside>

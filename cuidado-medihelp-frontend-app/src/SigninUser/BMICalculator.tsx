@@ -354,8 +354,9 @@ export default function BMICalculator() {
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
   const [selectedServiceId, setSelectedServiceId] = useState("");
-  const [patientName, setPatientName] = useState("");
-  const [patientPhone, setPatientPhone] = useState("");
+  const [bookingForSelf, setBookingForSelf] = useState(true);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [purpose, setPurpose] = useState("BMI consultation");
   const [symptoms, setSymptoms] = useState("");
   const [patientNote, setPatientNote] = useState("");
@@ -549,8 +550,9 @@ const bmiCheckupAdvice = useMemo(() => {
     setAppointmentDate(toDateInputValue(plusThirty));
     setAppointmentTime(toTimeInputValue(plusThirty));
     setSelectedServiceId("");
-    setPatientName(currentUser?.full_name || currentUser?.name || "");
-    setPatientPhone(currentUser?.phone || "");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
     setPurpose("BMI consultation");
     setSymptoms("");
     setPatientNote(
@@ -601,6 +603,9 @@ const bmiCheckupAdvice = useMemo(() => {
     setClinicProfileError("");
     setBookingMessage("");
     setBookingSuccess("");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
   };
 
   const handleServiceChange = (serviceId: string) => {
@@ -650,8 +655,15 @@ const bmiCheckupAdvice = useMemo(() => {
       return;
     }
 
-    if (!patientName.trim() || !patientPhone.trim()) {
-      setBookingMessage("Please enter your name and phone number.");
+    const patientNameValue = bookingForSelf
+      ? (currentUser.full_name || currentUser.name || "")
+      : guestName.trim();
+    const patientPhoneValue = bookingForSelf
+      ? (currentUser.phone || "")
+      : guestPhone.trim();
+
+    if (!patientNameValue) {
+      setBookingMessage(bookingForSelf ? "Your account name is missing." : "Please enter the patient's name.");
       return;
     }
 
@@ -677,8 +689,8 @@ const bmiCheckupAdvice = useMemo(() => {
           purpose: purpose || "BMI consultation",
           symptoms,
           patient_note: patientNote,
-          patient_name_snapshot: patientName.trim(),
-          patient_phone_snapshot: patientPhone.trim(),
+          patient_name_snapshot: patientNameValue,
+          patient_phone_snapshot: patientPhoneValue,
           clinic_name_snapshot: profileClinic.clinic_name,
           services: selectedService
             ? [
@@ -1151,25 +1163,67 @@ const bmiCheckupAdvice = useMemo(() => {
                           </select>
                         </label>
 
-                        <label>
-                          Your Name
-                          <input
-                            type="text"
-                            value={patientName}
-                            onChange={(event) => setPatientName(event.target.value)}
-                            disabled={booking}
-                          />
+                        <label className="wide">
+                          Who is this for?
+                          <div className="fc-for-toggle">
+                            <button
+                              type="button"
+                              className={`fc-for-btn${bookingForSelf ? " active" : ""}`}
+                              onClick={() => { setBookingForSelf(true); setGuestName(""); setGuestPhone(""); setBookingMessage(""); }}
+                              disabled={booking}
+                            >
+                              Myself
+                            </button>
+                            <button
+                              type="button"
+                              className={`fc-for-btn${!bookingForSelf ? " active" : ""}`}
+                              onClick={() => { setBookingForSelf(false); setBookingMessage(""); }}
+                              disabled={booking}
+                            >
+                              Someone else
+                            </button>
+                          </div>
                         </label>
 
-                        <label>
-                          Phone Number
-                          <input
-                            type="text"
-                            value={patientPhone}
-                            onChange={(event) => setPatientPhone(event.target.value)}
-                            disabled={booking}
-                          />
-                        </label>
+                        {bookingForSelf ? (
+                          <label className="wide">
+                            Patient
+                            <div className="fc-patient-summary">
+                              {(() => {
+                                const user = getStoredCurrentUser();
+                                const name = user?.full_name || user?.name || "Name not set";
+                                const phone = user?.phone || "Phone not set";
+                                return <><span>👤 {name}</span><span>📞 {phone}</span></>;
+                              })()}
+                            </div>
+                          </label>
+                        ) : (
+                          <>
+                            <label>
+                              Patient Name <span className="fc-required-star">*</span>
+                              <input
+                                type="text"
+                                value={guestName}
+                                onChange={(e) => setGuestName(e.target.value)}
+                                placeholder="Full name of the patient"
+                                disabled={booking}
+                              />
+                            </label>
+                            <label>
+                              Phone Number
+                              <input
+                                type="text"
+                                value={guestPhone}
+                                onChange={(e) => {
+                                  const v = e.target.value.replace(/\D/g, "");
+                                  if (v.length <= 11) setGuestPhone(v);
+                                }}
+                                placeholder="Patient's phone number"
+                                disabled={booking}
+                              />
+                            </label>
+                          </>
+                        )}
 
                         <label>
                           Purpose
