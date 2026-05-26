@@ -425,7 +425,7 @@ export default function Patients() {
     </div>
   </div>
 )}
-// logout
+
 {showLogoutConfirm && (
   <div className="logout-confirm-overlay">
     <div className="logout-confirm-modal">
