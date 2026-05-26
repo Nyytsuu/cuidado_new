@@ -75,6 +75,26 @@ const ensureOtpRequestsTable = async () => {
   `);
 };
 
+const ensurePasswordResetTokensTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id         SERIAL PRIMARY KEY,
+      email      VARCHAR(255) NOT NULL,
+      token      VARCHAR(128) NOT NULL,
+      expires_at TIMESTAMPTZ  NOT NULL,
+      created_at TIMESTAMPTZ  DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_email
+    ON password_reset_tokens (email)
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token
+    ON password_reset_tokens (token)
+  `);
+};
+
 const ensureEmailVerificationTokensTable = async () => {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS email_verification_tokens (
@@ -367,6 +387,7 @@ const crypto = require("crypto");
 router.post("/auth/otp/send", async (req, res) => {
   try {
     await ensureOtpRequestsTable();
+    await ensurePasswordResetTokensTable();
 
     const purpose = String(req.body.purpose || "forgot_password").trim();
     const email = String(req.body.identifier || "").trim().toLowerCase();
