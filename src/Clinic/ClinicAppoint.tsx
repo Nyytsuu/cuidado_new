@@ -772,9 +772,9 @@ export default function ClinicAppoint() {
             <div className="admin-grid">
               <div className="table-col">
                 <div className="appoint-toolbar">
-                  {!showArchived && (
-                    <div className="appoint-filter-pills">
-                      {(["All", "Pending", "Reschedule Requested", "Confirmed", "Completed", "Cancelled"] as const).map((s) => (
+                  <div className="appoint-filter-pills">
+                    {!showArchived && (
+                      (["All", "Pending", "Reschedule Requested", "Confirmed", "Completed", "Cancelled"] as const).map((s) => (
                         <button
                           key={s}
                           type="button"
@@ -788,24 +788,24 @@ export default function ClinicAppoint() {
                             </span>
                           )}
                         </button>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    )}
 
-                  {showArchived && (
-                    <div className="appoint-archive-banner">
-                      <FaArchive />
-                      <span>Showing archived cancelled appointments — hidden from the main list</span>
-                    </div>
-                  )}
+                    {showArchived && (
+                      <div className="appoint-archive-banner">
+                        <FaArchive />
+                        <span>Showing archived cancelled appointments — hidden from the main list</span>
+                      </div>
+                    )}
 
-                  <button
-                    type="button"
-                    className={`appoint-archive-toggle ${showArchived ? "active" : ""}`}
-                    onClick={() => setShowArchived((v) => !v)}
-                  >
-                    {showArchived ? <><FaBoxOpen /> Exit Archive</> : <><FaArchive /> Archived {archivedCount > 0 && <span className="appoint-filter-count">{archivedCount}</span>}</>}
-                  </button>
+                    <button
+                      type="button"
+                      className={`appoint-archive-toggle ${showArchived ? "active" : ""}`}
+                      onClick={() => setShowArchived((v) => !v)}
+                    >
+                      {showArchived ? <><FaBoxOpen /> Exit Archive</> : <><FaArchive /> Archived {archivedCount > 0 && <span className="appoint-filter-count">{archivedCount}</span>}</>}
+                    </button>
+                  </div>
                 </div>
 
                 <section className="admin-card admin-table-card">

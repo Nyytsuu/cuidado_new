@@ -704,10 +704,6 @@ body {
 
 /* ── TOOLBAR (filter pills + archive toggle) ── */
 .ClinicAppoint .appoint-toolbar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
   padding: 10px 16px;
   background: #ffffff;
   border-radius: 14px;
@@ -720,8 +716,6 @@ body {
   flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
-  flex: 1;
-  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -811,7 +805,7 @@ body {
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  align-self: flex-start;
+  margin-left: auto;
   transition: background 0.13s ease, border-color 0.13s ease, color 0.13s ease;
 }
 .ClinicAppoint .appoint-archive-toggle:hover {
