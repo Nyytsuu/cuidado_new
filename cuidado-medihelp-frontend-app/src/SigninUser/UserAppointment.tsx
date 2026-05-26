@@ -767,6 +767,10 @@ function UserAppointmentsContent({
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
 
   const [actionMessage, setActionMessage] = useState("");
+  const [rescheduleResultModal, setRescheduleResultModal] = useState<{
+    action: "accept" | "cancel";
+    message: string;
+  } | null>(null);
 
   const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "all">(
     "upcoming"
@@ -795,16 +799,16 @@ function UserAppointmentsContent({
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
   const userId = currentUser?.id;
 
-  const loadAppointments = async () => {
+  const loadAppointments = async (silent = false) => {
     try {
       if (!userId) {
         setError("No logged-in user found.");
         setAppointments([]);
-        setLoading(false);
+        if (!silent) setLoading(false);
         return;
       }
 
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError("");
 
       const res = await fetch(apiUrl(`/api/appointments/by-user/${userId}`));
@@ -823,18 +827,27 @@ function UserAppointmentsContent({
       );
     } catch (err) {
       console.error("Failed to load appointments:", err);
-      setError("Failed to load appointments.");
-      setAppointments([]);
+      if (!silent) {
+        setError("Failed to load appointments.");
+        setAppointments([]);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadAppointments();
+    const interval = setInterval(() => loadAppointments(true), 30_000);
+    return () => clearInterval(interval);
   }, [userId]);
 
   const now = Date.now();
+  const startOfToday = useMemo(() => {
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    return date.getTime();
+  }, []);
 
   const validAppointments = useMemo(() => {
     return appointments.filter((a) => isValidDate(a.start_at));
@@ -842,23 +855,31 @@ function UserAppointmentsContent({
 
   const upcomingAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
-      .filter((a) => (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) >= now)
+      .filter((a) => {
+        const time = parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0;
+        const isActive = ["pending", "confirmed", "reschedule_requested"].includes(a.status);
+        return isActive && time >= startOfToday;
+      })
       .sort(
         (a, b) =>
           (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) -
           (parseDateTime(getTimelineStartAt(b))?.getTime() ?? 0)
       );
-  }, [validAppointments, now]);
+  }, [validAppointments, startOfToday]);
 
   const pastAppointments = useMemo<Appointment[]>(() => {
     return validAppointments
-      .filter((a) => (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0) < now)
+      .filter((a) => {
+        const time = parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0;
+        const isActive = ["pending", "confirmed", "reschedule_requested"].includes(a.status);
+        return !isActive || time < startOfToday;
+      })
       .sort(
         (a, b) =>
           (parseDateTime(getTimelineStartAt(b))?.getTime() ?? 0) -
           (parseDateTime(getTimelineStartAt(a))?.getTime() ?? 0)
       );
-  }, [validAppointments, now]);
+  }, [validAppointments, startOfToday]);
 
   const allAppointments = useMemo<Appointment[]>(() => {
     return [...validAppointments].sort(
@@ -1211,12 +1232,14 @@ function UserAppointmentsContent({
         throw new Error(data.message || "Failed to update reschedule request");
       }
 
-      setActionMessage(
-        action === "accept"
-          ? "New schedule accepted. Your appointment was updated."
-          : "Reschedule declined. The appointment was cancelled."
-      );
-      await loadAppointments();
+      setRescheduleResultModal({
+        action,
+        message:
+          action === "accept"
+            ? "New schedule accepted. Your appointment has been confirmed."
+            : "Reschedule declined. The appointment has been cancelled.",
+      });
+      await loadAppointments(true);
     } catch (err) {
       setActionMessage(
         err instanceof Error
@@ -2092,6 +2115,33 @@ function UserAppointmentsContent({
                 {rescheduleSubmitting ? "Saving..." : "Yes, reschedule"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {rescheduleResultModal && (
+        <div className="booking-modal-overlay reschedule-result-overlay">
+          <div className="booking-modal small-modal reschedule-result-modal">
+            <div className="reschedule-result-icon">
+              {rescheduleResultModal.action === "accept" ? (
+                <span className="reschedule-result-icon--accept">✓</span>
+              ) : (
+                <span className="reschedule-result-icon--cancel">✕</span>
+              )}
+            </div>
+            <h2>
+              {rescheduleResultModal.action === "accept"
+                ? "Appointment Confirmed"
+                : "Appointment Cancelled"}
+            </h2>
+            <p>{rescheduleResultModal.message}</p>
+            <button
+              type="button"
+              className="book-btn"
+              onClick={() => setRescheduleResultModal(null)}
+            >
+              OK
+            </button>
           </div>
         </div>
       )}

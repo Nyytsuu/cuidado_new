@@ -1049,16 +1049,16 @@ function UserAppointmentsContent({
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
   const userId = currentUser?.id;
 
-  const loadAppointments = async () => {
+  const loadAppointments = async (silent = false) => {
     try {
       if (!userId) {
         setError("No logged-in user found.");
         setAppointments([]);
-        setLoading(false);
+        if (!silent) setLoading(false);
         return;
       }
 
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError("");
 
       const res = await fetch(apiUrl(`/api/appointments/by-user/${userId}`));
@@ -1077,15 +1077,19 @@ function UserAppointmentsContent({
       );
     } catch (err) {
       console.error("Failed to load appointments:", err);
-      setError("Failed to load appointments.");
-      setAppointments([]);
+      if (!silent) {
+        setError("Failed to load appointments.");
+        setAppointments([]);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadAppointments();
+    const interval = setInterval(() => loadAppointments(true), 30_000);
+    return () => clearInterval(interval);
   }, [userId]);
 
   const now = Date.now();
@@ -1379,7 +1383,7 @@ function UserAppointmentsContent({
       closeCancelModal();
       setSelectedAppointment(null);
       setActionMessage("Appointment cancelled successfully.");
-      await loadAppointments();
+      await loadAppointments(true);
     } catch (err) {
       setActionMessage(
         err instanceof Error ? err.message : "Failed to cancel appointment."
@@ -1423,7 +1427,7 @@ function UserAppointmentsContent({
 
       closeFeedbackModal();
       setActionMessage("Thank you. Your clinic rating was saved.");
-      await loadAppointments();
+      await loadAppointments(true);
     } catch (err) {
       setFeedbackError(
         err instanceof Error ? err.message : "Failed to save clinic feedback."
@@ -1506,7 +1510,7 @@ function UserAppointmentsContent({
       closeRescheduleModal();
       setSelectedAppointment(null);
       setActionMessage("Appointment rescheduled successfully.");
-      await loadAppointments();
+      await loadAppointments(true);
     } catch (err) {
       setActionMessage(
         err instanceof Error ? err.message : "Failed to reschedule appointment."
@@ -1554,7 +1558,7 @@ function UserAppointmentsContent({
           ? "✓ New schedule accepted. Your appointment has been confirmed."
           : "Reschedule declined. The appointment was cancelled."
       );
-      await loadAppointments();
+      await loadAppointments(true);
     } catch (err) {
       setActionMessage(
         err instanceof Error

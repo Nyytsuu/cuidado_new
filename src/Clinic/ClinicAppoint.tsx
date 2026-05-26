@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./ClinicAppoint.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
-import { FaCalendarAlt, FaCheck, FaEye, FaTimes } from "react-icons/fa";
+import { FaCalendarAlt, FaCheck, FaEye, FaTimes, FaArchive, FaBoxOpen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 type AppointmentStatus =
@@ -128,6 +128,18 @@ export default function ClinicAppoint() {
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "All">("All");
+  const [sortColumn, setSortColumn] = useState<"patientName" | "serviceType" | "date" | "status">("date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedIds, setArchivedIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(`clinic_archived_${getStoredClinicId()}`);
+      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+    } catch {
+      return new Set<string>();
+    }
+  });
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentRow | null>(null);
@@ -229,9 +241,9 @@ export default function ClinicAppoint() {
     return fallbackDuration;
   };
 
-  const loadAppointments = useCallback(async () => {
+  const loadAppointments = useCallback(async (silent = false) => {
     try {
-      setLoadingAppointments(true);
+      if (!silent) setLoadingAppointments(true);
 
       const res = await fetch(
         `${API}/clinic/appointments?clinic_id=${clinicId}`
@@ -269,14 +281,16 @@ export default function ClinicAppoint() {
       setAppointments(normalized);
     } catch (error) {
       console.error("Load appointments error:", error);
-      setAppointments([]);
+      if (!silent) setAppointments([]);
     } finally {
-      setLoadingAppointments(false);
+      if (!silent) setLoadingAppointments(false);
     }
   }, [API, clinicId]);
 
   useEffect(() => {
     loadAppointments();
+    const interval = setInterval(() => loadAppointments(true), 30_000);
+    return () => clearInterval(interval);
   }, [loadAppointments]);
 
   /* Fetch clinic schedule once so we can validate reschedule times client-side */
@@ -310,6 +324,49 @@ export default function ClinicAppoint() {
       default:
         return "";
     }
+  };
+
+  const handleSort = (col: typeof sortColumn) => {
+    if (sortColumn === col) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortColumn(col);
+      setSortDirection("asc");
+    }
+  };
+
+  const sortArrow = (col: typeof sortColumn) => {
+    if (sortColumn !== col) return <span className="sort-arrow inactive">↕</span>;
+    return <span className="sort-arrow active">{sortDirection === "asc" ? "↑" : "↓"}</span>;
+  };
+
+  const rowHighlightClass = (status: AppointmentStatus) => {
+    switch (status) {
+      case "Pending":              return "row-hl-pending";
+      case "Reschedule Requested": return "row-hl-reschedule";
+      case "Confirmed":            return "row-hl-confirmed";
+      case "Completed":            return "row-hl-completed";
+      case "Cancelled":            return "row-hl-cancelled";
+      default:                     return "";
+    }
+  };
+
+  const archiveAppointment = (id: string) => {
+    setArchivedIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem(`clinic_archived_${clinicId}`, JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const unarchiveAppointment = (id: string) => {
+    setArchivedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      localStorage.setItem(`clinic_archived_${clinicId}`, JSON.stringify([...next]));
+      return next;
+    });
   };
 
   const openViewModal = (row: AppointmentRow) => {
@@ -369,7 +426,7 @@ export default function ClinicAppoint() {
         throw new Error(`HTTP ${res.status} - ${raw}`);
       }
 
-      await loadAppointments();
+      await loadAppointments(true);
 
       if (selectedAppointment?.id === id) {
         const updated = appointments.find((a) => a.id === id);
@@ -422,7 +479,7 @@ export default function ClinicAppoint() {
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      await loadAppointments();
+      await loadAppointments(true);
     } catch (error) {
       console.error("Reject appointment error:", error);
       alert(`Failed to reject appointment: ${String(error)}`);
@@ -500,7 +557,7 @@ export default function ClinicAppoint() {
         throw new Error(message || `HTTP ${res.status}`);
       }
 
-      await loadAppointments();
+      await loadAppointments(true);
       closeModal();
       setRescheduleSuccessOpen(true);
     } catch (error) {
@@ -558,20 +615,64 @@ export default function ClinicAppoint() {
     return "";
   }, [rescheduleForm, clinicSchedule, clinicBlockedDates, selectedAppointment]);
 
+  const archivedCount = useMemo(
+    () => appointments.filter((r) => archivedIds.has(r.id)).length,
+    [appointments, archivedIds]
+  );
+
   const filteredAppointments = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
-    if (!keyword) return appointments;
+    // Split into archived vs active view
+    let list = showArchived
+      ? appointments.filter((r) => archivedIds.has(r.id))
+      : appointments.filter((r) => !archivedIds.has(r.id));
 
-    return appointments.filter(
-      (row) =>
-        row.patientName.toLowerCase().includes(keyword) ||
-        row.serviceType.toLowerCase().includes(keyword) ||
-        row.date.toLowerCase().includes(keyword) ||
-        row.time.toLowerCase().includes(keyword) ||
-        row.status.toLowerCase().includes(keyword)
-    );
-  }, [appointments, searchTerm]);
+    if (keyword) {
+      list = list.filter(
+        (row) =>
+          row.patientName.toLowerCase().includes(keyword) ||
+          row.serviceType.toLowerCase().includes(keyword) ||
+          row.date.toLowerCase().includes(keyword) ||
+          row.time.toLowerCase().includes(keyword) ||
+          row.status.toLowerCase().includes(keyword)
+      );
+    }
+
+    if (!showArchived && statusFilter !== "All") {
+      list = list.filter((row) => row.status === statusFilter);
+    }
+
+    const statusOrder: Record<AppointmentStatus, number> = {
+      "Pending": 0,
+      "Reschedule Requested": 1,
+      "Confirmed": 2,
+      "Completed": 3,
+      "Cancelled": 4,
+    };
+
+    list.sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+
+      if (sortColumn === "date") {
+        aVal = new Date(a.startAtRaw).getTime();
+        bVal = new Date(b.startAtRaw).getTime();
+      } else if (sortColumn === "status") {
+        aVal = statusOrder[a.status] ?? 99;
+        bVal = statusOrder[b.status] ?? 99;
+      } else {
+        aVal = (a[sortColumn] || "").toLowerCase();
+        bVal = (b[sortColumn] || "").toLowerCase();
+      }
+
+      if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return list;
+  }, [appointments, searchTerm, statusFilter, sortColumn, sortDirection, archivedIds, showArchived]);
 
   return (
     <div
@@ -600,14 +701,59 @@ export default function ClinicAppoint() {
             </div>
             <div className="admin-grid">
               <section className="admin-card admin-table-card">
+                <div className="appoint-toolbar">
+                  {!showArchived && (
+                    <div className="appoint-filter-pills">
+                      {(["All", "Pending", "Reschedule Requested", "Confirmed", "Completed", "Cancelled"] as const).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          className={`appoint-filter-pill ${statusFilter === s ? "active" : ""} ${s !== "All" ? statusClass(s as AppointmentStatus) : ""}`}
+                          onClick={() => setStatusFilter(s)}
+                        >
+                          {s}
+                          {s !== "All" && (
+                            <span className="appoint-filter-count">
+                              {appointments.filter((r) => r.status === s && !archivedIds.has(r.id)).length}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {showArchived && (
+                    <div className="appoint-archive-banner">
+                      <FaArchive />
+                      <span>Showing archived cancelled appointments — hidden from the main list</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    className={`appoint-archive-toggle ${showArchived ? "active" : ""}`}
+                    onClick={() => setShowArchived((v) => !v)}
+                  >
+                    {showArchived ? <><FaBoxOpen /> Exit Archive</> : <><FaArchive /> Archived {archivedCount > 0 && <span className="appoint-filter-count">{archivedCount}</span>}</>}
+                  </button>
+                </div>
+
                 <div className="users-table">
                   <div className="users-row users-header">
-                    <div className="users-cell">Patient Name</div>
-                    <div className="users-cell">Service Type</div>
-                    <div className="users-cell">Date</div>
+                    <button type="button" className="users-cell sort-header" onClick={() => handleSort("patientName")}>
+                      Patient Name {sortArrow("patientName")}
+                    </button>
+                    <button type="button" className="users-cell sort-header" onClick={() => handleSort("serviceType")}>
+                      Service Type {sortArrow("serviceType")}
+                    </button>
+                    <button type="button" className="users-cell sort-header" onClick={() => handleSort("date")}>
+                      Date {sortArrow("date")}
+                    </button>
                     <div className="users-cell">Time</div>
-                    <div className="users-cell">Status</div>
-                    <div className="users-cell">Actions:</div>
+                    <button type="button" className="users-cell sort-header" onClick={() => handleSort("status")}>
+                      Status {sortArrow("status")}
+                    </button>
+                    <div className="users-cell">Actions</div>
                   </div>
 
                   {loadingAppointments ? (
@@ -630,7 +776,7 @@ export default function ClinicAppoint() {
                     </div>
                   ) : (
                     filteredAppointments.map((row) => (
-                      <div className="users-row" key={row.id}>
+                      <div className={`users-row ${rowHighlightClass(row.status)}`} key={row.id}>
                         <div className="users-cell users-name">
                           {row.patientName}
                         </div>
@@ -658,13 +804,36 @@ export default function ClinicAppoint() {
 
 <div className="users-actions">
   {row.status === "Cancelled" || row.status === "Completed" ? (
-    <button
-      type="button"
-      className="icon-btn pill-view"
-      onClick={() => openViewModal(row)}
-    >
-      <FaEye />
-    </button>
+    <>
+      <button
+        type="button"
+        className="icon-btn pill-view"
+        onClick={() => openViewModal(row)}
+      >
+        <FaEye />
+      </button>
+      {row.status === "Cancelled" && (
+        archivedIds.has(row.id) ? (
+          <button
+            type="button"
+            className="icon-btn pill-restore"
+            title="Restore from archive"
+            onClick={() => unarchiveAppointment(row.id)}
+          >
+            <FaBoxOpen />
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="icon-btn pill-archive"
+            title="Archive"
+            onClick={() => archiveAppointment(row.id)}
+          >
+            <FaArchive />
+          </button>
+        )
+      )}
+    </>
   ) : (
     <>
       <button
