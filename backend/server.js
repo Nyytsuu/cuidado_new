@@ -234,21 +234,27 @@ app.get("/api/clinic/patients", verifyToken, requireRole("clinic", "admin"), asy
 
     const [rows] = await pool.query(
       `
-      SELECT
-        u.id,
-        COALESCE(NULLIF(TRIM(a.patient_name_snapshot), ''), u.full_name)  AS name,
-        COALESCE(NULLIF(TRIM(a.patient_phone_snapshot), ''), u.phone)     AS contact,
-        u.date_of_birth,
-        MAX(a.start_at) AS "lastVisit"
-      FROM appointments a
-      INNER JOIN users u ON u.id = a.user_id
-      WHERE a.clinic_id = ?
-      GROUP BY
-        u.id,
-        COALESCE(NULLIF(TRIM(a.patient_name_snapshot), ''), u.full_name),
-        COALESCE(NULLIF(TRIM(a.patient_phone_snapshot), ''), u.phone),
-        u.date_of_birth
-      ORDER BY MAX(a.start_at) DESC NULLS LAST
+      WITH ranked AS (
+        SELECT
+          u.id,
+          COALESCE(NULLIF(TRIM(a.patient_name_snapshot), ''), u.full_name)  AS name,
+          COALESCE(NULLIF(TRIM(a.patient_phone_snapshot), ''), u.phone)     AS contact,
+          u.date_of_birth,
+          a.start_at,
+          ROW_NUMBER() OVER (
+            PARTITION BY
+              u.id,
+              LOWER(TRIM(COALESCE(NULLIF(TRIM(a.patient_name_snapshot), ''), u.full_name)))
+            ORDER BY a.start_at DESC NULLS LAST
+          ) AS rn
+        FROM appointments a
+        INNER JOIN users u ON u.id = a.user_id
+        WHERE a.clinic_id = ?
+      )
+      SELECT id, name, contact, date_of_birth, start_at AS "lastVisit"
+      FROM ranked
+      WHERE rn = 1
+      ORDER BY start_at DESC NULLS LAST
       `,
       [clinicId]
     );
