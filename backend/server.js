@@ -236,14 +236,18 @@ app.get("/api/clinic/patients", verifyToken, requireRole("clinic", "admin"), asy
       `
       SELECT
         u.id,
-        u.full_name        AS name,
-        u.phone            AS contact,
+        COALESCE(NULLIF(TRIM(a.patient_name_snapshot), ''), u.full_name)  AS name,
+        COALESCE(NULLIF(TRIM(a.patient_phone_snapshot), ''), u.phone)     AS contact,
         u.date_of_birth,
-        MAX(a.start_at)    AS "lastVisit"
+        MAX(a.start_at) AS "lastVisit"
       FROM appointments a
       INNER JOIN users u ON u.id = a.user_id
       WHERE a.clinic_id = ?
-      GROUP BY u.id, u.full_name, u.phone, u.date_of_birth
+      GROUP BY
+        u.id,
+        COALESCE(NULLIF(TRIM(a.patient_name_snapshot), ''), u.full_name),
+        COALESCE(NULLIF(TRIM(a.patient_phone_snapshot), ''), u.phone),
+        u.date_of_birth
       ORDER BY MAX(a.start_at) DESC NULLS LAST
       `,
       [clinicId]

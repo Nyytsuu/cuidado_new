@@ -388,8 +388,11 @@ export default function BMICalculator() {
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
   const [selectedServiceId, setSelectedServiceId] = useState("");
-  const [patientName, setPatientName] = useState("");
-  const [patientPhone, setPatientPhone] = useState("");
+  const [bookingForSelf, setBookingForSelf] = useState(true);
+  const [accountName, setAccountName] = useState("");
+  const [accountPhone, setAccountPhone] = useState("");
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
   const [purpose, setPurpose] = useState("BMI consultation");
   const [symptoms, setSymptoms] = useState("");
   const [patientNote, setPatientNote] = useState("");
@@ -594,8 +597,11 @@ const bmiCheckupAdvice = useMemo(() => {
     setAppointmentDate(toDateInputValue(plusThirty));
     setAppointmentTime(toTimeInputValue(plusThirty));
     setSelectedServiceId("");
-    setPatientName(currentUser?.full_name || currentUser?.name || "");
-    setPatientPhone(currentUser?.phone || "");
+    setAccountName(currentUser?.full_name || currentUser?.name || "");
+    setAccountPhone(currentUser?.phone || "");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
     setPurpose("BMI consultation");
     setSymptoms("");
     setPatientNote(
@@ -646,6 +652,9 @@ const bmiCheckupAdvice = useMemo(() => {
     setClinicProfileError("");
     setBookingMessage("");
     setBookingSuccess("");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
   };
 
   const handleServiceChange = (serviceId: string) => {
@@ -700,8 +709,13 @@ const bmiCheckupAdvice = useMemo(() => {
       return;
     }
 
-    if (!patientName.trim() || !patientPhone.trim()) {
-      setBookingMessage("Please enter your name and phone number.");
+    const patientName = bookingForSelf ? accountName : guestName.trim();
+    const patientPhone = bookingForSelf ? accountPhone : guestPhone.trim();
+
+    if (!patientName) {
+      setBookingMessage(bookingForSelf
+        ? "Your account has no name on file. Please update your profile."
+        : "Please enter the patient's name.");
       return;
     }
 
@@ -1218,25 +1232,62 @@ const bmiCheckupAdvice = useMemo(() => {
                           </select>
                         </label>
 
-                        <label>
-                          Your Name
-                          <input
-                            type="text"
-                            value={patientName}
-                            onChange={(event) => setPatientName(event.target.value)}
-                            disabled={booking}
-                          />
+                        {/* WHO IS THIS FOR? */}
+                        <label className="wide">
+                          <div className="fc-for-toggle">
+                            <span className="fc-for-label">Who is this for?</span>
+                            <div className="fc-for-btns">
+                              <button
+                                type="button"
+                                className={`fc-for-btn ${bookingForSelf ? "active" : ""}`}
+                                onClick={() => { setBookingForSelf(true); setGuestName(""); setGuestPhone(""); setBookingMessage(""); }}
+                                disabled={booking}
+                              >
+                                Myself
+                              </button>
+                              <button
+                                type="button"
+                                className={`fc-for-btn ${!bookingForSelf ? "active" : ""}`}
+                                onClick={() => { setBookingForSelf(false); setBookingMessage(""); }}
+                                disabled={booking}
+                              >
+                                Someone else
+                              </button>
+                            </div>
+                          </div>
                         </label>
 
-                        <label>
-                          Phone Number
-                          <input
-                            type="text"
-                            value={patientPhone}
-                            onChange={(event) => setPatientPhone(event.target.value)}
-                            disabled={booking}
-                          />
-                        </label>
+                        {bookingForSelf ? (
+                          <label className="wide">
+                            <div className="fc-patient-summary">
+                              <span>👤 {accountName || "No name on file"}</span>
+                              <span>📞 {accountPhone || "No phone on file"}</span>
+                            </div>
+                          </label>
+                        ) : (
+                          <>
+                            <label>
+                              Patient name <span className="fc-required">*</span>
+                              <input
+                                type="text"
+                                value={guestName}
+                                onChange={(e) => { setGuestName(e.target.value); setBookingMessage(""); }}
+                                placeholder="Full name of the patient"
+                                disabled={booking}
+                              />
+                            </label>
+                            <label>
+                              Contact number
+                              <input
+                                type="tel"
+                                value={guestPhone}
+                                onChange={(e) => { setGuestPhone(e.target.value); setBookingMessage(""); }}
+                                placeholder="e.g. 09xxxxxxxxx"
+                                disabled={booking}
+                              />
+                            </label>
+                          </>
+                        )}
 
                         <label>
                           Purpose

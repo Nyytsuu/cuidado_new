@@ -512,8 +512,21 @@ function BookingModal({
   const [symptoms, setSymptoms] = useState<string>("");
   const [patientNote, setPatientNote] = useState<string>("");
 
-  const [patientName, setPatientName] = useState<string>("");
-  const [patientPhone, setPatientPhone] = useState<string>("");
+  const [bookingForSelf, setBookingForSelf] = useState<boolean>(true);
+  const [guestName, setGuestName] = useState<string>("");
+  const [guestPhone, setGuestPhone] = useState<string>("");
+
+  const currentUser = useMemo(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const accountName: string = currentUser?.full_name || currentUser?.name || "";
+  const accountPhone: string = currentUser?.phone || "";
 
   const [loadingClinics, setLoadingClinics] = useState<boolean>(false);
   const [loadingServices, setLoadingServices] = useState<boolean>(false);
@@ -611,8 +624,9 @@ function BookingModal({
     setPurpose("");
     setSymptoms("");
     setPatientNote("");
-    setPatientName("");
-    setPatientPhone("");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
     setError("");
     setServices([]);
   };
@@ -641,8 +655,13 @@ function BookingModal({
         return;
       }
 
-      if (!patientName.trim() || !patientPhone.trim()) {
-        setError("Please enter your name and phone number.");
+      const patientName = bookingForSelf ? accountName : guestName.trim();
+      const patientPhone = bookingForSelf ? accountPhone : guestPhone.trim();
+
+      if (!patientName) {
+        setError(bookingForSelf
+          ? "Your account has no name on file. Please update your profile."
+          : "Please enter the patient's name.");
         return;
       }
 
@@ -871,33 +890,66 @@ function BookingModal({
             />
           </div>
 
-          <div className="booking-field">
-            <label>Your Name</label>
-            <input
-              type="text"
-              value={patientName}
-              onChange={(e) => setPatientName(e.target.value)}
-              placeholder="Enter your full name"
-              disabled={submitting}
-            />
+          {/* WHO IS THIS FOR? */}
+          <div className="booking-field full-width">
+            <div className="fc-for-toggle">
+              <span className="fc-for-label">Who is this for?</span>
+              <div className="fc-for-btns">
+                <button
+                  type="button"
+                  className={`fc-for-btn ${bookingForSelf ? "active" : ""}`}
+                  onClick={() => { setBookingForSelf(true); setGuestName(""); setGuestPhone(""); setError(""); }}
+                  disabled={submitting}
+                >
+                  Myself
+                </button>
+                <button
+                  type="button"
+                  className={`fc-for-btn ${!bookingForSelf ? "active" : ""}`}
+                  onClick={() => { setBookingForSelf(false); setError(""); }}
+                  disabled={submitting}
+                >
+                  Someone else
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="booking-field">
-            <label>Phone Number</label>
-            <input
-  type="text"
-  value={patientPhone}
-  onChange={(e) => {
-    const value = e.target.value.replace(/\D/g, ""); // allow digits only
-    if (value.length <= 11) {
-      setPatientPhone(value);
-    }
-  }}
-  maxLength={11}
-  placeholder="Enter your phone number"
-  disabled={submitting}
-/>
-          </div>
+          {bookingForSelf ? (
+            <div className="booking-field full-width">
+              <div className="fc-patient-summary">
+                <span>👤 {accountName || "No name on file"}</span>
+                <span>📞 {accountPhone || "No phone on file"}</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="booking-field">
+                <label>Patient name <span className="fc-required">*</span></label>
+                <input
+                  type="text"
+                  value={guestName}
+                  onChange={(e) => { setGuestName(e.target.value); setError(""); }}
+                  placeholder="Full name of the patient"
+                  disabled={submitting}
+                />
+              </div>
+              <div className="booking-field">
+                <label>Contact number</label>
+                <input
+                  type="tel"
+                  value={guestPhone}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "");
+                    if (v.length <= 11) setGuestPhone(v);
+                  }}
+                  maxLength={11}
+                  placeholder="e.g. 09xxxxxxxxx"
+                  disabled={submitting}
+                />
+              </div>
+            </>
+          )}
 
           <div className="booking-field full-width">
             <label>Purpose</label>

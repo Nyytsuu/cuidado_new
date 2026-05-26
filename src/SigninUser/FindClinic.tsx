@@ -537,6 +537,11 @@ export default function FindClinic() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successPopupMessage, setSuccessPopupMessage] = useState("");
 
+  // "Who is this for?" toggle
+  const [bookingForSelf, setBookingForSelf] = useState(true);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+
   const fetchClinics = useCallback(async (searchOverride = search) => {
     try {
       setLoading(true);
@@ -899,6 +904,9 @@ export default function FindClinic() {
     setPatientNote("");
     setClinicServices([]);
     setSelectedServiceId("");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
   };
 
   const closeBookingModal = () => {
@@ -908,6 +916,9 @@ export default function FindClinic() {
     setClinicServices([]);
     setSelectedServiceId("");
     setBookingMessage("");
+    setBookingForSelf(true);
+    setGuestName("");
+    setGuestPhone("");
   };
 
   const handleConfirmBooking = async () => {
@@ -949,9 +960,21 @@ export default function FindClinic() {
       setBookingMessage("");
 
       const user_id = currentUser.id;
-      const patient_name_snapshot =
-        currentUser.full_name || currentUser.name || "";
-      const patient_phone_snapshot = currentUser.phone || "";
+
+      // If booking for someone else, use the typed-in guest details;
+      // otherwise fall back to the logged-in user's account info.
+      const patient_name_snapshot = bookingForSelf
+        ? (currentUser.full_name || currentUser.name || "")
+        : guestName.trim();
+      const patient_phone_snapshot = bookingForSelf
+        ? (currentUser.phone || "")
+        : guestPhone.trim();
+
+      if (!bookingForSelf && !patient_name_snapshot) {
+        setBookingMessage("Please enter the patient's name.");
+        setBooking(false);
+        return;
+      }
 
       const start_at = `${appointmentDate} ${appointmentTime}:00`;
 
@@ -1510,20 +1533,80 @@ export default function FindClinic() {
                     Patient details
                   </h3>
 
-                  <div className="fc-patient-summary">
-                    <span>
-                      <UserRound size={15} />
-                      {patientDisplayName}
-                    </span>
-                    <span>
-                      <Phone size={15} />
-                      {patientDisplayPhone}
-                    </span>
-                    <span>
-                      <Mail size={15} />
-                      {patientDisplayEmail}
-                    </span>
+                  {/* WHO IS THIS FOR? toggle */}
+                  <div className="fc-for-toggle">
+                    <span className="fc-for-label">Who is this for?</span>
+                    <div className="fc-for-btns">
+                      <button
+                        type="button"
+                        className={`fc-for-btn ${bookingForSelf ? "active" : ""}`}
+                        onClick={() => {
+                          setBookingForSelf(true);
+                          setGuestName("");
+                          setGuestPhone("");
+                          setBookingMessage("");
+                        }}
+                      >
+                        Myself
+                      </button>
+                      <button
+                        type="button"
+                        className={`fc-for-btn ${!bookingForSelf ? "active" : ""}`}
+                        onClick={() => {
+                          setBookingForSelf(false);
+                          setBookingMessage("");
+                        }}
+                      >
+                        Someone else
+                      </button>
+                    </div>
                   </div>
+
+                  {/* MYSELF — read-only account info */}
+                  {bookingForSelf ? (
+                    <div className="fc-patient-summary">
+                      <span>
+                        <UserRound size={15} />
+                        {patientDisplayName}
+                      </span>
+                      <span>
+                        <Phone size={15} />
+                        {patientDisplayPhone}
+                      </span>
+                      <span>
+                        <Mail size={15} />
+                        {patientDisplayEmail}
+                      </span>
+                    </div>
+                  ) : (
+                    /* SOMEONE ELSE — editable fields */
+                    <div className="fc-guest-fields">
+                      <div className="fc-modal-field">
+                        <label>Patient name <span className="fc-required">*</span></label>
+                        <input
+                          type="text"
+                          value={guestName}
+                          onChange={(e) => {
+                            setGuestName(e.target.value);
+                            setBookingMessage("");
+                          }}
+                          placeholder="Full name of the patient"
+                        />
+                      </div>
+                      <div className="fc-modal-field">
+                        <label>Contact number</label>
+                        <input
+                          type="tel"
+                          value={guestPhone}
+                          onChange={(e) => {
+                            setGuestPhone(e.target.value);
+                            setBookingMessage("");
+                          }}
+                          placeholder="e.g. 09xxxxxxxxx"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div className="fc-modal-field">
                     <label>Symptoms</label>
@@ -1533,7 +1616,7 @@ export default function FindClinic() {
                         setSymptoms(e.target.value);
                         setBookingMessage("");
                       }}
-                      placeholder="Briefly describe what you are feeling"
+                      placeholder="Briefly describe what the patient is feeling"
                       rows={4}
                     />
                   </div>
