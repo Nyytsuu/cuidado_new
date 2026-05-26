@@ -146,42 +146,30 @@ const handleLogin = (req, res) => {
       const loginAs = String(req.body.loginAs || "").toLowerCase(); // "user" | "clinic" | "admin" | ""
 
       if (isMobileLogin || loginAs === "user") {
-        // ── User / Admin login (mobile only allows user) ──
-        console.log("[LOGIN] path=user/mobile, email:", String(email).trim().toLowerCase(), "isMobile:", isMobileLogin);
-        let found = await tryLogin("users", "user", "full_name");
-        console.log("[LOGIN] users result:", found === null ? "not found" : found === "bad_password" ? "bad_password" : "found");
+        // All roles share the same login page. Try each table in order.
+        // Do NOT stop on bad_password — the same email can exist in multiple
+        // tables (e.g. a clinic owner who also has a user account). Continue
+        // checking and only give up after all tables return null / bad_password.
+        let found = null;
 
-        if (found === "bad_password") {
-          return res.status(401).json({ message: "Invalid email or password." });
+        // 1) users
+        const usersResult = await tryLogin("users", "user", "full_name");
+        if (usersResult !== null && usersResult !== "bad_password") found = usersResult;
+
+        // 2) admins (web only)
+        if (!found && !isMobileLogin) {
+          const adminsResult = await tryLogin("admins", "admin", "full_name");
+          if (adminsResult !== null && adminsResult !== "bad_password") found = adminsResult;
         }
 
+        // 3) clinics (web only)
         if (!found && !isMobileLogin) {
-          // All roles (user, admin, clinic) share the same login page on the website.
-          // Try admins next…
-          found = await tryLogin("admins", "admin", "full_name");
-          console.log("[LOGIN] admins result:", found === null ? "not found" : found === "bad_password" ? "bad_password" : "found");
-
-          if (found === "bad_password") {
-            return res.status(401).json({ message: "Invalid email or password." });
-          }
-
-          // …then clinics
-          if (!found) {
-            found = await tryLogin("clinics", "clinic", "clinic_name");
-            console.log("[LOGIN] clinics result:", found === null ? "not found" : found === "bad_password" ? "bad_password" : "found");
-
-            if (found === "bad_password") {
-              return res.status(401).json({ message: "Invalid email or password." });
-            }
-          }
-
-          if (!found) {
-            return res.status(401).json({ message: "Invalid email or password." });
-          }
+          const clinicsResult = await tryLogin("clinics", "clinic", "clinic_name");
+          if (clinicsResult !== null && clinicsResult !== "bad_password") found = clinicsResult;
         }
 
         if (!found) {
-          // Give clinic users a helpful message instead of a cryptic error
+          // Give clinic users a helpful message on mobile instead of a cryptic error
           if (isMobileLogin) {
             const accounts = await findAccountByEmail(String(email).trim().toLowerCase());
             const accountType = accounts?.[0]?.account_type;
