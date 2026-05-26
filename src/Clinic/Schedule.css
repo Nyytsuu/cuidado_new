@@ -21,9 +21,7 @@ body {
 .Schedule.with-sidebar {
   display: flex;
   height: 100vh;
-  background:
-    linear-gradient(180deg, rgba(15, 143, 131, 0.08), transparent 260px),
-    #f5faf9;
+  background: #eef3f2;
   padding-left: var(--sidebar-width-collapsed);
   overflow: hidden;
 }
@@ -258,15 +256,12 @@ body {
 }
 
 .Schedule .admin-table-card {
-  min-height: 520px;
-  padding: 14px 12px;
+  background: #ffffff;
+  border: 1px solid #e2eeeb;
+  box-shadow: 0 2px 10px rgba(15, 66, 66, 0.06);
+  border-radius: 16px;
   overflow: hidden;
-  border-radius: 14px;
-  background: linear-gradient(
-    #109c85 73px,
-    #ffffff 78px,
-    #ffffff 100%
-  ) !important;
+  min-height: 420px;
 }
 
 /* ================= TABLE ================= */
@@ -274,52 +269,56 @@ body {
   width: 100%;
 }
 
-/* ✅ Schedule columns: Day | Working | Open | Close | Actions */
+/* Schedule columns: Day | Working | Open | Close | Actions */
 .Schedule .users-row {
   display: grid;
   grid-template-columns: 1.6fr 1.2fr 1.6fr 1.4fr 2.0fr;
   align-items: center;
   gap: 0;
-  padding: 16px 12px;
-  border-bottom: 1px solid rgba(15, 66, 66, 0.12);
-  background: transparent;
+  padding: 0 22px;
+  border-bottom: 1px solid #f0f4f3;
+  min-height: 58px;
+  transition: background 0.12s ease;
 }
 
 .Schedule .schedule-row:hover {
-  background: rgba(15, 143, 131, 0.045);
+  background: #f5fffd;
 }
 
 .Schedule .users-header {
-  font-weight: 900;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 46px;
+  background: #f4f9f8;
+  border-bottom: 1px solid #daecea;
+  box-shadow: 0 2px 8px rgba(15, 66, 66, 0.05);
+}
+
+.Schedule .users-cell {
+  min-width: 0;
+  padding: 14px 10px;
+  display: flex;
+  align-items: center;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #374151;
 }
 
 .Schedule .users-header .users-cell {
-  color: white;
-  font-size: 1.2rem;
-}
-
-/* first column no line + no padding */
-.Schedule .users-row .users-cell:first-child {
-  padding-left: 0;
-}
-
-/* ✅ VERTICAL LINES */
-.Schedule .users-row .users-cell:not(:first-child)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 28px;
-  background: rgba(15, 66, 66, 0.18);
+  color: #5d7f7c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0 10px;
 }
 
 /* text style */
 .Schedule .users-name {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  color: #123432;
+  color: #0f172a;
 }
 
 /* time input */
@@ -540,15 +539,7 @@ body {
   min-height: 26px;
   padding: 0 10px;
 }
-.users-header .users-cell:nth-child(5) {
-  padding-left: 45px;   /* lower value = more left */
-}
-.users-header .users-cell:nth-child(4) {
-  padding-left: 10px;   /* lower value = more left */
-}
-.users-header .users-cell:nth-child(3) {
-  padding-left: 10px;   /* lower value = more left */
-}
+/* header cell padding overrides removed — uniform 10px via users-cell */
 
 
 /* RESPONSIVE */

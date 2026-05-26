@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./services.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
+import { FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 type ApiServiceRow = {
@@ -382,14 +383,17 @@ const closeDeleteModal = () => {
       <main className="preview-canvas">
         <section className="admin-content">
           <div className="admin-content-inner">
-            <div className="admin-title services-titlebar">
-              <h2>Services</h2>
+            <div className="services-titlebar">
+              <div className="admin-title">
+                <h2>Services</h2>
+                <p className="admin-title-sub">Manage the services your clinic offers to patients</p>
+              </div>
               <button
                 type="button"
-                className="pill pill-resched add-btn"
+                className="add-btn"
                 onClick={openAddModal}
               >
-                + Add New Service
+                <FaPlus /> Add Service
               </button>
             </div>
 
@@ -406,16 +410,14 @@ const closeDeleteModal = () => {
                   </div>
 
                   {loadingServices ? (
-                    <div className="users-row">
-                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
-                        Loading services...
-                      </div>
+                    <div className="svc-empty-state">
+                      <span className="svc-empty-icon">⏳</span>
+                      <p>Loading services…</p>
                     </div>
                   ) : rows.length === 0 ? (
-                    <div className="users-row">
-                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
-                        No services found.
-                      </div>
+                    <div className="svc-empty-state">
+                      <span className="svc-empty-icon">🩺</span>
+                      <p>No services found. Add one to get started.</p>
                     </div>
                   ) : (
                     rows.map((row) => (
@@ -423,27 +425,19 @@ const closeDeleteModal = () => {
                         <div className="users-cell users-name">{row.name}</div>
 
                         <div className="users-cell">
-                          <span className="pills pills-desc">{row.description}</span>
+                          <span className="svc-desc" title={row.description}>{row.description}</span>
                         </div>
 
                         <div className="users-cell">
-                          <span className="pills">
-                            {row.price != null ? `₱${row.price}` : "—"}
-                          </span>
+                          {row.price != null ? `₱${row.price}` : "—"}
                         </div>
 
                         <div className="users-cell">
-                          <span className="pills">
-                            {row.duration != null ? `${row.duration} min` : "—"}
-                          </span>
+                          {row.duration != null ? `${row.duration} min` : "—"}
                         </div>
 
                         <div className="users-cell">
-                          <span
-                            className={`pill ${
-                              row.enabled ? "pill-success" : "pill-gray"
-                            }`}
-                          >
+                          <span className={`status-badge ${row.enabled ? "badge-enabled" : "badge-disabled"}`}>
                             {row.enabled ? "Enabled" : "Disabled"}
                           </span>
                         </div>
@@ -452,31 +446,29 @@ const closeDeleteModal = () => {
                           <div className="users-actions">
                             <button
                               type="button"
-                              className="pill pill-view"
+                              className="icon-btn pill-view"
+                              title="Edit"
                               onClick={() => openEditModal(row)}
                             >
-                              Edit
+                              <FaEdit />
                             </button>
 
                             <button
                               type="button"
-                              className="pill pill-danger"
-                              onClick={() => {
-  setDeleteTargetId(row.id);
-  setIsDeleteModalOpen(true);
-}}
+                              className="icon-btn pill-danger"
+                              title="Delete"
+                              onClick={() => { setDeleteTargetId(row.id); setIsDeleteModalOpen(true); }}
                             >
-                              Delete
+                              <FaTrash />
                             </button>
 
                             <button
                               type="button"
-                              className={`pill ${
-                                row.enabled ? "pill-gray" : "pill-success"
-                              }`}
+                              className={`icon-btn ${row.enabled ? "pill-gray" : "pill-success"}`}
+                              title={row.enabled ? "Disable" : "Enable"}
                               onClick={() => setStatusTarget(row)}
                             >
-                              {row.enabled ? "Disable" : "Enable"}
+                              {row.enabled ? <FaToggleOff /> : <FaToggleOn />}
                             </button>
                           </div>
                         </div>

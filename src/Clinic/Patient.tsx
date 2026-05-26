@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import "./Patient.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
+import { FaEye, FaCalendarAlt } from "react-icons/fa";
 // logout
 import { useNavigate } from "react-router-dom";
 
@@ -210,6 +211,7 @@ export default function Patients() {
           <div className="admin-content-inner">
             <div className="admin-title">
               <h2>Patients</h2>
+              <p className="admin-title-sub">View and manage registered clinic patients</p>
             </div>
 
             <div className="admin-grid">
@@ -224,52 +226,49 @@ export default function Patients() {
                   </div>
 
                   {loadingPatients ? (
-                    <div className="users-row">
-                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
-                        Loading patients...
-                      </div>
+                    <div className="pt-empty-state">
+                      <span className="pt-empty-icon">⏳</span>
+                      <p>Loading patients…</p>
                     </div>
                   ) : rows.length === 0 ? (
-                    <div className="users-row">
-                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
-                        No patients found.
-                      </div>
+                    <div className="pt-empty-state">
+                      <span className="pt-empty-icon">🧑‍⚕️</span>
+                      <p>No patients found.</p>
                     </div>
                   ) : (
                     rows.map((row) => (
                       <div className="users-row" key={row.id}>
-                        <div className="users-cell users-name">{row.name}</div>
-
-                        <div className="users-cell users-center">
-                          <span className="pills">{row.age || "-"}</span>
+                        <div className="users-cell">
+                          <div className="pt-row">
+                            <div className="pt-avatar">{row.name.charAt(0).toUpperCase()}</div>
+                            <span className="pt-name">{row.name}</span>
+                          </div>
                         </div>
 
-                        <div className="users-cell users-center">
-                          <span className="pills">{row.contact}</span>
-                        </div>
+                        <div className="users-cell">{row.age || "—"}</div>
 
-                        <div className="users-cell users-center">
-                          <span className="pills">{row.lastVisit}</span>
-                        </div>
+                        <div className="users-cell">{row.contact}</div>
+
+                        <div className="users-cell">{row.lastVisit}</div>
 
                         <div className="users-cell">
                           <div className="users-actions">
                             <button
                               type="button"
-                              className="pill pill-view"
+                              className="icon-btn pill-view"
+                              title="View Profile"
                               onClick={() => viewProfile(row)}
                             >
-                              View Profile
+                              <FaEye />
                             </button>
-
                             <button
-  type="button"
-  className="pill pill-history"
-  onClick={() => viewHistory(row)}
->
-  <i className="bx bx-calendar-detail"></i>
-  <span>Appointment History</span>
-</button>
+                              type="button"
+                              className="icon-btn pill-history"
+                              title="Appointment History"
+                              onClick={() => viewHistory(row)}
+                            >
+                              <FaCalendarAlt />
+                            </button>
                           </div>
                         </div>
                       </div>

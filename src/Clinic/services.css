@@ -21,7 +21,7 @@ body {
 .services.with-sidebar {
   display: flex;
   height: 100vh;
-  background: #ffffff;
+  background: #eef3f2;
   padding-left: var(--sidebar-width-collapsed);
   overflow: hidden;
 }
@@ -184,54 +184,77 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .services .admin-content {
-  padding: calc(var(--header-height) + 20px) 24px 40px;
+  padding: calc(var(--header-height) + 24px) 28px 80px;
+}
+
+.services .admin-content-inner {
+  padding: 0;
+}
+
+/* ── PAGE HEADER ── */
+.services .services-titlebar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .services .admin-title h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0;
-  color: #000;
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: #0f172a;
 }
 
+.services .admin-title-sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b8b88;
+  font-weight: 500;
+}
+
+.services .add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: #109c85;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(16, 156, 133, 0.28);
+  transition: background 0.14s ease, transform 0.14s ease;
+}
+
+.services .add-btn:hover {
+  background: #0a7a68;
+  transform: translateY(-1px);
+}
+
+/* ── GRID ── */
 .services .admin-grid {
   display: grid;
-  grid-template-columns: 1fr 360px;
-  gap: 26px;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
   align-items: start;
 }
 
-.services .admin-card {
-  background: #d9d9d9;
-  border-radius: 10px;
-}
-
-.services .admin-right {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.services .small-card {
-  height: 120px;
-}
-
-.services .big-card {
-  height: 430px;
-  background: #8f8f8f;
-}
-
+/* ── TABLE CARD ── */
 .services .admin-table-card {
-  min-height: 520px;
-  padding: 14px 12px;
+  background: #ffffff;
+  border: 1px solid #e2eeeb;
+  box-shadow: 0 2px 10px rgba(15, 66, 66, 0.06);
+  border-radius: 16px;
   overflow: hidden;
-  border-radius: 26px;
-  background: linear-gradient(
-    rgb(16, 156, 133) 73px,
-    white 78px,
-    white 100%
-  );
+  min-height: 420px;
 }
+
 /* ================= TABLE ================= */
 .services .users-table {
   width: 100%;
@@ -239,195 +262,192 @@ body {
 
 .services .users-row {
   display: grid;
-  grid-template-columns: 1.65fr 2.25fr 1fr 1.2fr 1.3fr 2.4fr;
+  grid-template-columns:
+    minmax(140px, 1.6fr)
+    minmax(160px, 2fr)
+    minmax(90px,  0.8fr)
+    minmax(100px, 0.8fr)
+    minmax(100px, 0.85fr)
+    minmax(110px, 0.85fr);
   align-items: center;
   gap: 0;
-  padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  background: transparent;
+  padding: 0 22px;
+  border-bottom: 1px solid #f0f4f3;
+  min-height: 58px;
+  transition: background 0.12s ease;
 }
 
+.services .users-row:hover:not(.users-header) {
+  background: #f5fffd;
+}
+
+/* ── TABLE HEADER ── */
 .services .users-header {
-  font-weight: 900;
-}
-.services .users-row .users-cell:nth-child(5) {
-  padding-left: 18px;
-}
-.services .users-row .users-cell:nth-child(6) {
-  padding-left: 6px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 46px;
+  background: #f4f9f8;
+  border-bottom: 1px solid #daecea;
+  box-shadow: 0 2px 8px rgba(15, 66, 66, 0.05);
 }
 
 .services .users-header .users-cell {
-  color: white;
-  font-size: 1.2rem;
+  color: #5d7f7c;
+  font-size: 0.72rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   white-space: nowrap;
 }
+
+/* ── CELLS ── */
 .services .users-cell {
   min-width: 0;
-  position: relative;
-  padding-left: 12px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #1f2937;
+  padding: 14px 10px;
+  display: flex;
+  align-items: center;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #374151;
 }
-
-/* first column no line + no padding */
-.services .users-row .users-cell:first-child {
-  padding-left: 0;
-}
-
-/* ✅ VERTICAL LINES */
-
 
 .services .users-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: black;
-}
-
-/* ================= PILL STYLES ================= */
-.services .pill {
-  border: none;
-  color: white;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
+  font-size: 0.9rem;
   font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  color: #0f172a;
+}
+
+/* description truncated */
+.services .svc-desc {
+  font-size: 0.82rem;
+  color: #6b7280;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
-  background: #5b5b5b;
+  display: block;
 }
 
-.services .pill {
-  border: none;
-  color: white;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 36px;
-  font-size: 0.95rem;
-  font-weight: 800;
+/* ── STATUS BADGE ── */
+.services .status-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-  background: #5b5b5b;
-}
-
-/* ✅ description pill (fix wrapping + readability) */
-.services .pills-desc {
-  justify-content: flex-start;
-  text-align: left;
-  white-space: normal;
-  line-height: 1.25;
-}
-
-/* Buttons */
-.services .pill-view {
-  background: #0f9b7d;
-  color: #fff;
-  cursor: pointer;
-}
-
-.services .pill-danger {
-  background: #c62828;
-  cursor: pointer;
-}
-
-.services .pill-success {
-  background: rgb(16, 156, 133);
-  cursor: pointer;
-}
-
-.services .pill-gray {
-  background: #6ca375;
-  color: #fff;
-  cursor: pointer;
-}
-
-.services .pill-resched {
-  background: rgb(16, 156, 133);
-  color: #fff;
-  cursor: pointer;
-}
-
-/* ✅ actions (align left so buttons stay inside Actions column nicely) */
-.services .users-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-start;
-  align-items: center;
-  flex-wrap: nowrap;
-}
-
-/* top title bar with button */
-.services .services-titlebar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 18px;
-}
-
-.services .add-btn {
-  min-height: 34px;
-  width: auto;         /* ✅ prevent full width */
-  padding: 0 18px;
+  gap: 5px;
+  padding: 4px 10px;
   border-radius: 6px;
-  border: 1px solid rgb(16, 156, 133); /* border color */
-  position: relative;
-  left: 250px
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid transparent;
 }
 
-/* ================= RIGHT PANEL CONTENT ================= */
-.services .admin-right-card {
-   background: #ffffff;
-  border: 1px solid #d9ebe8;
-  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
-  border-radius: 14px;
-  padding: 26px 24px;
-  min-height: 150px;
+.services .status-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.services .status-badge.badge-enabled {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+.services .status-badge.badge-enabled::before { background: #10b981; }
+
+.services .status-badge.badge-disabled {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #d1d5db;
+}
+
+.services .status-badge.badge-disabled::before { background: #9ca3af; }
+
+/* ── EMPTY / LOADING STATE ── */
+.services .svc-empty-state {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 20px;
+  color: #6b8b88;
 }
 
-.services .admin-right-card h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0f4242;
+.services .svc-empty-icon {
+  font-size: 2.4rem;
 }
 
-.services .admin-right-card p {
+.services .svc-empty-state p {
   margin: 0;
-  color: #31514d;
   font-size: 0.92rem;
-  line-height: 1.35;
+  font-weight: 600;
 }
+
+/* ── ICON ACTION BUTTONS ── */
+.services .users-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.services .icon-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 8px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.services .icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.services .icon-btn.pill-view    { background: #3b82f6; }
+.services .icon-btn.pill-danger  { background: #ef4444; }
+.services .icon-btn.pill-success { background: #10b981; }
+.services .icon-btn.pill-gray    { background: #6b7280; }
+
+/* modal pill buttons (kept for modals) */
+.services .pill {
+  border: none;
+  color: white;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.services .pill-view    { background: #3b82f6; }
+.services .pill-danger  { background: #ef4444; }
+.services .pill-success { background: #10b981; }
+.services .pill-gray    { background: #6b7280; }
+.services .pill-resched { background: #109c85; }
 
 /* RESPONSIVE */
-@media screen and (max-width: 900px) {
-  .services .admin-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .services .header-search {
-    width: 100%;
-    max-width: 360px;
-  }
-
- .services .users-row {
-  grid-template-columns: 1.65fr 2.2fr 1fr 1fr 1fr 2.25fr;
+@media screen and (max-width: 1100px) {
+  .services .admin-grid { grid-template-columns: 1fr; }
 }
+
+@media screen and (max-width: 900px) {
+  .services .users-row {
+    grid-template-columns: 1.6fr 2fr 0.8fr 0.8fr 0.85fr 0.85fr;
+  }
 }
 .service-modal-overlay {
   position: fixed;

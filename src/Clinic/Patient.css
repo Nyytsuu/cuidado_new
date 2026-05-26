@@ -27,7 +27,7 @@ body {
 .Patient.with-sidebar {
   display: flex;
   height: 100vh;
-  background: #ffffff;
+  background: #eef3f2;
 }
 
 /* MAIN scroll area */
@@ -191,400 +191,195 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .Patient .admin-content {
-  padding: calc(var(--header-height) + 20px) 24px 40px;
+  padding: calc(var(--header-height) + 24px) 28px 80px;
+}
+
+.Patient .admin-content-inner {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ── PAGE HEADER ── */
+.Patient .admin-title {
+  margin-bottom: 24px;
 }
 
 .Patient .admin-title h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 18px;
-  color: #000;
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin: 0 0 4px;
+  color: #0f172a;
 }
 
+.Patient .admin-title-sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b8b88;
+  font-weight: 500;
+}
+
+/* ── GRID ── */
 .Patient .admin-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 26px;
+  gap: 20px;
   align-items: start;
-  width: 100%; /* 🔥 add this */
-
+  width: 100%;
 }
 
-.Patient .admin-card {
-  background: #ffffff;
-  border: 1px solid #d9ebe8;
-  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
-  border-radius: 10px;
-}
-
-.Patient .admin-right {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  
-}
-
-.Patient .small-card {
-  min-height: 120px;
-}
-
-.Patient .big-card {
-  min-height: 430px;
-  background: #f5fbfa;
-}
+/* ── TABLE CARD ── */
 .Patient .admin-table-card {
-  min-height: 520px;
-  padding: 14px 12px;
+  background: #ffffff;
+  border: 1px solid #e2eeeb;
+  box-shadow: 0 2px 10px rgba(15, 66, 66, 0.06);
+  border-radius: 16px;
   overflow: hidden;
-  border-radius: 26px;
-  background: linear-gradient(
-   rgb(16, 156, 133) 73px,
-    white 78px,
-    white 100%
-  );
+  min-height: 420px;
 }
 
 .Patient .users-table {
   width: 100%;
 }
 
+/* ── TABLE ROWS ── */
+.Patient .users-row {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 2fr)
+    minmax(70px,  0.55fr)
+    minmax(140px, 1.4fr)
+    minmax(110px, 1fr)
+    minmax(110px, 0.9fr);
+  align-items: center;
+  gap: 0;
+  padding: 0 22px;
+  border-bottom: 1px solid #f0f4f3;
+  min-height: 58px;
+  transition: background 0.12s ease;
+}
 
+.Patient .users-row:hover:not(.users-header) {
+  background: #f5fffd;
+}
+
+/* ── TABLE HEADER ── */
 .Patient .users-header {
-  font-weight: 900;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  min-height: 46px;
+  background: #f4f9f8;
+  border-bottom: 1px solid #daecea;
+  box-shadow: 0 2px 8px rgba(15, 66, 66, 0.05);
 }
 
 .Patient .users-header .users-cell {
-  color: white;
-  font-size: 1.2rem;
+  color: #5d7f7c;
+  font-size: 0.72rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-
-
-.Patient .users-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: black;
-}
-
-.Patient .users-row {
-  display: grid;
-  grid-template-columns: 1.1fr 0.5fr 1.2fr 1fr 1.8fr;
-  align-items: center;
-  gap: 0;
-  padding: 16px 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-  background: transparent;
-}
-
+/* ── CELLS ── */
 .Patient .users-cell {
   min-width: 0;
-  padding: 0 10px;
+  padding: 14px 10px;
   display: flex;
   align-items: center;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #374151;
 }
 
-.Patient .users-row .users-cell:first-child {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.Patient .users-row .users-cell:nth-child(2),
-.Patient .users-row .users-cell:nth-child(3),
-.Patient .users-row .users-cell:nth-child(4),
-.Patient .users-header .users-cell:nth-child(2),
-.Patient .users-header .users-cell:nth-child(3),
-.Patient .users-header .users-cell:nth-child(4) {
-  justify-content: center;
-  text-align: center;
-}
-
-.Patient .users-row .users-cell:nth-child(5),
-.Patient .users-header .users-cell:nth-child(5) {
-  justify-content: flex-start;
-  text-align: left;
-  padding-left: 20px; /* adjust mo lang 5px–20px depende sa gusto mo */
-}
-
-
-.Patient .pills {
-  border: none;
-  color: black;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  text-align: center;
-}
-
-.Patient .users-actions {
+/* ── PATIENT AVATAR + NAME ── */
+.Patient .pt-row {
   display: flex;
-  gap: 8px;
-  justify-content: center;
   align-items: center;
-  width: 100%;
-  flex-wrap: nowrap !important; /* 🔥 add this to prevent wrapping */
+  gap: 10px;
 }
 
-.Patient .pill {
-  border: none;
-  color: white;
-  border-radius: 999px;
+.Patient .pt-avatar {
+  width: 34px;
   height: 34px;
-  padding: 0 10px;
-  font-size: 0.92rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  cursor: pointer;
-  flex-shrink: 1;
-  max-width: 100%;
-}
-
-.Patient .pill-view {
-  background:    rgb(16, 156, 133) !important;
-  min-width: 120px;
-}
-
-
-.Patient .pill-history {
-  border: 2px solid #04a57d !important;
-  padding: 1px !important;
-  outline: none;
-  box-shadow: none;
-  color: rgb(18, 136, 106) !important;
-  background-color: white !important;
-  max-width: 160px;
-  margin-left: 10px !important;
-
-  border-radius: 6px !important; /* 🔥 ito ang importante */
-}
-.Patient .pill-history:focus,
-.Patient .pill-history:active {
-  outline: none;
-  box-shadow: none;
-}
-
-.Patient .pill:focus,
-.Patient .pill:active {
-  outline: none;
-  box-shadow: none;
-}
-/* ================= PILL STYLES ================= */
-.Patient .pill {
-  border: none;
-  color: white;
-  border-radius: 999px;
-  padding: 0 16px;
-  min-height: 36px;
-  font-size: 0.97rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  background: #5b5b5b;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.Patient .pills {
-  border: none;
-  color: black;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 28px;
-  font-size: 0.99rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
-  text-align: center;
-}
-
-/* Actions */
-.Patient .users-actions {
+  min-width: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #109c85 0%, #0a7a68 100%);
+  box-shadow: 0 3px 8px rgba(16, 156, 133, 0.24);
   display: flex;
-  gap: 12px;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-  flex-wrap: nowrap;
-  width: 100%;
-}
-
-.Patient .pill-view {
-  background: #5b5b5b;
-  width: auto;
-  color: #fff;
-  min-width: unset;
-}
-
-.Patient .pill:focus,
-.Patient .pill:active {
-  outline: none;
-  box-shadow: none;
-}
-
-.Patient .admin-right-card {
-  background: #ffffff;
-  border: 1px solid #d9ebe8;
-  box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
-  border-radius: 14px;
-  padding: 26px 24px;
-  min-height: 150px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-/* Titles inside right cards */
-.Patient .admin-right-card h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #0f4242;
-}
-
-.Patient .admin-right-card p {
-  margin: 0;
-  color: #31514d;
-  font-size: 0.92rem;
-  line-height: 1.35;
-}
-
-.Patient .patient-schedule-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.Patient .patient-schedule-row {
-  display: grid;
-  grid-template-columns: 74px 1fr 1fr;
-  gap: 8px;
-  align-items: center;
-  padding: 8px;
-  border: 1px solid #d9ebe8;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.Patient .patient-schedule-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #0f4242;
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 800;
+  color: #fff;
 }
 
-.Patient .patient-schedule-toggle input {
-  width: 16px;
-  height: 16px;
-  accent-color: #109c85;
-}
-
-.Patient .patient-schedule-row input[type="time"] {
-  width: 100%;
-  min-width: 0;
-  height: 32px;
-  border: 1px solid #c9e2df;
-  border-radius: 8px;
-  padding: 0 6px;
-  color: #0f4242;
-  background: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.Patient .patient-schedule-row input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.Patient .patient-schedule-message {
-  padding: 9px 10px;
-  border-radius: 8px;
-  font-size: 0.84rem;
-  font-weight: 700;
-  line-height: 1.3;
-}
-
-.Patient .schedule-error {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.Patient .schedule-success {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.Patient .pill-save-schedule {
-  width: 100%;
-  background: #109c85 !important;
-  color: #ffffff;
-  border-radius: 8px;
-  margin-top: auto;
-}
-
-.Patient .pill-save-schedule:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.Patient .users-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-start; /* 👈 prevents overflow push */
-  align-items: center;
-  width: 100%;
-}
-
-.Patient .pill {
-  height: 34px;
-  padding: 0 12px;
+.Patient .pt-name {
   font-size: 0.9rem;
-  flex-shrink: 0;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-/* make buttons smaller so they fit */
-.Patient .pill-view {
-  min-width: 110px;
-}
-/* 🔥 make LEFT table flexible */
-.Patient .admin-table-card {
-  height: auto !important;
-  min-height: 520px;
+/* ── EMPTY / LOADING STATE ── */
+.Patient .pt-empty-state {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 60px 20px;
+  color: #6b8b88;
 }
 
+.Patient .pt-empty-icon {
+  font-size: 2.4rem;
+}
+
+.Patient .pt-empty-state p {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+/* ── ICON ACTION BUTTONS ── */
+.Patient .users-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.Patient .icon-btn {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 8px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.Patient .icon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.Patient .icon-btn.pill-view    { background: #3b82f6; }
+.Patient .icon-btn.pill-history { background: #6366f1; }
 
 /* RESPONSIVE */
+@media screen and (max-width: 1100px) {
+  .Patient .admin-grid { grid-template-columns: 1fr; }
+}
+
 @media screen and (max-width: 900px) {
-  .Patient .admin-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .Patient .header-search {
-    width: 100%;
-    max-width: 360px;
-  }
-
-  .Patient .users-table {
-    min-width: 950px;
-  }
-
   .Patient .users-row {
-    grid-template-columns: 2.1fr 0.9fr 1.6fr 1.4fr 2.7fr;
+    grid-template-columns: 2fr 0.6fr 1.4fr 1fr 1fr;
   }
 }
 
