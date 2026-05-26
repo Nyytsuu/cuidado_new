@@ -93,7 +93,7 @@ const handleLogin = (req, res) => {
     new Promise((resolve, reject) => {
       const normalizedEmail = String(email || "").trim().toLowerCase();
       db.query(
-        `SELECT id, ${nameCol} AS name, email, password_hash
+        `SELECT id, ${nameCol} AS name, email, password_hash, status
          FROM ${table}
          WHERE LOWER(email) = ?
          LIMIT 1`,
@@ -106,7 +106,12 @@ const handleLogin = (req, res) => {
           const ok = await bcrypt.compare(String(password || "").trim(), acc.password_hash);
           if (!ok) return resolve("bad_password");
 
-          resolve({ id: acc.id, email: acc.email, name: acc.name, role });
+          // Reactivate disabled accounts on login (Facebook-style)
+          if (acc.status === "disabled") {
+            await dbQuery(`UPDATE ${table} SET status = 'active' WHERE id = ?`, [acc.id]);
+          }
+
+          resolve({ id: acc.id, email: acc.email, name: acc.name, role, status: "active" });
         }
       );
     });
@@ -165,6 +170,7 @@ const handleLogin = (req, res) => {
             role: found.role,
             email: found.email,
             name: found.name,
+            status: found.status,
           },
         });
       }
@@ -204,6 +210,7 @@ const handleLogin = (req, res) => {
             role: found.role,
             email: found.email,
             name: found.name,
+            status: found.status,
           },
         });
       }
@@ -241,6 +248,7 @@ const handleLogin = (req, res) => {
           role: found.role,
           email: found.email,
           name: found.name,
+          status: found.status,
         },
       });
     } catch (err) {
