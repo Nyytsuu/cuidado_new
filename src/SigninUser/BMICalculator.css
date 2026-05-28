@@ -832,6 +832,13 @@ body {
   min-height: 78px;
 }
 
+.clinic-booking-grid .fc-field-hint {
+  color: #6b7f8b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .bmi-unit-toggle button {
   font-size: 0 !important;
 }

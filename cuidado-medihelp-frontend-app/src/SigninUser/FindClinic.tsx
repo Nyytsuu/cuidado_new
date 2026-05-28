@@ -162,19 +162,49 @@ function getMinimumTimeForDate(date: string): string | undefined {
 function normalizePhilippineMobileInput(value: string): string {
   const digits = value.replace(/\D/g, "");
 
+  if (!digits) {
+    return "";
+  }
+
+  if (digits === "0" || digits === "6" || digits === "63") {
+    return digits;
+  }
+
+  if (digits.startsWith("09")) {
+    return digits.slice(0, 11);
+  }
+
   if (digits.startsWith("639")) {
     return `0${digits.slice(2, 12)}`;
   }
 
   if (digits.startsWith("9")) {
-    return `0${digits.slice(0, 10)}`;
+    return `09${digits.slice(1, 10)}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return "0";
+  }
+
+  if (digits.startsWith("6")) {
+    return "6";
+  }
+
+  return "";
+}
+
+function toPhilippineLocalMobileNumber(value: string): string {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.startsWith("639")) {
+    return `0${digits.slice(2, 12)}`;
   }
 
   return digits.slice(0, 11);
 }
 
 function isValidPhilippineMobileNumber(value: string): boolean {
-  return /^09\d{9}$/.test(value);
+  return /^09\d{9}$/.test(toPhilippineLocalMobileNumber(value));
 }
 
 function normalizeDay(value: string): string {
@@ -985,7 +1015,7 @@ export default function FindClinic() {
         !bookingForSelf &&
         !isValidPhilippineMobileNumber(patient_phone_snapshot)
       ) {
-        setBookingMessage("Please enter a valid Philippine mobile number, e.g. 09171234567.");
+        setBookingMessage("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
         setBooking(false);
         return;
       }
@@ -1608,7 +1638,7 @@ export default function FindClinic() {
                           disabled={booking}
                         />
                         <small className="fc-field-hint">
-                          Use an 11-digit Philippine mobile number starting with 09.
+                          Use 09XXXXXXXXX or 639XXXXXXXXX.
                         </small>
                       </div>
                     </div>
