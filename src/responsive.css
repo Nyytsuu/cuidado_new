@@ -7,6 +7,112 @@
   --user-tablet-sidebar: 74px;
 }
 
+/* Close button alignment guard */
+.bmi-popup-card,
+.clinic-profile-modal,
+.fc-modal-card,
+.booking-modal,
+.voice-result-modal,
+.voice-assistant-popup .voice-popup-card,
+.voice-popup-card,
+.fp-modal-card,
+.terms-modal-card,
+.condition-support-modal-card,
+.stress-popup-card,
+.article-modal,
+.homepage-article-modal,
+.notification-modal,
+.symptom-result-modal,
+.lp-email-card,
+.verify-modal,
+.deactivate-modal,
+.support-popup,
+.appoint-modal,
+.service-modal,
+.clinic-dashboard-page .clinic-dash-modal,
+.ClinicProfile .profile-modal,
+.admin-UserClinics .modal-card,
+.admin-UserAppoint .modal-card,
+.admin-UserAppoint .appointment-details-modal,
+.admin-Userpage .modal-card {
+  position: relative !important;
+}
+
+.bmi-popup-close,
+.clinic-profile-close,
+.fc-modal-close,
+.modal-close-btn,
+.voice-result-close,
+.voice-assistant-popup .voice-popup-close,
+.voice-popup-close,
+.fp-modal-close,
+.terms-modal-close,
+.condition-support-modal-close,
+.stress-popup-close,
+.article-close-btn,
+.homepage-article-close,
+.notification-modal-close,
+.symptom-result-close,
+.lp-email-close,
+.verify-modal-close,
+.deactivate-modal-close,
+.support-popup-close,
+.appoint-modal-close,
+.service-modal-close,
+.clinic-dashboard-page .clinic-dash-modal-close,
+.ClinicProfile .modal-close,
+.admin-UserClinics .modal-close,
+.admin-UserAppoint .modal-close,
+.admin-Userpage .modal-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  z-index: 20 !important;
+}
+
+.bmi-popup-close > svg,
+.clinic-profile-close > svg,
+.fc-modal-close > svg,
+.modal-close-btn > svg,
+.voice-result-close > svg,
+.voice-assistant-popup .voice-popup-close > svg,
+.voice-popup-close > svg,
+.fp-modal-close > svg,
+.terms-modal-close > svg,
+.condition-support-modal-close > svg,
+.stress-popup-close > svg,
+.article-close-btn > svg,
+.homepage-article-close > svg,
+.notification-modal-close > svg,
+.symptom-result-close > svg,
+.lp-email-close > svg,
+.verify-modal-close > svg,
+.deactivate-modal-close > svg,
+.support-popup-close > svg,
+.appoint-modal-close > svg,
+.service-modal-close > svg,
+.clinic-dashboard-page .clinic-dash-modal-close > svg,
+.ClinicProfile .modal-close > svg,
+.admin-UserClinics .modal-close > svg,
+.admin-UserAppoint .modal-close > svg,
+.admin-Userpage .modal-close > svg {
+  display: block !important;
+  margin: 0 !important;
+}
+
 html,
 body,
 #root {
@@ -3529,4 +3635,3 @@ button {
     border-radius: 16px !important;
   }
 }
-

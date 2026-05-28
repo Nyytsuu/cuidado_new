@@ -28,6 +28,42 @@ const includesPhrase = (text, phrase) => {
 
 const compactText = (value) => normalizeText(value).replace(/\s/g, "");
 
+const FILIPINO_SYMPTOM_ALIASES = [
+  { aliases: ["ubo", "inuubo"], symptoms: ["cough"] },
+  { aliases: ["lagnat", "sinat", "nilalagnat"], symptoms: ["fever"] },
+  { aliases: ["sipon", "sinisipon"], symptoms: ["runny nose", "nasal congestion"] },
+  { aliases: ["baradong ilong", "bara ang ilong"], symptoms: ["nasal congestion"] },
+  { aliases: ["sakit ulo", "sakit ng ulo", "sumasakit ang ulo"], symptoms: ["headache"] },
+  { aliases: ["hilo", "nahihilo", "pagkahilo"], symptoms: ["dizziness"] },
+  { aliases: ["suka", "pagsusuka", "nagsusuka"], symptoms: ["vomiting"] },
+  { aliases: ["nasusuka", "pagduduwal"], symptoms: ["nausea"] },
+  { aliases: ["sakit tiyan", "sakit ng tiyan", "pananakit ng tiyan"], symptoms: ["stomach pain", "abdominal pain"] },
+  { aliases: ["pagtatae", "nagtatae"], symptoms: ["diarrhea"] },
+  { aliases: ["hirap huminga", "nahihirapan huminga", "kinakapos ng hininga"], symptoms: ["shortness of breath", "difficulty breathing"] },
+  { aliases: ["sakit dibdib", "sakit ng dibdib", "pananakit ng dibdib"], symptoms: ["chest pain"] },
+  { aliases: ["pantal", "butlig"], symptoms: ["rash"] },
+  { aliases: ["kati", "pangangati", "makati"], symptoms: ["itching"] },
+  { aliases: ["pagod", "pagkapagod", "panghihina"], symptoms: ["fatigue", "weakness"] },
+  { aliases: ["sakit lalamunan", "sakit ng lalamunan", "namamagang lalamunan"], symptoms: ["sore throat"] },
+  { aliases: ["panginginig", "giniginaw"], symptoms: ["chills"] },
+  { aliases: ["sakit katawan", "pananakit ng katawan"], symptoms: ["body aches"] },
+  { aliases: ["pawis sa gabi", "pinapawisan sa gabi"], symptoms: ["night sweats"] },
+  { aliases: ["bumababa timbang", "pagbaba ng timbang"], symptoms: ["weight loss"] },
+  { aliases: ["ubo na may dugo", "dugo sa ubo"], symptoms: ["coughing blood", "blood in cough"] },
+];
+
+const expandTranscriptAliases = (normalizedTranscript) => {
+  const extraSymptoms = new Set();
+
+  FILIPINO_SYMPTOM_ALIASES.forEach(({ aliases, symptoms }) => {
+    if (aliases.some((alias) => includesPhrase(normalizedTranscript, alias))) {
+      symptoms.forEach((symptom) => extraSymptoms.add(normalizeText(symptom)));
+    }
+  });
+
+  return [normalizedTranscript, ...extraSymptoms].filter(Boolean).join(" ");
+};
+
 const matchesConditionName = (text, conditionName) => {
   const normalizedCondition = normalizeText(conditionName);
   if (!normalizedCondition) return false;
@@ -72,6 +108,7 @@ router.post("/analyze", async (req, res) => {
     }
 
     const normalizedTranscript = normalizeText(cleanTranscript);
+    const searchableTranscript = expandTranscriptAliases(normalizedTranscript);
 
     const [symptomRows] = await pool.query(`
       SELECT symptom_id, symptom_name, is_red_flag
@@ -106,10 +143,10 @@ router.post("/analyze", async (req, res) => {
     `);
 
     const matchedSymptoms = symptomRows.filter((symptom) =>
-      includesPhrase(normalizedTranscript, symptom.symptom_name)
+      includesPhrase(searchableTranscript, symptom.symptom_name)
     );
     const recognizedConditions = conditionNameRows.filter((condition) =>
-      matchesConditionName(normalizedTranscript, condition.condition_name)
+      matchesConditionName(searchableTranscript, condition.condition_name)
     );
 
     const matchedSymptomIds = matchedSymptoms.map((symptom) => symptom.symptom_id);

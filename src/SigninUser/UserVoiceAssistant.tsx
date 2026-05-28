@@ -68,6 +68,12 @@ interface SpeechRecognition extends EventTarget {
   onend: ((this: SpeechRecognition, ev: Event) => void) | null;
 }
 
+const LANGUAGES = [
+  { label: "English (Philippines)", value: "en-PH" },
+  { label: "English (US)", value: "en-US" },
+  { label: "Filipino", value: "tl-PH" },
+];
+
 export default function UserVoiceAssistant() {
   const navigate = useNavigate();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -78,6 +84,7 @@ export default function UserVoiceAssistant() {
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
+  const [selectedLang, setSelectedLang] = useState("en-PH");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
@@ -129,7 +136,7 @@ export default function UserVoiceAssistant() {
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
 
-    recognition.lang = "en-PH";
+    recognition.lang = selectedLang;
     recognition.continuous = false;
     recognition.interimResults = true;
 
@@ -151,7 +158,17 @@ export default function UserVoiceAssistant() {
     };
 
     recognition.onerror = (event) => {
-      setVoiceError(event.error || "Speech recognition failed.");
+      const selectedLanguageLabel =
+        LANGUAGES.find((language) => language.value === selectedLang)?.label ||
+        "the selected language";
+      const errorMessages: Record<string, string> = {
+        language: `${selectedLanguageLabel} is not available on this device. Try another language or type symptoms instead.`,
+        "not-allowed": "Microphone permission is blocked. Allow Microphone for Cuidado, then try again.",
+        "no-speech": "I did not receive microphone audio. Try again and speak clearly.",
+        network: "Speech recognition could not connect. Check your internet connection and try again.",
+      };
+
+      setVoiceError(errorMessages[event.error] || "Speech recognition failed. Please try again.");
       setVoiceStep("retry");
     };
 
@@ -223,10 +240,17 @@ export default function UserVoiceAssistant() {
                 <p className="tap-text">{title}</p>
                 <p className="voice-status-text">{subtitle}</p>
 
-                <select className="language-select">
-                  <option>English (Philippines)</option>
-                  <option>English (US)</option>
-                  <option>Filipino</option>
+                <select
+                  className="language-select"
+                  value={selectedLang}
+                  onChange={(event) => setSelectedLang(event.target.value)}
+                  disabled={voiceStep === "listening" || voiceStep === "processing"}
+                >
+                  {LANGUAGES.map((language) => (
+                    <option key={language.value} value={language.value}>
+                      {language.label}
+                    </option>
+                  ))}
                 </select>
 
                 {voiceStep !== "idle" && (
@@ -364,6 +388,7 @@ export default function UserVoiceAssistant() {
               type="button"
               className="voice-result-close"
               onClick={resetVoiceAssistant}
+              aria-label="Close results"
             >
               ×
             </button>

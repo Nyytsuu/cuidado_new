@@ -6,13 +6,16 @@ import VoiceAssistantResult from "./VoiceAssistantResult";
 import { useNavigate } from "react-router-dom";
 import {
   Mic,
-  CalendarDays,
-  MapPin,
-  HeartPulse,
-  Scale,
-  Stethoscope,
-  Activity,
+  Thermometer,
+  Wind,
   Brain,
+  Activity,
+  HeartPulse,
+  Scan,
+  ClipboardList,
+  SearchCheck,
+  ShieldAlert,
+  Keyboard,
   Lightbulb,
   Headphones,
   ChevronRight,
@@ -45,9 +48,9 @@ type SpeechRecognitionErrorEventLike = Event & {
 const LISTENING_TIMEOUT_MS = 12000;
 
 const LANGUAGES = [
-  { label: "English (US)", value: "en-US" },
   { label: "English (Philippines)", value: "en-PH" },
-  { label: "Filipino", value: "fil-PH" },
+  { label: "English (US)", value: "en-US" },
+  { label: "Filipino", value: "tl-PH" },
 ];
 
 declare global {
@@ -84,7 +87,7 @@ export default function UserVoiceAssistant() {
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
-  const [selectedLang, setSelectedLang] = useState("en-US");
+  const [selectedLang, setSelectedLang] = useState("en-PH");
   const [typedFallback, setTypedFallback] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const listeningTimeoutRef = useRef<number | null>(null);
@@ -107,12 +110,12 @@ export default function UserVoiceAssistant() {
   }, []);
 
   const suggestions = [
-    { icon: CalendarDays, text: "What are my upcoming appointments?" },
-    { icon: MapPin,        text: "Find a clinic near me" },
-    { icon: HeartPulse,   text: "I have fever, cough and body ache" },
-    { icon: Scale,        text: "Help me check my BMI" },
-    { icon: Stethoscope,  text: "Tell me about high blood pressure" },
-    { icon: Activity,     text: "I feel stressed and anxious" },
+    { icon: Thermometer,  text: "I have fever, chills, and body aches" },
+    { icon: Wind,         text: "I have cough and shortness of breath" },
+    { icon: Brain,        text: "I have headache and dizziness" },
+    { icon: Activity,     text: "I feel nauseous and have stomach pain" },
+    { icon: HeartPulse,   text: "I have chest pain and palpitations" },
+    { icon: Scan,         text: "I have skin rash and itching" },
   ];
 
   const analyzeVoiceSymptoms = async (transcript: string) => {
@@ -224,7 +227,7 @@ export default function UserVoiceAssistant() {
         audio: "Android could not open the microphone audio stream. Check the emulator microphone setting and try again.",
         client: "Android speech recognition could not start on this emulator. Restart the emulator or try one of the typed suggestions below.",
         service: "The Android speech recognition service stopped unexpectedly. Restart the emulator and try again.",
-        language: "English (US) is not available on this emulator. Please use typed suggestions instead.",
+        language: `${LANGUAGES.find((language) => language.value === selectedLang)?.label || "The selected language"} is not available on this device. Try another language or type symptoms instead.`,
         busy: "The microphone is already listening. Please wait a moment and try again.",
       };
 
@@ -397,7 +400,7 @@ export default function UserVoiceAssistant() {
                 )}
 
                 <div className="suggestions-section">
-                  <h3>Try asking me</h3>
+                  <h3>Try describing symptoms</h3>
 
                   <div className="suggestions-grid">
                     {suggestions.map(({ icon: Icon, text }) => (
@@ -417,39 +420,39 @@ export default function UserVoiceAssistant() {
             </section>
 
             <section className="features-card">
-              <h3>Voice Assistant Features</h3>
+              <h3>Symptom Voice Assistant</h3>
 
               <div className="features-grid">
                 <div className="feature-item">
                   <div className="feature-icon teal">
-                    <CalendarDays size={26} />
+                    <ClipboardList size={26} />
                   </div>
-                  <h4>Appointments</h4>
-                  <p>Book, reschedule, or check your upcoming visits</p>
+                  <h4>Symptom capture</h4>
+                  <p>Describe what you feel in plain language.</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon blue">
-                    <Brain size={26} />
+                    <SearchCheck size={26} />
                   </div>
-                  <h4>Symptom Checker</h4>
-                  <p>Describe your symptoms to get health insights</p>
+                  <h4>Possible matches</h4>
+                  <p>Compares your symptoms with mapped conditions.</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon green">
-                    <MapPin size={26} />
+                    <ShieldAlert size={26} />
                   </div>
-                  <h4>Find Clinics</h4>
-                  <p>Locate nearby clinics and health centers</p>
+                  <h4>Care guidance</h4>
+                  <p>Shows self-care, consult, or urgent-care guidance.</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon purple">
-                    <HeartPulse size={26} />
+                    <Keyboard size={26} />
                   </div>
-                  <h4>Health &amp; Wellness</h4>
-                  <p>BMI, stress index, and health topics</p>
+                  <h4>Typed backup</h4>
+                  <p>Type symptoms when the microphone is not available.</p>
                 </div>
               </div>
             </section>
@@ -509,7 +512,9 @@ export default function UserVoiceAssistant() {
               </svg>
             </button>
 
-            <VoiceAssistantResult result={symptomResult} showTranscript />
+            <div className="voice-result-scroll">
+              <VoiceAssistantResult result={symptomResult} showTranscript />
+            </div>
 
             <div className="voice-result-actions">
               <button

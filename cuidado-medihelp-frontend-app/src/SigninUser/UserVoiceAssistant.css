@@ -74,10 +74,12 @@
 
 .voice-wave-wrap {
   height: 190px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 34px;
+  overflow: hidden;
 }
 
 .mic-button {
@@ -87,12 +89,21 @@
   border-radius: 50%;
   background: linear-gradient(145deg, #5fc7c0, #078b8a);
   color: #ffffff;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   box-shadow: 0 0 0 18px #eefaf9;
   transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   flex: 0 0 auto;
+  flex-shrink: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.mic-button svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .mic-button:hover {
@@ -617,17 +628,33 @@
   }
 
   .voice-wave-wrap {
-    height: 190px;
-    gap: 12px;
+    height: 200px;
+    gap: 0;
+    position: relative;
   }
 
   .mic-button {
     width: 126px;
     height: 126px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 16px #eefaf9;
   }
 
   .wave {
-    width: 72px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    pointer-events: none;
+  }
+
+  .left-wave {
+    left: 0;
+  }
+
+  .right-wave {
+    right: 0;
   }
 
   .suggestions-grid,
@@ -662,31 +689,53 @@
 
 .voice-result-modal {
   background: #f6fafb;
-  padding: 22px;
+  padding: 0;
   border-radius: 22px;
-  width: min(760px, 100%);
+  width: min(920px, 100%);
+  height: min(820px, calc(100vh - 36px));
   max-height: calc(100vh - 36px);
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 28px 80px rgba(15, 23, 42, 0.26);
   border: 1px solid rgba(210, 229, 232, 0.95);
 }
 
+.voice-result-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 32px 22px 22px;
+  scrollbar-width: thin;
+  scrollbar-color: #b8d8d5 transparent;
+}
+
+.voice-result-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.voice-result-scroll::-webkit-scrollbar-thumb {
+  background: #b8d8d5;
+  border-radius: 999px;
+}
+
 .voice-result-close {
   position: absolute;
-  top: 12px;
+  top: 10px;
   right: 14px;
-  width: 34px;
-  height: 34px;
+  width: 38px;
+  height: 38px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #e8eef2;
   color: #30444f;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 2;
+  z-index: 4;
   transition: background 0.18s, color 0.18s;
 }
 
@@ -696,15 +745,22 @@
 }
 
 .voice-result-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 16px;
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin: 0;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #dce8e8;
+  background: #f6fafb;
+  box-shadow: 0 -12px 28px rgba(15, 23, 42, 0.06);
+  z-index: 3;
 }
 
 .voice-result-primary,
 .voice-result-secondary {
-  min-height: 42px;
+  width: 100%;
+  min-height: 52px;
   border: none;
   border-radius: 999px;
   padding: 0 18px;
@@ -726,7 +782,7 @@
 
 @media (max-width: 560px) {
   .voice-result-actions {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .voice-result-primary,

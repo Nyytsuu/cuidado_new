@@ -536,8 +536,8 @@
   background: #f6fafb;
   padding: 0;
   border-radius: 22px;
-  width: min(760px, 100%);
-  height: min(760px, calc(100vh - 36px));
+  width: min(920px, 100%);
+  height: min(820px, calc(100vh - 36px));
   max-height: calc(100vh - 36px);
   overflow: hidden;
   position: relative;
@@ -552,7 +552,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 24px 22px 18px;
+  padding: 32px 22px 22px;
   scrollbar-width: thin;
   scrollbar-color: #b8d8d5 transparent;
 }
@@ -570,18 +570,24 @@
   position: absolute;
   top: 10px;
   right: 14px;
+  width: 38px;
+  height: 38px;
   border: none;
-  background: transparent;
+  border-radius: 12px;
+  background: #e8eef2;
   color: #62717d;
   font-size: 0;
   line-height: 1;
   cursor: pointer;
-  z-index: 2;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .voice-result-close::before {
   content: "x";
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
 }
 

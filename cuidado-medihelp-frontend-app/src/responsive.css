@@ -7,6 +7,75 @@
   --user-tablet-sidebar: 74px;
 }
 
+/* Close button alignment guard */
+.bmi-popup-card,
+.clinic-profile-modal,
+.fc-modal-card,
+.booking-modal,
+.voice-result-modal,
+.voice-assistant-popup .voice-popup-card,
+.voice-popup-card,
+.fp-modal-card,
+.terms-modal-card,
+.stress-popup-card,
+.homepage-article-modal,
+.support-popup,
+.verify-modal,
+.deactivate-modal {
+  position: relative !important;
+}
+
+.bmi-popup-close,
+.clinic-profile-close,
+.fc-modal-close,
+.modal-close-btn,
+.voice-result-close,
+.voice-assistant-popup .voice-popup-close,
+.voice-popup-close,
+.fp-modal-close,
+.terms-modal-close,
+.stress-popup-close,
+.homepage-article-close,
+.support-popup-close,
+.verify-modal-close,
+.deactivate-modal-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  z-index: 20 !important;
+}
+
+.bmi-popup-close > svg,
+.clinic-profile-close > svg,
+.fc-modal-close > svg,
+.modal-close-btn > svg,
+.voice-result-close > svg,
+.voice-assistant-popup .voice-popup-close > svg,
+.voice-popup-close > svg,
+.fp-modal-close > svg,
+.terms-modal-close > svg,
+.stress-popup-close > svg,
+.homepage-article-close > svg,
+.support-popup-close > svg,
+.verify-modal-close > svg,
+.deactivate-modal-close > svg {
+  display: block !important;
+  margin: 0 !important;
+}
+
 html,
 body,
 #root {
@@ -960,6 +1029,82 @@ button {
   .signup-form {
     max-height: none;
     overflow: visible;
+  }
+}
+
+/* Mobile drawer reliability for app-only custom pages */
+@media (max-width: 760px) {
+  .user-layout.appointments-shell > .user-layout:not(.appointments-shell) {
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    pointer-events: none !important;
+  }
+
+  .user-layout.appointments-shell.sidebar-expanded > .user-layout:not(.appointments-shell) {
+    pointer-events: auto !important;
+  }
+
+  .user-layout.appointments-shell > .user-layout:not(.appointments-shell) .app-header,
+  .user-layout.appointments-shell > .user-layout:not(.appointments-shell) .user-mobile-header,
+  .user-layout.appointments-shell > .user-layout:not(.appointments-shell) .user-bottom-nav {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .user-layout.appointments-shell > .user-layout:not(.appointments-shell) .sidebar,
+  .user-layout.appointments-shell > .user-layout:not(.appointments-shell) .sidebar.collapsed,
+  .user-layout.appointments-shell > .user-layout:not(.appointments-shell) .sidebar.expanded,
+  .browse-health-page.browse-health-index-page .user-layout .sidebar,
+  .browse-health-page.browse-health-index-page .user-layout .sidebar.collapsed,
+  .browse-health-page.browse-health-index-page .user-layout .sidebar.expanded {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: var(--sidebar-width-expanded) !important;
+    max-width: 82vw !important;
+    height: 100dvh !important;
+    transform: translate3d(-105%, 0, 0) !important;
+    pointer-events: none !important;
+    z-index: 13000 !important;
+  }
+
+  .user-layout.appointments-shell.sidebar-expanded > .user-layout:not(.appointments-shell) .sidebar,
+  .user-layout.appointments-shell.sidebar-expanded > .user-layout:not(.appointments-shell) .sidebar.collapsed,
+  .user-layout.appointments-shell.sidebar-expanded > .user-layout:not(.appointments-shell) .sidebar.expanded,
+  .browse-health-page.browse-health-index-page .user-layout.sidebar-expanded .sidebar,
+  .browse-health-page.browse-health-index-page .user-layout.sidebar-expanded .sidebar.collapsed,
+  .browse-health-page.browse-health-index-page .user-layout.sidebar-expanded .sidebar.expanded {
+    transform: translate3d(0, 0, 0) !important;
+    pointer-events: auto !important;
+  }
+
+  .user-layout.appointments-shell.sidebar-expanded > .user-layout:not(.appointments-shell) .sidebar-mobile-backdrop,
+  .browse-health-page.browse-health-index-page .user-layout.sidebar-expanded .sidebar-mobile-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 12500 !important;
+    border: none !important;
+    background: rgba(15, 23, 42, 0.38) !important;
+  }
+
+  .user-layout.appointments-shell .appointments-mobile-header,
+  .browse-health-page.browse-health-index-page .user-layout .user-mobile-header {
+    z-index: 12400 !important;
+  }
+
+  .user-layout.appointments-shell .appointments-icon-button,
+  .browse-health-page.browse-health-index-page .user-layout .user-mobile-header-button {
+    pointer-events: auto !important;
   }
 }
 

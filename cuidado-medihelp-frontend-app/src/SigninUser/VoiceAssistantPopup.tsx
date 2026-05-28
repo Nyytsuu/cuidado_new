@@ -354,7 +354,9 @@ export default function VoiceAssistantPopup({
         )}
 
         {voiceStep === "result" && symptomResult && (
-          <VoiceAssistantResult result={symptomResult} compact />
+          <div className="voice-popup-result-scroll">
+            <VoiceAssistantResult result={symptomResult} compact />
+          </div>
         )}
 
         {(voiceStep === "retry" || voiceStep === "result") && (
