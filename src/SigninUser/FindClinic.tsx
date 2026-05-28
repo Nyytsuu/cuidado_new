@@ -157,6 +157,24 @@ function getMinimumTimeForDate(date: string): string | undefined {
   return date === toDateInputValue() ? toTimeInputValue() : undefined;
 }
 
+function normalizePhilippineMobileInput(value: string): string {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.startsWith("639")) {
+    return `0${digits.slice(2, 12)}`;
+  }
+
+  if (digits.startsWith("9")) {
+    return `0${digits.slice(0, 10)}`;
+  }
+
+  return digits.slice(0, 11);
+}
+
+function isValidPhilippineMobileNumber(value: string): boolean {
+  return /^09\d{9}$/.test(value);
+}
+
 function normalizeDay(value: string): string {
   return value.trim().toLowerCase().replace(/\./g, "");
 }
@@ -976,6 +994,15 @@ export default function FindClinic() {
         return;
       }
 
+      if (
+        !bookingForSelf &&
+        !isValidPhilippineMobileNumber(patient_phone_snapshot)
+      ) {
+        setBookingMessage("Please enter a valid Philippine mobile number, e.g. 09171234567.");
+        setBooking(false);
+        return;
+      }
+
       const start_at = `${appointmentDate} ${appointmentTime}:00`;
 
       const startDateObj = new Date(`${appointmentDate}T${appointmentTime}:00`);
@@ -1597,13 +1624,20 @@ export default function FindClinic() {
                         <label>Contact number</label>
                         <input
                           type="tel"
+                          inputMode="numeric"
+                          autoComplete="tel"
+                          maxLength={13}
+                          pattern="09[0-9]{9}"
                           value={guestPhone}
                           onChange={(e) => {
-                            setGuestPhone(e.target.value);
+                            setGuestPhone(normalizePhilippineMobileInput(e.target.value));
                             setBookingMessage("");
                           }}
-                          placeholder="e.g. 09xxxxxxxxx"
+                          placeholder="09171234567"
                         />
+                        <small className="fc-field-hint">
+                          Use an 11-digit Philippine mobile number starting with 09.
+                        </small>
                       </div>
                     </div>
                   )}

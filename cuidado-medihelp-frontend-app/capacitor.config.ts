@@ -1,13 +1,19 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+const serverUrl = process.env.CAPACITOR_SERVER_URL;
+
 const config: CapacitorConfig = {
   appId: 'com.cuidado.app',
   appName: 'Cuidado',
   webDir: 'dist',
-  server: {
-    url: 'http://localhost:5173',
-    cleartext: true,
-  },
+  ...(serverUrl
+    ? {
+        server: {
+          url: serverUrl,
+          cleartext: true,
+        },
+      }
+    : {}),
 };
 
 export default config;

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { MemoryRouter as BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import ConditionDetails from "./SigninUser/ConditionDetails";
 import Signup from "./SignupUser/Signup";
@@ -33,10 +33,10 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgetPass />} />
         <Route path="/change-password" element={<Changepass />} />
-        <Route path="/landingpage" element={<LandingPage/>} />
+        <Route path="/landingpage" element={<Navigate to="/" replace />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
-        <Route path="/landing" element={<LandingPage />} />
         <Route path="/browse-health" element={<BrowseHealth />} />
         <Route path="/health/body-system/:slug" element={<BodySystemDetails />} />
         <Route path="/health/condition/:slug" element={<ConditionDetails />} />
@@ -54,6 +54,7 @@ function App() {
         <Route path="/emergency" element={<UserEmergency />} />
         <Route path="/emergency-guide" element={<UserEmergency />} />
         <Route path="/help" element={<UserHelp />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

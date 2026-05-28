@@ -27,9 +27,20 @@ const clinicDashboardRoutes = require("./routes/clinicDashboard");
 
 const app = express();
 
-// CORS — restrict to known origins in production; allow all in development
+// CORS — restrict to known origins in production; allow all in development.
+// Capacitor WebViews can send localhost-style origins even for bundled apps.
+const MOBILE_APP_ORIGINS = [
+  "capacitor://localhost",
+  "ionic://localhost",
+  "http://localhost",
+  "https://localhost",
+];
+
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  ? new Set([
+      ...process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean),
+      ...MOBILE_APP_ORIGINS,
+    ])
   : null; // null = allow all (dev mode)
 
 app.use(
@@ -40,7 +51,7 @@ app.use(
       // Dev mode: ALLOWED_ORIGINS not set → allow everything
       if (!ALLOWED_ORIGINS) return callback(null, true);
       // Prod mode: only allow listed origins
-      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      if (ALLOWED_ORIGINS.has(origin)) return callback(null, true);
       callback(new Error(`CORS: origin ${origin} not allowed`));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
 import "./App.css";
 import UserProtectedRoute from "./routes/UserProtectedRoute";
 import ConditionDetails from "./SigninUser/ConditionDetails";
 import Signup from "./SignupUser/Signup";
 import Signin from "./SigninUser/Signin";
-import LandingPage from "./SigninUser/Landingpage";
+import SplashScreen from "./SigninUser/SplashScreen";
 import Categories from "./Categories/Categories";
 import VerifyOtp from "./SigninUser/VerifyOtp";
 import BrowseHealth from "./SigninUser/BrowseHealth";
@@ -50,14 +50,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<SplashScreen />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/clinic/signup" element={<ClinicSignup/>} />
-        <Route path="/landingpage" element={<LandingPage/>} />
+        <Route path="/landingpage" element={<Navigate to="/" replace />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
-        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
 
         
         <Route element={<UserProtectedRoute />}>

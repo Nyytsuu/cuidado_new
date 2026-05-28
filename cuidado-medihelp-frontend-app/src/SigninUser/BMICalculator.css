@@ -730,6 +730,12 @@ body {
   justify-content: center;
   flex-shrink: 0;
   line-height: 1;
+  transition: background 0.18s, color 0.18s;
+}
+
+.clinic-profile-close:hover:not(:disabled) {
+  background: #fde8e8;
+  color: #c0392b;
 }
 
 .clinic-profile-loading {
@@ -909,8 +915,12 @@ body {
 }
 
 .clinic-book-btn {
-  background: linear-gradient(180deg, #48aabd 0%, #358ea4 100%);
+  background: linear-gradient(180deg, #0fada5 0%, #0b8a84 100%);
   color: #ffffff;
+}
+
+.clinic-book-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #0b8a84 0%, #097570 100%);
 }
 
 .clinic-secondary-btn:disabled,

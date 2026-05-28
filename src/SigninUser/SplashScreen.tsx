@@ -37,18 +37,15 @@ export default function SplashScreen() {
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (destination) {
-        // Already logged in — go to their dashboard
         navigate(destination, { replace: true });
         return;
       }
 
       if (hasSeenOnboarding) {
-        // Returning user, not logged in — skip onboarding, go to login
         navigate("/signin", { replace: true });
         return;
       }
 
-      // First time — show onboarding slides
       setIntroDone(true);
     }, destination || hasSeenOnboarding ? 250 : 1400);
 
@@ -73,7 +70,7 @@ export default function SplashScreen() {
     return (
       <div className="splash-screen splash-intro">
         {!destination ? (
-          <button className="skip-btn" onClick={finishOnboarding}>
+          <button className="skip-btn" onClick={finishOnboarding} type="button">
             Skip
           </button>
         ) : null}
@@ -85,7 +82,7 @@ export default function SplashScreen() {
 
   return (
     <div className="splash-screen onboarding-screen">
-      <button className="skip-btn" onClick={finishOnboarding}>
+      <button className="skip-btn" onClick={finishOnboarding} type="button">
         Skip
       </button>
 
@@ -120,7 +117,7 @@ export default function SplashScreen() {
         </section>
       </main>
 
-      <button className="onboarding-primary" onClick={goToNextSlide}>
+      <button className="onboarding-primary" onClick={goToNextSlide} type="button">
         Get Started
       </button>
     </div>

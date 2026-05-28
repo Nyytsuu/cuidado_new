@@ -274,6 +274,12 @@ function toTitle(value?: string | null): string {
     .join(" ");
 }
 
+function formatPhilippinePhone(digits: string): string {
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  return `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}`;
+}
+
 function getClinicSummary(clinic: Clinic): string {
   const specialization = toTitle(clinic.specialization);
   const services = toTitle(clinic.services_offered);
@@ -1029,7 +1035,9 @@ const bmiCheckupAdvice = useMemo(() => {
                     disabled={booking}
                     aria-label="Close clinic profile"
                   >
-                    ×
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
                   </button>
                 </div>
 
@@ -1210,15 +1218,16 @@ const bmiCheckupAdvice = useMemo(() => {
                               />
                             </label>
                             <label>
-                              Phone Number
+                              Contact Number
                               <input
                                 type="text"
-                                value={guestPhone}
+                                value={formatPhilippinePhone(guestPhone)}
                                 onChange={(e) => {
-                                  const v = e.target.value.replace(/\D/g, "");
-                                  if (v.length <= 11) setGuestPhone(v);
+                                  const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                                  setGuestPhone(digits);
                                 }}
-                                placeholder="Patient's phone number"
+                                placeholder="09XX-XXX-XXXX"
+                                maxLength={13}
                                 disabled={booking}
                               />
                             </label>
