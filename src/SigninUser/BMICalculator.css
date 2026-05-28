@@ -604,6 +604,7 @@ body {
   width: min(980px, 100%);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
+  position: relative;
   background: #f8fbfc;
   border-radius: 18px;
   box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
@@ -617,6 +618,7 @@ body {
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+  padding-right: 54px;
   padding-bottom: 16px;
   border-bottom: 1px solid #dce7ed;
 }
@@ -664,6 +666,12 @@ body {
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .clinic-profile-loading {

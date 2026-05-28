@@ -1028,6 +1028,7 @@
   max-width: 760px;
   max-height: 90vh;
   overflow-y: auto;
+  position: relative;
   background: #fff;
   border-radius: 20px;
   padding: 24px;
@@ -1040,6 +1041,7 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 16px;
+  padding-right: 48px;
   margin-bottom: 20px;
 }
 
@@ -1060,6 +1062,12 @@
   border-radius: 10px;
   cursor: pointer;
   color: black;
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .booking-form-grid {
@@ -1094,6 +1102,13 @@
 
 .booking-field textarea {
   resize: vertical;
+}
+
+.booking-field-hint {
+  color: #6b7f8b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .full-width {
@@ -2271,4 +2286,3 @@
 .fc-required-star {
   color: #ef4444;
 }
-

@@ -227,6 +227,54 @@ function getMinimumTimeForDate(date: string): string | undefined {
   return date === toDateInputValue() ? toTimeInputValue() : undefined;
 }
 
+function normalizePhilippineMobileInput(value: string): string {
+  const digits = value.replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  if (digits === "0" || digits === "6" || digits === "63") {
+    return digits;
+  }
+
+  if (digits.startsWith("09")) {
+    return digits.slice(0, 11);
+  }
+
+  if (digits.startsWith("639")) {
+    return `0${digits.slice(2, 12)}`;
+  }
+
+  if (digits.startsWith("9")) {
+    return `09${digits.slice(1, 10)}`;
+  }
+
+  if (digits.startsWith("0")) {
+    return "0";
+  }
+
+  if (digits.startsWith("6")) {
+    return "6";
+  }
+
+  return "";
+}
+
+function toPhilippineLocalMobileNumber(value: string): string {
+  const digits = value.replace(/\D/g, "");
+
+  if (digits.startsWith("639")) {
+    return `0${digits.slice(2, 12)}`;
+  }
+
+  return digits.slice(0, 11);
+}
+
+function isValidPhilippineMobileNumber(value: string): boolean {
+  return /^09\d{9}$/.test(toPhilippineLocalMobileNumber(value));
+}
+
 function addMinutes(date: string, time: string, minutes: number): string {
   const base = new Date(`${date}T${time}:00`);
   base.setMinutes(base.getMinutes() + minutes);
@@ -459,10 +507,17 @@ function BookingModal({
       }
 
       const patientName = bookingForSelf ? accountName : guestName.trim();
-      const patientPhone = bookingForSelf ? accountPhone : guestPhone.trim();
+      const patientPhone = bookingForSelf
+        ? accountPhone
+        : toPhilippineLocalMobileNumber(guestPhone);
 
       if (!patientName) {
         setError(bookingForSelf ? "Your account name is missing." : "Please enter the patient's name.");
+        return;
+      }
+
+      if (!bookingForSelf && !isValidPhilippineMobileNumber(patientPhone)) {
+        setError("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
         return;
       }
 
@@ -703,16 +758,22 @@ function BookingModal({
               <div className="booking-field">
                 <label>Phone Number</label>
                 <input
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  maxLength={13}
+                  pattern="09[0-9]{9}"
                   value={guestPhone}
                   onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "");
-                    if (v.length <= 11) setGuestPhone(v);
+                    setGuestPhone(normalizePhilippineMobileInput(e.target.value));
+                    setError("");
                   }}
-                  maxLength={11}
-                  placeholder="Patient's phone number"
+                  placeholder="09171234567"
                   disabled={submitting}
                 />
+                <small className="booking-field-hint">
+                  Use 09XXXXXXXXX or 639XXXXXXXXX.
+                </small>
               </div>
             </>
           )}
