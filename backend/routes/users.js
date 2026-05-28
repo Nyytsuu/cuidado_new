@@ -39,6 +39,7 @@ const SUPPORT_TOPICS = new Set([
   "Account",
   "Appointments",
   "Clinic Search",
+  "Notifications",
   "Voice Assistant",
   "Emergency Page",
   "Technical Issue",
@@ -58,17 +59,39 @@ const SUPABASE_BUCKET = "profile-pictures";
 const USE_SUPABASE_STORAGE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_KEY);
 
 const MAIL_USER = process.env.MAIL_USER || process.env.EMAIL_USER;
-const MAIL_PASS = process.env.MAIL_PASS || process.env.EMAIL_PASS;
+const MAIL_PASS = String(process.env.MAIL_PASS || process.env.EMAIL_PASS || "").replace(/\s+/g, "");
 const MAIL_FROM = process.env.MAIL_FROM || MAIL_USER;
+const MAIL_HOST = process.env.MAIL_HOST || process.env.EMAIL_HOST;
+const MAIL_PORT = Number(process.env.MAIL_PORT || process.env.EMAIL_PORT || 587);
+const MAIL_SECURE =
+  String(process.env.MAIL_SECURE || process.env.EMAIL_SECURE || "").toLowerCase() === "true" ||
+  MAIL_PORT === 465;
+const SUPPORT_EMAIL =
+  process.env.SUPPORT_EMAIL ||
+  process.env.CONTACT_SUPPORT_EMAIL ||
+  process.env.SUPPORT_TO_EMAIL ||
+  MAIL_USER;
 const reminderMailer =
   MAIL_USER && MAIL_PASS
-    ? nodemailer.createTransport({
-        service: process.env.MAIL_SERVICE || process.env.EMAIL_SERVICE || "gmail",
-        auth: {
-          user: MAIL_USER,
-          pass: MAIL_PASS,
-        },
-      })
+    ? nodemailer.createTransport(
+        MAIL_HOST
+          ? {
+              host: MAIL_HOST,
+              port: MAIL_PORT,
+              secure: MAIL_SECURE,
+              auth: {
+                user: MAIL_USER,
+                pass: MAIL_PASS,
+              },
+            }
+          : {
+              service: process.env.MAIL_SERVICE || process.env.EMAIL_SERVICE || "gmail",
+              auth: {
+                user: MAIL_USER,
+                pass: MAIL_PASS,
+              },
+            }
+      )
     : null;
 
 // Only create the local uploads directory when NOT using Supabase Storage (i.e. local dev).
@@ -303,6 +326,98 @@ const escapeHtml = (value) =>
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
+const sendSupportTicketEmails = async ({
+  requestId,
+  user,
+  topic,
+  priority,
+  subject,
+  message,
+  contactEmail,
+  contactPhone,
+}) => {
+  if (!reminderMailer || !SUPPORT_EMAIL) {
+    return { supportEmailSent: false, confirmationEmailSent: false };
+  }
+
+  const requesterName = user?.full_name || user?.name || "Cuidado user";
+  const requesterEmail = contactEmail || user?.email || "";
+  const requesterPhone = contactPhone || user?.phone || "";
+  const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
+
+  let supportEmailSent = false;
+  let confirmationEmailSent = false;
+
+  try {
+    await reminderMailer.sendMail({
+      from: MAIL_FROM,
+      to: SUPPORT_EMAIL,
+      replyTo: requesterEmail || undefined,
+      subject: `[Cuidado Support #${requestId}] ${subject}`,
+      text: [
+        `New support ticket #${requestId}`,
+        `User: ${requesterName}`,
+        `User ID: ${user?.id || "Unknown"}`,
+        `Topic: ${topic}`,
+        `Priority: ${priorityLabel}`,
+        `Reply email: ${requesterEmail || "Not provided"}`,
+        `Phone: ${requesterPhone || "Not provided"}`,
+        "",
+        subject,
+        "",
+        message,
+      ].join("\n"),
+      html: `
+        <div style="font-family:Arial,sans-serif;line-height:1.5;color:#123;">
+          <h2 style="margin:0 0 12px;color:#0b716b;">New support ticket #${escapeHtml(
+            requestId
+          )}</h2>
+          <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
+          <p><strong>Topic:</strong> ${escapeHtml(topic)}</p>
+          <p><strong>Priority:</strong> ${escapeHtml(priorityLabel)}</p>
+          <p><strong>User:</strong> ${escapeHtml(requesterName)} (#${escapeHtml(
+            user?.id || "Unknown"
+          )})</p>
+          <p><strong>Reply email:</strong> ${escapeHtml(requesterEmail || "Not provided")}</p>
+          <p><strong>Phone:</strong> ${escapeHtml(requesterPhone || "Not provided")}</p>
+          <hr style="border:none;border-top:1px solid #dce8e8;margin:16px 0;" />
+          <p style="white-space:pre-wrap;">${escapeHtml(message)}</p>
+        </div>
+      `,
+    });
+    supportEmailSent = true;
+  } catch (error) {
+    console.error("SUPPORT EMAIL SEND ERROR:", error);
+  }
+
+  if (requesterEmail) {
+    try {
+      await reminderMailer.sendMail({
+        from: MAIL_FROM,
+        to: requesterEmail,
+        subject: `Cuidado support received your request #${requestId}`,
+        text: `Hi ${requesterName}, we received your support request "${subject}". Ticket #${requestId} is now open.`,
+        html: `
+          <div style="font-family:Arial,sans-serif;line-height:1.5;color:#123;">
+            <h2 style="margin:0 0 12px;color:#0b716b;">Support request received</h2>
+            <p>Hi ${escapeHtml(requesterName)},</p>
+            <p>We received your support request and saved it as ticket <strong>#${escapeHtml(
+              requestId
+            )}</strong>.</p>
+            <p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
+            <p>You can close it from your Help page once the issue is resolved.</p>
+          </div>
+        `,
+      });
+      confirmationEmailSent = true;
+    } catch (error) {
+      console.error("SUPPORT CONFIRMATION EMAIL SEND ERROR:", error);
+    }
+  }
+
+  return { supportEmailSent, confirmationEmailSent };
+};
 
 const sendAppointmentReminderEmailOnce = async ({
   userId,
@@ -741,7 +856,7 @@ router.post("/:userId/support-requests", async (req, res) => {
 
     const [users] = await pool.query(
       `
-      SELECT id
+      SELECT id, full_name, email, phone
       FROM users
       WHERE id = ?
       LIMIT 1
@@ -752,6 +867,8 @@ router.post("/:userId/support-requests", async (req, res) => {
     if (users.length === 0) {
       return res.status(404).json({ message: "User not found." });
     }
+
+    const user = users[0];
 
     await ensureUserSupportRequestsTable();
 
@@ -783,10 +900,22 @@ router.post("/:userId/support-requests", async (req, res) => {
       ]
     );
 
+    const ticketId = result.insertId;
+    const { supportEmailSent, confirmationEmailSent } = await sendSupportTicketEmails({
+      requestId: ticketId,
+      user,
+      topic,
+      priority,
+      subject,
+      message,
+      contactEmail,
+      contactPhone,
+    });
+
     await ensureUserNotificationsTable();
     await insertNotification({
       userId,
-      uniqueKey: `support:${result.insertId}:created`,
+      uniqueKey: `support:${ticketId}:created`,
       title: "Support Request Received",
       message: `Your support request "${subject}" was submitted.`,
       category: "System",
@@ -796,12 +925,60 @@ router.post("/:userId/support-requests", async (req, res) => {
 
     res.status(201).json({
       message: "Support request submitted successfully.",
-      request_id: result.insertId,
+      request_id: ticketId,
       status: "open",
+      email_sent: supportEmailSent,
+      confirmation_email_sent: confirmationEmailSent,
     });
   } catch (error) {
     console.error("POST /support-requests error:", error);
     res.status(500).json({ message: "Failed to submit support request." });
+  }
+});
+
+/**
+ * PATCH /api/users/:userId/support-requests/:requestId/close
+ */
+router.patch("/:userId/support-requests/:requestId/close", async (req, res) => {
+  try {
+    const userId = Number(req.params.userId);
+    const requestId = Number(req.params.requestId);
+
+    if (!userId || !requestId) {
+      return res.status(400).json({ message: "Valid userId and requestId are required." });
+    }
+
+    await ensureUserSupportRequestsTable();
+
+    const [result] = await pool.query(
+      `
+      UPDATE user_support_requests
+      SET status = 'closed', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND user_id = ?
+      RETURNING id
+      `,
+      [requestId, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Support request not found." });
+    }
+
+    await ensureUserNotificationsTable();
+    await insertNotification({
+      userId,
+      uniqueKey: `support:${requestId}:closed`,
+      title: "Support Request Closed",
+      message: `Support ticket #${requestId} was closed.`,
+      category: "System",
+      icon: "info",
+      createdAt: new Date(),
+    });
+
+    res.json({ message: "Support request closed.", request_id: requestId, status: "closed" });
+  } catch (error) {
+    console.error("PATCH /support-requests/:requestId/close error:", error);
+    res.status(500).json({ message: "Failed to close support request." });
   }
 });
 

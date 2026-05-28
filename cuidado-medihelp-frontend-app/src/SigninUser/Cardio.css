@@ -518,11 +518,12 @@ body {
 }
 
 .body-system-details-page .overview-grid {
+  grid-template-columns: minmax(0, 1.6fr) 260px;
   grid-template-areas:
-    "overview visual related"
-    "diseases diseases ."
-    "symptoms prevention ."
-    "footer footer footer";
+    "overview visual"
+    "diseases related"
+    "symptoms prevention"
+    "footer footer";
 }
 
 .body-system-details-page .overview-card {

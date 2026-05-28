@@ -15,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./UserHelp.css";
 
@@ -49,8 +50,6 @@ type HelpRouteState = {
   topic?: string;
   subject?: string;
 };
-
-const API_BASE = "http://localhost:5000";
 
 const supportTopics = [
   "Account",
@@ -182,6 +181,7 @@ export default function UserHelp() {
   const [errorMessage, setErrorMessage] = useState("");
   const [requests, setRequests] = useState<SupportRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
+  const [closingRequestId, setClosingRequestId] = useState<number | null>(null);
   const [highlightSupport, setHighlightSupport] = useState(false);
 
   const faqCategories = useMemo(
@@ -208,7 +208,7 @@ export default function UserHelp() {
 
     try {
       setRequestsLoading(true);
-      const res = await fetch(`${API_BASE}/api/users/${userId}/support-requests`, {
+      const res = await fetch(apiUrl(`/api/users/${userId}/support-requests`), {
         cache: "no-store",
       });
       const data = await res.json().catch(() => []);
@@ -283,7 +283,7 @@ export default function UserHelp() {
       setErrorMessage("");
       setStatusMessage("");
 
-      const res = await fetch(`${API_BASE}/api/users/${userId}/support-requests`, {
+      const res = await fetch(apiUrl(`/api/users/${userId}/support-requests`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -301,7 +301,11 @@ export default function UserHelp() {
         throw new Error(data.message || "Failed to submit support request.");
       }
 
-      setStatusMessage("Support request submitted. We saved it to your account.");
+      setStatusMessage(
+        data.email_sent
+          ? "Support request submitted and emailed to support."
+          : "Support request saved. Email delivery is not configured or failed on the backend."
+      );
       setForm((prev) => ({
         ...prev,
         subject: "",
@@ -314,6 +318,42 @@ export default function UserHelp() {
       );
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const closeSupportRequest = async (requestId: number) => {
+    if (!userId || closingRequestId) return;
+
+    const shouldClose = window.confirm("Close this support ticket?");
+    if (!shouldClose) return;
+
+    try {
+      setClosingRequestId(requestId);
+      setErrorMessage("");
+      setStatusMessage("");
+
+      const res = await fetch(
+        apiUrl(`/api/users/${userId}/support-requests/${requestId}/close`),
+        { method: "PATCH" }
+      );
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to close support request.");
+      }
+
+      setRequests((prev) =>
+        prev.map((request) =>
+          request.id === requestId ? { ...request, status: "closed" } : request
+        )
+      );
+      setStatusMessage("Support ticket closed.");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Failed to close support request."
+      );
+    } finally {
+      setClosingRequestId(null);
     }
   };
 
@@ -548,7 +588,19 @@ export default function UserHelp() {
                         <h3>{request.subject}</h3>
                         <p>{formatDate(request.created_at)}</p>
                       </div>
-                      <strong className={request.status}>{request.status}</strong>
+                      <div className="request-card-actions">
+                        <strong className={request.status}>{request.status}</strong>
+                        {request.status.toLowerCase() !== "closed" && (
+                          <button
+                            type="button"
+                            className="request-close-btn"
+                            onClick={() => closeSupportRequest(request.id)}
+                            disabled={closingRequestId === request.id}
+                          >
+                            {closingRequestId === request.id ? "Closing" : "Close"}
+                          </button>
+                        )}
+                      </div>
                     </article>
                   ))}
                 </div>
