@@ -1517,6 +1517,31 @@
     box-shadow: 0 4px 10px rgba(7, 77, 73, 0.12);
   }
 
+  .appointments-shell .appointments-notification-button {
+    position: relative;
+  }
+
+  .appointments-shell .appointments-notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border: 2px solid #dff8f6;
+    border-radius: 999px;
+    background: #ef4444;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 900;
+    line-height: 1;
+    pointer-events: none;
+    box-shadow: 0 4px 10px rgba(239, 68, 68, 0.28);
+  }
+
   .user-layout.appointments-shell .appointments-mobile-bar .appointments-icon-button:first-child {
     justify-self: start;
     display: inline-flex !important;
@@ -1537,6 +1562,18 @@
     height: 20px;
     display: block;
     stroke-width: 3;
+  }
+
+  .user-layout.appointments-shell .appointments-menu-icon {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 20px !important;
+    height: 20px !important;
+    color: #063f3b !important;
+    stroke: #063f3b !important;
+    fill: none !important;
+    flex: 0 0 auto !important;
   }
 
   .appointments-shell .appointments-mobile-search {

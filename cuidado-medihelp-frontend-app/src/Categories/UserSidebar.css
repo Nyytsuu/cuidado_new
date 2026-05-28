@@ -163,6 +163,47 @@
   color: inherit;
 }
 
+.user-layout .notification-bell-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.user-layout .notification-bell-wrap svg {
+  display: block;
+}
+
+.user-layout .notification-bell-wrap .notification-unread-badge {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  min-width: 16px;
+  height: 16px;
+  max-width: none !important;
+  padding: 0 4px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  opacity: 1 !important;
+  transform: none !important;
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.28);
+}
+
+.user-layout .sidebar .notification-unread-badge {
+  border-color: var(--sidebar-bg);
+}
+
 .user-layout .sidebar-item.active a,
 .user-layout .sidebar-item.active .sidebar-btn {
   background: var(--sidebar-active-bg);

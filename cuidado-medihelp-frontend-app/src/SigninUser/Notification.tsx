@@ -12,6 +12,7 @@ import {
 import { useLocation } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import "./Notification.css";
+import { notifyNotificationsChanged } from "../useUnreadNotifications";
 
 type FilterName = "All" | "Unread" | "Appointments" | "System" | "Promotions";
 
@@ -221,6 +222,7 @@ export default function Notifications() {
       });
 
       if (!res.ok) throw new Error("Failed to mark notification as read.");
+      notifyNotificationsChanged();
     } catch {
       setNotifications((items) =>
         items.map((item) => (item.id === notification.id ? { ...item, unread: true } : item))
@@ -240,6 +242,7 @@ export default function Notifications() {
       });
 
       if (!res.ok) throw new Error("Failed to mark notifications as read.");
+      notifyNotificationsChanged();
     } catch {
       setNotifications(previous);
       setError("Failed to mark notifications as read.");

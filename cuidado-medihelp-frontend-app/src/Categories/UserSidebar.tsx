@@ -34,6 +34,7 @@ import logo from "../img/logo.png";
 import userIcon from "../img/friends.png";
 import VoiceAssistantPopup from "../SigninUser/VoiceAssistantPopup";
 import { clearStoredAuth } from "../authSession";
+import { useUnreadNotifications } from "../useUnreadNotifications";
 
 type HeaderUser = {
   id?: number;
@@ -99,6 +100,12 @@ export default function UserSidebar({
       return null;
     }
   }, []);
+  const unreadNotificationCount = useUnreadNotifications(
+    headerUser?.id ?? storedHeaderUser?.id ?? null
+  );
+  const hasUnreadNotifications = unreadNotificationCount > 0;
+  const unreadNotificationLabel =
+    unreadNotificationCount > 9 ? "9+" : String(unreadNotificationCount);
 
   useEffect(() => {
     let cancelled = false;
@@ -301,8 +308,23 @@ export default function UserSidebar({
             </div>
 
             <div className={`sidebar-item ${isPathActive("/notifications") ? "active" : ""}`}>
-              <Link to="/notifications" className="sidebar-btn">
-                <Bell size={24} />
+              <Link
+                to="/notifications"
+                className="sidebar-btn notification-nav-link"
+                aria-label={
+                  hasUnreadNotifications
+                    ? `Notifications, ${unreadNotificationCount} unread`
+                    : "Notifications"
+                }
+              >
+                <div className="notification-bell-wrap">
+                  <Bell size={24} />
+                  {hasUnreadNotifications && (
+                    <span className="notification-unread-badge">
+                      {unreadNotificationLabel}
+                    </span>
+                  )}
+                </div>
                 <span>Notifications</span>
               </Link>
             </div>
@@ -353,10 +375,21 @@ export default function UserSidebar({
             className={`user-mobile-header-button user-mobile-header-alert ${
               location.pathname === "/notifications" ? "active" : ""
             }`}
-            aria-label="Open notifications"
+            aria-label={
+              hasUnreadNotifications
+                ? `Open notifications, ${unreadNotificationCount} unread`
+                : "Open notifications"
+            }
             onClick={() => setHeaderProfileOpen(false)}
           >
-            <Bell size={19} />
+            <span className="notification-bell-wrap">
+              <Bell size={19} />
+              {hasUnreadNotifications && (
+                <span className="notification-unread-badge">
+                  {unreadNotificationLabel}
+                </span>
+              )}
+            </span>
           </Link>
         </div>
 
@@ -391,10 +424,21 @@ export default function UserSidebar({
             className={`mobile-header-action ${
               location.pathname === "/notifications" ? "active" : ""
             }`}
-            aria-label="Open notifications"
+            aria-label={
+              hasUnreadNotifications
+                ? `Open notifications, ${unreadNotificationCount} unread`
+                : "Open notifications"
+            }
             onClick={() => setHeaderProfileOpen(false)}
           >
-            <Bell size={19} />
+            <span className="notification-bell-wrap">
+              <Bell size={19} />
+              {hasUnreadNotifications && (
+                <span className="notification-unread-badge">
+                  {unreadNotificationLabel}
+                </span>
+              )}
+            </span>
           </Link>
 
           <form className="header-search" onSubmit={handleSearchSubmit}>

@@ -6,6 +6,7 @@ import "./UserAppointment.css";
 import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import { apiUrl } from "../sharedBackendFetch";
+import { useUnreadNotifications } from "../useUnreadNotifications";
 import logo from "../img/logo.png";
 import {
   Filter,
@@ -909,6 +910,10 @@ function UserAppointmentsContent({
   const storedUser = localStorage.getItem("user");
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
   const userId = currentUser?.id;
+  const unreadNotificationCount = useUnreadNotifications(userId || null);
+  const hasUnreadNotifications = unreadNotificationCount > 0;
+  const unreadNotificationLabel =
+    unreadNotificationCount > 9 ? "9+" : String(unreadNotificationCount);
 
   const loadAppointments = async (silent = false) => {
     try {
@@ -1399,7 +1404,7 @@ function UserAppointmentsContent({
               aria-label="Open sidebar"
               onClick={openSidebar}
             >
-              <Menu size={20} />
+              <Menu className="appointments-menu-icon" size={20} strokeWidth={3} />
             </button>
 
             <Link className="appointments-mobile-brand" to="/homepage">
@@ -1408,10 +1413,19 @@ function UserAppointmentsContent({
 
             <Link
               to="/notifications"
-              className="appointments-icon-button"
-              aria-label="Open notifications"
+              className="appointments-icon-button appointments-notification-button"
+              aria-label={
+                hasUnreadNotifications
+                  ? `Open notifications, ${unreadNotificationCount} unread`
+                  : "Open notifications"
+              }
             >
               <Bell size={19} />
+              {hasUnreadNotifications && (
+                <span className="appointments-notification-badge">
+                  {unreadNotificationLabel}
+                </span>
+              )}
             </Link>
           </div>
 
