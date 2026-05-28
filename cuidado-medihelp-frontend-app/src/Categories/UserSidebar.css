@@ -786,7 +786,9 @@
   .sympcheck-page .sympcheck-content,
   .sympcheck-page.sidebar-expanded .sympcheck-content,
   .findclinic-page .findclinic-content,
-  .findclinic-page.sidebar-expanded .findclinic-content {
+  .findclinic-page.sidebar-expanded .findclinic-content,
+  .voice-assistant-page .page-content,
+  .voice-assistant-page.sidebar-expanded .page-content {
     margin-left: 0 !important;
     width: 100% !important;
   }

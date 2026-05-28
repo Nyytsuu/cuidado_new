@@ -7,11 +7,12 @@ import { useNavigate } from "react-router-dom";
 import {
   Mic,
   CalendarDays,
-  FlaskConical,
   MapPin,
-  Bell,
   HeartPulse,
-  Moon,
+  Scale,
+  Stethoscope,
+  Activity,
+  Brain,
   Lightbulb,
   Headphones,
   ChevronRight,
@@ -42,6 +43,12 @@ type SpeechRecognitionErrorEventLike = Event & {
 };
 
 const LISTENING_TIMEOUT_MS = 12000;
+
+const LANGUAGES = [
+  { label: "English (US)", value: "en-US" },
+  { label: "English (Philippines)", value: "en-PH" },
+  { label: "Filipino", value: "fil-PH" },
+];
 
 declare global {
   interface Window {
@@ -77,6 +84,8 @@ export default function UserVoiceAssistant() {
   const [voiceTranscript, setVoiceTranscript] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
+  const [selectedLang, setSelectedLang] = useState("en-US");
+  const [typedFallback, setTypedFallback] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const listeningTimeoutRef = useRef<number | null>(null);
   const latestTranscriptRef = useRef("");
@@ -99,11 +108,11 @@ export default function UserVoiceAssistant() {
 
   const suggestions = [
     { icon: CalendarDays, text: "What are my upcoming appointments?" },
-    { icon: FlaskConical, text: "Show my lab test results" },
-    { icon: MapPin, text: "Where is the nearest clinic?" },
-    { icon: HeartPulse, text: "I have fever cough and body ache" },
-    { icon: Bell, text: "Remind me to take my medicine at 8 PM" },
-    { icon: Moon, text: "How can I improve my sleep?" },
+    { icon: MapPin,        text: "Find a clinic near me" },
+    { icon: HeartPulse,   text: "I have fever, cough and body ache" },
+    { icon: Scale,        text: "Help me check my BMI" },
+    { icon: Stethoscope,  text: "Tell me about high blood pressure" },
+    { icon: Activity,     text: "I feel stressed and anxious" },
   ];
 
   const analyzeVoiceSymptoms = async (transcript: string) => {
@@ -153,7 +162,7 @@ export default function UserVoiceAssistant() {
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
 
-    recognition.lang = "en-US";
+    recognition.lang = selectedLang;
     recognition.continuous = false;
     recognition.interimResults = true;
 
@@ -258,6 +267,7 @@ export default function UserVoiceAssistant() {
     setVoiceTranscript("");
     setVoiceError("");
     setSymptomResult(null);
+    setTypedFallback("");
     latestTranscriptRef.current = "";
     heardSpeechRef.current = false;
   };
@@ -282,7 +292,7 @@ export default function UserVoiceAssistant() {
   const [title, subtitle] = getVoiceContent();
 
   return (
-    <div className={`user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div className={`voice-assistant-page user-layout ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -300,13 +310,14 @@ export default function UserVoiceAssistant() {
 
             <section className="voice-card">
               <div className="voice-fixed-top">
-                <div className="voice-wave-wrap">
+                <div className={`voice-wave-wrap ${voiceStep}`}>
                   <div className="wave left-wave" />
 
                   <button
                     className={`mic-button ${voiceStep}`}
                     type="button"
-                    onClick={startVoiceAssistant}
+                    onClick={voiceStep === "idle" || voiceStep === "retry" || voiceStep === "unsupported" ? startVoiceAssistant : undefined}
+                    aria-label={voiceStep === "listening" ? "Listening..." : voiceStep === "processing" ? "Processing..." : "Start voice assistant"}
                   >
                     <Mic size={70} />
                   </button>
@@ -314,31 +325,74 @@ export default function UserVoiceAssistant() {
                   <div className="wave right-wave" />
                 </div>
 
+                <div className={`voice-bars ${voiceStep === "listening" ? "active" : ""}`} aria-hidden="true">
+                  {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                    <span key={i} style={{ "--bar-i": i } as React.CSSProperties} />
+                  ))}
+                </div>
+
                 <p className="tap-text">{title}</p>
                 <p className="voice-status-text">{subtitle}</p>
 
-                <select className="language-select">
-                  <option>English (US)</option>
-                  <option>English (Philippines)</option>
-                  <option>Filipino</option>
-                </select>
-
-                {voiceStep !== "idle" && (
-                  <button
-                    type="button"
-                    className="voice-reset-btn"
-                    onClick={resetVoiceAssistant}
+                <div className="voice-controls-row">
+                  <select
+                    className="language-select"
+                    value={selectedLang}
+                    onChange={(e) => setSelectedLang(e.target.value)}
+                    disabled={voiceStep === "listening" || voiceStep === "processing"}
                   >
-                    <X size={16} />
-                    Reset
-                  </button>
-                )}
+                    {LANGUAGES.map(({ label, value }) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+
+                  {voiceStep !== "idle" && (
+                    <button
+                      type="button"
+                      className="voice-reset-btn"
+                      onClick={resetVoiceAssistant}
+                    >
+                      <X size={15} />
+                      Reset
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="voice-card-content">
                 {voiceTranscript && (
                   <div className="voice-transcript-preview">
                     <strong>Heard:</strong> {voiceTranscript}
+                  </div>
+                )}
+
+                {voiceStep === "retry" && (
+                  <div className="voice-typed-fallback">
+                    <p className="voice-fallback-label">Or type your symptoms below:</p>
+                    <textarea
+                      className="voice-fallback-textarea"
+                      value={typedFallback}
+                      onChange={(e) => setTypedFallback(e.target.value)}
+                      placeholder="e.g. I have a fever, headache and sore throat..."
+                      rows={3}
+                    />
+                    <div className="voice-fallback-actions">
+                      <button
+                        type="button"
+                        className="voice-popup-retry"
+                        onClick={startVoiceAssistant}
+                      >
+                        Try voice again
+                      </button>
+                      <button
+                        type="button"
+                        className="voice-analyze-typed-btn"
+                        onClick={() => { if (typedFallback.trim()) analyzeVoiceSymptoms(typedFallback.trim()); }}
+                        disabled={!typedFallback.trim()}
+                      >
+                        Analyze symptoms
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -359,16 +413,6 @@ export default function UserVoiceAssistant() {
                     ))}
                   </div>
                 </div>
-
-                {voiceStep === "retry" && (
-                  <button
-                    type="button"
-                    className="voice-popup-retry"
-                    onClick={startVoiceAssistant}
-                  >
-                    Try again
-                  </button>
-                )}
               </div>
             </section>
 
@@ -381,31 +425,31 @@ export default function UserVoiceAssistant() {
                     <CalendarDays size={26} />
                   </div>
                   <h4>Appointments</h4>
-                  <p>Book, reschedule or check your appointments</p>
+                  <p>Book, reschedule, or check your upcoming visits</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon blue">
-                    <FlaskConical size={26} />
+                    <Brain size={26} />
                   </div>
-                  <h4>Lab Results</h4>
-                  <p>Get your lab test results and reports</p>
+                  <h4>Symptom Checker</h4>
+                  <p>Describe your symptoms to get health insights</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon green">
-                    <Bell size={26} />
+                    <MapPin size={26} />
                   </div>
-                  <h4>Medications</h4>
-                  <p>Set reminders and get medication information</p>
+                  <h4>Find Clinics</h4>
+                  <p>Locate nearby clinics and health centers</p>
                 </div>
 
                 <div className="feature-item">
                   <div className="feature-icon purple">
                     <HeartPulse size={26} />
                   </div>
-                  <h4>Health Info</h4>
-                  <p>Get reliable health information and tips</p>
+                  <h4>Health &amp; Wellness</h4>
+                  <p>BMI, stress index, and health topics</p>
                 </div>
               </div>
             </section>
@@ -452,60 +496,20 @@ export default function UserVoiceAssistant() {
       </main>
 
       {voiceStep === "result" && symptomResult && (
-        <div className="voice-result-overlay">
-          <div className="voice-result-modal">
+        <div className="voice-result-overlay" onClick={resetVoiceAssistant}>
+          <div className="voice-result-modal" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               className="voice-result-close"
               onClick={resetVoiceAssistant}
+              aria-label="Close results"
             >
-              ×
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
             </button>
 
             <VoiceAssistantResult result={symptomResult} showTranscript />
-            <div className="voice-result-section">
-              <strong>Possible conditions:</strong>
-              {symptomResult.possible_conditions.length > 0 ? (
-                <ol>
-                  {symptomResult.possible_conditions.map((condition) => (
-                    <li className="voice-condition-match" key={condition.name}>
-                      {condition.name} — {(condition.score * 100).toFixed(0)}% match
-                      {condition.recognizedByName && <em>recognized by name</em>}
-                      {condition.matchedSymptoms.length > 0 && (
-                        <small>
-                          Related symptoms: {condition.matchedSymptoms.join(", ")}
-                        </small>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p>No likely conditions found.</p>
-              )}
-            </div>
-
-            <div className="voice-result-section">
-              <p>
-                <strong>Urgency:</strong> {symptomResult.urgency}
-              </p>
-              <p>
-                <strong>Advice:</strong> {symptomResult.advice}
-              </p>
-
-              {symptomResult.emergency && (
-                <p className="voice-emergency-text">
-                  This may require urgent medical attention.
-                </p>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="voice-popup-retry"
-              onClick={startVoiceAssistant}
-            >
-              Try again
-            </button>
 
             <div className="voice-result-actions">
               <button
