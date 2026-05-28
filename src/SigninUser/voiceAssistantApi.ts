@@ -33,7 +33,7 @@ type VoiceAssistantApiResponse = {
   };
 };
 
-const API_URL = "http://localhost:5000/api/voice-assistant/analyze";
+const API_URL = apiUrl("/api/voice-assistant/analyze");
 
 const adviceLevelToUrgency = (
   adviceLevel?: "self-care" | "consult" | "urgent"
@@ -102,3 +102,4 @@ export const analyzeVoiceTranscript = async (
     emergency: Boolean(data.emergency),
   };
 };
+import { apiUrl } from "../sharedBackendFetch";

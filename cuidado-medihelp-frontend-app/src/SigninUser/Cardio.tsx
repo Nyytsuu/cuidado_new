@@ -60,12 +60,12 @@ const symptoms = [
   "Swelling in the legs, ankles, or feet",
 ];
 
-const preventionTips = [
-  "Eat a healthy diet rich in fruits, vegetables, whole grains, and lean proteins.",
-  "Exercise regularly, aiming for at least 150 minutes of moderate-intensity exercise per week.",
-  "Maintain a healthy weight and quit smoking if applicable.",
-  "Check your blood pressure and cholesterol levels regularly.",
-  "Manage stress.",
+const didYouKnowFacts = [
+  "Your heart pumps roughly 2,000 gallons of blood through your body each day.",
+  "Blood pressure can be high without obvious symptoms, so regular checks can catch concerns early.",
+  "Poor sleep and long-term stress can affect heart health, not only your mood.",
+  "The heart has its own electrical system that keeps each beat coordinated.",
+  "Small daily habits can make a meaningful difference for cardiovascular health over time.",
 ];
 
 export default function Cardio() {
@@ -83,7 +83,7 @@ export default function Cardio() {
   );
   const filteredRelatedArticles = relatedArticles.filter((item) => matches(item));
   const filteredSymptoms = symptoms.filter((item) => matches(item));
-  const filteredPreventionTips = preventionTips.filter((item) => matches(item));
+  const filteredDidYouKnowFacts = didYouKnowFacts.filter((item) => matches(item));
 
   return (
     <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -258,9 +258,9 @@ export default function Cardio() {
                   </div>
 
                   <div className="prevention-card">
-                    <h3>Prevention Tips</h3>
+                    <h3>Did You Know?</h3>
                     <ul>
-                      {filteredPreventionTips.map((item) => (
+                      {filteredDidYouKnowFacts.map((item) => (
                         <li key={item}>{item}</li>
                       ))}
                     </ul>

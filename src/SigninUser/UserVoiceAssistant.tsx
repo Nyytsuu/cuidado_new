@@ -44,6 +44,8 @@ type SpeechRecognitionErrorEventLike = Event & {
   error: string;
 };
 
+const LISTENING_TIMEOUT_MS = 12000;
+
 declare global {
   interface Window {
     SpeechRecognition?: new () => SpeechRecognition;
@@ -71,7 +73,7 @@ interface SpeechRecognition extends EventTarget {
 const LANGUAGES = [
   { label: "English (Philippines)", value: "en-PH" },
   { label: "English (US)", value: "en-US" },
-  { label: "Filipino", value: "tl-PH" },
+  { label: "Filipino", value: "fil-PH" },
 ];
 
 export default function UserVoiceAssistant() {
@@ -85,10 +87,22 @@ export default function UserVoiceAssistant() {
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
   const [selectedLang, setSelectedLang] = useState("en-PH");
+  const [typedFallback, setTypedFallback] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const listeningTimeoutRef = useRef<number | null>(null);
+  const latestTranscriptRef = useRef("");
+  const recognitionSettledRef = useRef(false);
+
+  const clearListeningTimer = () => {
+    if (listeningTimeoutRef.current !== null) {
+      window.clearTimeout(listeningTimeoutRef.current);
+      listeningTimeoutRef.current = null;
+    }
+  };
 
   useEffect(() => {
     return () => {
+      clearListeningTimer();
       recognitionRef.current?.abort();
     };
   }, []);
@@ -104,12 +118,22 @@ export default function UserVoiceAssistant() {
 
   const analyzeVoiceSymptoms = async (transcript: string) => {
     try {
+      const cleanedTranscript = transcript.trim();
+      clearListeningTimer();
+      recognitionSettledRef.current = true;
+
+      if (!cleanedTranscript) {
+        setVoiceError("I did not receive microphone audio. Try again or type your symptoms below.");
+        setVoiceStep("retry");
+        return;
+      }
+
       setVoiceStep("processing");
       setVoiceError("");
       setSymptomResult(null);
-      setVoiceTranscript(transcript);
+      setVoiceTranscript(cleanedTranscript);
 
-      const result = await analyzeVoiceTranscript(transcript);
+      const result = await analyzeVoiceTranscript(cleanedTranscript);
       setSymptomResult(result);
       setVoiceStep("result");
     } catch (err) {
@@ -125,6 +149,8 @@ export default function UserVoiceAssistant() {
     setVoiceTranscript("");
     setVoiceError("");
     setSymptomResult(null);
+    latestTranscriptRef.current = "";
+    recognitionSettledRef.current = false;
 
     if (!SpeechRecognitionAPI) {
       setVoiceStep("unsupported");
@@ -140,7 +166,28 @@ export default function UserVoiceAssistant() {
     recognition.continuous = false;
     recognition.interimResults = true;
 
-    recognition.onstart = () => setVoiceStep("listening");
+    recognition.onstart = () => {
+      clearListeningTimer();
+      latestTranscriptRef.current = "";
+      recognitionSettledRef.current = false;
+      setVoiceStep("listening");
+
+      listeningTimeoutRef.current = window.setTimeout(() => {
+        if (recognitionSettledRef.current) return;
+
+        recognitionSettledRef.current = true;
+        const transcript = latestTranscriptRef.current.trim();
+        recognition.abort();
+
+        if (transcript) {
+          void analyzeVoiceSymptoms(transcript);
+          return;
+        }
+
+        setVoiceError("I could not hear microphone audio. Try again or type your symptoms below.");
+        setVoiceStep("retry");
+      }, LISTENING_TIMEOUT_MS);
+    };
 
     recognition.onresult = (event) => {
       let transcript = "";
@@ -149,11 +196,14 @@ export default function UserVoiceAssistant() {
         transcript += event.results[i][0].transcript;
       }
 
+      latestTranscriptRef.current = transcript;
       setVoiceTranscript(transcript);
 
       const lastResult = event.results[event.results.length - 1];
       if (lastResult?.isFinal) {
-        analyzeVoiceSymptoms(transcript.trim());
+        recognitionSettledRef.current = true;
+        clearListeningTimer();
+        void analyzeVoiceSymptoms(transcript.trim());
       }
     };
 
@@ -161,26 +211,62 @@ export default function UserVoiceAssistant() {
       const selectedLanguageLabel =
         LANGUAGES.find((language) => language.value === selectedLang)?.label ||
         "the selected language";
+      const isFilipino = selectedLang.toLowerCase().startsWith("fil");
+      recognitionSettledRef.current = true;
+      clearListeningTimer();
+
       const errorMessages: Record<string, string> = {
         language: `${selectedLanguageLabel} is not available on this device. Try another language or type symptoms instead.`,
         "not-allowed": "Microphone permission is blocked. Allow Microphone for Cuidado, then try again.",
         "no-speech": "I did not receive microphone audio. Try again and speak clearly.",
-        network: "Speech recognition could not connect. Check your internet connection and try again.",
+        network: isFilipino
+          ? "Filipino speech recognition is not available in this browser right now. Your internet is fine; try English (Philippines) or type symptoms below."
+          : "The browser speech service could not start. Try again, choose another language, or type symptoms below.",
+        audio: "The browser could not open the microphone. Check microphone permission and try again.",
+        service: "The browser speech service stopped unexpectedly. Try another language or type symptoms below.",
+        client: "The browser speech service could not start. Try another language or type symptoms below.",
+        busy: "The microphone is already listening. Please wait a moment and try again.",
       };
 
       setVoiceError(errorMessages[event.error] || "Speech recognition failed. Please try again.");
       setVoiceStep("retry");
     };
 
-    recognition.start();
+    recognition.onend = () => {
+      clearListeningTimer();
+
+      if (recognitionSettledRef.current) return;
+
+      recognitionSettledRef.current = true;
+      const transcript = latestTranscriptRef.current.trim();
+
+      if (transcript) {
+        void analyzeVoiceSymptoms(transcript);
+        return;
+      }
+
+      setVoiceError("Speech recognition stopped before hearing anything. Try again or type symptoms below.");
+      setVoiceStep("retry");
+    };
+
+    try {
+      recognition.start();
+    } catch {
+      setVoiceError("Speech recognition could not start. Try another language or type symptoms below.");
+      setVoiceStep("retry");
+    }
   };
 
   const resetVoiceAssistant = () => {
+    clearListeningTimer();
+    recognitionSettledRef.current = true;
     recognitionRef.current?.abort();
     setVoiceStep("idle");
     setVoiceTranscript("");
     setVoiceError("");
     setSymptomResult(null);
+    setTypedFallback("");
+    latestTranscriptRef.current = "";
   };
 
   const getVoiceContent = () => {
@@ -291,13 +377,39 @@ export default function UserVoiceAssistant() {
                 </div>
 
                 {voiceStep === "retry" && (
-                  <button
-                    type="button"
-                    className="voice-popup-retry"
-                    onClick={startVoiceAssistant}
-                  >
-                    Try again
-                  </button>
+                  <>
+                    <div className="voice-typed-fallback">
+                      <p className="voice-fallback-label">Or type your symptoms below:</p>
+                      <textarea
+                        className="voice-fallback-textarea"
+                        value={typedFallback}
+                        onChange={(event) => setTypedFallback(event.target.value)}
+                        placeholder="Example: May ubo, lagnat, at sakit ng ulo"
+                        rows={3}
+                      />
+                      <div className="voice-fallback-actions">
+                        <button
+                          type="button"
+                          className="voice-popup-retry"
+                          onClick={startVoiceAssistant}
+                        >
+                          Try again
+                        </button>
+                        <button
+                          type="button"
+                          className="voice-analyze-typed-btn"
+                          onClick={() => {
+                            if (typedFallback.trim()) {
+                              void analyzeVoiceSymptoms(typedFallback.trim());
+                            }
+                          }}
+                          disabled={!typedFallback.trim()}
+                        >
+                          Analyze typed symptoms
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </section>

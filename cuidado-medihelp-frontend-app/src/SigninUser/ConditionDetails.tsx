@@ -41,11 +41,6 @@ type ArticleItem = {
   source?: string | null;
 };
 
-type PreventionTip = {
-  id: number;
-  tip_text: string;
-};
-
 type HealthFact = {
   id: number;
   title: string | null;
@@ -77,7 +72,7 @@ const createConditionArticleFallbacks = (topic?: string | null): ArticleItem[] =
     `${cleanTopic} overview and care`,
     `Common ${cleanTopic} symptoms`,
     `${cleanTopic} treatment options`,
-    `${cleanTopic} prevention tips`,
+    `${cleanTopic} care facts`,
     `When to seek care for ${cleanTopic}`,
   ];
 
@@ -121,7 +116,6 @@ export default function ConditionDetails() {
   const [condition, setCondition] = useState<ConditionDetailsType | null>(null);
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [symptoms, setSymptoms] = useState<SymptomItem[]>([]);
-  const [preventionTips, setPreventionTips] = useState<PreventionTip[]>([]);
   const [healthFacts, setHealthFacts] = useState<HealthFact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -191,16 +185,14 @@ export default function ConditionDetails() {
           details: apiUrl(`/api/health/condition/${selectedSlug}?user_id=${userId}`),
           symptoms: apiUrl(`/api/health/condition/${selectedSlug}/symptoms`),
           articles: apiUrl(`/api/health/condition/${selectedSlug}/articles`),
-          prevention: apiUrl(`/api/health/condition/${selectedSlug}/prevention-tips`),
           facts: apiUrl(`/api/health/condition/${selectedSlug}/facts`),
         };
 
-        const [detailsRes, symptomsRes, articlesRes, preventionRes, factsRes] =
+        const [detailsRes, symptomsRes, articlesRes, factsRes] =
           await Promise.all([
             fetch(urls.details),
             fetch(urls.symptoms),
             fetch(urls.articles),
-            fetch(urls.prevention),
             fetch(urls.facts),
           ]);
 
@@ -209,7 +201,6 @@ export default function ConditionDetails() {
         const detailsData = await detailsRes.json();
         const symptomsData = symptomsRes.ok ? await symptomsRes.json() : null;
         const articlesData = articlesRes.ok ? await articlesRes.json() : [];
-        const preventionData = preventionRes.ok ? await preventionRes.json() : [];
         const factsData = factsRes.ok ? await factsRes.json() : [];
 
         setCondition(detailsData || null);
@@ -221,7 +212,6 @@ export default function ConditionDetails() {
               : []
         );
         setArticles(Array.isArray(articlesData) ? articlesData : []);
-        setPreventionTips(Array.isArray(preventionData) ? preventionData : []);
         setHealthFacts(Array.isArray(factsData) ? factsData : []);
       } catch (err) {
         console.error("Condition page error:", err);
@@ -620,12 +610,17 @@ export default function ConditionDetails() {
                     </div>
 
                     <div className="prevention-card">
-                      <h3>Prevention Tips</h3>
+                      <h3>Did You Know?</h3>
                       <ul>
-                        {preventionTips.length > 0 ? (
-                          preventionTips.map((item) => <li key={item.id}>{item.tip_text}</li>)
+                        {healthFacts.length > 0 ? (
+                          healthFacts.map((item) => (
+                            <li key={item.id}>
+                              {item.title ? <strong>{item.title}: </strong> : null}
+                              {item.fact_text}
+                            </li>
+                          ))
                         ) : (
-                          <li>Prevention tips will appear here when they are added for this body system.</li>
+                          <li>Helpful health facts will appear here when they are added.</li>
                         )}
                       </ul>
                     </div>

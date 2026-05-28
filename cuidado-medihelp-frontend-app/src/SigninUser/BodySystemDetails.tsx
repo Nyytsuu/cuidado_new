@@ -50,11 +50,6 @@ type ArticleItem = {
   source?: string | null;
 };
 
-type PreventionTip = {
-  id: number;
-  tip_text: string;
-};
-
 type HealthFact = {
   id: number;
   title: string | null;
@@ -64,6 +59,7 @@ type HealthFact = {
 type SymptomItem = {
   symptom_id: number;
   symptom_name: string;
+  description?: string | null;
 };
 
 const quickActions = [
@@ -84,7 +80,7 @@ const createBodySystemArticleFallbacks = (topic?: string | null): ArticleItem[] 
     `${cleanTopic} health overview`,
     `Common ${cleanTopic} conditions`,
     `${cleanTopic} symptoms to watch`,
-    `${cleanTopic} prevention tips`,
+    `${cleanTopic} care facts`,
     `When to seek care for ${cleanTopic}`,
   ];
 
@@ -111,7 +107,6 @@ export default function BodySystemDetails() {
   const [conditions, setConditions] = useState<ConditionItem[]>([]);
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [symptoms, setSymptoms] = useState<SymptomItem[]>([]);
-  const [preventionTips, setPreventionTips] = useState<PreventionTip[]>([]);
   const [healthFacts, setHealthFacts] = useState<HealthFact[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -145,7 +140,6 @@ export default function BodySystemDetails() {
         conditions: apiUrl(`/api/health/body-systems/${selectedSlug}/conditions`),
         articles: apiUrl(`/api/health/body-systems/${selectedSlug}/articles`),
         symptoms: apiUrl(`/api/health/body-systems/${selectedSlug}/symptoms`),
-        prevention: apiUrl(`/api/health/body-systems/${selectedSlug}/prevention-tips`),
         facts: apiUrl(`/api/health/body-systems/${selectedSlug}/facts`),
       };
 
@@ -154,14 +148,12 @@ export default function BodySystemDetails() {
         conditionsRes,
         articlesRes,
         symptomsRes,
-        preventionRes,
         factsRes,
       ] = await Promise.all([
         fetch(urls.bodySystem),
         fetch(urls.conditions),
         fetch(urls.articles),
         fetch(urls.symptoms),
-        fetch(urls.prevention),
         fetch(urls.facts),
       ]);
 
@@ -171,14 +163,12 @@ export default function BodySystemDetails() {
       const conditionsData = conditionsRes.ok ? await conditionsRes.json() : [];
       const articlesData = articlesRes.ok ? await articlesRes.json() : [];
       const symptomsData = symptomsRes.ok ? await symptomsRes.json() : [];
-      const preventionData = preventionRes.ok ? await preventionRes.json() : [];
       const factsData = factsRes.ok ? await factsRes.json() : [];
 
       setBodySystem(bodySystemData || null);
       setConditions(Array.isArray(conditionsData) ? conditionsData : []);
       setArticles(Array.isArray(articlesData) ? articlesData : []);
       setSymptoms(Array.isArray(symptomsData) ? symptomsData : []);
-      setPreventionTips(Array.isArray(preventionData) ? preventionData : []);
       setHealthFacts(Array.isArray(factsData) ? factsData : []);
     } catch (err) {
       console.error("Body system page error:", err);
@@ -460,7 +450,10 @@ export default function BodySystemDetails() {
                       <ul>
                         {symptoms.length > 0 ? (
                           symptoms.map((item) => (
-                            <li key={item.symptom_id}>{item.symptom_name}</li>
+                            <li key={item.symptom_id}>
+                              <strong>{item.symptom_name}</strong>
+                              {item.description && <span>{item.description}</span>}
+                            </li>
                           ))
                         ) : (
                           <li>No symptoms found.</li>
@@ -477,12 +470,17 @@ export default function BodySystemDetails() {
                     </div>
 
                     <div className="prevention-card">
-                      <h3>Prevention Tips</h3>
+                      <h3>Did You Know?</h3>
                       <ul>
-                        {preventionTips.length > 0 ? (
-                          preventionTips.map((item) => <li key={item.id}>{item.tip_text}</li>)
+                        {healthFacts.length > 0 ? (
+                          healthFacts.map((item) => (
+                            <li key={item.id}>
+                              {item.title ? <strong>{item.title}: </strong> : null}
+                              {item.fact_text}
+                            </li>
+                          ))
                         ) : (
-                          <li>No prevention tips found.</li>
+                          <li>Helpful health facts will appear here when they are added.</li>
                         )}
                       </ul>
                     </div>

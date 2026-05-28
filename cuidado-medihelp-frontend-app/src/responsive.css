@@ -2934,6 +2934,28 @@ button {
     line-height: 1.38 !important;
   }
 
+  .body-system-details-page .disease-content {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .body-system-details-page .disease-content p {
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 3 !important;
+    max-height: calc(1.38em * 3) !important;
+  }
+
+  .body-system-details-page .symptoms-card li span {
+    display: -webkit-box !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
   .body-system-details-page .heart-visual-card {
     display: none !important;
   }

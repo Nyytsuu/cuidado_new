@@ -50,7 +50,7 @@ const LISTENING_TIMEOUT_MS = 12000;
 const LANGUAGES = [
   { label: "English (Philippines)", value: "en-PH" },
   { label: "English (US)", value: "en-US" },
-  { label: "Filipino", value: "tl-PH" },
+  { label: "Filipino", value: "fil-PH" },
 ];
 
 declare global {
@@ -219,15 +219,21 @@ export default function UserVoiceAssistant() {
     recognition.onerror = (event) => {
       recognitionSettledRef.current = true;
       clearListeningTimer();
+      const selectedLanguageLabel =
+        LANGUAGES.find((language) => language.value === selectedLang)?.label ||
+        "The selected language";
+      const isFilipino = selectedLang.toLowerCase().startsWith("fil");
       const errorMessages: Record<string, string> = {
-        network: "Speech recognition could not connect. Check your internet connection and try again.",
+        network: isFilipino
+          ? "Filipino speech recognition is not available in this browser right now. Your internet is fine; try English (Philippines) or type symptoms below."
+          : "The browser speech service could not start. Try again, choose another language, or type symptoms below.",
         "not-allowed": "Microphone permission is blocked. Allow Microphone for Cuidado, then try again.",
         "no-speech": "I did not receive microphone audio. Check the emulator microphone input, then try again and speak clearly.",
         "not-supported": "Speech recognition is not available on this device.",
         audio: "Android could not open the microphone audio stream. Check the emulator microphone setting and try again.",
         client: "Android speech recognition could not start on this emulator. Restart the emulator or try one of the typed suggestions below.",
         service: "The Android speech recognition service stopped unexpectedly. Restart the emulator and try again.",
-        language: `${LANGUAGES.find((language) => language.value === selectedLang)?.label || "The selected language"} is not available on this device. Try another language or type symptoms instead.`,
+        language: `${selectedLanguageLabel} is not available on this device. Try another language or type symptoms instead.`,
         busy: "The microphone is already listening. Please wait a moment and try again.",
       };
 
