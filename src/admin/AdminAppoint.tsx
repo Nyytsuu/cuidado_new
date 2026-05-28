@@ -350,30 +350,65 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
       {/* ✅ VIEW DETAILS MODAL */}
 {isPopupOpen && selected && (
   <div className="modal-backdrop" onClick={() => setIsPopupOpen(false)}>
-    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="modal-card appointment-details-modal"
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="modal-head">
-        <h3>Appointment Details</h3>
+        <div>
+          <span className="appointment-details-kicker">View Details</span>
+          <h3>Appointment Details</h3>
+        </div>
         <button
           className="modal-close"
           onClick={() => setIsPopupOpen(false)}
           type="button"
+          aria-label="Close appointment details"
         >
           ✕
         </button>
       </div>
 
-      <div className="modal-body">
-        <p><b>Patient:</b> {selected.patient_name_snapshot ?? "—"}</p>
-        <p><b>Clinic:</b> {selected.clinic_name_snapshot ?? "—"}</p>
-        <p><b>Schedule:</b> {formatDateTime(selected.start_at)}</p>
-        <p><b>Purpose:</b> {selected.purpose ?? "—"}</p>
-        <p><b>Status:</b> {selected.status}</p>
-        {selected.patient_note ? (
-          <p><b>Patient Note:</b> {selected.patient_note}</p>
-        ) : null}
-        {selected.clinic_note ? (
-          <p><b>Clinic Note:</b> {selected.clinic_note}</p>
-        ) : null}
+      <div className="modal-body appointment-details-body">
+        <div className="appointment-details-hero">
+          <div className="appointment-details-avatar">
+            {(selected.patient_name_snapshot || "P").charAt(0).toUpperCase()}
+          </div>
+          <div className="appointment-details-person">
+            <span>Patient</span>
+            <h4>{selected.patient_name_snapshot || "Patient unavailable"}</h4>
+            <p>{selected.patient_phone_snapshot || "No phone provided"}</p>
+          </div>
+          <span className={statusPill(selected.status)}>
+            {selected.status.replace("_", " ")}
+          </span>
+        </div>
+
+        <div className="appointment-details-grid">
+          <div className="appointment-detail-item">
+            <span>Clinic</span>
+            <strong>{selected.clinic_name_snapshot || "Not provided"}</strong>
+          </div>
+          <div className="appointment-detail-item">
+            <span>Schedule</span>
+            <strong>{formatDateTime(selected.start_at)}</strong>
+          </div>
+          <div className="appointment-detail-item appointment-detail-wide">
+            <span>Purpose</span>
+            <strong>{selected.purpose || "No purpose provided"}</strong>
+          </div>
+        </div>
+
+        <div className="appointment-details-notes">
+          <div className="appointment-note-block">
+            <span>Patient Note</span>
+            <p>{selected.patient_note || "No patient note added."}</p>
+          </div>
+          <div className="appointment-note-block">
+            <span>Clinic Note</span>
+            <p>{selected.clinic_note || "No clinic note added."}</p>
+          </div>
+        </div>
       </div>
 
       <div className="modal-foot">

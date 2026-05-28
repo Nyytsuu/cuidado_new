@@ -1086,10 +1086,12 @@ body {
   width: min(900px, 92vw);
   max-width: 92vw;
   max-height: 88vh;
-  overflow: auto;
+  overflow: hidden;
   border-radius: 22px;
   background: #ffffff;
   box-shadow: 0 24px 70px rgba(15, 23, 42, 0.26);
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-UserClinics .modal-head {
@@ -1098,6 +1100,7 @@ body {
   justify-content: space-between;
   padding: 24px 28px 18px;
   border-bottom: 1px solid #e5edf0;
+  flex-shrink: 0;
 }
 
 .admin-UserClinics .modal-head h3 {
@@ -1124,6 +1127,8 @@ body {
 
 .admin-UserClinics .modal-body {
   padding: 24px 28px 26px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .admin-UserClinics .modal-body > p:not(.clinic-detail-note) {
@@ -1133,7 +1138,9 @@ body {
 .admin-UserClinics .modal-foot {
   display: flex;
   justify-content: flex-end;
-  padding: 0 28px 26px;
+  padding: 16px 28px;
+  border-top: 1px solid #e5edf0;
+  flex-shrink: 0;
 }
 
 .admin-UserClinics .clinic-detail-hero {

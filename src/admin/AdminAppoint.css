@@ -298,10 +298,11 @@ body {
   font-weight: 700;
   color: #0f0f0f;
 }
-.modal-backdrop {
+.admin-UserAppoint .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -309,17 +310,18 @@ body {
   padding: 20px;
 }
 
-.modal-card {
+.admin-UserAppoint .modal-card {
   width: 100%;
   max-width: 500px;
   background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(15, 66, 66, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
   overflow: hidden;
   animation: modalPop 0.25s ease;
 }
 
-.modal-head {
+.admin-UserAppoint .modal-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -327,14 +329,14 @@ body {
   border-bottom: 1px solid #e9e9e9;
 }
 
-.modal-head h3 {
+.admin-UserAppoint .modal-head h3 {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
   color: #222;
 }
 
-.modal-close {
+.admin-UserAppoint .modal-close {
   border: none;
   background: transparent;
   font-size: 22px;
@@ -350,26 +352,197 @@ body {
   line-height: 1;
 }
 
-.modal-body {
+.admin-UserAppoint .modal-body {
   padding: 20px 22px 10px;
 }
 
-.modal-body p {
+.admin-UserAppoint .modal-body p {
   margin: 0 0 12px;
   font-size: 15px;
   line-height: 1.5;
   color: #333;
 }
 
-.modal-body b {
+.admin-UserAppoint .modal-body b {
   color: #111;
 }
 
-.modal-foot {
+.admin-UserAppoint .modal-foot {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   padding: 16px 22px 22px;
+}
+
+.admin-UserAppoint .appointment-details-modal {
+  max-width: 660px;
+}
+
+.admin-UserAppoint .appointment-details-modal .modal-head {
+  padding: 20px 24px;
+  background: #0f766e;
+  border-bottom: 0;
+}
+
+.admin-UserAppoint .appointment-details-modal .modal-head h3 {
+  margin-top: 4px;
+  color: #ffffff;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.admin-UserAppoint .appointment-details-kicker {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.admin-UserAppoint .appointment-details-modal .modal-close {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  margin-right: 0;
+  position: relative;
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.admin-UserAppoint .appointment-details-modal .modal-close:hover {
+  background: rgba(255, 255, 255, 0.24);
+  transform: translateY(-1px);
+}
+
+.admin-UserAppoint .appointment-details-body {
+  max-height: min(68vh, 560px);
+  overflow-y: auto;
+  padding: 24px;
+  background: #f8fafc;
+}
+
+.admin-UserAppoint .appointment-details-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-UserAppoint .appointment-details-body::-webkit-scrollbar-thumb {
+  background: rgba(15, 118, 110, 0.28);
+  border-radius: 999px;
+}
+
+.admin-UserAppoint .appointment-details-hero {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: 8px;
+}
+
+.admin-UserAppoint .appointment-details-avatar {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #dff5ef;
+  color: #0f766e;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.admin-UserAppoint .appointment-details-person {
+  min-width: 0;
+}
+
+.admin-UserAppoint .appointment-details-person span,
+.admin-UserAppoint .appointment-detail-item span,
+.admin-UserAppoint .appointment-note-block span {
+  display: block;
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.admin-UserAppoint .appointment-details-person h4 {
+  margin: 0 0 3px;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.admin-UserAppoint .appointment-details-person p {
+  margin: 0;
+  color: #475569;
+  font-size: 14px;
+}
+
+.admin-UserAppoint .appointment-details-hero .pill {
+  justify-self: end;
+  text-transform: capitalize;
+}
+
+.admin-UserAppoint .appointment-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.admin-UserAppoint .appointment-detail-item {
+  min-width: 0;
+  padding: 15px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.admin-UserAppoint .appointment-detail-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-UserAppoint .appointment-detail-item strong {
+  display: block;
+  color: #111827;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.admin-UserAppoint .appointment-details-notes {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.admin-UserAppoint .appointment-note-block {
+  padding: 15px 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #0f766e;
+  border-radius: 8px;
+}
+
+.admin-UserAppoint .appointment-note-block p {
+  margin: 0;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.admin-UserAppoint .appointment-details-modal .modal-foot {
+  padding: 16px 24px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
 }
 
 .pill {
@@ -561,6 +734,35 @@ body {
 
   .admin-UserAppoint .users-actions {
     flex-wrap: wrap;
+  }
+
+  .admin-UserAppoint .modal-backdrop {
+    align-items: flex-start;
+    padding: 16px;
+  }
+
+  .admin-UserAppoint .appointment-details-modal {
+    max-width: 100%;
+    margin-top: 18px;
+  }
+
+  .admin-UserAppoint .appointment-details-body {
+    max-height: calc(100vh - 190px);
+    padding: 18px;
+  }
+
+  .admin-UserAppoint .appointment-details-hero,
+  .admin-UserAppoint .appointment-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-UserAppoint .appointment-details-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .admin-UserAppoint .appointment-details-hero .pill {
+    justify-self: start;
   }
 }
 

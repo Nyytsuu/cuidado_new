@@ -739,13 +739,6 @@ export default function AdminClinics() {
               <p className="clinic-detail-note">
                 Activity is estimated from clinic registration and appointment request history.
               </p>
-              <p><b>Clinic Name:</b> {selectedClinic.clinic_name ?? "—"}</p>
-              <p><b>Approval:</b> {selectedClinic.status ?? "—"}</p>
-              <p><b>Account:</b> {selectedClinic.account_status ?? "—"}</p>
-              <p><b>Email:</b> {selectedClinic.email ?? "—"}</p>
-              <p><b>Phone:</b> {selectedClinic.phone ?? "—"}</p>
-              <p><b>Address:</b> {selectedClinic.address ?? "—"}</p>
-              <p><b>Created At:</b> {selectedClinic.created_at ?? "—"}</p>
             </div>
 
             <div className="modal-foot">
