@@ -182,7 +182,11 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
 };
 
   return (
-    <div className={`admin-UserAppoint with-sidebar ${isPopupOpen ? "modal-open" : ""}`}>
+    <div
+      className={`admin-UserAppoint with-sidebar ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      } ${isPopupOpen ? "modal-open" : ""}`}
+    >
       <Sidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -393,9 +397,19 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
             <span>Schedule</span>
             <strong>{formatDateTime(selected.start_at)}</strong>
           </div>
+          <div className="appointment-detail-item">
+            <span>End</span>
+            <strong>
+              {selected.end_at ? formatDateTime(selected.end_at) : "Not provided"}
+            </strong>
+          </div>
           <div className="appointment-detail-item appointment-detail-wide">
             <span>Purpose</span>
             <strong>{selected.purpose || "No purpose provided"}</strong>
+          </div>
+          <div className="appointment-detail-item appointment-detail-wide">
+            <span>Symptoms</span>
+            <strong>{selected.symptoms || "No symptoms listed"}</strong>
           </div>
         </div>
 
@@ -409,6 +423,18 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
             <p>{selected.clinic_note || "No clinic note added."}</p>
           </div>
         </div>
+
+        {(selected.status === "cancelled" || selected.cancel_reason) && (
+          <div className="appointment-details-notes">
+            <div className="appointment-note-block danger">
+              <span>Cancellation</span>
+              <p>
+                {selected.cancel_reason || "No cancellation reason provided."}
+                {selected.cancelled_by ? ` Cancelled by ${selected.cancelled_by}.` : ""}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="modal-foot">

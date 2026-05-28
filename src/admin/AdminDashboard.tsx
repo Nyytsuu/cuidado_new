@@ -547,50 +547,79 @@ export default function AdminDashboard() {
               </div>
             </section>
 
-            <section className="dash-chart">
-              <div className="dash-chart-head">
-                <h3>User Trend (Last 7 Days)</h3>
-              </div>
+            <section className="dash-feature-grid">
+              <section className="dash-chart">
+                <div className="dash-chart-head">
+                  <h3>User Trend (Last 7 Days)</h3>
+                </div>
 
-              <div
-                className={`dash-chart-card ${
-                  hasUserTrendData ? "" : "is-empty-trend"
-                }`}
-              >
-                <ResponsiveContainer width="100%" height={260}>
-                  <LineChart
-                    data={userTrend}
-                    margin={{
-                      top: 10,
-                      right: 20,
-                      left: 10,
-                      bottom: 35,
-                    }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" height={30} tickMargin={10} interval={0} />
-                    <YAxis
-                      allowDecimals={false}
-                      domain={[0, userTrendYAxisMax]}
-                      tickCount={4}
-                    />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="total"
-                      stroke="#00bfa6"
-                      strokeWidth={3}
-                      dot={{ r: 4, strokeWidth: 2 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-                {!loadingMetrics && !hasUserTrendData && (
-                  <div className="trend-empty-note">
-                    No new users in the last 7 days.
-                  </div>
+                <div
+                  className={`dash-chart-card ${
+                    hasUserTrendData ? "" : "is-empty-trend"
+                  }`}
+                >
+                  <ResponsiveContainer width="100%" height={230}>
+                    <LineChart
+                      data={userTrend}
+                      margin={{
+                        top: 10,
+                        right: 20,
+                        left: 10,
+                        bottom: 25,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" height={30} tickMargin={10} interval={0} />
+                      <YAxis
+                        allowDecimals={false}
+                        domain={[0, userTrendYAxisMax]}
+                        tickCount={4}
+                      />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="total"
+                        stroke="#00bfa6"
+                        strokeWidth={3}
+                        dot={{ r: 4, strokeWidth: 2 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  {!loadingMetrics && !hasUserTrendData && (
+                    <div className="trend-empty-note">
+                      No new users in the last 7 days.
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <Panel title="Recent Activity" className="activity-panel">
+                {filteredActivities.length === 0 ? (
+                  <div className="activity-empty">No recent activity yet.</div>
+                ) : (
+                  <ul className="activity-list">
+                    {filteredActivities.slice(0, 6).map((item) => (
+                      <li key={item.id} className={`activity-item ${item.type}`}>
+                        <div className="activity-icon">
+                          {item.type === "user" && "U"}
+                          {item.type === "clinic" && "CL"}
+                          {item.type === "clinic-approved" && "OK"}
+                          {item.type === "clinic-rejected" && "NO"}
+                          {item.type === "appointment" && "AP"}
+                        </div>
+
+                        <div className="activity-content">
+                          <div className="activity-text">{item.text}</div>
+                          <div className="activity-time">
+                            {new Date(item.time).toLocaleString()}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </div>
+              </Panel>
             </section>
 
             <section className="dash-grid dash-grid-2col">

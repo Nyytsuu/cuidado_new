@@ -243,7 +243,11 @@ setTimeout(() => setToast(null), 2500);
 };
 
   return (
-    <div className="admin-UserClinics with-sidebar">
+    <div
+      className={`admin-UserClinics admin-condition-management with-sidebar ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <Sidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -401,7 +405,7 @@ setTimeout(() => setToast(null), 2500);
                     className="save-condition-btn"
                     onClick={handleSaveCondition}
                   >
-                    Save Condition
+                    {editingId !== null ? "Update Condition" : "Save Condition"}
                   </button>
                   <button
                     type="button"

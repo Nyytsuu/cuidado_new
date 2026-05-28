@@ -413,6 +413,154 @@
   overflow-x: auto;
 }
 
+.clinic-dashboard-page .clinic-reviews-panel .dash-panel-body {
+  padding: 14px;
+}
+
+.clinic-dashboard-page .clinic-review-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.clinic-dashboard-page .clinic-review-summary span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef8f6;
+  color: var(--clinic-teal-dark);
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.clinic-dashboard-page .clinic-review-message {
+  margin-bottom: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgba(15, 143, 131, 0.2);
+  border-radius: 8px;
+  background: #eef8f6;
+  color: var(--clinic-teal-dark);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.clinic-dashboard-page .clinic-review-list {
+  display: grid;
+  gap: 10px;
+  max-height: 560px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.clinic-dashboard-page .clinic-review-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e4eeec;
+  border-radius: 8px;
+  background: #fbfefd;
+}
+
+.clinic-dashboard-page .clinic-review-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.clinic-dashboard-page .clinic-review-head div {
+  min-width: 0;
+}
+
+.clinic-dashboard-page .clinic-review-head strong,
+.clinic-dashboard-page .clinic-review-saved-reply strong,
+.clinic-dashboard-page .clinic-reply-field span {
+  display: block;
+  color: var(--clinic-text);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.clinic-dashboard-page .clinic-review-head span,
+.clinic-dashboard-page .clinic-review-saved-reply span,
+.clinic-dashboard-page .clinic-reply-actions span {
+  color: var(--clinic-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.clinic-dashboard-page .clinic-review-head b {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #e0f2f1;
+  color: var(--clinic-teal-dark);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.clinic-dashboard-page .clinic-review-text,
+.clinic-dashboard-page .clinic-review-saved-reply p {
+  margin: 0;
+  color: var(--clinic-muted);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.clinic-dashboard-page .clinic-review-saved-reply {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border-left: 3px solid var(--clinic-teal);
+  border-radius: 8px;
+  background: #eef8f6;
+}
+
+.clinic-dashboard-page .clinic-reply-field {
+  display: grid;
+  gap: 6px;
+}
+
+.clinic-dashboard-page .clinic-reply-field textarea {
+  width: 100%;
+  min-height: 82px;
+  resize: vertical;
+  border: 1px solid var(--clinic-line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #ffffff;
+  color: var(--clinic-text);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.45;
+  outline: none;
+}
+
+.clinic-dashboard-page .clinic-reply-field textarea:focus {
+  border-color: var(--clinic-teal);
+  box-shadow: 0 0 0 3px rgba(15, 143, 131, 0.12);
+}
+
+.clinic-dashboard-page .clinic-reply-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.clinic-dashboard-page .clinic-reply-actions .btn-sm:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .clinic-dashboard-page .dash-table-appt {
   min-width: 100%;
   overflow: hidden;

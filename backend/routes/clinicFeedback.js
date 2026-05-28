@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db/pool");
-const { verifyToken } = require("../middleware/auth");
+const { verifyToken, requireRole } = require("../middleware/auth");
 
 // Feedback can be submitted by any logged-in user
 router.use(verifyToken);
@@ -15,10 +15,22 @@ const ensureClinicFeedbackTable = async () => {
       user_id INTEGER NOT NULL,
       rating SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
       feedback TEXT NULL,
+      clinic_reply TEXT NULL,
+      clinic_reply_updated_at TIMESTAMP NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT unique_feedback_appointment_user UNIQUE (appointment_id, user_id)
     )
+  `);
+
+  await pool.query(`
+    ALTER TABLE clinic_feedback
+    ADD COLUMN IF NOT EXISTS clinic_reply TEXT NULL
+  `);
+
+  await pool.query(`
+    ALTER TABLE clinic_feedback
+    ADD COLUMN IF NOT EXISTS clinic_reply_updated_at TIMESTAMP NULL
   `);
 
   await pool.query(`
@@ -123,6 +135,103 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.patch("/:feedbackId/reply", requireRole("clinic", "admin"), async (req, res) => {
+  try {
+    await ensureClinicFeedbackTable();
+
+    const feedbackId = Number(req.params.feedbackId);
+    const replyText = String(req.body.reply ?? "").trim();
+    const providedClinicId = Number(req.body.clinic_id || req.query.clinic_id || 0);
+
+    if (!feedbackId) {
+      return res.status(400).json({ message: "feedback id is required." });
+    }
+
+    if (replyText.length > 1000) {
+      return res.status(400).json({
+        message: "Clinic reply must be 1,000 characters or fewer.",
+      });
+    }
+
+    const [[feedbackRow]] = await pool.query(
+      `
+      SELECT id, clinic_id
+      FROM clinic_feedback
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [feedbackId]
+    );
+
+    if (!feedbackRow) {
+      return res.status(404).json({ message: "Clinic feedback not found." });
+    }
+
+    const rowClinicId = Number(feedbackRow.clinic_id);
+    const actorClinicId =
+      req.user?.role === "clinic" ? Number(req.user.id) : providedClinicId;
+
+    if (req.user?.role === "clinic" && actorClinicId !== rowClinicId) {
+      return res.status(403).json({
+        message: "You can only reply to reviews for your own clinic.",
+      });
+    }
+
+    if (req.user?.role === "admin" && providedClinicId && providedClinicId !== rowClinicId) {
+      return res.status(403).json({
+        message: "This review does not belong to the selected clinic.",
+      });
+    }
+
+    const normalizedReply = replyText || null;
+
+    await pool.query(
+      `
+      UPDATE clinic_feedback
+      SET
+        clinic_reply = ?,
+        clinic_reply_updated_at = ${normalizedReply ? "NOW()" : "NULL"}
+      WHERE id = ?
+      `,
+      [normalizedReply, feedbackId]
+    );
+
+    const [[updatedReview]] = await pool.query(
+      `
+      SELECT
+        cf.id,
+        cf.appointment_id,
+        cf.clinic_id,
+        cf.user_id,
+        cf.rating,
+        cf.feedback,
+        cf.clinic_reply,
+        TO_CHAR(cf.clinic_reply_updated_at, 'YYYY-MM-DD HH24:MI:SS') AS clinic_reply_updated_at,
+        TO_CHAR(cf.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at,
+        TO_CHAR(cf.updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at,
+        COALESCE(u.full_name, 'Cuidado user') AS reviewer_name
+      FROM clinic_feedback cf
+      LEFT JOIN users u ON u.id = cf.user_id
+      WHERE cf.id = ?
+      LIMIT 1
+      `,
+      [feedbackId]
+    );
+
+    return res.json({
+      message: normalizedReply ? "Clinic reply saved." : "Clinic reply removed.",
+      review: updatedReview,
+    });
+  } catch (err) {
+    console.error("Save clinic feedback reply error:", err);
+    return res.status(500).json({
+      message: "Failed to save clinic reply.",
+      error: err.message,
+      code: err.code || null,
+    });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     await ensureClinicFeedbackTable();
@@ -153,6 +262,8 @@ router.get("/", async (req, res) => {
         cf.user_id,
         cf.rating,
         cf.feedback,
+        cf.clinic_reply,
+        TO_CHAR(cf.clinic_reply_updated_at, 'YYYY-MM-DD HH24:MI:SS') AS clinic_reply_updated_at,
         TO_CHAR(cf.created_at, 'YYYY-MM-DD HH24:MI:SS') AS created_at,
         TO_CHAR(cf.updated_at, 'YYYY-MM-DD HH24:MI:SS') AS updated_at,
         COALESCE(u.full_name, 'Cuidado user') AS reviewer_name

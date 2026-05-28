@@ -601,3 +601,73 @@
     transform: scale(1);
   }
 }
+
+/* Page-scoped layout guard. Prevent admin-wide CSS from pushing the form
+   buttons over the conditions table. */
+.admin-condition-management .condition-form-card {
+  overflow: hidden;
+  margin-bottom: 34px;
+}
+
+.admin-condition-management .condition-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.admin-condition-management .condition-form-grid {
+  width: 100%;
+}
+
+.admin-condition-management .condition-form-actions {
+  position: static !important;
+  inset: auto !important;
+  z-index: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.admin-condition-management .save-condition-btn,
+.admin-condition-management .cancel-condition-btn {
+  flex: 0 1 220px;
+  width: auto !important;
+  min-width: 210px;
+  max-width: 240px;
+}
+
+.admin-condition-management .condition-list-card {
+  position: relative;
+  z-index: 1;
+  margin-top: 0;
+}
+
+.admin-condition-management .admin-table-wrap {
+  max-height: min(52vh, 560px);
+  overflow: auto;
+  border: 1px solid #dcebea;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .admin-condition-management .condition-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-condition-management .save-condition-btn,
+  .admin-condition-management .cancel-condition-btn {
+    width: 100% !important;
+    max-width: none;
+    min-width: 0;
+  }
+}

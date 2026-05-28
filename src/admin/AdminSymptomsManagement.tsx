@@ -296,7 +296,11 @@ setTimeout(() => setToast(null), 2500);
 };
 
   return (
-    <div className="admin-UserClinics with-sidebar">
+    <div
+      className={`admin-UserClinics admin-symptoms-management with-sidebar ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <Sidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -454,7 +458,7 @@ setTimeout(() => setToast(null), 2500);
                     className="save-symptom-btn"
                     onClick={handleSaveSymptom}
                   >
-                    Save Symptom
+                    {editingId !== null ? "Update Symptom" : "Save Symptom"}
                   </button>
 
                   <button

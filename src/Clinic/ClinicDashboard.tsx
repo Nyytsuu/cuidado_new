@@ -19,6 +19,26 @@ type ActivityItem = {
   time: string;
 };
 
+type ClinicReview = {
+  id: number;
+  appointment_id?: number;
+  clinic_id?: number;
+  user_id?: number;
+  rating: number | string;
+  feedback?: string | null;
+  clinic_reply?: string | null;
+  clinic_reply_updated_at?: string | null;
+  reviewer_name?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type ClinicFeedbackResponse = {
+  average_rating?: number | null;
+  rating_count?: number;
+  reviews?: ClinicReview[];
+};
+
 type PatientRow = {
   id: number;
   full_name: string;
@@ -179,6 +199,17 @@ export default function ClinicDashboard() {
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
+  /* ---------- REVIEWS ---------- */
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [reviews, setReviews] = useState<ClinicReview[]>([]);
+  const [reviewRatingCount, setReviewRatingCount] = useState(0);
+  const [reviewAverageRating, setReviewAverageRating] = useState<number | null>(
+    null
+  );
+  const [replyDrafts, setReplyDrafts] = useState<Record<number, string>>({});
+  const [savingReplyId, setSavingReplyId] = useState<number | null>(null);
+  const [reviewMessage, setReviewMessage] = useState("");
+
   /* ---------- HELPERS ---------- */
   const fmtDate = (created_at: string) => {
     if (!created_at) return "-";
@@ -282,6 +313,16 @@ export default function ClinicDashboard() {
       activity.text,
       activity.type,
       fmtDate(activity.time)
+    )
+  );
+  const filteredReviews = reviews.filter((review) =>
+    matchesSearch(
+      dashboardQuery,
+      review.reviewer_name,
+      review.feedback,
+      review.clinic_reply,
+      review.rating,
+      review.created_at
     )
   );
 
@@ -473,6 +514,100 @@ export default function ClinicDashboard() {
 
     fetchActivities();
   }, [clinicId]);
+
+  /* ---------- FETCH REVIEWS ---------- */
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setLoadingReviews(true);
+        setReviewMessage("");
+
+        const res = await fetch(
+          apiUrl(`/api/clinic-feedback?clinic_id=${clinicId}`),
+          { cache: "no-store" }
+        );
+        const data = (await res.json().catch(() => ({}))) as ClinicFeedbackResponse;
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch patient reviews");
+        }
+
+        const normalized = Array.isArray(data.reviews) ? data.reviews : [];
+        setReviews(normalized);
+        setReviewRatingCount(Number(data.rating_count || 0));
+        setReviewAverageRating(
+          data.average_rating === null || data.average_rating === undefined
+            ? null
+            : Number(data.average_rating)
+        );
+        setReplyDrafts(
+          normalized.reduce<Record<number, string>>((drafts, review) => {
+            drafts[review.id] = review.clinic_reply || "";
+            return drafts;
+          }, {})
+        );
+      } catch (error) {
+        console.error("Reviews fetch error:", error);
+        setReviews([]);
+        setReviewRatingCount(0);
+        setReviewAverageRating(null);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [clinicId]);
+
+  const saveReviewReply = async (reviewId: number) => {
+    const reply = String(replyDrafts[reviewId] || "").trim();
+
+    if (reply.length > 1000) {
+      setReviewMessage("Reply must be 1,000 characters or fewer.");
+      return;
+    }
+
+    try {
+      setSavingReplyId(reviewId);
+      setReviewMessage("");
+
+      const res = await fetch(apiUrl(`/api/clinic-feedback/${reviewId}/reply`), {
+        method: "PATCH",
+        body: JSON.stringify({
+          clinic_id: clinicId,
+          reply,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to save reply.");
+      }
+
+      const updatedReview = data?.review as ClinicReview | undefined;
+
+      if (updatedReview?.id) {
+        setReviews((current) =>
+          current.map((review) =>
+            review.id === updatedReview.id ? { ...review, ...updatedReview } : review
+          )
+        );
+        setReplyDrafts((current) => ({
+          ...current,
+          [updatedReview.id]: updatedReview.clinic_reply || "",
+        }));
+      }
+
+      setReviewMessage(reply ? "Reply saved." : "Reply removed.");
+    } catch (error) {
+      console.error("Save review reply error:", error);
+      setReviewMessage(
+        error instanceof Error ? error.message : "Failed to save reply."
+      );
+    } finally {
+      setSavingReplyId(null);
+    }
+  };
 
   return (
     <div
@@ -712,6 +847,93 @@ export default function ClinicDashboard() {
                   </tbody>
                 </table>
               </div>
+            </Panel>
+
+            <Panel title="Patient Reviews" className="clinic-reviews-panel">
+              <div className="clinic-review-summary">
+                <span>
+                  {reviewAverageRating
+                    ? `${reviewAverageRating.toFixed(1)} / 5`
+                    : "No rating yet"}
+                </span>
+                <span>
+                  {reviewRatingCount} {reviewRatingCount === 1 ? "review" : "reviews"}
+                </span>
+              </div>
+
+              {reviewMessage && (
+                <div className="clinic-review-message">{reviewMessage}</div>
+              )}
+
+              {loadingReviews ? (
+                <div className="box-empty">Loading reviews...</div>
+              ) : filteredReviews.length === 0 ? (
+                <div className="box-empty">No patient reviews yet.</div>
+              ) : (
+                <div className="clinic-review-list">
+                  {filteredReviews.slice(0, 4).map((review) => {
+                    const draft = replyDrafts[review.id] ?? "";
+                    const savedReply = review.clinic_reply || "";
+                    const hasChanges = draft.trim() !== savedReply.trim();
+                    const isSaving = savingReplyId === review.id;
+
+                    return (
+                      <article className="clinic-review-card" key={review.id}>
+                        <div className="clinic-review-head">
+                          <div>
+                            <strong>{review.reviewer_name || "Cuidado user"}</strong>
+                            <span>{fmtOptionalDateTime(review.created_at)}</span>
+                          </div>
+                          <b>{Number(review.rating || 0).toFixed(0)} / 5</b>
+                        </div>
+
+                        <p className="clinic-review-text">
+                          {review.feedback || "No written feedback."}
+                        </p>
+
+                        {review.clinic_reply && (
+                          <div className="clinic-review-saved-reply">
+                            <strong>Current reply</strong>
+                            <p>{review.clinic_reply}</p>
+                            <span>
+                              {fmtOptionalDateTime(review.clinic_reply_updated_at)}
+                            </span>
+                          </div>
+                        )}
+
+                        <label className="clinic-reply-field">
+                          <span>Clinic reply</span>
+                          <textarea
+                            value={draft}
+                            maxLength={1000}
+                            placeholder="Write a short response..."
+                            onChange={(event) =>
+                              setReplyDrafts((current) => ({
+                                ...current,
+                                [review.id]: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+
+                        <div className="clinic-reply-actions">
+                          <span>{draft.trim().length} / 1000</span>
+                          <button
+                            type="button"
+                            className="btn-sm btn-view"
+                            disabled={
+                              isSaving || !hasChanges || draft.trim().length > 1000
+                            }
+                            onClick={() => saveReviewReply(review.id)}
+                          >
+                            {isSaving ? "Saving..." : savedReply ? "Update Reply" : "Save Reply"}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
             </Panel>
           </aside>
         </section>

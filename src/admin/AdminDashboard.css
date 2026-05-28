@@ -963,3 +963,165 @@ body:has(.admin-dashboard-page) {
     grid-template-columns: 1fr;
   }
 }
+
+/* Dashboard relayout: keep every section in one aligned flow instead of a
+   separate right rail that can overrun the content below it. */
+.admin-dashboard-page .dash-layout {
+  grid-template-columns: 1fr !important;
+  gap: 20px;
+}
+
+.admin-dashboard-page .dash-feature-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.55fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.admin-dashboard-page .dash-feature-grid .dash-chart,
+.admin-dashboard-page .dash-feature-grid .activity-panel {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-dashboard-page .dash-feature-grid .dash-panel-body {
+  flex: 1;
+}
+
+.admin-dashboard-page .dash-chart-card {
+  height: 250px;
+}
+
+.admin-dashboard-page .activity-panel .dash-panel-body {
+  padding: 14px;
+  max-height: 302px;
+}
+
+.admin-dashboard-page .activity-panel .activity-list {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.admin-dashboard-page .dash-aside {
+  display: grid !important;
+  grid-template-columns: 1fr;
+  width: 100%;
+  gap: 20px;
+}
+
+.admin-dashboard-page .dash-aside > .dash-panel-title,
+.admin-dashboard-page .dash-aside > .dash-right-top {
+  display: none !important;
+}
+
+.admin-dashboard-page .dash-aside > .appointment-panel {
+  order: 0;
+  width: 100%;
+}
+
+.admin-dashboard-page .dash-grid-2col {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.admin-dashboard-page .dash-grid-2col > .dash-left,
+.admin-dashboard-page .dash-grid-2col > .dash-center {
+  min-height: 0;
+  height: 100%;
+}
+
+.admin-dashboard-page .dash-grid-2col .dash-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-dashboard-page .dash-grid-2col .dash-panel-body {
+  flex: 1;
+}
+
+.admin-dashboard-page .dash-left > .dash-panel:first-child .dash-panel-body {
+  max-height: 260px;
+}
+
+.admin-dashboard-page .dash-left > .dash-panel:last-child .dash-panel-body,
+.admin-dashboard-page .dash-center .dash-panel-body,
+.admin-dashboard-page .appointment-panel .dash-panel-body {
+  max-height: 380px;
+}
+
+.admin-dashboard-page .dash-left > .dash-panel:last-child .dash-table tbody tr:last-child td,
+.admin-dashboard-page .dash-center .dash-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin-dashboard-page .appointment-panel .appointment-list {
+  max-height: 330px;
+  overflow-y: auto;
+}
+
+.admin-dashboard-page .appointment-row {
+  grid-template-columns: minmax(0, 1fr) minmax(176px, auto);
+}
+
+.admin-dashboard-page .appointment-controls {
+  justify-content: flex-end;
+}
+
+.admin-dashboard-page .dash-table-clinics th:nth-child(1),
+.admin-dashboard-page .dash-table-clinics td:nth-child(1) {
+  width: 26%;
+}
+
+.admin-dashboard-page .dash-table-clinics th:nth-child(2),
+.admin-dashboard-page .dash-table-clinics td:nth-child(2) {
+  width: 40%;
+}
+
+.admin-dashboard-page .dash-table-clinics th:nth-child(3),
+.admin-dashboard-page .dash-table-clinics td:nth-child(3) {
+  width: 16%;
+}
+
+.admin-dashboard-page .dash-table-clinics th:nth-child(4),
+.admin-dashboard-page .dash-table-clinics td:nth-child(4) {
+  width: 18%;
+}
+
+.admin-dashboard-page .badge {
+  font-size: 12px;
+  line-height: 1;
+}
+
+@media (max-width: 1180px) {
+  .admin-dashboard-page .dash-feature-grid,
+  .admin-dashboard-page .dash-grid-2col {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-page .activity-panel .dash-panel-body,
+  .admin-dashboard-page .dash-left > .dash-panel:first-child .dash-panel-body,
+  .admin-dashboard-page .dash-left > .dash-panel:last-child .dash-panel-body,
+  .admin-dashboard-page .dash-center .dash-panel-body,
+  .admin-dashboard-page .appointment-panel .dash-panel-body {
+    max-height: none;
+  }
+
+  .admin-dashboard-page .activity-panel .activity-list,
+  .admin-dashboard-page .appointment-panel .appointment-list {
+    max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-dashboard-page .appointment-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-page .appointment-controls {
+    justify-content: flex-start;
+  }
+}

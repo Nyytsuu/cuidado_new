@@ -1164,7 +1164,7 @@
   background: #f9fcfc;
 }
 
-.fc-profile-review > div {
+.fc-profile-review > div:first-child {
   display: flex;
   justify-content: space-between;
   gap: 10px;
@@ -1199,6 +1199,27 @@
   background: #e0f2f1;
   color: #08756e !important;
   font-weight: 900 !important;
+}
+
+.fc-profile-clinic-reply {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 11px;
+  border-left: 3px solid #0f8f83;
+  border-radius: 12px;
+  background: #eef8f6;
+}
+
+.fc-profile-clinic-reply > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fc-profile-clinic-reply p {
+  margin: 0;
 }
 
 .fc-profile-empty-reviews {

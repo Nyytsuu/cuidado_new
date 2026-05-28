@@ -124,6 +124,8 @@ type ClinicReview = {
   user_id?: number;
   rating: number | string;
   feedback?: string | null;
+  clinic_reply?: string | null;
+  clinic_reply_updated_at?: string | null;
   reviewer_name?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
@@ -1888,6 +1890,21 @@ export default function FindClinic() {
                           {Number(review.rating).toFixed(0)} / 5
                         </p>
                         {review.feedback && <p>{review.feedback}</p>}
+                        {review.clinic_reply && (
+                          <div className="fc-profile-clinic-reply">
+                            <div>
+                              <strong>Clinic response</strong>
+                              <span>
+                                {formatReviewDate(
+                                  review.clinic_reply_updated_at ||
+                                    review.updated_at ||
+                                    review.created_at
+                                )}
+                              </span>
+                            </div>
+                            <p>{review.clinic_reply}</p>
+                          </div>
+                        )}
                       </article>
                     ))}
                   </div>

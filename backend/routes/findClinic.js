@@ -50,10 +50,22 @@ const ensureClinicFeedbackTable = async () => {
       user_id INTEGER NOT NULL,
       rating SMALLINT NOT NULL,
       feedback TEXT NULL,
+      clinic_reply TEXT NULL,
+      clinic_reply_updated_at TIMESTAMP NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT unique_feedback_appointment_user UNIQUE (appointment_id, user_id)
     )
+  `);
+
+  await pool.query(`
+    ALTER TABLE clinic_feedback
+    ADD COLUMN IF NOT EXISTS clinic_reply TEXT NULL
+  `);
+
+  await pool.query(`
+    ALTER TABLE clinic_feedback
+    ADD COLUMN IF NOT EXISTS clinic_reply_updated_at TIMESTAMP NULL
   `);
 
   await pool.query(`

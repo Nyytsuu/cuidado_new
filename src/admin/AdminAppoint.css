@@ -379,7 +379,10 @@ body {
 }
 
 .admin-UserAppoint .appointment-details-modal .modal-head {
+  position: relative;
+  min-height: 82px;
   padding: 20px 24px;
+  padding-right: 78px;
   background: #0f766e;
   border-bottom: 0;
 }
@@ -400,13 +403,25 @@ body {
 }
 
 .admin-UserAppoint .appointment-details-modal .modal-close {
+  position: absolute !important;
+  top: 18px !important;
+  right: 20px !important;
   color: #ffffff;
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   margin-right: 0;
-  position: relative;
+  font-size: 0;
   transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.admin-UserAppoint .modal-close::before {
+  content: "x";
+  display: block;
+  color: currentColor;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .admin-UserAppoint .appointment-details-modal .modal-close:hover {
@@ -539,10 +554,31 @@ body {
   overflow-wrap: anywhere;
 }
 
+.admin-UserAppoint .appointment-note-block.danger {
+  border-left-color: #dc2626;
+  background: #fff7f7;
+}
+
+.admin-UserAppoint .appointment-note-block.danger span {
+  color: #b91c1c;
+}
+
 .admin-UserAppoint .appointment-details-modal .modal-foot {
   padding: 16px 24px;
   background: #ffffff;
   border-top: 1px solid #e2e8f0;
+}
+
+.admin-UserAppoint .modal-card:not(.appointment-details-modal) .modal-head {
+  position: relative;
+  padding-right: 72px;
+}
+
+.admin-UserAppoint .modal-card:not(.appointment-details-modal) .modal-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 16px !important;
+  font-size: 0;
 }
 
 .pill {

@@ -663,3 +663,65 @@
 .btn-delete:hover {
   background: #c53030;
 }
+
+/* Page-scoped layout guard. Prevent admin-wide CSS from pushing the form
+   buttons over the symptoms table. */
+.admin-symptoms-management .symptom-form-card {
+  overflow: hidden;
+  margin-bottom: 34px;
+}
+
+.admin-symptoms-management .symptom-form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.admin-symptoms-management .symptom-form-grid {
+  width: 100%;
+}
+
+.admin-symptoms-management .symptom-form-actions {
+  position: static !important;
+  inset: auto !important;
+  z-index: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.admin-symptoms-management .save-symptom-btn,
+.admin-symptoms-management .cancel-symptom-btn {
+  flex: 0 1 220px;
+  width: auto !important;
+  min-width: 210px;
+  max-width: 240px;
+}
+
+.admin-symptoms-management .symptom-list-card {
+  position: relative;
+  z-index: 1;
+  margin-top: 0;
+}
+
+@media (max-width: 760px) {
+  .admin-symptoms-management .symptom-form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-symptoms-management .save-symptom-btn,
+  .admin-symptoms-management .cancel-symptom-btn {
+    width: 100% !important;
+    max-width: none;
+    min-width: 0;
+  }
+}
