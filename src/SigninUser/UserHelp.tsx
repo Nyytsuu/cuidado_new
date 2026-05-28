@@ -12,7 +12,6 @@ import {
   Mic,
   Search,
   Send,
-  Settings,
   User,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
@@ -117,10 +116,10 @@ const quickLinks = [
     path: "/notifications",
   },
   {
-    title: "Settings",
-    description: "Update account, privacy, and password settings.",
-    icon: Settings,
-    path: "/settings",
+    title: "My Profile",
+    description: "Update your account details and profile photo.",
+    icon: User,
+    path: "/profile",
   },
   {
     title: "Voice Assistant",

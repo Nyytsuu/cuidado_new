@@ -32,9 +32,13 @@ type ConditionDetailsType = {
 };
 
 type ArticleItem = {
-  id: number;
+  id: number | string;
   title: string;
-  slug: string;
+  slug?: string | null;
+  searchQuery?: string | null;
+  subtitle?: string | null;
+  url?: string | null;
+  source?: string | null;
 };
 
 type PreventionTip = {
@@ -60,6 +64,31 @@ const quickActions = [
   { id: "clinics", icon: "📍", label: "Find Clinics" },
   { id: "emergency", icon: "🧰", label: "Emergency Guide" },
 ];
+
+const toRelatedArticleSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const createConditionArticleFallbacks = (topic?: string | null): ArticleItem[] => {
+  const cleanTopic = String(topic || "health").trim() || "health";
+  const titles = [
+    `${cleanTopic} overview and care`,
+    `Common ${cleanTopic} symptoms`,
+    `${cleanTopic} treatment options`,
+    `${cleanTopic} prevention tips`,
+    `When to seek care for ${cleanTopic}`,
+  ];
+
+  return titles.map((title, index) => ({
+    id: `fallback-condition-article-${toRelatedArticleSlug(title)}-${index + 1}`,
+    title,
+    slug: toRelatedArticleSlug(title),
+    searchQuery: title,
+    source: "Cuidado MediHelp",
+  }));
+};
 
 const toTitle = (value?: string | null) => {
   const text = String(value || "").trim();
@@ -239,7 +268,13 @@ export default function ConditionDetails() {
     }
   };
 
-  const handleArticleClick = (articleQuery: string) => {
+  const handleArticleClick = (article: ArticleItem) => {
+    if (article.url) {
+      window.open(article.url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const articleQuery = article.searchQuery || article.title || article.slug || "health";
     navigate(`/browse-health?search=${encodeURIComponent(articleQuery)}`);
   };
 
@@ -249,6 +284,13 @@ export default function ConditionDetails() {
   const redFlagSymptoms = symptoms.filter((item) => Number(item.is_red_flag) === 1);
   const hasSymptomSearch = search.trim().length > 0;
   const symptomsToShow = hasSymptomSearch ? filteredSymptoms : symptoms;
+  const relatedArticles = useMemo(
+    () =>
+      articles.length > 0
+        ? articles
+        : createConditionArticleFallbacks(condition?.condition_name || bodySystemName),
+    [articles, condition?.condition_name, bodySystemName]
+  );
 
   return (
     <div
@@ -431,13 +473,13 @@ export default function ConditionDetails() {
                     <div className="related-card">
                       <h3>Related Articles</h3>
                       <div className="related-list">
-                        {articles.length > 0 ? (
-                          articles.map((item) => (
+                        {relatedArticles.length > 0 ? (
+                          relatedArticles.map((item) => (
                             <button
                               key={item.id}
                               type="button"
                               className="related-item"
-                              onClick={() => handleArticleClick(item.title)}
+                              onClick={() => handleArticleClick(item)}
                             >
                               <span>{item.title}</span>
                               <span>›</span>
@@ -445,8 +487,7 @@ export default function ConditionDetails() {
                           ))
                         ) : (
                           <div className="empty-state compact">
-                            Related reading will appear here when articles are connected to this
-                            body system.
+                            Related reading will appear here when articles are connected.
                           </div>
                         )}
                       </div>

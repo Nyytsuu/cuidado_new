@@ -13,7 +13,6 @@ import {
   Mic,
   Search,
   Send,
-  Settings,
   ShieldCheck,
   User,
   type LucideIcon,
@@ -122,10 +121,10 @@ const quickLinks = [
     path: "/notifications",
   },
   {
-    title: "Settings",
-    description: "Update account, privacy, and password settings.",
-    icon: Settings,
-    path: "/settings",
+    title: "My Profile",
+    description: "Update your account details and profile photo.",
+    icon: User,
+    path: "/profile",
   },
   {
     title: "Voice Assistant",

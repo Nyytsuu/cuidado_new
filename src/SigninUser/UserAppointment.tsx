@@ -15,6 +15,8 @@ import {
   ChevronRight,
   MoreVertical,
   Star,
+  Stethoscope,
+  UserRound,
 } from "lucide-react";
 import { apiUrl } from "../sharedBackendFetch";
 
@@ -540,6 +542,252 @@ function sameDate(a: Date, b: Date) {
     a.getFullYear() === b.getFullYear() &&
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
+  );
+}
+
+function AppointmentViewModal({
+  appointment,
+  onClose,
+  onReschedule,
+  onCancel,
+}: {
+  appointment: Appointment | null;
+  onClose: () => void;
+  onReschedule: (appointment: Appointment) => void;
+  onCancel: (appointment: Appointment) => void;
+}) {
+  if (!appointment) return null;
+
+  const canReschedule =
+    appointment.status === "pending" || appointment.status === "confirmed";
+  const canCancel = ["pending", "confirmed", "reschedule_requested"].includes(
+    appointment.status
+  );
+  const displayStart = getTimelineStartAt(appointment);
+
+  return (
+    <div
+      className="appt-view-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="appointment-view-title"
+    >
+      <div className="appt-view-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="appt-view-header">
+          <div className="appt-view-header-info">
+            <p className="appt-view-eyebrow">Appointment Details</p>
+            <h2 id="appointment-view-title">
+              {appointment.clinic_name_snapshot || appointment.clinic_name || "Clinic"}
+            </h2>
+            <span className={`appt-view-status-pill ${appointment.status}`}>
+              {formatStatus(appointment.status)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="appt-view-close"
+            onClick={onClose}
+            aria-label="Close appointment details"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="appt-view-body">
+          <section className="appt-view-section">
+            <div className="appt-view-row">
+              <CalendarDays size={16} className="appt-view-icon" />
+              <span>
+                <strong>{formatDate(displayStart)}</strong>
+                <span className="appt-view-muted"> • {formatDay(displayStart)}</span>
+              </span>
+            </div>
+            <div className="appt-view-row">
+              <Stethoscope size={16} className="appt-view-icon" />
+              <span>
+                {formatTime(displayStart)}
+                {appointment.end_at && (
+                  <span className="appt-view-muted">
+                    {" "}
+                    - {formatTime(appointment.end_at)}
+                  </span>
+                )}
+              </span>
+            </div>
+          </section>
+
+          {(appointment.patient_name_snapshot || appointment.patient_phone_snapshot) && (
+            <>
+              <div className="appt-view-divider" />
+              <section className="appt-view-section">
+                <p className="appt-view-section-label">Patient</p>
+                {appointment.patient_name_snapshot && (
+                  <div className="appt-view-row">
+                    <UserRound size={16} className="appt-view-icon" />
+                    <span>{appointment.patient_name_snapshot}</span>
+                  </div>
+                )}
+                {appointment.patient_phone_snapshot && (
+                  <div className="appt-view-row">
+                    <span className="appt-view-icon-placeholder" />
+                    <span className="appt-view-muted">
+                      {appointment.patient_phone_snapshot}
+                    </span>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
+          {(appointment.specialization ||
+            (Array.isArray(appointment.services) && appointment.services.length > 0)) && (
+            <>
+              <div className="appt-view-divider" />
+              <section className="appt-view-section">
+                <p className="appt-view-section-label">Service</p>
+                {appointment.specialization && (
+                  <div className="appt-view-row">
+                    <Stethoscope size={16} className="appt-view-icon" />
+                    <span>{appointment.specialization}</span>
+                  </div>
+                )}
+                {Array.isArray(appointment.services) &&
+                  appointment.services.map((service) => (
+                    <div className="appt-view-row" key={service.service_id}>
+                      <span className="appt-view-icon-placeholder" />
+                      <div className="appt-view-service-row">
+                        <span>{service.service_name_snapshot}</span>
+                        <span className="appt-view-service-price">
+                          PHP {Number(service.price_snapshot).toFixed(2)} •{" "}
+                          {service.duration_minutes_snapshot} min
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </section>
+            </>
+          )}
+
+          {appointment.address && (
+            <>
+              <div className="appt-view-divider" />
+              <section className="appt-view-section">
+                <div className="appt-view-row">
+                  <MapPin size={16} className="appt-view-icon" />
+                  <span>{appointment.address}</span>
+                </div>
+              </section>
+            </>
+          )}
+
+          {(appointment.purpose ||
+            appointment.symptoms ||
+            appointment.patient_note ||
+            appointment.clinic_note) && (
+            <>
+              <div className="appt-view-divider" />
+              <section className="appt-view-section">
+                {appointment.purpose && (
+                  <div className="appt-view-note-row">
+                    <p className="appt-view-section-label">Purpose</p>
+                    <p>{appointment.purpose}</p>
+                  </div>
+                )}
+                {appointment.symptoms && (
+                  <div className="appt-view-note-row">
+                    <p className="appt-view-section-label">Symptoms</p>
+                    <p>{appointment.symptoms}</p>
+                  </div>
+                )}
+                {appointment.patient_note && (
+                  <div className="appt-view-note-row">
+                    <p className="appt-view-section-label">Patient Note</p>
+                    <p>{appointment.patient_note}</p>
+                  </div>
+                )}
+                {appointment.clinic_note && (
+                  <div className="appt-view-note-row">
+                    <p className="appt-view-section-label">Clinic Note</p>
+                    <p>{appointment.clinic_note}</p>
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
+          {appointment.status === "reschedule_requested" &&
+            appointment.proposed_start_at && (
+              <>
+                <div className="appt-view-divider" />
+                <section className="appt-view-section appt-view-section--warning">
+                  <p className="appt-view-section-label">Clinic proposed a new schedule</p>
+                  <div className="appt-view-row">
+                    <CalendarDays size={16} className="appt-view-icon" />
+                    <span>
+                      {formatDate(appointment.proposed_start_at)} at{" "}
+                      {formatTime(appointment.proposed_start_at)}
+                    </span>
+                  </div>
+                  {appointment.reschedule_reason && (
+                    <p className="appt-view-muted">{appointment.reschedule_reason}</p>
+                  )}
+                </section>
+              </>
+            )}
+
+          {appointment.status === "cancelled" &&
+            (appointment.cancel_reason || appointment.cancelled_at) && (
+              <>
+                <div className="appt-view-divider" />
+                <section className="appt-view-section appt-view-section--cancelled">
+                  {appointment.cancel_reason && (
+                    <div className="appt-view-note-row">
+                      <p className="appt-view-section-label">Cancel Reason</p>
+                      <p>{appointment.cancel_reason}</p>
+                    </div>
+                  )}
+                  {appointment.cancelled_at && (
+                    <p className="appt-view-muted">
+                      Cancelled on {formatDate(appointment.cancelled_at)}
+                    </p>
+                  )}
+                </section>
+              </>
+            )}
+        </div>
+
+        {(canReschedule || canCancel) && (
+          <div className="appt-view-actions">
+            {canReschedule && (
+              <button
+                type="button"
+                className="appt-view-action-btn"
+                onClick={() => {
+                  onClose();
+                  onReschedule(appointment);
+                }}
+              >
+                Reschedule
+              </button>
+            )}
+            {canCancel && (
+              <button
+                type="button"
+                className="appt-view-action-btn danger"
+                onClick={() => {
+                  onClose();
+                  onCancel(appointment);
+                }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1111,6 +1359,8 @@ function UserAppointmentsContent({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const [bookingOpen, setBookingOpen] = useState<boolean>(false);
+  const [viewModalAppointment, setViewModalAppointment] =
+    useState<Appointment | null>(null);
 
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
@@ -1961,7 +2211,13 @@ function UserAppointmentsContent({
 
                         <div className="today-location-row">
                           <span>{dayAppointments[0].address || "Clinic address unavailable"}</span>
-                          <a href={`/appointments/${dayAppointments[0].id}`}>View</a>
+                          <button
+                            type="button"
+                            className="today-view-btn"
+                            onClick={() => setViewModalAppointment(dayAppointments[0])}
+                          >
+                            View
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -2162,6 +2418,14 @@ function UserAppointmentsContent({
                       </div>
 
                       <div className="appointment-actions">
+                        <button
+                          className="mini-action-btn view"
+                          type="button"
+                          onClick={() => setViewModalAppointment(item)}
+                        >
+                          View
+                        </button>
+
                         {item.status === "reschedule_requested" ? (
                           <>
                             <button
@@ -2312,6 +2576,19 @@ function UserAppointmentsContent({
           </div>
         </div>
       </div>
+
+      <AppointmentViewModal
+        appointment={viewModalAppointment}
+        onClose={() => setViewModalAppointment(null)}
+        onReschedule={(appointment) => {
+          setViewModalAppointment(null);
+          openRescheduleModal(appointment);
+        }}
+        onCancel={(appointment) => {
+          setViewModalAppointment(null);
+          openCancelModal(appointment);
+        }}
+      />
 
       <BookingModal
         open={bookingOpen}

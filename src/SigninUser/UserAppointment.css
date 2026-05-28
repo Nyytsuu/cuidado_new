@@ -1615,3 +1615,287 @@
   font-weight: 600;
   color: #0f766e;
 }
+
+.today-view-btn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #0c9490;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.today-view-btn:hover {
+  color: #076d6a;
+}
+
+.mini-action-btn.view {
+  background: #eef9fa;
+  border-color: #c4eceb;
+  color: #0c9490;
+  font-weight: 800;
+}
+
+.mini-action-btn.view:hover {
+  background: #d5f4f3;
+  border-color: #9fdad8;
+}
+
+.appt-view-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.appt-view-modal {
+  width: min(540px, 100%);
+  max-height: calc(100vh - 36px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.25);
+}
+
+.appt-view-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 20px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.appt-view-header-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.appt-view-eyebrow {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.appt-view-header-info h2 {
+  margin: 0;
+  color: #102b44;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.appt-view-status-pill {
+  width: fit-content;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.appt-view-status-pill.pending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.appt-view-status-pill.confirmed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.appt-view-status-pill.completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.appt-view-status-pill.cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.appt-view-status-pill.no_show {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.appt-view-status-pill.reschedule_requested {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.appt-view-close {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 12px;
+  background: #f1f5f9;
+  color: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.appt-view-close:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.appt-view-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.appt-view-divider {
+  height: 1px;
+  margin: 0 20px;
+  background: #edf2f7;
+}
+
+.appt-view-section {
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.appt-view-section--warning,
+.appt-view-section--cancelled {
+  margin: 14px 20px;
+  border-left: 4px solid #f59e0b;
+  border-radius: 0 12px 12px 0;
+  background: #fffbeb;
+}
+
+.appt-view-section--cancelled {
+  border-left-color: #f87171;
+  background: #fff1f2;
+}
+
+.appt-view-section-label {
+  margin: 0 0 2px;
+  color: #64748b;
+  font-size: 0.73rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.appt-view-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  color: #1e293b;
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+
+.appt-view-icon,
+.appt-view-icon-placeholder {
+  width: 16px;
+  flex: 0 0 16px;
+  margin-top: 2px;
+}
+
+.appt-view-icon {
+  color: #0f766e;
+}
+
+.appt-view-muted {
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.appt-view-note-row {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: #1e293b;
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.appt-view-note-row p {
+  margin: 0;
+}
+
+.appt-view-service-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.appt-view-service-price {
+  color: #64748b;
+  font-size: 0.83rem;
+}
+
+.appt-view-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid #edf2f7;
+}
+
+.appt-view-action-btn {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  background: #fff;
+  color: #374151;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.appt-view-action-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.appt-view-action-btn.danger {
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.appt-view-action-btn.danger:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+@media (max-width: 560px) {
+  .appt-view-overlay {
+    align-items: flex-end;
+    padding: 12px;
+  }
+
+  .appt-view-modal {
+    max-height: calc(100vh - 24px);
+    border-radius: 22px;
+  }
+
+  .appt-view-actions {
+    flex-direction: column;
+  }
+
+  .appt-view-action-btn {
+    width: 100%;
+  }
+}

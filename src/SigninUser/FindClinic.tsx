@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Search,
   MapPin,
@@ -589,14 +589,18 @@ export default function FindClinic() {
   const [bookingForSelf, setBookingForSelf] = useState(true);
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
+  const clinicFetchIdRef = useRef(0);
 
   const fetchClinics = useCallback(async (searchOverride = search) => {
+    const fetchId = ++clinicFetchIdRef.current;
+
     try {
       setLoading(true);
       setError("");
 
       const params = new URLSearchParams();
-      if (searchOverride) params.append("search", searchOverride);
+      const searchQuery = searchOverride.trim();
+      if (searchQuery) params.append("search", searchQuery);
       if (specialization !== "All") params.append("specialization", specialization);
       if (openNow) params.append("openNow", "true");
 
@@ -615,6 +619,10 @@ export default function FindClinic() {
       );
       const statusNow = new Date();
 
+      if (fetchId !== clinicFetchIdRef.current) {
+        return;
+      }
+
       setStatusTick(statusNow.getTime());
       setClinics(
         openNow
@@ -624,9 +632,13 @@ export default function FindClinic() {
           : clinicsWithSchedules
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      if (fetchId === clinicFetchIdRef.current) {
+        setError(err instanceof Error ? err.message : "Something went wrong.");
+      }
     } finally {
-      setLoading(false);
+      if (fetchId === clinicFetchIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [openNow, search, specialization]);
 

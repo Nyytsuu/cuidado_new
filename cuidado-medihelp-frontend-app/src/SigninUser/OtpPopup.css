@@ -1,128 +1,181 @@
-/* OTP container inside parent modal */
+/* ─────────────────────────────────────────
+   OTP card  (lives inside .fp-modal-card)
+───────────────────────────────────────── */
 .otp-card {
   width: 100%;
   max-width: 100%;
   background: transparent;
-  border-radius: 0;
-  padding: 42px 46px 34px;
+  padding: 8px 12px 20px;
   text-align: center;
   position: relative;
-  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* icon */
+/* ── Envelope icon ── */
 .otp-iconWrap {
-  display: grid;
-  place-items: center;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
 }
 
 .otp-icon {
-  width: 88px;
-  height: 88px;
-  display: grid;
-  place-items: center;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  color: #1f1f1f;
+  color: #1a1a1a;
 }
 
 .otp-check {
   position: absolute;
-  top: 4px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
+  top: 2px;
+  right: 2px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: #5dbb63;
+  background: #4caf50;
   color: #fff;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 900;
-  border: 2px solid #fff;
-  font-size: 14px;
+  font-size: 13px;
+  border: 2.5px solid #fff;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(76, 175, 80, 0.35);
 }
 
-/* text */
+/* ── Description text ── */
 .otp-text {
-  margin: 12px auto 22px;
-  max-width: 520px;
+  margin: 0 0 24px;
+  max-width: 340px;
   color: #1f2937;
   font-size: 15px;
-  line-height: 1.5;
-  position: relative;
-  left: 50px;
-  text-align:start;
+  line-height: 1.65;
+  text-align: center;
 }
 
-/* otp boxes */
+.otp-text b {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+/* ── 6-box row ── */
 .otp-boxRow {
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin: 12px 0 18px;
+  gap: 10px;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
 .otp-box {
-  width: 62px;
-  height: 70px;
+  width: 52px;
+  height: 60px;
   border-radius: 14px;
-  border: 2px solid #cbd5e1;
-  background: #a9d6d3;
-  font-size: 30px;
+  border: 2px solid #b2d8d6;
+  background: #c8e9e7;
+  font-size: 26px;
   font-weight: 800;
   text-align: center;
   outline: none;
   color: #0f172a;
+  caret-color: #006b65;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
 
 .otp-box:focus {
-  border-color: #004d40;
-  box-shadow: 0 0 0 4px rgba(0, 77, 64, 0.18);
+  border-color: #007a73;
+  background: #b8e4e2;
+  box-shadow: 0 0 0 3px rgba(0, 122, 115, 0.18);
 }
 
-/* resend */
+/* ── Resend link ── */
 .otp-resend {
   border: none;
   background: transparent;
   cursor: pointer;
   text-decoration: underline;
-  color: #004d40;
+  text-underline-offset: 2px;
+  color: #007a73;
   font-weight: 700;
-  margin: 2px 0 16px;
-  position: relative;
-  left: 70px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  align-self: flex-end;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.otp-resend:hover:not(:disabled) {
+  color: #004d49;
 }
 
 .otp-resend:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* error */
+/* ── Error ── */
 .otp-error {
   font-size: 13px;
-  color: #b00020;
-  margin-bottom: 10px;
+  color: #dc2626;
+  margin-bottom: 12px;
+  text-align: center;
+  width: 100%;
 }
 
-/* confirm button */
+/* ── Confirm button ── */
 .otp-confirm {
-  width: min(220px, 92%);
-  height: 50px;
+  width: 100%;
+  height: 52px;
   border: none;
   border-radius: 999px;
-  background-color: #004d40;
+  background: #4a9e98;
   color: #fff;
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.4px;
+  letter-spacing: 1.5px;
   cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.otp-confirm:hover:not(:disabled) {
+  background: #3a8a84;
 }
 
 .otp-confirm:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* ── Close button (hidden — parent fp-modal-close handles it) ── */
 .otp-close {
-   display: none !important;
-   }
+  display: none !important;
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .otp-card {
+    padding: 4px 4px 16px;
+  }
+
+  .otp-box {
+    width: 44px;
+    height: 54px;
+    font-size: 22px;
+    border-radius: 12px;
+  }
+
+  .otp-boxRow {
+    gap: 8px;
+  }
+
+  .otp-text {
+    font-size: 14px;
+  }
+}

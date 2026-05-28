@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
 import "./App.css";
+import LandingPage from "./SigninUser/Landingpage";
 import UserProtectedRoute from "./routes/UserProtectedRoute";
 import ConditionDetails from "./SigninUser/ConditionDetails";
 import Signup from "./SignupUser/Signup";
 import Signin from "./SigninUser/Signin";
-import SplashScreen from "./SigninUser/SplashScreen";
 import Categories from "./Categories/Categories";
 import VerifyOtp from "./SigninUser/VerifyOtp";
 import BrowseHealth from "./SigninUser/BrowseHealth";
@@ -15,7 +15,6 @@ import FindClinic from "./SigninUser/FindClinic";
 import Homepage from "./SigninUser/Homepage";
 import Notifications from "./SigninUser/Notification";
 import Profile from "./SigninUser/UserProfile";
-import UserSettings from "./SigninUser/UserSettings";
 import BMICalculator from "./SigninUser/BMICalculator";
 import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
@@ -50,16 +49,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         
-        <Route path="/" element={<SplashScreen />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/clinic/signup" element={<ClinicSignup/>} />
-        <Route path="/landingpage" element={<Navigate to="/" replace />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
-        <Route path="/landing" element={<Navigate to="/" replace />} />
 
-        
+       
         <Route element={<UserProtectedRoute />}>
         <Route path="/browse-health" element={<BrowseHealth />} />
         <Route path="/health/body-system/:slug" element={<BodySystemDetails />} />
@@ -71,7 +68,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
        <Route path="/cardio" element={<Cardio />} /> 
         <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<UserSettings />} />
+        <Route path="/settings" element={<Navigate to="/profile" replace />} />
         <Route path="/bmi-calculator" element={<BMICalculator />} />
         <Route path="/stress-index" element={<StressIndex />} />
         <Route path="/voice-assistant" element={<UserVoiceAssistant />} />

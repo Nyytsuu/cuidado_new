@@ -28,7 +28,6 @@ const onboardingSlides = [
 export default function SplashScreen() {
   const navigate = useNavigate();
   const [destination] = useState(() => getActiveAuthDestination());
-  const hasSeenOnboarding = localStorage.getItem("hasSeenOnboarding") === "true";
   const [introDone, setIntroDone] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const currentSlide = onboardingSlides[activeSlide];
@@ -42,21 +41,13 @@ export default function SplashScreen() {
         return;
       }
 
-      if (hasSeenOnboarding) {
-        // Returning user, not logged in — skip onboarding, go to login
-        navigate("/signin", { replace: true });
-        return;
-      }
-
-      // First time — show onboarding slides
       setIntroDone(true);
-    }, destination || hasSeenOnboarding ? 250 : 1400);
+    }, destination ? 250 : 1400);
 
     return () => window.clearTimeout(timer);
-  }, [destination, hasSeenOnboarding, navigate]);
+  }, [destination, navigate]);
 
   const finishOnboarding = () => {
-    localStorage.setItem("hasSeenOnboarding", "true");
     navigate("/signin", { replace: true });
   };
 

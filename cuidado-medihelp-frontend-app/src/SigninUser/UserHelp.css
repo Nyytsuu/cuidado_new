@@ -460,7 +460,9 @@
   text-align: left;
   text-decoration: none;
   font: inherit;
+  outline: none;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .quick-help-card > span {
@@ -491,6 +493,17 @@
 
 .quick-help-card > svg {
   color: #536879;
+}
+
+.quick-help-card:hover {
+  border-color: #b8d9d4;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(15, 84, 83, 0.08);
+}
+
+.quick-help-card:focus-visible {
+  border-color: #0b8a84;
+  box-shadow: 0 0 0 3px rgba(11, 138, 132, 0.14);
 }
 
 .help-hero button,

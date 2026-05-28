@@ -4,6 +4,7 @@ import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import "./Cardio.css";
 import searchIcon from "../img/search.png";
+import { apiUrl } from "../sharedBackendFetch";
 
 type BodySystemMenuItem = {
   id: number;
@@ -30,6 +31,7 @@ type BodySystemDetailsType = {
 type ConditionItem = {
   condition_id: number;
   slug: string | null;
+  condition_slug?: string | null;
   condition_name: string;
   description: string | null;
   thumbnail_image: string | null;
@@ -39,9 +41,13 @@ type ConditionItem = {
 };
 
 type ArticleItem = {
-  id: number;
+  id: number | string;
   title: string;
-  slug: string;
+  slug?: string | null;
+  searchQuery?: string | null;
+  subtitle?: string | null;
+  url?: string | null;
+  source?: string | null;
 };
 
 type PreventionTip = {
@@ -65,6 +71,31 @@ const quickActions = [
   { id: "clinics", icon: "📍", label: "Find Clinics" },
   { id: "emergency", icon: "🧰", label: "Emergency Guide" },
 ];
+
+const toRelatedArticleSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+const createBodySystemArticleFallbacks = (topic?: string | null): ArticleItem[] => {
+  const cleanTopic = String(topic || "health").trim() || "health";
+  const titles = [
+    `${cleanTopic} health overview`,
+    `Common ${cleanTopic} conditions`,
+    `${cleanTopic} symptoms to watch`,
+    `${cleanTopic} prevention tips`,
+    `When to seek care for ${cleanTopic}`,
+  ];
+
+  return titles.map((title, index) => ({
+    id: `fallback-body-article-${toRelatedArticleSlug(title)}-${index + 1}`,
+    title,
+    slug: toRelatedArticleSlug(title),
+    searchQuery: title,
+    source: "Cuidado MediHelp",
+  }));
+};
 
 export default function BodySystemDetails() {
   const navigate = useNavigate();
@@ -90,7 +121,7 @@ export default function BodySystemDetails() {
   useEffect(() => {
     const loadBodySystems = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/health/body-systems");
+        const res = await fetch(apiUrl("/api/health/body-systems"), { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to load body systems");
 
         const data = await res.json();
@@ -110,12 +141,12 @@ export default function BodySystemDetails() {
       setError("");
 
       const urls = {
-        bodySystem: `http://localhost:5000/api/health/body-systems/${selectedSlug}`,
-        conditions: `http://localhost:5000/api/health/body-systems/${selectedSlug}/conditions`,
-        articles: `http://localhost:5000/api/health/body-systems/${selectedSlug}/articles`,
-        symptoms: `http://localhost:5000/api/health/body-systems/${selectedSlug}/symptoms`,
-        prevention: `http://localhost:5000/api/health/body-systems/${selectedSlug}/prevention-tips`,
-        facts: `http://localhost:5000/api/health/body-systems/${selectedSlug}/facts`,
+        bodySystem: apiUrl(`/api/health/body-systems/${selectedSlug}`),
+        conditions: apiUrl(`/api/health/body-systems/${selectedSlug}/conditions`),
+        articles: apiUrl(`/api/health/body-systems/${selectedSlug}/articles`),
+        symptoms: apiUrl(`/api/health/body-systems/${selectedSlug}/symptoms`),
+        prevention: apiUrl(`/api/health/body-systems/${selectedSlug}/prevention-tips`),
+        facts: apiUrl(`/api/health/body-systems/${selectedSlug}/facts`),
       };
 
       const [
@@ -134,26 +165,14 @@ export default function BodySystemDetails() {
         fetch(urls.facts),
       ]);
 
-      console.log("bodySystemRes", bodySystemRes.status, urls.bodySystem);
-      console.log("conditionsRes", conditionsRes.status, urls.conditions);
-      console.log("articlesRes", articlesRes.status, urls.articles);
-      console.log("symptomsRes", symptomsRes.status, urls.symptoms);
-      console.log("preventionRes", preventionRes.status, urls.prevention);
-      console.log("factsRes", factsRes.status, urls.facts);
-
       if (!bodySystemRes.ok) throw new Error(`Body system failed: ${bodySystemRes.status}`);
-      if (!conditionsRes.ok) throw new Error(`Conditions failed: ${conditionsRes.status}`);
-      if (!articlesRes.ok) throw new Error(`Articles failed: ${articlesRes.status}`);
-      if (!symptomsRes.ok) throw new Error(`Symptoms failed: ${symptomsRes.status}`);
-      if (!preventionRes.ok) throw new Error(`Prevention tips failed: ${preventionRes.status}`);
-      if (!factsRes.ok) throw new Error(`Facts failed: ${factsRes.status}`);
 
       const bodySystemData = await bodySystemRes.json();
-      const conditionsData = await conditionsRes.json();
-      const articlesData = await articlesRes.json();
-      const symptomsData = await symptomsRes.json();
-      const preventionData = await preventionRes.json();
-      const factsData = await factsRes.json();
+      const conditionsData = conditionsRes.ok ? await conditionsRes.json() : [];
+      const articlesData = articlesRes.ok ? await articlesRes.json() : [];
+      const symptomsData = symptomsRes.ok ? await symptomsRes.json() : [];
+      const preventionData = preventionRes.ok ? await preventionRes.json() : [];
+      const factsData = factsRes.ok ? await factsRes.json() : [];
 
       setBodySystem(bodySystemData || null);
       setConditions(Array.isArray(conditionsData) ? conditionsData : []);
@@ -192,12 +211,23 @@ export default function BodySystemDetails() {
     );
   }, [conditions, search]);
 
+  const relatedArticles = useMemo(
+    () =>
+      articles.length > 0
+        ? articles
+        : createBodySystemArticleFallbacks(bodySystem?.name || selectedSlug),
+    [articles, bodySystem?.name, selectedSlug]
+  );
+
   const handleBodySystemClick = (systemSlug: string) => {
     navigate(`/health/body-system/${systemSlug}`);
   };
 
   const handleConditionClick = (item: ConditionItem) => {
-    navigate(`/health/condition/${item.slug || item.condition_id}`);
+    const conditionSlug = item.condition_slug || item.slug;
+    const conditionTarget =
+      conditionSlug && conditionSlug !== selectedSlug ? conditionSlug : item.condition_id;
+    navigate(`/health/condition/${conditionTarget}`);
   };
 
   const handleQuickActionClick = (actionId: string) => {
@@ -216,12 +246,22 @@ export default function BodySystemDetails() {
     }
   };
 
-  const handleArticleClick = (articleSlug: string) => {
-    navigate(`/health/article/${articleSlug}`);
+  const handleArticleClick = (article: ArticleItem) => {
+    if (article.url) {
+      window.open(article.url, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const articleQuery = article.searchQuery || article.title || article.slug || "health";
+    navigate(`/browse-health?search=${encodeURIComponent(articleQuery)}`);
   };
 
   return (
-    <div className={`browse-health-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
+    <div
+      className={`browse-health-page body-system-details-page ${
+        sidebarExpanded ? "sidebar-expanded" : ""
+      }`}
+    >
       <UserSidebar
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -354,13 +394,13 @@ export default function BodySystemDetails() {
                     <div className="related-card">
                       <h3>Related Articles</h3>
                       <div className="related-list">
-                        {articles.length > 0 ? (
-                          articles.map((item) => (
+                        {relatedArticles.length > 0 ? (
+                          relatedArticles.map((item) => (
                             <button
                               key={item.id}
                               type="button"
                               className="related-item"
-                              onClick={() => handleArticleClick(item.slug)}
+                              onClick={() => handleArticleClick(item)}
                             >
                               <span>{item.title}</span>
                               <span>›</span>

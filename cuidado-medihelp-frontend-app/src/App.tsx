@@ -16,7 +16,6 @@ import FindClinic from "./SigninUser/FindClinic";
 import Homepage from "./SigninUser/Homepage";
 import Notifications from "./SigninUser/Notification";
 import Profile from "./SigninUser/UserProfile";
-import UserSettings from "./SigninUser/UserSettings";
 import BMICalculator from "./SigninUser/BMICalculator";
 import StressIndex from "./SigninUser/StressIndex"  ;
 import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
@@ -47,7 +46,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         
         <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<UserSettings />} />
+        <Route path="/settings" element={<Navigate to="/profile" replace />} />
         <Route path="/bmi-calculator" element={<BMICalculator />} />
         <Route path="/stress-index" element={<StressIndex />} />
         <Route path="/voice-assistant" element={<UserVoiceAssistant />} />

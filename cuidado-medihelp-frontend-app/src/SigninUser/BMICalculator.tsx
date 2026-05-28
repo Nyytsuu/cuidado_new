@@ -322,6 +322,19 @@ function isValidPhilippineMobileNumber(value: string): boolean {
   return /^09\d{9}$/.test(toPhilippineLocalMobileNumber(value));
 }
 
+/** Strip non-digits (integers only — for Age) */
+function sanitizeInteger(value: string): string {
+  return value.replace(/[^0-9]/g, "");
+}
+
+/** Strip non-digits/dots and keep at most one decimal point (for Weight & Height) */
+function sanitizeDecimal(value: string): string {
+  const cleaned = value.replace(/[^0-9.]/g, "");
+  const firstDot = cleaned.indexOf(".");
+  if (firstDot === -1) return cleaned;
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+}
+
 function getClinicSummary(clinic: Clinic): string {
   const specialization = toTitle(clinic.specialization);
   const services = toTitle(clinic.services_offered);
@@ -825,8 +838,11 @@ const bmiCheckupAdvice = useMemo(() => {
                     <span className="input-icon">👤</span>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={age}
-                      onChange={(e) => setAge(e.target.value)}
+                      onChange={(e) => setAge(sanitizeInteger(e.target.value))}
+                      placeholder="0"
                     />
                     <span className="label-text">Age</span>
                   </div>
@@ -840,8 +856,11 @@ const bmiCheckupAdvice = useMemo(() => {
                     </div>
                     <input
                       type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
                       value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
+                      onChange={(e) => setWeight(sanitizeDecimal(e.target.value))}
+                      placeholder="0"
                     />
                     <span className="unit-text">
                       {unit === "Metric" ? "kg" : "lb"}
@@ -857,8 +876,11 @@ const bmiCheckupAdvice = useMemo(() => {
                     </div>
                     <input
                       type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
                       value={height}
-                      onChange={(e) => setHeight(e.target.value)}
+                      onChange={(e) => setHeight(sanitizeDecimal(e.target.value))}
+                      placeholder="0"
                     />
                     <span className="unit-text">
                       {unit === "Metric" ? "cm" : "in"}

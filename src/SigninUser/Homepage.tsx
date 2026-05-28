@@ -31,7 +31,7 @@ const topServices = [
     path: "/find-clinic",
   },
   {
-    title: "Diagnostics",
+    title: "Appointments",
     subtitle: "Book visits & screenings",
     iconType: "diagnostics",
     path: "/appointments",
@@ -52,7 +52,7 @@ const quickActions = [
     path: "/symptom-checker",
   },
   {
-    title: "Health Tips",
+    title: "Health Topics",
     subtitle: "Read health & wellness advice",
     iconType: "healthtips",
     path: "/browse-health",
@@ -244,11 +244,7 @@ export default function Homepage() {
 
   const handleHealthTopicSearch = () => {
     const keyword = healthTopicSearchQuery.trim();
-    navigate(
-      keyword
-        ? `/browse-health?search=${encodeURIComponent(keyword)}`
-        : "/browse-health"
-    );
+    void loadArticles(keyword || "health");
   };
 
   const loadArticles = async (query?: string) => {

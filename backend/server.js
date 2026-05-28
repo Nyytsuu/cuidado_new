@@ -5,6 +5,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const axios = require("axios");
 
 const pool = require("./db/pool");
 const { verifyToken, requireRole } = require("./middleware/auth");
@@ -386,6 +387,123 @@ const ensureHealthSymptomColumns = async () => {
   }
 };
 
+const HEALTH_ARTICLE_KEYWORDS = [
+  "health",
+  "medical",
+  "medicine",
+  "disease",
+  "treatment",
+  "symptom",
+  "doctor",
+  "hospital",
+  "patient",
+  "wellness",
+  "diet",
+  "nutrition",
+  "exercise",
+  "mental",
+  "vaccine",
+  "drug",
+  "therapy",
+  "cancer",
+  "diabetes",
+  "heart",
+  "virus",
+  "surgery",
+  "clinical",
+  "infection",
+  "blood",
+  "brain",
+  "immune",
+  "chronic",
+  "obesity",
+  "stroke",
+];
+
+const slugifyArticleTitle = (value, fallback = "health-article") => {
+  const slug = String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || fallback;
+};
+
+const isHealthArticle = (article) => {
+  const text = `${article.title || ""} ${article.description || ""}`.toLowerCase();
+  return HEALTH_ARTICLE_KEYWORDS.some((keyword) => text.includes(keyword));
+};
+
+const buildRelatedArticleSuggestions = (topic, limit = 6) => {
+  const cleanTopic = String(topic || "health").trim() || "health";
+  const titles = [
+    `${cleanTopic} overview`,
+    `Common ${cleanTopic} symptoms`,
+    `${cleanTopic} treatment options`,
+    `${cleanTopic} prevention tips`,
+    `When to see a doctor for ${cleanTopic}`,
+    `${cleanTopic} care and wellness guide`,
+  ];
+
+  return titles.slice(0, limit).map((title, index) => ({
+    id: `suggested-${slugifyArticleTitle(title)}-${index + 1}`,
+    title,
+    slug: slugifyArticleTitle(title),
+    searchQuery: title,
+    source: "Cuidado MediHelp",
+  }));
+};
+
+const loadExternalRelatedArticles = async (query, limit = 6) => {
+  if (!process.env.NEWS_API_KEY) {
+    return [];
+  }
+
+  try {
+    const response = await axios.get("https://newsapi.org/v2/everything", {
+      params: {
+        q: query,
+        searchIn: "title,description",
+        language: "en",
+        sortBy: "publishedAt",
+        pageSize: 20,
+        apiKey: process.env.NEWS_API_KEY,
+      },
+    });
+
+    return (response.data.articles || [])
+      .filter((article) => article.title && article.url && isHealthArticle(article))
+      .slice(0, limit)
+      .map((article, index) => ({
+        id: `external-${slugifyArticleTitle(article.title)}-${index + 1}`,
+        title: article.title,
+        slug: slugifyArticleTitle(article.title),
+        searchQuery: article.title,
+        subtitle: article.description || "No description available.",
+        content: article.content || article.description || "No article content available.",
+        image: article.urlToImage || "",
+        url: article.url,
+        source: article.source?.name || "Unknown source",
+        publishedAt: article.publishedAt || null,
+      }));
+  } catch (err) {
+    console.warn(
+      "Related health article fallback:",
+      err?.response?.data?.message || err.message
+    );
+    return [];
+  }
+};
+
+const loadRelatedHealthArticles = async (query, fallbackTopic, limit = 6) => {
+  const externalArticles = await loadExternalRelatedArticles(query, limit);
+  if (externalArticles.length > 0) {
+    return externalArticles;
+  }
+
+  return buildRelatedArticleSuggestions(fallbackTopic || query, limit);
+};
+
 app.get("/api/health/body-systems", async (req, res) => {
   try {
     const [rows] = await pool.query(`
@@ -551,6 +669,23 @@ app.get("/api/health/body-systems/:slug/articles", async (req, res) => {
   try {
     const { slug } = req.params;
 
+    const [[bodySystem]] = await pool.query(
+      `
+      SELECT
+        id,
+        name
+      FROM body_systems
+      WHERE slug = ?
+        AND COALESCE(is_active::text, 'true') IN ('true', '1', 't')
+      LIMIT 1
+      `,
+      [slug]
+    );
+
+    if (!bodySystem) {
+      return res.status(404).json({ message: "Body system not found" });
+    }
+
     const [rows] = await pool.query(
       `
       SELECT
@@ -558,19 +693,28 @@ app.get("/api/health/body-systems/:slug/articles", async (req, res) => {
         a.title,
         a.slug
       FROM articles a
-      INNER JOIN body_systems bs
-        ON bs.id = a.body_system_id
-      WHERE bs.slug = ?
+      WHERE a.body_system_id = ?
         AND COALESCE(a.is_published::text, 'true') IN ('true', '1', 't')
       ORDER BY
         COALESCE(a.is_featured::text, 'false') IN ('true', '1', 't') DESC,
         COALESCE(a.sort_order, 9999) ASC,
         a.title ASC
+      LIMIT 6
       `,
-      [slug]
+      [bodySystem.id]
     );
 
-    res.json(rows);
+    if (rows.length > 0) {
+      return res.json(rows);
+    }
+
+    const relatedArticles = await loadRelatedHealthArticles(
+      `${bodySystem.name} health symptoms prevention`,
+      bodySystem.name,
+      6
+    );
+
+    res.json(relatedArticles);
   } catch (err) {
     console.error("Load body system articles error:", err);
     res.status(500).json({
@@ -828,7 +972,13 @@ app.get("/api/health/condition/:slug/articles", async (req, res) => {
     }
 
     if (!condition.body_system_id) {
-      return res.json([]);
+      const relatedArticles = await loadRelatedHealthArticles(
+        `${condition.condition_name} symptoms treatment health`,
+        condition.condition_name,
+        6
+      );
+
+      return res.json(relatedArticles);
     }
 
     const [rows] = await pool.query(
@@ -849,7 +999,17 @@ app.get("/api/health/condition/:slug/articles", async (req, res) => {
       [condition.body_system_id]
     );
 
-    res.json(rows);
+    if (rows.length > 0) {
+      return res.json(rows);
+    }
+
+    const relatedArticles = await loadRelatedHealthArticles(
+      `${condition.condition_name} symptoms treatment health`,
+      condition.condition_name,
+      6
+    );
+
+    res.json(relatedArticles);
   } catch (err) {
     console.error("Load condition articles error:", err);
     res.status(500).json({

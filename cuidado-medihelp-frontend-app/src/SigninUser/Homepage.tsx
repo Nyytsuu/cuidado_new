@@ -255,12 +255,7 @@ export default function Homepage() {
 
   const handleHealthTopicSearch = () => {
     const keyword = healthTopicSearchQuery.trim();
-
-    navigate(
-      keyword
-        ? `/browse-health?search=${encodeURIComponent(keyword)}`
-        : "/browse-health"
-    );
+    void loadArticles(keyword || "health");
   };
 
   const handleArticleKeyDown = (

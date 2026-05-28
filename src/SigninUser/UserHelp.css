@@ -256,16 +256,25 @@
 }
 
 .quick-help-card {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
   gap: 12px;
+  min-height: 86px;
   padding: 14px;
   text-decoration: none;
   width: 100%;
   border: 1px solid #e0ece9;
+  border-radius: 8px;
+  background: #fbfefd;
   color: inherit;
   cursor: pointer;
   text-align: left;
+  font: inherit;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+    transform 0.18s ease, background 0.18s ease;
 }
 
 .quick-help-card > span {
@@ -277,6 +286,22 @@
   background: #e8f3f1;
   color: #0f8f83;
   flex-shrink: 0;
+}
+
+.quick-help-card > div {
+  min-width: 0;
+}
+
+.quick-help-card:hover {
+  border-color: #b8d9d4;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(20, 75, 70, 0.08);
+  transform: translateY(-1px);
+}
+
+.quick-help-card:focus-visible {
+  border-color: #0f8f83;
+  box-shadow: 0 0 0 3px rgba(15, 143, 131, 0.14);
 }
 
 .support-form {

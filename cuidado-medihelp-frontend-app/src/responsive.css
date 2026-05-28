@@ -2791,6 +2791,206 @@ button {
 }
 
 @media (max-width: 760px) {
+  .body-system-details-page {
+    --mobile-header-height: 120px;
+    --mobile-bottom-nav-height: 58px;
+    display: block !important;
+    min-height: 100vh !important;
+    background: #f7fafb !important;
+  }
+
+  .body-system-details-page .browse-page-content,
+  .body-system-details-page.sidebar-expanded .browse-page-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .body-system-details-page .browse-health-main {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100vh !important;
+    padding: calc(var(--mobile-header-height, 120px) + 24px) 14px
+      calc(var(--mobile-bottom-nav-height, 58px) + 18px) !important;
+    border: 0 !important;
+    background: #f7fafb !important;
+    box-shadow: none !important;
+    overflow-x: hidden !important;
+  }
+
+  .body-system-details-page .health-browser-layout {
+    display: block !important;
+    min-height: 0 !important;
+  }
+
+  .body-system-details-page .left-panel {
+    display: none !important;
+  }
+
+  .body-system-details-page .main-panel {
+    width: 100% !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  .body-system-details-page .hero-card {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 16px !important;
+    border: 1px solid #e2ecee !important;
+    border-radius: 16px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    box-shadow: 0 8px 18px rgba(30, 48, 67, 0.06) !important;
+  }
+
+  .body-system-details-page .hero-left {
+    min-width: 0 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .body-system-details-page .hero-heart {
+    width: 78px !important;
+    height: 78px !important;
+    flex: 0 0 78px !important;
+    border-radius: 18px !important;
+    display: grid !important;
+    place-items: center !important;
+    background: linear-gradient(145deg, #dff5f2 0%, #80cfc8 100%) !important;
+    border: 1px solid #cbe6e4 !important;
+    font-size: 42px !important;
+    filter: none !important;
+  }
+
+  .body-system-details-page .hero-left h1 {
+    margin: 0 0 6px !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    color: #172033 !important;
+  }
+
+  .body-system-details-page .hero-left p {
+    display: -webkit-box !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    -webkit-box-orient: vertical !important;
+    -webkit-line-clamp: 3 !important;
+    font-size: 12.5px !important;
+    line-height: 1.35 !important;
+    color: #526671 !important;
+  }
+
+  .body-system-details-page .clinic-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 42px !important;
+    border-radius: 10px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+  }
+
+  .body-system-details-page .overview-grid,
+  .body-system-details-page .bottom-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+    margin-top: 12px !important;
+  }
+
+  .body-system-details-page .overview-card,
+  .body-system-details-page .heart-visual-card,
+  .body-system-details-page .related-card,
+  .body-system-details-page .diseases-card,
+  .body-system-details-page .symptoms-card,
+  .body-system-details-page .prevention-card {
+    min-height: 0 !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+    box-shadow: 0 8px 18px rgba(30, 48, 67, 0.05) !important;
+  }
+
+  .body-system-details-page .overview-card h2,
+  .body-system-details-page .diseases-card h2,
+  .body-system-details-page .related-card h3,
+  .body-system-details-page .symptoms-card h3,
+  .body-system-details-page .prevention-card h3 {
+    margin-bottom: 10px !important;
+    font-size: 16px !important;
+    line-height: 1.12 !important;
+  }
+
+  .body-system-details-page .overview-card p,
+  .body-system-details-page .disease-content p,
+  .body-system-details-page .symptoms-card li,
+  .body-system-details-page .prevention-card li {
+    font-size: 11.5px !important;
+    line-height: 1.38 !important;
+  }
+
+  .body-system-details-page .heart-visual-card {
+    display: none !important;
+  }
+
+  .body-system-details-page .bottom-grid .diseases-card,
+  .body-system-details-page .bottom-grid .prevention-card,
+  .body-system-details-page .bottom-grid .symptoms-card,
+  .body-system-details-page .bottom-grid .footer-voice-row {
+    grid-column: 1 / -1 !important;
+    grid-row: auto !important;
+  }
+
+  .body-system-details-page .disease-item {
+    min-height: 64px !important;
+    padding: 11px 12px !important;
+  }
+
+  .body-system-details-page .disease-left {
+    gap: 11px !important;
+  }
+
+  .body-system-details-page .disease-icon {
+    font-size: 31px !important;
+  }
+
+  .body-system-details-page .disease-content h4 {
+    margin-bottom: 4px !important;
+    font-size: 13px !important;
+    line-height: 1.15 !important;
+  }
+
+  .body-system-details-page .related-item {
+    min-height: 44px !important;
+    padding: 0 12px !important;
+    font-size: 12px !important;
+  }
+
+  .body-system-details-page .heart-footer {
+    display: none !important;
+  }
+
+  .body-system-details-page .voice-fab {
+    position: fixed !important;
+    right: 22px !important;
+    bottom: calc(var(--mobile-bottom-nav-height, 58px) + 18px) !important;
+    width: 54px !important;
+    height: 54px !important;
+    z-index: 12420 !important;
+  }
+
+  .body-system-details-page .voice-fab-svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+@media (max-width: 760px) {
   .stress-page,
   .stress-page.sidebar-expanded {
     background: #f6fafb !important;
