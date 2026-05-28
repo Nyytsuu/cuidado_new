@@ -36,6 +36,7 @@ import AdminConditionalManagement  from "./admin/AdminConditionManagement";
 import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
 import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
 //clinic
+import ClinicSignup from "./Clinic/ClinicSignup";
 import ClinicProtectedRoute from "./routes/ClinicProtectedRoute";
 import ClinicDashboard from "./Clinic/ClinicDashboard";
 import ClinicAppoint from "./Clinic/ClinicAppoint";
@@ -52,6 +53,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/clinic/signup" element={<ClinicSignup/>} />
         <Route path="/landingpage" element={<LandingPage/>} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/categories" element={<Categories />} />
