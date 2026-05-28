@@ -2968,6 +2968,15 @@ button {
     grid-row: auto !important;
   }
 
+  .body-system-details-page .disease-list {
+    max-height: calc(88px * 5) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 6px !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: #c9dcda transparent !important;
+  }
+
   .body-system-details-page .disease-item {
     min-height: 64px !important;
     padding: 11px 12px !important;

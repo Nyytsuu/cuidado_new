@@ -423,9 +423,7 @@ export default function BodySystemDetails() {
                         )}
                       </div>
                     </div>
-                  </section>
 
-                  <section className="bottom-grid">
                     <div className="diseases-card">
                       <h2>Common {bodySystem?.name || "Health"} Conditions</h2>
 
@@ -466,7 +464,9 @@ export default function BodySystemDetails() {
                         )}
                       </div>
                     </div>
+                  </section>
 
+                  <section className="bottom-grid">
                     <div className="symptoms-card">
                       <h3>Symptoms</h3>
                       <ul>
