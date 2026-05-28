@@ -671,7 +671,9 @@ body {
 .body-system-details-page .overview-grid {
   grid-template-areas:
     "overview visual related"
-    "diseases diseases related";
+    "diseases diseases ."
+    "symptoms prevention ."
+    "footer footer footer";
 }
 
 .body-system-details-page .overview-card {
@@ -685,11 +687,24 @@ body {
 
 .body-system-details-page .related-card {
   grid-area: related;
-  align-self: stretch;
+  align-self: start;
+  height: fit-content;
 }
 
 .body-system-details-page .overview-grid > .diseases-card {
   grid-area: diseases;
+}
+
+.body-system-details-page .overview-grid > .symptoms-card {
+  grid-area: symptoms;
+}
+
+.body-system-details-page .overview-grid > .prevention-card {
+  grid-area: prevention;
+}
+
+.body-system-details-page .overview-grid > .footer-voice-row {
+  grid-area: footer;
 }
 
 .body-system-details-page .bottom-grid {
@@ -1259,7 +1274,10 @@ body {
       "overview"
       "visual"
       "related"
-      "diseases";
+      "diseases"
+      "symptoms"
+      "prevention"
+      "footer";
   }
 
   .body-system-details-page .bottom-grid {

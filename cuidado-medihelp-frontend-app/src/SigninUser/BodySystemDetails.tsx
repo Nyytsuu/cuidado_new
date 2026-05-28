@@ -442,9 +442,7 @@ export default function BodySystemDetails() {
                         )}
                       </div>
                     </div>
-                  </section>
 
-                  <section className="bottom-grid">
                     <div className="symptoms-card">
                       <h3>Symptoms</h3>
                       <ul>
