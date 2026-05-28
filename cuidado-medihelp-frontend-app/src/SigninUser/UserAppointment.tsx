@@ -647,6 +647,11 @@ function BookingModal({
     <div className="booking-modal-overlay front">
       <div className="booking-modal">
         <div className="booking-modal-header">
+          <div>
+            <h2>Book Appointment</h2>
+            <p>Choose your clinic, service, and schedule.</p>
+          </div>
+
           <button
             type="button"
             className="modal-close-btn"

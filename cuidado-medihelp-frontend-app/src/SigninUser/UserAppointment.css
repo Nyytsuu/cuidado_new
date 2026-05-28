@@ -2121,6 +2121,26 @@
     border-radius: 11px;
     font-size: 13px;
   }
+
+  .appointments-shell .booking-modal-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .appointments-shell .booking-modal-actions .book-btn,
+  .appointments-shell .booking-modal-actions .cancel-btn {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    font-size: 13px !important;
+  }
 }
 
 @media (max-width: 370px) {
