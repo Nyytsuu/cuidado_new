@@ -637,10 +637,10 @@ body {
 /* WIDER COMMON HEART DISEASES BOX */
 .bottom-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(260px, 0.8fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
   grid-template-areas:
-    "diseases symptoms"
-    "diseases prevention"
+    "diseases diseases"
+    "symptoms prevention"
     "support support"
     "footer footer";
   gap: 14px 18px;
@@ -669,11 +669,12 @@ body {
 }
 
 .body-system-details-page .overview-grid {
+  grid-template-columns: minmax(0, 1.6fr) 260px;
   grid-template-areas:
-    "overview visual related"
-    "diseases diseases ."
-    "symptoms prevention ."
-    "footer footer footer";
+    "overview visual"
+    "diseases related"
+    "symptoms prevention"
+    "footer  footer";
 }
 
 .body-system-details-page .overview-card {
@@ -682,13 +683,15 @@ body {
 
 .body-system-details-page .heart-visual-card {
   grid-area: visual;
+  align-self: stretch;
   height: 100%;
+  min-height: 160px;
 }
 
 .body-system-details-page .related-card {
   grid-area: related;
-  align-self: start;
-  height: fit-content;
+  align-self: stretch;
+  height: 100%;
 }
 
 .body-system-details-page .overview-grid > .diseases-card {
@@ -1263,13 +1266,14 @@ body {
     grid-template-columns: 1fr;
     grid-template-areas:
       "diseases"
-      "support"
       "symptoms"
       "prevention"
+      "support"
       "footer";
   }
 
   .body-system-details-page .overview-grid {
+    grid-template-columns: 1fr;
     grid-template-areas:
       "overview"
       "visual"
@@ -1294,6 +1298,13 @@ body {
   .bottom-grid .footer-voice-row {
     grid-column: 1;
     grid-row: auto;
+  }
+
+  /* reset stretch heights in single-column mode */
+  .body-system-details-page .related-card,
+  .body-system-details-page .heart-visual-card {
+    align-self: start;
+    height: auto;
   }
 
   .related-card,

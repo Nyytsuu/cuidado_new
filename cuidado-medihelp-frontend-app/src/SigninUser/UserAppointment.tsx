@@ -398,25 +398,25 @@ function AppointmentViewModal({
       <div className="appt-view-modal" onClick={(e) => e.stopPropagation()}>
         {/* ── Header ── */}
         <div className="appt-view-header">
-          <div className="appt-view-header-info">
+          <div className="appt-view-header-top">
             <p className="appt-view-eyebrow">Appointment Details</p>
-            <h2 id="appointment-view-title">
-              {appointment.clinic_name_snapshot ||
-                appointment.clinic_name ||
-                "Clinic"}
-            </h2>
-            <span className={`appt-view-status-pill ${appointment.status}`}>
-              {formatStatus(appointment.status)}
-            </span>
+            <button
+              type="button"
+              className="appt-view-close"
+              onClick={onClose}
+              aria-label="Close appointment details"
+            >
+              <X size={18} />
+            </button>
           </div>
-          <button
-            type="button"
-            className="appt-view-close"
-            onClick={onClose}
-            aria-label="Close appointment details"
-          >
-            <X size={18} />
-          </button>
+          <h2 id="appointment-view-title">
+            {appointment.clinic_name_snapshot ||
+              appointment.clinic_name ||
+              "Clinic"}
+          </h2>
+          <span className={`appt-view-status-pill ${appointment.status}`}>
+            {formatStatus(appointment.status)}
+          </span>
         </div>
 
         {/* ── Scrollable body ── */}
@@ -1947,12 +1947,10 @@ function UserAppointmentsContent({
                             dayAppointments[0].specialization ||
                             "Consultation"}
                         </p>
-                        <span className={`status ${dayAppointments[0].status || ""}`}>
-                          {formatStatus(dayAppointments[0].status)}
-                        </span>
-
-                        <div className="today-location-row">
-                          <span>{dayAppointments[0].address || "Clinic address unavailable"}</span>
+                        <div className="today-card-footer">
+                          <span className={`status ${dayAppointments[0].status || ""}`}>
+                            {formatStatus(dayAppointments[0].status)}
+                          </span>
                           <button
                             type="button"
                             className="today-view-btn"

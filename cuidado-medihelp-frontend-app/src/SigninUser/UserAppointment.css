@@ -365,6 +365,14 @@
   white-space: nowrap;
 }
 
+.user-layout .today-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .user-layout .empty-state-text {
   margin: 0;
   color: #6b7280;
@@ -2395,24 +2403,30 @@
 
 .appt-view-modal {
   background: #ffffff;
-  border-radius: 18px;
+  border-radius: 22px;
   width: min(520px, 100%);
   max-height: calc(100vh - 36px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 32px 80px rgba(15, 23, 42, 0.26);
   overflow: hidden;
 }
 
 /* Header */
 .appt-view-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 20px 20px 16px;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px 16px;
   border-bottom: 1px solid #edf2f7;
   flex-shrink: 0;
+}
+
+.appt-view-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .appt-view-header-info {
@@ -2428,22 +2442,24 @@
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.appt-view-header-info h2 {
+.appt-view-header > h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
   color: #102b44;
-  line-height: 1.25;
-  white-space: nowrap;
+  line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .appt-view-status-pill {
-  display: inline-block;
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
@@ -2460,10 +2476,10 @@
 
 .appt-view-close {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border: none;
-  border-radius: 8px;
+  border-radius: 50%;
   background: #f1f5f9;
   color: #475569;
   display: flex;
