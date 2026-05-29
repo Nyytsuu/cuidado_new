@@ -847,13 +847,13 @@ const bmiCheckupAdvice = useMemo(() => {
                     <span className="label-text">Age</span>
                   </div>
 
-                  <div className="bmi-input-row split">
-                    <div className="split-left">
+                  <label className="bmi-input-row split">
+                    <span className="split-left">
                       <span className="input-icon">🫀</span>
                       <span className="label-text">
                         {unit === "Metric" ? "Weight (kg)" : "Weight (lb)"}
                       </span>
-                    </div>
+                    </span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -861,19 +861,20 @@ const bmiCheckupAdvice = useMemo(() => {
                       value={weight}
                       onChange={(e) => setWeight(sanitizeDecimal(e.target.value))}
                       placeholder="0"
+                      aria-label={unit === "Metric" ? "Weight in kilograms" : "Weight in pounds"}
                     />
                     <span className="unit-text">
                       {unit === "Metric" ? "kg" : "lb"}
                     </span>
-                  </div>
+                  </label>
 
-                  <div className="bmi-input-row split">
-                    <div className="split-left">
+                  <label className="bmi-input-row split">
+                    <span className="split-left">
                       <span className="input-icon">🧍</span>
                       <span className="label-text">
                         {unit === "Metric" ? "Height (cm)" : "Height (in)"}
                       </span>
-                    </div>
+                    </span>
                     <input
                       type="text"
                       inputMode="decimal"
@@ -881,11 +882,12 @@ const bmiCheckupAdvice = useMemo(() => {
                       value={height}
                       onChange={(e) => setHeight(sanitizeDecimal(e.target.value))}
                       placeholder="0"
+                      aria-label={unit === "Metric" ? "Height in centimeters" : "Height in inches"}
                     />
                     <span className="unit-text">
                       {unit === "Metric" ? "cm" : "in"}
                     </span>
-                  </div>
+                  </label>
                 </div>
 
                 <button type="button" className="bmi-primary-btn" onClick={() => setShowBmiPopup(true)}>

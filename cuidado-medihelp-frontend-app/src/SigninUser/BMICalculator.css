@@ -1407,3 +1407,56 @@ body {
   color: #ef4444;
 }
 
+.bmi-input-row.split {
+  min-height: 54px;
+  height: 54px;
+  display: grid;
+  grid-template-columns: minmax(150px, max-content) minmax(120px, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+  cursor: text;
+}
+
+.bmi-input-row.split .split-left {
+  min-width: 0;
+}
+
+.bmi-input-row.split input {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  height: 100%;
+  padding: 0 8px;
+  text-align: right;
+  cursor: text;
+}
+
+.bmi-input-row.split .unit-text {
+  min-width: 34px;
+}
+
+@media (max-width: 760px) {
+  .bmi-input-row.split {
+    min-height: 52px !important;
+    height: 52px !important;
+    grid-template-columns: minmax(138px, max-content) minmax(92px, 1fr) max-content !important;
+    gap: 10px !important;
+    padding: 0 12px !important;
+  }
+
+  .bmi-input-row.split input {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    padding: 0 8px !important;
+    text-align: right !important;
+    font-size: 15px !important;
+  }
+
+  .bmi-input-row.split .label-text,
+  .bmi-input-row.split .unit-text {
+    font-size: 13px !important;
+  }
+}
+

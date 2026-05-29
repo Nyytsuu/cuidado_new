@@ -46,8 +46,11 @@ type ArticleItem = {
   slug?: string | null;
   searchQuery?: string | null;
   subtitle?: string | null;
+  content?: string | null;
+  image?: string | null;
   url?: string | null;
   source?: string | null;
+  publishedAt?: string | null;
 };
 
 type HealthFact = {
@@ -60,6 +63,8 @@ type SymptomItem = {
   symptom_id: number;
   symptom_name: string;
   description?: string | null;
+  category?: string | null;
+  is_red_flag?: number | boolean | null;
 };
 
 const quickActions = [
@@ -88,7 +93,10 @@ const createBodySystemArticleFallbacks = (topic?: string | null): ArticleItem[] 
     id: `fallback-body-article-${toRelatedArticleSlug(title)}-${index + 1}`,
     title,
     slug: toRelatedArticleSlug(title),
-    searchQuery: title,
+    searchQuery: cleanTopic,
+    subtitle: `A quick guide for ${cleanTopic.toLowerCase()} care and awareness.`,
+    content:
+      `This related guide helps patients review ${cleanTopic.toLowerCase()} basics, symptoms, care options, and when to ask a healthcare professional for help.`,
     source: "Cuidado MediHelp",
   }));
 };
@@ -108,6 +116,7 @@ export default function BodySystemDetails() {
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [symptoms, setSymptoms] = useState<SymptomItem[]>([]);
   const [healthFacts, setHealthFacts] = useState<HealthFact[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -201,6 +210,20 @@ export default function BodySystemDetails() {
     );
   }, [conditions, search]);
 
+  const displayedSymptoms = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const filtered = !query
+      ? symptoms
+      : symptoms.filter(
+          (item) =>
+            item.symptom_name.toLowerCase().includes(query) ||
+            (item.description || "").toLowerCase().includes(query) ||
+            (item.category || "").toLowerCase().includes(query)
+        );
+
+    return filtered.slice(0, 5);
+  }, [search, symptoms]);
+
   const relatedArticles = useMemo(
     () =>
       articles.length > 0
@@ -237,13 +260,7 @@ export default function BodySystemDetails() {
   };
 
   const handleArticleClick = (article: ArticleItem) => {
-    if (article.url) {
-      window.open(article.url, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    const articleQuery = article.searchQuery || article.title || article.slug || "health";
-    navigate(`/browse-health?search=${encodeURIComponent(articleQuery)}`);
+    setSelectedArticle(article);
   };
 
   return (
@@ -382,20 +399,42 @@ export default function BodySystemDetails() {
                     </div>
 
                     <div className="related-card">
-                      <h3>Related Articles</h3>
+                      <div className="related-card-header">
+                        <h3>Related Articles</h3>
+                        {relatedArticles.length > 0 && (
+                          <span className="related-count-pill">
+                            {relatedArticles.length}
+                          </span>
+                        )}
+                      </div>
                       <div className="related-list">
                         {relatedArticles.length > 0 ? (
-                          relatedArticles.map((item) => (
+                          relatedArticles.map((item, idx) => {
+                            const icons = ["\uD83D\uDCCB", "\uD83D\uDD2C", "\u2764\uFE0F", "\uD83D\uDC8A", "\uD83D\uDCA1", "\uD83C\uDFE5"];
+                            return (
                             <button
                               key={item.id}
                               type="button"
                               className="related-item"
                               onClick={() => handleArticleClick(item)}
                             >
-                              <span>{item.title}</span>
+                              <span className="related-item-icon">
+                                {icons[idx % icons.length]}
+                              </span>
+                              <span className="related-item-body">
+                                <span className="related-item-title">
+                                  {item.title}
+                                </span>
+                                {item.source && (
+                                  <span className="related-item-source">
+                                    {item.source}
+                                  </span>
+                                )}
+                              </span>
                               <span>›</span>
                             </button>
-                          ))
+                            );
+                          })
                         ) : (
                           <p>No related articles found.</p>
                         )}
@@ -421,8 +460,10 @@ export default function BodySystemDetails() {
                                 <div className="disease-content">
                                   <h4>{item.condition_name}</h4>
                                   <p>
-                                    {item.description ||
-                                      "No description available for this condition."}
+                                    {(() => {
+                                      const text = item.description || "No description available.";
+                                      return text.length > 50 ? text.slice(0, 50).trimEnd() + "…" : text;
+                                    })()}
                                   </p>
                                 </div>
                               </div>
@@ -444,17 +485,23 @@ export default function BodySystemDetails() {
                     </div>
 
                     <div className="symptoms-card">
-                      <h3>Symptoms</h3>
+                      <h3>Common Symptoms</h3>
                       <ul>
-                        {symptoms.length > 0 ? (
-                          symptoms.map((item) => (
+                        {displayedSymptoms.length > 0 ? (
+                          displayedSymptoms.map((item) => (
                             <li key={item.symptom_id}>
                               <strong>{item.symptom_name}</strong>
-                              {item.description && <span>{item.description}</span>}
+                              <span>
+                                {item.description ||
+                                  `${bodySystem?.name || "Health"} symptom to watch.`}
+                              </span>
                             </li>
                           ))
                         ) : (
-                          <li>No symptoms found.</li>
+                          <li>
+                            <strong>No symptoms found</strong>
+                            <span>Try a different search or body system.</span>
+                          </li>
                         )}
                       </ul>
 
@@ -521,6 +568,69 @@ export default function BodySystemDetails() {
           </div>
         </main>
       </div>
+
+      {selectedArticle && (
+        <div
+          className="related-article-modal-overlay"
+          onClick={() => setSelectedArticle(null)}
+        >
+          <article
+            className="related-article-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="related-article-modal-close"
+              onClick={() => setSelectedArticle(null)}
+              aria-label="Close related article"
+            >
+              x
+            </button>
+
+            <div className="related-article-modal-head">
+              <span>{selectedArticle.source || "Cuidado MediHelp"}</span>
+              <h2>{selectedArticle.title}</h2>
+              {selectedArticle.subtitle && <p>{selectedArticle.subtitle}</p>}
+            </div>
+
+            <div className="related-article-modal-body">
+              <h3>Summary</h3>
+              <p>
+                {selectedArticle.content ||
+                  `Review ${selectedArticle.title.toLowerCase()} and use it as a starting point for discussing symptoms, care options, or next steps with a healthcare professional.`}
+              </p>
+
+              {selectedArticle.url ? (
+                <a
+                  href={selectedArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="related-article-link"
+                >
+                  Read full article
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  className="related-article-link"
+                  onClick={() => {
+                    const query =
+                      selectedArticle.source === "Cuidado MediHelp"
+                        ? bodySystem?.name || selectedSlug
+                        : selectedArticle.searchQuery ||
+                          selectedArticle.title ||
+                          selectedArticle.slug ||
+                          "health";
+                    navigate(`/browse-health?search=${encodeURIComponent(query)}`);
+                  }}
+                >
+                  Search related topics
+                </button>
+              )}
+            </div>
+          </article>
+        </div>
+      )}
     </div>
   );
 }

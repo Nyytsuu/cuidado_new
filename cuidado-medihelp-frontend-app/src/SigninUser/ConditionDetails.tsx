@@ -37,8 +37,11 @@ type ArticleItem = {
   slug?: string | null;
   searchQuery?: string | null;
   subtitle?: string | null;
+  content?: string | null;
+  image?: string | null;
   url?: string | null;
   source?: string | null;
+  publishedAt?: string | null;
 };
 
 type HealthFact = {
@@ -50,6 +53,7 @@ type HealthFact = {
 type SymptomItem = {
   symptom_id: number;
   symptom_name: string;
+  description?: string | null;
   category?: string | null;
   is_red_flag?: number | boolean | null;
 };
@@ -80,7 +84,10 @@ const createConditionArticleFallbacks = (topic?: string | null): ArticleItem[] =
     id: `fallback-condition-article-${toRelatedArticleSlug(title)}-${index + 1}`,
     title,
     slug: toRelatedArticleSlug(title),
-    searchQuery: title,
+    searchQuery: cleanTopic,
+    subtitle: `A quick guide for ${cleanTopic.toLowerCase()} care and awareness.`,
+    content:
+      `This related guide helps patients review ${cleanTopic.toLowerCase()} basics, possible symptoms, care options, and when to ask a healthcare professional for help.`,
     source: "Cuidado MediHelp",
   }));
 };
@@ -117,6 +124,8 @@ export default function ConditionDetails() {
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [symptoms, setSymptoms] = useState<SymptomItem[]>([]);
   const [healthFacts, setHealthFacts] = useState<HealthFact[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleItem | null>(null);
+  const [selectedSymptom, setSelectedSymptom] = useState<SymptomItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -259,13 +268,7 @@ export default function ConditionDetails() {
   };
 
   const handleArticleClick = (article: ArticleItem) => {
-    if (article.url) {
-      window.open(article.url, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    const articleQuery = article.searchQuery || article.title || article.slug || "health";
-    navigate(`/browse-health?search=${encodeURIComponent(articleQuery)}`);
+    setSelectedArticle(article);
   };
 
   const conditionImageUrl = toAssetUrl(condition?.hero_image || condition?.thumbnail_image);
@@ -461,20 +464,42 @@ export default function ConditionDetails() {
                     </div>
 
                     <div className="related-card">
-                      <h3>Related Articles</h3>
+                      <div className="related-card-header">
+                        <h3>Related Articles</h3>
+                        {relatedArticles.length > 0 && (
+                          <span className="related-count-pill">
+                            {relatedArticles.length}
+                          </span>
+                        )}
+                      </div>
                       <div className="related-list">
                         {relatedArticles.length > 0 ? (
-                          relatedArticles.map((item) => (
+                          relatedArticles.map((item, idx) => {
+                            const icons = ["\uD83D\uDCCB", "\uD83D\uDD2C", "\u2764\uFE0F", "\uD83D\uDC8A", "\uD83D\uDCA1", "\uD83C\uDFE5"];
+                            return (
                             <button
                               key={item.id}
                               type="button"
                               className="related-item"
                               onClick={() => handleArticleClick(item)}
                             >
-                              <span>{item.title}</span>
+                              <span className="related-item-icon">
+                                {icons[idx % icons.length]}
+                              </span>
+                              <span className="related-item-body">
+                                <span className="related-item-title">
+                                  {item.title}
+                                </span>
+                                {item.source && (
+                                  <span className="related-item-source">
+                                    {item.source}
+                                  </span>
+                                )}
+                              </span>
                               <span>›</span>
                             </button>
-                          ))
+                            );
+                          })
                         ) : (
                           <div className="empty-state compact">
                             Related reading will appear here when articles are connected.
@@ -491,27 +516,34 @@ export default function ConditionDetails() {
                       <div className="disease-list">
                         {symptomsToShow.length > 0 ? (
                           symptomsToShow.map((item) => (
-                            <div
+                            <button
                               key={item.symptom_id}
+                              type="button"
                               className={`disease-item ${
                                 Number(item.is_red_flag) === 1 ? "red-flag" : ""
                               }`}
-                              style={{ cursor: "default" }}
+                              onClick={() => setSelectedSymptom(item)}
                             >
                               <div className="disease-left">
                                 <div className="disease-icon">🩺</div>
                                 <div className="disease-content">
                                   <h4>{item.symptom_name}</h4>
                                   <p>
-                                    {Number(item.is_red_flag) === 1
-                                      ? "Red flag symptom. Consider prompt medical attention."
-                                      : item.category
-                                        ? `${toTitle(item.category)} symptom associated with this condition.`
-                                        : "Common symptom associated with this condition."}
+                                    {(() => {
+                                      const text = item.description
+                                        ? item.description
+                                        : Number(item.is_red_flag) === 1
+                                        ? "Red flag symptom. Consider prompt medical attention."
+                                        : item.category
+                                          ? `${toTitle(item.category)} symptom associated with this condition.`
+                                          : "Common symptom associated with this condition.";
+                                      return text.length > 50 ? text.slice(0, 50).trimEnd() + "…" : text;
+                                    })()}
                                   </p>
                                 </div>
                               </div>
-                            </div>
+                              <span className="menu-arrow disease-arrow">Open</span>
+                            </button>
                           ))
                         ) : (
                           <div className="empty-state">
@@ -665,6 +697,137 @@ export default function ConditionDetails() {
       </div>
 
       {/* ── Support-card popup overlay ── */}
+      {selectedSymptom && (
+        <div
+          className="related-article-modal-overlay"
+          onClick={() => setSelectedSymptom(null)}
+        >
+          <article
+            className="symptom-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="symptom-modal-title"
+          >
+            <button
+              type="button"
+              className="related-article-modal-close"
+              onClick={() => setSelectedSymptom(null)}
+              aria-label="Close symptom details"
+            >
+              x
+            </button>
+
+            <div className="symptom-modal-head">
+              <div className="symptom-modal-icon">
+                {Number(selectedSymptom.is_red_flag) === 1 ? "!" : "+"}
+              </div>
+              <div className="symptom-modal-meta">
+                {selectedSymptom.category && (
+                  <span className="symptom-modal-category">
+                    {toTitle(selectedSymptom.category)}
+                  </span>
+                )}
+                {Number(selectedSymptom.is_red_flag) === 1 && (
+                  <span className="symptom-modal-redflag">Red Flag</span>
+                )}
+              </div>
+              <h2 id="symptom-modal-title">{selectedSymptom.symptom_name}</h2>
+            </div>
+
+            <div className="symptom-modal-body">
+              {Number(selectedSymptom.is_red_flag) === 1 && (
+                <div className="symptom-modal-warning">
+                  <span>!</span>
+                  <p>
+                    This is a red flag symptom. If you or someone you know is
+                    experiencing this, seek prompt medical attention.
+                  </p>
+                </div>
+              )}
+
+              <h3>About this symptom</h3>
+              <p>
+                {selectedSymptom.description ||
+                  (Number(selectedSymptom.is_red_flag) === 1
+                    ? "This symptom may indicate a serious underlying condition. Prompt medical evaluation is recommended."
+                    : selectedSymptom.category
+                      ? `This is a ${toTitle(selectedSymptom.category).toLowerCase()} symptom commonly associated with ${condition?.condition_name || "this condition"}.`
+                      : `This symptom is associated with ${condition?.condition_name || "this condition"}. Monitor its progression and consult a healthcare professional if it worsens.`)}
+              </p>
+
+              <div className="symptom-modal-condition-tag">
+                <span>Linked condition</span>
+                <strong>{condition?.condition_name || "This condition"}</strong>
+              </div>
+            </div>
+          </article>
+        </div>
+      )}
+
+      {selectedArticle && (
+        <div
+          className="related-article-modal-overlay"
+          onClick={() => setSelectedArticle(null)}
+        >
+          <article
+            className="related-article-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="related-article-modal-close"
+              onClick={() => setSelectedArticle(null)}
+              aria-label="Close related article"
+            >
+              x
+            </button>
+
+            <div className="related-article-modal-head">
+              <span>{selectedArticle.source || "Cuidado MediHelp"}</span>
+              <h2>{selectedArticle.title}</h2>
+              {selectedArticle.subtitle && <p>{selectedArticle.subtitle}</p>}
+            </div>
+
+            <div className="related-article-modal-body">
+              <h3>Summary</h3>
+              <p>
+                {selectedArticle.content ||
+                  `Review ${selectedArticle.title.toLowerCase()} and use it as a starting point for discussing symptoms, care options, or next steps with a healthcare professional.`}
+              </p>
+
+              {selectedArticle.url ? (
+                <a
+                  href={selectedArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="related-article-link"
+                >
+                  Read full article
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  className="related-article-link"
+                  onClick={() => {
+                    const query =
+                      selectedArticle.source === "Cuidado MediHelp"
+                        ? condition?.condition_name || bodySystemName
+                        : selectedArticle.searchQuery ||
+                          selectedArticle.title ||
+                          selectedArticle.slug ||
+                          "health";
+                    navigate(`/browse-health?search=${encodeURIComponent(query)}`);
+                  }}
+                >
+                  Search related topics
+                </button>
+              )}
+            </div>
+          </article>
+        </div>
+      )}
+
       {supportPopup !== null && condition && (
         <div
           className="support-popup-backdrop"
