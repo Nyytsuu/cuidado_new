@@ -13,6 +13,7 @@ import { useLocation } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import "./Notification.css";
 import { notifyNotificationsChanged } from "../useUnreadNotifications";
+import { showUnreadPhoneNotifications } from "./phoneNotifications";
 
 type FilterName = "All" | "Unread" | "Appointments" | "System" | "Promotions";
 
@@ -24,6 +25,7 @@ type NotificationItem = {
   category: string;
   unread: boolean;
   created_at: string;
+  appointment_id?: number | null;
 };
 
 type RawNotification = {
@@ -35,6 +37,7 @@ type RawNotification = {
   is_read?: number;
   unread?: boolean;
   created_at?: string;
+  appointment_id?: number | null;
 };
 
 const API_BASE = "http://localhost:5000";
@@ -69,6 +72,7 @@ const toNotification = (item: RawNotification): NotificationItem => ({
   category: item.category,
   unread: item.unread ?? Number(item.is_read) === 0,
   created_at: item.created_at || new Date().toISOString(),
+  appointment_id: item.appointment_id || null,
 });
 
 const formatRelativeTime = (value: string) => {
@@ -167,7 +171,9 @@ export default function Notifications() {
           throw new Error(!Array.isArray(data) ? data.message : "Failed to load notifications.");
         }
 
-        setNotifications(Array.isArray(data) ? data.map(toNotification) : []);
+        const parsedNotifications = Array.isArray(data) ? data.map(toNotification) : [];
+        setNotifications(parsedNotifications);
+        void showUnreadPhoneNotifications(userId, parsedNotifications);
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to load notifications.");

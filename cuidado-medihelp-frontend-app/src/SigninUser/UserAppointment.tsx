@@ -7,6 +7,10 @@ import UserSidebar from "../Categories/UserSidebar";
 import VoiceAssistantPopup from "./VoiceAssistantPopup";
 import { apiUrl } from "../sharedBackendFetch";
 import { useUnreadNotifications } from "../useUnreadNotifications";
+import {
+  scheduleAppointmentPhoneReminders,
+  showUnreadPhoneNotifications,
+} from "./phoneNotifications";
 import logo from "../img/logo.png";
 import {
   Filter,
@@ -1205,13 +1209,22 @@ function UserAppointmentsContent({
       }
 
       const data: Appointment[] = await res.json();
-      setAppointments(Array.isArray(data) ? data : []);
+      const appointmentList = Array.isArray(data) ? data : [];
+      setAppointments(appointmentList);
+      void scheduleAppointmentPhoneReminders(userId, appointmentList);
 
-      void fetch(apiUrl(`/api/users/${userId}/notifications`)).catch(
-        (notificationError) => {
+      void fetch(apiUrl(`/api/users/${userId}/notifications`))
+        .then((notificationRes) =>
+          notificationRes.ok ? notificationRes.json() : []
+        )
+        .then((notificationData) => {
+          if (Array.isArray(notificationData)) {
+            void showUnreadPhoneNotifications(userId, notificationData);
+          }
+        })
+        .catch((notificationError) => {
           console.warn("Failed to sync appointment reminders:", notificationError);
-        }
-      );
+        });
     } catch (err) {
       console.error("Failed to load appointments:", err);
       if (!silent) {

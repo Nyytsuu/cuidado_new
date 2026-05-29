@@ -1,4 +1,5 @@
-import { MemoryRouter as BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { MemoryRouter as BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./App.css";
 import ConditionDetails from "./SigninUser/ConditionDetails";
 import Signup from "./SignupUser/Signup";
@@ -22,10 +23,20 @@ import UserVoiceAssistant from "./SigninUser/UserVoiceAssistant";
 import UserEmergency from "./SigninUser/UserEmergency";
 import UserHelp from "./SigninUser/UserHelp";
 import SplashScreen from "./SigninUser/SplashScreen"
+import { registerPhoneNotificationNavigation } from "./SigninUser/phoneNotifications";
+
+function PhoneNotificationBridge() {
+  const navigate = useNavigate();
+
+  useEffect(() => registerPhoneNotificationNavigation(navigate), [navigate]);
+
+  return null;
+}
 
 function App() {
   return (
     <BrowserRouter>
+      <PhoneNotificationBridge />
       <Routes>
         <Route path="/" element={<SplashScreen />} />
         <Route path="/signin" element={<Signin />} />
