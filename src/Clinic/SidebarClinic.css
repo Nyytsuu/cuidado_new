@@ -161,6 +161,13 @@
   flex: 0 0 auto;
 }
 
+.SidebarClinic .sidebar-item svg {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: var(--sidebar-text);
+}
+
 /* push logout to bottom */
 .SidebarClinic .sidebar-item.logout {
   margin-top: auto;
@@ -268,7 +275,8 @@
 .services.sidebar-expanded .SidebarClinic .app-header,
 .Schedule.sidebar-expanded .SidebarClinic .app-header,
 .ClinicProfile.sidebar-expanded .SidebarClinic .app-header,
-.clinic-settings-page.sidebar-expanded .SidebarClinic .app-header {
+.clinic-settings-page.sidebar-expanded .SidebarClinic .app-header,
+.clinic-reviews-page.sidebar-expanded .SidebarClinic .app-header {
   left: var(--sidebar-width-expanded) !important;
 }
 

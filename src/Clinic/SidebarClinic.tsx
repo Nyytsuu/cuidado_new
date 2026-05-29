@@ -7,7 +7,7 @@ import {
 } from "react";
 import "./SidebarClinic.css";
 import { Link, useNavigate } from "react-router-dom";
-import { Bell } from "lucide-react";
+import { Bell, MessageSquareText } from "lucide-react";
 import { clearStoredAuth } from "../authSession";
 import { apiUrl } from "../sharedBackendFetch";
 
@@ -268,7 +268,12 @@ export default function SidebarClinic({
             </Link>
           </div>
 
-          
+          <div className="sidebar-item">
+            <Link to="/clinic/reviews">
+              <MessageSquareText aria-hidden="true" size={28} strokeWidth={2.2} />
+              <span>Reviews</span>
+            </Link>
+          </div>
 
           {/* LOGOUT SIDEBAR */}
           <div className="sidebar-item logout">

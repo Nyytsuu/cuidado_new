@@ -44,6 +44,7 @@ import Services from "./Clinic/services";
 import ClinicProfile from "./Clinic/ClinicProfile";
 import ClinicSettings from "./Clinic/ClinicSettings";
 import Schedule from "./Clinic/Schedule";
+import ClinicReviews from "./Clinic/ClinicReviews";
 function App() {
   return (
     <BrowserRouter>
@@ -85,6 +86,7 @@ function App() {
 <Route path="/clinic/profile" element={<ClinicProfile />} />
 <Route path="/clinic/settings" element={<ClinicSettings />} />
 <Route path="/clinic/schedule" element={<Schedule />} />
+<Route path="/clinic/reviews" element={<ClinicReviews />} />
 </Route>
 
         {/* admin */}

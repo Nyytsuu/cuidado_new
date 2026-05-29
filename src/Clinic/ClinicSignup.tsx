@@ -1,5 +1,5 @@
 
-import Logotag from "../components/Logotag";
+import "../SignupUser/Signup.css";
 import "./ClinicSignup.css";
 import zxcvbn from "zxcvbn";
 import { useEffect, useState, useMemo } from "react";
@@ -461,12 +461,9 @@ export default function ClinicSignup() {
   };
 
 return (
-    <div className="clinic-signup-page">
-      <div className="bgimg">
-        <Logotag />
-
-        <div className="wrapper">
-          <div className="left-bg"></div>
+    <div className="bgimg">
+      <div className="wrapper">
+        <div className="left-bg"></div>
 
           <div className="signup-container">
             {/* ---------- STEP 1 ---------- */}
@@ -951,7 +948,6 @@ return (
             )}
           </div>
         </div>
-      </div>
 
       {otpOpen && (
         <div className="fp-modal-overlay" onClick={closeOtpModal}>
