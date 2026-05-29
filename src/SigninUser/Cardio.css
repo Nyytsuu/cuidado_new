@@ -1828,3 +1828,165 @@ body {
       "footer";
   }
 }
+
+/* ────────────────────────────────────────────────────────────────
+   Symptom Detail Modal
+   Reuses .related-article-modal-overlay for the backdrop.
+   ──────────────────────────────────────────────────────────────── */
+.symptom-modal {
+  position: relative;
+  width: min(540px, 100%);
+  max-height: min(82vh, 640px);
+  background: #fff;
+  border-radius: 22px;
+  overflow-y: auto;
+  box-shadow: 0 26px 70px rgba(21, 48, 54, 0.28);
+  scrollbar-width: thin;
+  scrollbar-color: #b7d5d2 transparent;
+}
+
+.symptom-modal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.symptom-modal::-webkit-scrollbar-thumb {
+  background: #b7d5d2;
+  border-radius: 999px;
+}
+
+/* ── Modal header ── */
+.symptom-modal-head {
+  padding: 32px 30px 24px;
+  background:
+    radial-gradient(circle at top right, rgba(92, 210, 202, 0.22), transparent 40%),
+    linear-gradient(160deg, #f0faf9 0%, #fff 80%);
+  border-bottom: 1px solid #deebe9;
+}
+
+.symptom-modal-icon {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.symptom-modal-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.symptom-modal-category {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  background: rgba(92, 210, 202, 0.18);
+  border: 1px solid #b0ddd9;
+  border-radius: 999px;
+  color: #2e7d74;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.symptom-modal-redflag {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 999px;
+  color: #c0392b;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.symptom-modal-head h2 {
+  margin: 0;
+  max-width: calc(100% - 40px);
+  color: #1f3038;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* ── Modal body ── */
+.symptom-modal-body {
+  padding: 24px 30px 30px;
+}
+
+.symptom-modal-body h3 {
+  margin: 0 0 10px;
+  color: #253942;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.symptom-modal-body > p {
+  margin: 0 0 24px;
+  color: #42545d;
+  font-size: 15.5px;
+  line-height: 1.7;
+  font-weight: 450;
+}
+
+/* ── Red flag warning banner ── */
+.symptom-modal-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 22px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 12px;
+}
+
+.symptom-modal-warning span {
+  font-size: 20px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.symptom-modal-warning p {
+  margin: 0;
+  color: #a93226;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+/* ── Linked condition tag ── */
+.symptom-modal-condition-tag {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(92, 210, 202, 0.08);
+  border: 1px solid #c8e8e5;
+  border-radius: 12px;
+}
+
+.symptom-modal-condition-tag span {
+  color: #72838b;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.symptom-modal-condition-tag strong {
+  color: #1f3038;
+  font-size: 14px;
+  font-weight: 700;
+}

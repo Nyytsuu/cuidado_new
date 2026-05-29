@@ -124,6 +124,7 @@ export default function ConditionDetails() {
   const [symptoms, setSymptoms] = useState<SymptomItem[]>([]);
   const [healthFacts, setHealthFacts] = useState<HealthFact[]>([]);
   const [selectedArticle, setSelectedArticle] = useState<ArticleItem | null>(null);
+  const [selectedSymptom, setSelectedSymptom] = useState<SymptomItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeSupportIndex, setActiveSupportIndex] = useState<number | null>(null);
@@ -578,15 +579,18 @@ export default function ConditionDetails() {
                       <div className="disease-list">
                         {symptomsToShow.length > 0 ? (
                           symptomsToShow.map((item) => (
-                            <div
+                            <button
                               key={item.symptom_id}
+                              type="button"
                               className={`disease-item ${
                                 Number(item.is_red_flag) === 1 ? "red-flag" : ""
                               }`}
-                              style={{ cursor: "default" }}
+                              onClick={() => setSelectedSymptom(item)}
                             >
                               <div className="disease-left">
-                                <div className="disease-icon">🩺</div>
+                                <div className="disease-icon">
+                                  {Number(item.is_red_flag) === 1 ? "⚠️" : "🩺"}
+                                </div>
                                 <div className="disease-content">
                                   <h4>{item.symptom_name}</h4>
                                   <p>
@@ -600,7 +604,8 @@ export default function ConditionDetails() {
                                   </p>
                                 </div>
                               </div>
-                            </div>
+                              <span className="menu-arrow disease-arrow">›</span>
+                            </button>
                           ))
                         ) : (
                           <div className="empty-state">
@@ -711,6 +716,74 @@ export default function ConditionDetails() {
           </div>
         </main>
       </div>
+
+      {selectedSymptom && (
+        <div
+          className="related-article-modal-overlay"
+          onClick={() => setSelectedSymptom(null)}
+        >
+          <article
+            className="symptom-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="symptom-modal-title"
+          >
+            <button
+              type="button"
+              className="related-article-modal-close"
+              onClick={() => setSelectedSymptom(null)}
+              aria-label="Close symptom details"
+            >
+              ×
+            </button>
+
+            <div className="symptom-modal-head">
+              <div className="symptom-modal-icon">
+                {Number(selectedSymptom.is_red_flag) === 1 ? "⚠️" : "🩺"}
+              </div>
+              <div className="symptom-modal-meta">
+                {selectedSymptom.category && (
+                  <span className="symptom-modal-category">
+                    {toTitle(selectedSymptom.category)}
+                  </span>
+                )}
+                {Number(selectedSymptom.is_red_flag) === 1 && (
+                  <span className="symptom-modal-redflag">Red Flag</span>
+                )}
+              </div>
+              <h2 id="symptom-modal-title">{selectedSymptom.symptom_name}</h2>
+            </div>
+
+            <div className="symptom-modal-body">
+              {Number(selectedSymptom.is_red_flag) === 1 && (
+                <div className="symptom-modal-warning">
+                  <span>⚠️</span>
+                  <p>
+                    This is a red flag symptom. If you or someone you know
+                    is experiencing this, seek prompt medical attention.
+                  </p>
+                </div>
+              )}
+
+              <h3>About this symptom</h3>
+              <p>
+                {selectedSymptom.description ||
+                  (Number(selectedSymptom.is_red_flag) === 1
+                    ? "This symptom may indicate a serious underlying condition. Prompt medical evaluation is recommended."
+                    : selectedSymptom.category
+                      ? `This is a ${toTitle(selectedSymptom.category).toLowerCase()} symptom commonly associated with ${condition?.condition_name || "this condition"}.`
+                      : `This symptom is associated with ${condition?.condition_name || "this condition"}. Monitor its progression and consult a healthcare professional if it worsens.`)}
+              </p>
+
+              <div className="symptom-modal-condition-tag">
+                <span>Linked condition</span>
+                <strong>{condition?.condition_name || "This condition"}</strong>
+              </div>
+            </div>
+          </article>
+        </div>
+      )}
 
       {selectedArticle && (
         <div
