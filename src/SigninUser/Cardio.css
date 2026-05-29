@@ -330,6 +330,40 @@ body {
   margin: 0 -20px;
 }
 
+.body-system-details-page .hero-card {
+  min-height: 150px;
+  border: 1px solid #e2e9eb;
+  border-radius: 16px;
+  margin: 0 0 18px;
+  padding: 22px 24px;
+}
+
+.body-system-details-page .hero-left > div:last-child {
+  min-width: 0;
+}
+
+.body-system-details-page .hero-card h1 {
+  margin: 0 0 8px;
+  color: #1f3038;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.05;
+  font-weight: 800;
+}
+
+.body-system-details-page .hero-card p {
+  max-width: 760px;
+  margin: 0;
+  color: #445962;
+  font-size: clamp(14px, 1.4vw, 17px);
+  line-height: 1.45;
+  font-weight: 700;
+}
+
+.body-system-details-page .hero-heart {
+  flex: 0 0 auto;
+  font-size: clamp(62px, 7vw, 96px);
+}
+
 .hero-left {
   display: flex;
   align-items: center;
@@ -742,18 +776,22 @@ body {
 }
 
 .body-system-details-page .overview-grid {
-  grid-template-columns: minmax(0, 1.6fr) 260px;
+  width: 100%;
+  grid-template-columns: minmax(0, 1.14fr) minmax(300px, 0.86fr);
   grid-template-areas:
-    "overview visual"
-    "related  related"
-    "diseases diseases"
-    "prevention prevention"
-    "footer  footer";
+    "overview related"
+    "visual   related"
+    "diseases symptoms"
+    "diseases prevention"
+    "footer   footer";
+  gap: 18px;
 }
 
 /* Overview: row 1 only — natural height, no spanning, no blank space */
 .body-system-details-page .overview-card {
   grid-area: overview;
+  width: 100%;
+  min-width: 0;
   height: auto;
 }
 
@@ -766,27 +804,60 @@ body {
 .body-system-details-page .heart-visual-card {
   grid-area: visual;
   align-self: stretch;
-  min-height: 160px;
+  min-height: 150px;
   height: auto;
 }
 
 /* Related articles: full-width row 2 — natural height, no blank space */
 .body-system-details-page .related-card {
   grid-area: related;
-  align-self: start;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
   height: auto;
+}
+
+.body-system-details-page .related-list {
+  max-height: 345px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #b7d5d2 transparent;
 }
 
 .body-system-details-page .overview-grid > .diseases-card {
   grid-area: diseases;
+  width: 100%;
+  min-width: 0;
+}
+
+.body-system-details-page .overview-grid > .symptoms-card {
+  grid-area: symptoms;
+  width: 100%;
+  min-width: 0;
 }
 
 .body-system-details-page .overview-grid > .prevention-card {
   grid-area: prevention;
+  width: 100%;
+  min-width: 0;
 }
 
 .body-system-details-page .overview-grid > .footer-voice-row {
   grid-area: footer;
+}
+
+.body-system-details-page .disease-list {
+  max-height: calc((96px * 5) + (12px * 4));
+}
+
+.body-system-details-page .disease-item {
+  min-height: 96px;
+  align-items: center;
+}
+
+.body-system-details-page .disease-content p {
+  -webkit-line-clamp: 2;
 }
 
 .body-system-details-page .bottom-grid {
@@ -1357,6 +1428,7 @@ body {
       "visual"
       "related"
       "diseases"
+      "symptoms"
       "prevention"
       "footer";
   }

@@ -3635,3 +3635,84 @@ button {
     border-radius: 16px !important;
   }
 }
+
+/* Body-system detail pages use their own content grid. Keep these overrides at
+   the end so the generic browse-health responsive rules cannot collapse the
+   cards into a narrow column or hide this route's only layout. */
+@media (min-width: 901px) and (max-width: 1280px) {
+  .browse-health-page.body-system-details-page .health-browser-layout {
+    display: grid !important;
+    grid-template-columns: minmax(240px, 0.32fr) minmax(0, 1fr) !important;
+    align-items: stretch !important;
+  }
+
+  .browse-health-page.body-system-details-page .overview-grid {
+    grid-template-columns: minmax(0, 1.08fr) minmax(290px, 0.92fr) !important;
+    grid-template-areas:
+      "overview related"
+      "visual related"
+      "diseases symptoms"
+      "diseases prevention"
+      "footer footer" !important;
+    width: 100% !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .browse-health-page.body-system-details-page .health-browser-layout {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .browse-health-page.body-system-details-page .overview-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "overview"
+      "visual"
+      "related"
+      "diseases"
+      "symptoms"
+      "prevention"
+      "footer" !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .browse-health-page.body-system-details-page .browse-health-main {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .browse-health-page.body-system-details-page .health-browser-layout {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .browse-health-page.body-system-details-page .left-panel {
+    display: none !important;
+  }
+
+  .browse-health-page.body-system-details-page .main-panel {
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  .browse-health-page.body-system-details-page .overview-grid {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "overview"
+      "visual"
+      "related"
+      "diseases"
+      "symptoms"
+      "prevention"
+      "footer" !important;
+    width: 100% !important;
+  }
+}
