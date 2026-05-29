@@ -1,4 +1,5 @@
 
+import Logotag from "../components/Logotag";
 import "../SignupUser/Signup.css";
 import "./ClinicSignup.css";
 import zxcvbn from "zxcvbn";
@@ -462,6 +463,8 @@ export default function ClinicSignup() {
 
 return (
     <div className="bgimg">
+      <Logotag />
+
       <div className="wrapper">
         <div className="left-bg"></div>
 
