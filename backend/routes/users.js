@@ -58,19 +58,34 @@ const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
 const SUPABASE_BUCKET = "profile-pictures";
 const USE_SUPABASE_STORAGE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_KEY);
 
-const MAIL_USER = process.env.MAIL_USER || process.env.EMAIL_USER;
+const cleanEnv = (value) => String(value || "").trim();
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const parseEmailList = (value) =>
+  cleanEnv(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const MAIL_USER = cleanEnv(process.env.MAIL_USER || process.env.EMAIL_USER);
 const MAIL_PASS = String(process.env.MAIL_PASS || process.env.EMAIL_PASS || "").replace(/\s+/g, "");
-const MAIL_FROM = process.env.MAIL_FROM || MAIL_USER;
-const MAIL_HOST = process.env.MAIL_HOST || process.env.EMAIL_HOST;
+const configuredMailFrom = cleanEnv(process.env.MAIL_FROM);
+const MAIL_FROM =
+  configuredMailFrom && (configuredMailFrom.includes("<") || EMAIL_RE.test(configuredMailFrom))
+    ? configuredMailFrom
+    : MAIL_USER
+    ? `"Cuidado MediHelp" <${MAIL_USER}>`
+    : "";
+const MAIL_HOST = cleanEnv(process.env.MAIL_HOST || process.env.EMAIL_HOST);
 const MAIL_PORT = Number(process.env.MAIL_PORT || process.env.EMAIL_PORT || 587);
 const MAIL_SECURE =
   String(process.env.MAIL_SECURE || process.env.EMAIL_SECURE || "").toLowerCase() === "true" ||
   MAIL_PORT === 465;
-const SUPPORT_EMAIL =
+const SUPPORT_RECIPIENTS = parseEmailList(
   process.env.SUPPORT_EMAIL ||
   process.env.CONTACT_SUPPORT_EMAIL ||
   process.env.SUPPORT_TO_EMAIL ||
-  MAIL_USER;
+  MAIL_USER
+);
 const reminderMailer =
   MAIL_USER && MAIL_PASS
     ? nodemailer.createTransport(
@@ -93,6 +108,18 @@ const reminderMailer =
             }
       )
     : null;
+
+if (reminderMailer) {
+  reminderMailer.verify((error) => {
+    if (error) {
+      console.error("SUPPORT MAILER ERROR:", error.message || error);
+    } else {
+      console.log("Support mailer ready");
+    }
+  });
+} else {
+  console.warn("Support mailer disabled: MAIL_USER or MAIL_PASS is not configured.");
+}
 
 // Only create the local uploads directory when NOT using Supabase Storage (i.e. local dev).
 if (!USE_SUPABASE_STORAGE) {
@@ -337,23 +364,39 @@ const sendSupportTicketEmails = async ({
   contactEmail,
   contactPhone,
 }) => {
-  if (!reminderMailer || !SUPPORT_EMAIL) {
-    return { supportEmailSent: false, confirmationEmailSent: false };
+  if (!reminderMailer || SUPPORT_RECIPIENTS.length === 0) {
+    const missing = !reminderMailer ? "mailer credentials" : "support recipient";
+    console.error(`SUPPORT EMAIL SKIPPED: missing ${missing}.`);
+    return {
+      supportEmailSent: false,
+      confirmationEmailSent: false,
+      supportEmailError: `Missing ${missing}.`,
+      confirmationEmailError: "",
+    };
   }
 
   const requesterName = user?.full_name || user?.name || "Cuidado user";
-  const requesterEmail = contactEmail || user?.email || "";
+  const submittedEmail = cleanEnv(contactEmail);
+  const accountEmail = cleanEnv(user?.email);
+  const requesterEmail = EMAIL_RE.test(submittedEmail)
+    ? submittedEmail
+    : EMAIL_RE.test(accountEmail)
+    ? accountEmail
+    : submittedEmail || accountEmail;
   const requesterPhone = contactPhone || user?.phone || "";
   const priorityLabel = priority.charAt(0).toUpperCase() + priority.slice(1);
+  const replyToEmail = EMAIL_RE.test(requesterEmail) ? requesterEmail : "";
 
   let supportEmailSent = false;
   let confirmationEmailSent = false;
+  let supportEmailError = "";
+  let confirmationEmailError = "";
 
   try {
-    await reminderMailer.sendMail({
+    const info = await reminderMailer.sendMail({
       from: MAIL_FROM,
-      to: SUPPORT_EMAIL,
-      replyTo: requesterEmail || undefined,
+      to: SUPPORT_RECIPIENTS,
+      replyTo: replyToEmail || undefined,
       subject: `[Cuidado Support #${requestId}] ${subject}`,
       text: [
         `New support ticket #${requestId}`,
@@ -386,14 +429,19 @@ const sendSupportTicketEmails = async ({
         </div>
       `,
     });
-    supportEmailSent = true;
+    const accepted = Array.isArray(info.accepted) ? info.accepted : [];
+    const rejected = Array.isArray(info.rejected) ? info.rejected : [];
+    supportEmailSent = accepted.length > 0 && rejected.length === 0;
+    console.log("Support email accepted:", accepted);
+    console.log("Support email rejected:", rejected);
   } catch (error) {
-    console.error("SUPPORT EMAIL SEND ERROR:", error);
+    supportEmailError = error?.message || "Support email failed to send.";
+    console.error("SUPPORT EMAIL SEND ERROR:", supportEmailError);
   }
 
-  if (requesterEmail) {
+  if (EMAIL_RE.test(requesterEmail)) {
     try {
-      await reminderMailer.sendMail({
+      const info = await reminderMailer.sendMail({
         from: MAIL_FROM,
         to: requesterEmail,
         subject: `Cuidado support received your request #${requestId}`,
@@ -410,13 +458,23 @@ const sendSupportTicketEmails = async ({
           </div>
         `,
       });
-      confirmationEmailSent = true;
+      const accepted = Array.isArray(info.accepted) ? info.accepted : [];
+      const rejected = Array.isArray(info.rejected) ? info.rejected : [];
+      confirmationEmailSent = accepted.length > 0 && rejected.length === 0;
+      console.log("Support confirmation accepted:", accepted);
+      console.log("Support confirmation rejected:", rejected);
     } catch (error) {
-      console.error("SUPPORT CONFIRMATION EMAIL SEND ERROR:", error);
+      confirmationEmailError = error?.message || "Support confirmation email failed to send.";
+      console.error("SUPPORT CONFIRMATION EMAIL SEND ERROR:", confirmationEmailError);
     }
   }
 
-  return { supportEmailSent, confirmationEmailSent };
+  return {
+    supportEmailSent,
+    confirmationEmailSent,
+    supportEmailError,
+    confirmationEmailError,
+  };
 };
 
 const sendAppointmentReminderEmailOnce = async ({
@@ -901,7 +959,12 @@ router.post("/:userId/support-requests", async (req, res) => {
     );
 
     const ticketId = result.insertId;
-    const { supportEmailSent, confirmationEmailSent } = await sendSupportTicketEmails({
+    const {
+      supportEmailSent,
+      confirmationEmailSent,
+      supportEmailError,
+      confirmationEmailError,
+    } = await sendSupportTicketEmails({
       requestId: ticketId,
       user,
       topic,
@@ -929,6 +992,8 @@ router.post("/:userId/support-requests", async (req, res) => {
       status: "open",
       email_sent: supportEmailSent,
       confirmation_email_sent: confirmationEmailSent,
+      email_error: supportEmailSent ? "" : supportEmailError || "Support email was not accepted.",
+      confirmation_email_error: confirmationEmailSent ? "" : confirmationEmailError,
     });
   } catch (error) {
     console.error("POST /support-requests error:", error);

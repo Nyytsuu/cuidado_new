@@ -280,10 +280,14 @@ export default function UserHelp() {
         throw new Error(data.message || "Failed to submit support request.");
       }
 
+      const emailError =
+        typeof data.email_error === "string" ? data.email_error.trim() : "";
       setStatusMessage(
         data.email_sent
           ? "Support request submitted and emailed to support."
-          : "Support request saved. Email delivery is not configured or failed on the backend."
+          : `Support request saved, but the support email was not delivered.${
+              emailError ? ` Backend says: ${emailError}` : ""
+            }`
       );
       setForm((prev) => ({
         ...prev,

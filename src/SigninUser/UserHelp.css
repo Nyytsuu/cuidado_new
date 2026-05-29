@@ -387,17 +387,40 @@
   margin: 0;
 }
 
+.recent-requests-panel {
+  align-self: start;
+}
+
+.recent-requests-panel .help-panel-title {
+  margin-bottom: 10px;
+}
+
 .request-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
+  max-height: 236px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #b8d9d4 transparent;
+}
+
+.request-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.request-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #b8d9d4;
 }
 
 .request-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 62px;
+  padding: 9px 10px;
 }
 
 .request-card > div:first-child {
@@ -406,6 +429,9 @@
 
 .request-card h3 {
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .request-card p {
@@ -428,9 +454,9 @@
 
 .request-card-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
@@ -460,7 +486,9 @@
 
 .help-contact-card {
   display: grid;
-  gap: 12px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px 12px;
 }
 
 .help-contact-card > svg {
@@ -473,6 +501,7 @@
 
 .help-contact-card a {
   width: 100%;
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 1120px) {
