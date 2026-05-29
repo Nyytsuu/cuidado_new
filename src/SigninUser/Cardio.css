@@ -745,24 +745,21 @@ body {
   grid-template-columns: minmax(0, 1.6fr) 260px;
   grid-template-areas:
     "overview visual"
-    "overview related"
+    "related  related"
     "diseases diseases"
-    "symptoms symptoms"
     "prevention prevention"
     "footer  footer";
 }
 
-/* Overview spans rows 1-2 in left column — push diagram link to bottom */
+/* Overview: row 1 only — natural height, no spanning, no blank space */
 .body-system-details-page .overview-card {
   grid-area: overview;
   height: auto;
-  display: flex;
-  flex-direction: column;
 }
 
 .body-system-details-page .overview-card .diagram-link {
-  margin-top: auto;
-  padding-top: 16px;
+  margin-top: 16px;
+  padding-top: 0;
 }
 
 /* Visual card: row 1 right column — natural height */
@@ -773,7 +770,7 @@ body {
   height: auto;
 }
 
-/* Related articles: row 2 right column — natural height, NO stretch */
+/* Related articles: full-width row 2 — natural height, no blank space */
 .body-system-details-page .related-card {
   grid-area: related;
   align-self: start;
@@ -1368,6 +1365,11 @@ body {
       "footer";
   }
 
+  .body-system-details-page .overview-card .diagram-link {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
   /* reset overview-card flex so it doesn't add unnecessary height in single-column */
   .body-system-details-page .overview-card .diagram-link {
     margin-top: 0;
@@ -1536,26 +1538,25 @@ body {
    Left panel is intentionally left untouched.
 ════════════════════════════════════════════════════════ */
 
-/* ── Overview grid: 2-col, right sidebar stacks guide → articles ── */
+/* ── Overview grid: overview + guide side-by-side (row 1), related full-width (row 2) ──
+   This avoids spanning overview across two rows which caused blank white space
+   when overview text was shorter than guide + related combined. ── */
 .condition-details-page .overview-grid {
   grid-template-columns: minmax(0, 1fr) 260px;
   grid-template-areas:
     "overview guide"
-    "overview related";
+    "related  related";
   align-items: start;
 }
 
 .condition-details-page .overview-grid .overview-card {
   grid-area: overview;
   height: auto;
-  display: flex;
-  flex-direction: column;
 }
 
-/* push "View related body system" button to card bottom */
 .condition-details-page .overview-grid .overview-card .diagram-link {
-  margin-top: auto;
-  padding-top: 18px;
+  margin-top: 16px;
+  padding-top: 0;
 }
 
 .condition-details-page .overview-grid .condition-guide-card {
@@ -1564,6 +1565,8 @@ body {
 
 .condition-details-page .overview-grid .related-card {
   grid-area: related;
+  align-self: start;
+  height: auto;
 }
 
 /* ── Bottom grid: no duplicate symptoms row ── */
@@ -1600,6 +1603,10 @@ body {
       "overview"
       "guide"
       "related";
+  }
+
+  .condition-details-page .overview-grid .related-card {
+    align-self: start;
   }
 
   .condition-details-page .disease-list {
