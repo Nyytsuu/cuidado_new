@@ -1106,6 +1106,57 @@ body {
   opacity: 0.65;
 }
 
+.bmi-input-row.split {
+  position: relative;
+  min-height: 58px;
+  height: 58px;
+  display: grid !important;
+  grid-template-columns: minmax(150px, max-content) minmax(180px, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+  cursor: text;
+}
+
+.bmi-input-row.split .split-left {
+  min-width: 0;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
+.bmi-input-row.split input {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 160px !important;
+  height: 38px;
+  padding: 0 12px !important;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #f6fbfb;
+  color: #102033;
+  font-size: 18px !important;
+  font-weight: 800;
+  text-align: right;
+  cursor: text;
+}
+
+.bmi-input-row.split input::placeholder {
+  color: #9ca8b3;
+}
+
+.bmi-input-row.split:focus-within input {
+  border-color: #0f8f83;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(15, 143, 131, 0.12);
+}
+
+.bmi-input-row.split .unit-text {
+  min-width: 34px;
+  pointer-events: none;
+  position: relative;
+  z-index: 1;
+}
+
 @media (max-width: 760px) {
   .bmi-page {
     --mobile-header-height: 120px;
@@ -1466,6 +1517,24 @@ body {
     max-height: calc(100dvh - 24px) !important;
     padding: 16px !important;
     border-radius: 14px !important;
+  }
+
+  .bmi-input-row.split {
+    min-height: 54px !important;
+    height: 54px !important;
+    grid-template-columns: minmax(126px, max-content) minmax(92px, 1fr) max-content !important;
+    gap: 10px !important;
+    padding: 0 12px !important;
+  }
+
+  .bmi-input-row.split input {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 92px !important;
+    height: 36px !important;
+    padding: 0 12px !important;
+    text-align: right !important;
+    font-size: 16px !important;
   }
 
   .clinic-profile-grid,
