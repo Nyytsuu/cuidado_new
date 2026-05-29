@@ -270,6 +270,15 @@ export default function BodySystemDetails() {
         <main className="browse-health-main">
           <div className="health-browser-layout">
             <aside className="left-panel">
+              <button
+                type="button"
+                className="browse-back-btn"
+                onClick={() => navigate(-1)}
+              >
+                <span className="browse-back-icon" aria-hidden="true" />
+                Back
+              </button>
+
               <div className="left-card left-search-card">
                 <h2 className="left-title">Browse Health Topics</h2>
 
@@ -404,20 +413,42 @@ export default function BodySystemDetails() {
                     </div>
 
                     <div className="related-card">
-                      <h3>Related Articles</h3>
+                      <div className="related-card-header">
+                        <h3>Related Articles</h3>
+                        {relatedArticles.length > 0 && (
+                          <span className="related-count-pill">
+                            {relatedArticles.length}
+                          </span>
+                        )}
+                      </div>
                       <div className="related-list">
                         {relatedArticles.length > 0 ? (
-                          relatedArticles.map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className="related-item"
-                              onClick={() => handleArticleClick(item)}
-                            >
-                              <span>{item.title}</span>
-                              <span>›</span>
-                            </button>
-                          ))
+                          relatedArticles.map((item, idx) => {
+                            const icons = ["📋", "🔬", "❤️", "💊", "💡", "🏥"];
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className="related-item"
+                                onClick={() => handleArticleClick(item)}
+                              >
+                                <span className="related-item-icon">
+                                  {icons[idx % icons.length]}
+                                </span>
+                                <span className="related-item-body">
+                                  <span className="related-item-title">
+                                    {item.title}
+                                  </span>
+                                  {item.source && (
+                                    <span className="related-item-source">
+                                      {item.source}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="related-arrow">›</span>
+                              </button>
+                            );
+                          })
                         ) : (
                           <p>No related articles found.</p>
                         )}
@@ -463,30 +494,6 @@ export default function BodySystemDetails() {
                           <p>No conditions found.</p>
                         )}
                       </div>
-                    </div>
-
-                    <div className="symptoms-card">
-                      <h3>Symptoms</h3>
-                      <ul>
-                        {symptoms.length > 0 ? (
-                          symptoms.map((item) => (
-                            <li key={item.symptom_id}>
-                              <strong>{item.symptom_name}</strong>
-                              {item.description && <span>{item.description}</span>}
-                            </li>
-                          ))
-                        ) : (
-                          <li>No symptoms found.</li>
-                        )}
-                      </ul>
-
-                      <button
-                        type="button"
-                        className="tips-btn"
-                        onClick={() => navigate("/symptom-checker")}
-                      >
-                        Read health tips ›
-                      </button>
                     </div>
 
                     <div className="prevention-card">

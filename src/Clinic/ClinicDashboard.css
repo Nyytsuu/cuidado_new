@@ -71,6 +71,29 @@
   gap: 8px;
 }
 
+/* Left column stretches to match appointment column height */
+.clinic-dashboard-page .dash-left-col {
+  align-self: stretch;
+}
+
+/* Today's Schedule card fills remaining left-column height */
+.clinic-dashboard-page .dash-chart {
+  flex: 1;
+}
+
+.clinic-dashboard-page .dash-chart .dash-chart-card {
+  flex: 1;
+}
+
+/* Appointment panel body fills available column height */
+.clinic-dashboard-page .dash-right-col {
+  align-self: stretch;
+}
+
+.clinic-dashboard-page .dash-right-col .dash-panel-body {
+  flex: 1;
+}
+
 .clinic-dashboard-page .dash-aside {
   width: 290px;
   gap: 18px;
@@ -177,6 +200,16 @@
   align-items: start;
 }
 
+/* Fix browser scroll-container focus outline on Patients panel */
+.clinic-dashboard-page .appt-xaxis:focus,
+.clinic-dashboard-page .appt-xaxis:focus-visible,
+.clinic-dashboard-page .appt-xaxis:focus-within {
+  outline: none;
+}
+.clinic-dashboard-page .appt-xaxis {
+  outline: none;
+}
+
 .clinic-dashboard-page .dash-chart-head,
 .clinic-dashboard-page .dash-panel-title {
   padding: 0 2px;
@@ -191,7 +224,6 @@
 }
 
 .clinic-dashboard-page .dash-chart-card {
-  min-height: 166px;
   padding: 14px;
 }
 
@@ -201,7 +233,7 @@
 }
 
 .clinic-dashboard-page .dash-right-top .dash-panel-body {
-  min-height: 138px;
+  min-height: unset;
 }
 
 .clinic-dashboard-page .patients-panel .dash-panel-body,
@@ -210,7 +242,7 @@
 }
 
 .clinic-dashboard-page .dash-right-col .dash-panel-body {
-  min-height: 330px;
+  min-height: unset;
 }
 
 .clinic-dashboard-page .quick-actions-grid {

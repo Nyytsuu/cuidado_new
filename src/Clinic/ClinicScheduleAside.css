@@ -26,25 +26,36 @@
   height: auto;
 }
 
-/* ── Big card (Options) ── */
-.clinic-schedule-aside .big-card {
-  min-height: 430px;
-  padding: 16px 18px 18px;
-  background: #f7fdfb;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.Patient .clinic-schedule-aside .big-card,
+/* ── Big card (Options) — override the !important padding from ClinicAppoint ── */
+.clinic-schedule-aside .big-card,
 .ClinicAppoint .clinic-schedule-aside .big-card,
+.Patient .clinic-schedule-aside .big-card,
 .services .clinic-schedule-aside .big-card {
+  padding: 0 !important;   /* header and editor handle their own spacing */
   min-height: 430px;
   height: auto;
-  background: #f7fdfb;
+  background: #ffffff !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  overflow: hidden;
+  border-radius: 14px !important;
 }
 
-/* ── Card header row (title + status pill) ── */
+/* ── Big card: teal header band ── */
+.clinic-schedule-aside .big-card > h3 {
+  margin: 0;
+  padding: 14px 20px;
+  background: #109c85;
+  color: #ffffff;
+  font-size: 0.97rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  border-radius: 14px 14px 0 0;
+  flex-shrink: 0;
+}
+
+/* ── Card header row (title + status pill) — small-card ── */
 .sch-card-header {
   display: flex;
   align-items: center;
@@ -237,37 +248,41 @@
   color: #166534;
 }
 
-/* ── Big card heading ── */
-.clinic-schedule-aside .big-card h3 {
-  margin: 0 0 4px;
-  font-size: 0.98rem;
-  font-weight: 800;
-  color: #0f4242;
-}
-
-/* ── Schedule editor rows ── */
+/* ── Schedule editor rows container ── */
 .clinic-schedule-editor {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 6px;
   flex: 1;
+  padding: 14px 16px 10px;
+  overflow-y: auto;
 }
 
+/* ── Each day row ── */
 .clinic-schedule-row {
   display: grid;
-  grid-template-columns: 38px 38px 1fr;
-  gap: 6px;
+  grid-template-columns: 40px 46px 1fr;
+  gap: 8px;
   align-items: center;
-  padding: 7px 10px;
-  border: 1px solid #cde8e4;
-  border-radius: 9px;
-  background: #ffffff;
-  transition: background 0.15s;
+  padding: 9px 12px;
+  border: 1px solid #daecea;
+  border-radius: 10px;
+  background: #f8fffe;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.clinic-schedule-row:hover {
+  background: #f0faf8;
+  border-color: #b6dcd8;
 }
 
 .clinic-schedule-row.sch-row-off {
-  background: #f8f8f8;
+  background: #f7f9f9;
   border-color: #e4eae9;
+}
+
+.clinic-schedule-row.sch-row-off:hover {
+  background: #eff2f2;
 }
 
 /* ── Toggle switch ── */
@@ -324,35 +339,36 @@
 
 /* ── Day name label ── */
 .sch-day-name {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 800;
   text-align: left;
   transition: color 0.15s;
 }
 
 .sch-day-name.active { color: #0f4242; }
-.sch-day-name.dimmed { color: #adb9b7; }
+.sch-day-name.dimmed { color: #b0bfbd; }
 
 /* ── Time inputs ── */
 .sch-times {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   min-width: 0;
 }
 
 .sch-times input[type="time"] {
   flex: 1;
   min-width: 0;
-  height: 28px;
+  height: 30px;
   border: 1px solid #c9e2df;
-  border-radius: 7px;
-  padding: 0 5px;
+  border-radius: 8px;
+  padding: 0 6px;
   color: #0f4242;
-  background: #f8fefd;
-  font-size: 0.74rem;
+  background: #ffffff;
+  font-size: 0.73rem;
   font-weight: 700;
   outline: none;
+  font-family: inherit;
 }
 
 .sch-times input[type="time"]:focus {
@@ -363,50 +379,46 @@
 .sch-times input:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: #f1f5f5;
 }
 
 .sch-time-sep {
   color: #9eb8b4;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 /* ── Day off tag ── */
 .sch-day-off-tag {
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   font-weight: 700;
   color: #9ea8a6;
   background: #eef0f0;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 999px;
   letter-spacing: 0.02em;
   text-align: center;
+  width: fit-content;
 }
 
 /* ── Save button ── */
-.clinic-schedule-aside .pill-save-schedule {
-  width: 100%;
-  background: #109c85 !important;
-  color: #ffffff;
-  border-radius: 8px;
-  margin-top: auto;
-  min-height: 36px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  transition: background 0.18s;
-}
-
-.Patient .clinic-schedule-aside .pill-save-schedule,
+.clinic-schedule-aside .pill-save-schedule,
 .ClinicAppoint .clinic-schedule-aside .pill-save-schedule,
+.Patient .clinic-schedule-aside .pill-save-schedule,
 .services .clinic-schedule-aside .pill-save-schedule {
-  width: 100%;
+  width: calc(100% - 32px) !important;
+  margin: 4px 16px 16px !important;
+  min-height: 44px !important;
   background: #109c85 !important;
-  color: #ffffff;
-  border-radius: 8px;
-  margin-top: auto;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: background 0.18s !important;
+  flex-shrink: 0 !important;
 }
 
 .clinic-schedule-aside .pill-save-schedule:hover:not(:disabled) {
@@ -414,6 +426,6 @@
 }
 
 .clinic-schedule-aside .pill-save-schedule:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
 }
