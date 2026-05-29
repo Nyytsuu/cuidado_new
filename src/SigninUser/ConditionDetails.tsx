@@ -525,20 +525,42 @@ export default function ConditionDetails() {
                     </div>
 
                     <div className="related-card">
-                      <h3>Related Articles</h3>
+                      <div className="related-card-header">
+                        <h3>Related Articles</h3>
+                        {relatedArticles.length > 0 && (
+                          <span className="related-count-pill">
+                            {relatedArticles.length}
+                          </span>
+                        )}
+                      </div>
                       <div className="related-list">
                         {relatedArticles.length > 0 ? (
-                          relatedArticles.map((item) => (
-                            <button
-                              key={item.id}
-                              type="button"
-                              className="related-item"
-                              onClick={() => handleArticleClick(item)}
-                            >
-                              <span>{item.title}</span>
-                              <span>›</span>
-                            </button>
-                          ))
+                          relatedArticles.map((item, idx) => {
+                            const icons = ["📋", "🔬", "❤️", "💊", "💡", "🏥"];
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                className="related-item"
+                                onClick={() => handleArticleClick(item)}
+                              >
+                                <span className="related-item-icon">
+                                  {icons[idx % icons.length]}
+                                </span>
+                                <span className="related-item-body">
+                                  <span className="related-item-title">
+                                    {item.title}
+                                  </span>
+                                  {item.source && (
+                                    <span className="related-item-source">
+                                      {item.source}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="related-arrow">›</span>
+                              </button>
+                            );
+                          })
                         ) : (
                           <div className="empty-state compact">
                             Related reading will appear here when articles are connected.
@@ -656,27 +678,6 @@ export default function ConditionDetails() {
                         </div>
                       </div>
                     )}
-
-                    <div className="symptoms-card">
-                      <h3>Quick Symptoms List</h3>
-                      <ul>
-                        {symptomsToShow.length > 0 ? (
-                          symptomsToShow.map((item) => (
-                            <li key={item.symptom_id}>{item.symptom_name}</li>
-                          ))
-                        ) : (
-                          <li>{hasSymptomSearch ? "No matching symptoms." : "No symptoms mapped yet."}</li>
-                        )}
-                      </ul>
-
-                      <button
-                        type="button"
-                        className="tips-btn"
-                        onClick={() => navigate("/symptom-checker")}
-                      >
-                        Check symptoms ›
-                      </button>
-                    </div>
 
                     <div className="prevention-card">
                       <h3>Did You Know?</h3>

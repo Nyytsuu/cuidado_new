@@ -745,26 +745,38 @@ body {
   grid-template-columns: minmax(0, 1.6fr) 260px;
   grid-template-areas:
     "overview visual"
-    "diseases related"
+    "overview related"
+    "diseases diseases"
     "prevention prevention"
     "footer  footer";
 }
 
+/* Overview spans rows 1-2 in left column — push diagram link to bottom */
 .body-system-details-page .overview-card {
   grid-area: overview;
+  height: auto;
+  display: flex;
+  flex-direction: column;
 }
 
+.body-system-details-page .overview-card .diagram-link {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+/* Visual card: row 1 right column — natural height */
 .body-system-details-page .heart-visual-card {
   grid-area: visual;
   align-self: stretch;
-  height: 100%;
   min-height: 160px;
+  height: auto;
 }
 
+/* Related articles: row 2 right column — natural height, NO stretch */
 .body-system-details-page .related-card {
   grid-area: related;
-  align-self: stretch;
-  height: 100%;
+  align-self: start;
+  height: auto;
 }
 
 .body-system-details-page .overview-grid > .diseases-card {
@@ -1355,6 +1367,12 @@ body {
       "footer";
   }
 
+  /* reset overview-card flex so it doesn't add unnecessary height in single-column */
+  .body-system-details-page .overview-card .diagram-link {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
   .body-system-details-page .bottom-grid {
     grid-template-areas:
       "symptoms"
@@ -1509,5 +1527,93 @@ body {
 @media (max-width: 900px) {
   .condition-details-page .condition-support-grid {
     grid-template-columns: 1fr !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   CONDITION DETAILS — right-panel layout overrides
+   Left panel is intentionally left untouched.
+════════════════════════════════════════════════════════ */
+
+/* ── Overview grid: 2-col, right sidebar stacks guide → articles ── */
+.condition-details-page .overview-grid {
+  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-areas:
+    "overview guide"
+    "overview related";
+  align-items: start;
+}
+
+.condition-details-page .overview-grid .overview-card {
+  grid-area: overview;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* push "View related body system" button to card bottom */
+.condition-details-page .overview-grid .overview-card .diagram-link {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.condition-details-page .overview-grid .condition-guide-card {
+  grid-area: guide;
+}
+
+.condition-details-page .overview-grid .related-card {
+  grid-area: related;
+}
+
+/* ── Bottom grid: no duplicate symptoms row ── */
+.condition-details-page .bottom-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    "diseases   diseases"
+    "support    support"
+    "prevention prevention"
+    "footer     footer";
+}
+
+/* ── Diseases card: 2-column symptom cards, no artificial max-height ── */
+.condition-details-page .disease-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-height: none;
+  overflow-y: visible;
+}
+
+/* ── Prevention card: uncap height when full-width ── */
+.condition-details-page .prevention-card {
+  max-height: none;
+}
+
+.condition-details-page .prevention-card ul {
+  max-height: none;
+}
+
+/* ── Responsive: single-column stack below 1280px ── */
+@media (max-width: 1280px) {
+  .condition-details-page .overview-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "overview"
+      "guide"
+      "related";
+  }
+
+  .condition-details-page .disease-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Responsive: single-column bottom grid below 900px ── */
+@media (max-width: 900px) {
+  .condition-details-page .bottom-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "diseases"
+      "support"
+      "prevention"
+      "footer";
   }
 }
