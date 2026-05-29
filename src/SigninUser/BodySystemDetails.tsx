@@ -203,6 +203,20 @@ export default function BodySystemDetails() {
     );
   }, [conditions, search]);
 
+  const displayedSymptoms = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const filtered = !query
+      ? symptoms
+      : symptoms.filter(
+          (item) =>
+            item.symptom_name.toLowerCase().includes(query) ||
+            (item.description || "").toLowerCase().includes(query) ||
+            (item.category || "").toLowerCase().includes(query)
+        );
+
+    return filtered.slice(0, 5);
+  }, [search, symptoms]);
+
   const relatedArticles = useMemo(
     () =>
       articles.length > 0
@@ -494,6 +508,28 @@ export default function BodySystemDetails() {
                           <p>No conditions found.</p>
                         )}
                       </div>
+                    </div>
+
+                    <div className="symptoms-card">
+                      <h3>Common Symptoms</h3>
+                      <ul>
+                        {displayedSymptoms.length > 0 ? (
+                          displayedSymptoms.map((item) => (
+                            <li key={item.symptom_id}>
+                              <strong>{item.symptom_name}</strong>
+                              <span>
+                                {item.description ||
+                                  `${bodySystem?.name || "Health"} symptom to watch.`}
+                              </span>
+                            </li>
+                          ))
+                        ) : (
+                          <li>
+                            <strong>No symptoms found</strong>
+                            <span>Try a different search or body system.</span>
+                          </li>
+                        )}
+                      </ul>
                     </div>
 
                     <div className="prevention-card">
