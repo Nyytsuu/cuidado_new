@@ -2,6 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import "./AdminServices.css";
 import "./AdminHeader.css";
 import SidebarAdmin from "./SidebarAdmin";
+import AdminAppointmentDetailsModal, {
+  type AdminAppointmentDetails,
+} from "./AdminAppointmentDetailsModal";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 
@@ -54,6 +57,8 @@ export default function AdminServices() {
 
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
+  const [appointmentDetails, setAppointmentDetails] =
+    useState<AdminAppointmentDetails | null>(null);
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -299,8 +304,16 @@ export default function AdminServices() {
     }
   };
 
-  const onViewAppointment = (id: number) => {
-    console.log("View appointment:", id);
+  const onViewAppointment = async (id: number) => {
+    try {
+      const res = await fetch(`${API}/appointments/${id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: AdminAppointmentDetails = await res.json();
+      setAppointmentDetails(data);
+    } catch (e) {
+      console.error("View appointment details error:", e);
+      alert("Failed to load appointment details.");
+    }
   };
 
   return (
@@ -655,6 +668,13 @@ export default function AdminServices() {
               </div>
             </div>
           </div>
+        )}
+
+        {appointmentDetails && (
+          <AdminAppointmentDetailsModal
+            appointment={appointmentDetails}
+            onClose={() => setAppointmentDetails(null)}
+          />
         )}
       </main>
     </div>

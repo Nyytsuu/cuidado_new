@@ -489,12 +489,22 @@ router.post("/auth/otp/send", async (req, res) => {
     console.log("Purpose:", purpose);
     console.log("OTP:", otp);
 
-    await mailer.sendMail({
+    if (!MAIL_USER || !MAIL_PASS) {
+      console.error("OTP SEND ERROR: MAIL_USER or MAIL_PASS is not configured.");
+      return res.status(500).json({
+        message: "Email service is not configured. Please check MAIL_USER and MAIL_PASS.",
+      });
+    }
+
+    const info = await mailer.sendMail({
       from: `"Cuidado Medihelp" <${process.env.MAIL_USER}>`,
       to: email,
       subject,
       html,
     });
+
+    console.log("OTP email accepted:", info.accepted);
+    console.log("OTP email rejected:", info.rejected);
 
     return res.json({ message: "OTP sent" });
   } catch (e) {

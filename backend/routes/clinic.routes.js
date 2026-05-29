@@ -26,6 +26,8 @@ router.use((req, res, next) => {
 });
 
 /* ================= MULTER SETUP ================= */
+fs.mkdirSync("uploads", { recursive: true });
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => {
@@ -354,20 +356,24 @@ const findAccountByEmail = (email) =>
     [email, email, email]
   );
 
-const ensureEmailVerificationTokensTable = () =>
-  pool.query(`
+const ensureEmailVerificationTokensTable = async () => {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS email_verification_tokens (
-      id INT NOT NULL AUTO_INCREMENT,
+      id SERIAL PRIMARY KEY,
       email VARCHAR(255) NOT NULL,
       purpose VARCHAR(80) NOT NULL,
       token VARCHAR(128) NOT NULL,
-      expires_at DATETIME NOT NULL,
-      created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (id),
-      UNIQUE KEY unique_email_verification (email, purpose),
-      INDEX idx_email_verification_token (token)
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_email_verification UNIQUE (email, purpose)
     )
   `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_email_verification_token
+    ON email_verification_tokens (token)
+  `);
+};
 
 /* =================================================
    CLINIC SIGNUP
@@ -375,7 +381,7 @@ const ensureEmailVerificationTokensTable = () =>
    Final route: POST /api/clinic/signup
 ================================================= */
 router.post(
-  "/clinic/signup",
+  ["/signup", "/clinic/signup"],
   upload.fields([
     { name: "clinic_license_file", maxCount: 1 },
     { name: "rep_valid_id_file", maxCount: 1 },

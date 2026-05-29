@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo } from "react";
 import { FiEye, FiEyeOff, FiX } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import OtpPopup from "../SigninUser/OtpPopup";
+import { apiUrl } from "../sharedBackendFetch";
 
 /* ---------- TYPES ---------- */
 interface Province {
@@ -66,7 +67,6 @@ type ApiErrorResponse = {
   verificationToken?: string;
 };
 
-const API_BASE = "http://localhost:5000";
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const PH_PHONE_RE = /^(\+639|09)\d{9}$/;
 const LICENSE_RE = /^R\d{2}-\d{2}-\d{6}$/;
@@ -180,7 +180,7 @@ export default function ClinicSignup() {
   const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
   /* ---------- FETCH PROVINCES ---------- */
   useEffect(() => {
-    fetch(`${API_BASE}/api/provinces`)
+    fetch(apiUrl("/api/provinces"))
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
         return res.json();
@@ -193,7 +193,7 @@ export default function ClinicSignup() {
   useEffect(() => {
     if (!provinceId) return;
 
-    fetch(`${API_BASE}/api/municipalities/${provinceId}`)
+    fetch(apiUrl(`/api/municipalities/${provinceId}`))
       .then((res) => res.json())
       .then((data: Municipality[]) => {
         setMunicipalities(data);
@@ -208,7 +208,7 @@ export default function ClinicSignup() {
   useEffect(() => {
     if (!municipalityId) return;
 
-    fetch(`${API_BASE}/api/barangays/${municipalityId}`)
+    fetch(apiUrl(`/api/barangays/${municipalityId}`))
       .then((res) => res.json())
       .then((data: Barangay[]) => {
         setBarangays(data);
@@ -353,7 +353,7 @@ export default function ClinicSignup() {
   };
 
   const sendClinicSignupOtp = async (emailToSend: string) => {
-    const res = await fetch(`${API_BASE}/api/auth/otp/send`, {
+    const res = await fetch(apiUrl("/api/auth/otp/send"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -369,7 +369,7 @@ export default function ClinicSignup() {
   };
 
   const submitClinicSignup = async (verificationToken: string) => {
-    const res = await fetch(`${API_BASE}/api/clinic/signup`, {
+    const res = await fetch(apiUrl("/api/clinic/signup"), {
       method: "POST",
       body: buildClinicSignupFormData(verificationToken),
     });
@@ -397,7 +397,7 @@ export default function ClinicSignup() {
     let verificationToken = "";
 
     try {
-      const verifyRes = await fetch(`${API_BASE}/api/auth/otp/verify`, {
+      const verifyRes = await fetch(apiUrl("/api/auth/otp/verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -461,7 +461,7 @@ export default function ClinicSignup() {
   };
 
 return (
-    <div>
+    <div className="clinic-signup-page">
       <div className="bgimg">
         <Logotag />
 
@@ -519,8 +519,9 @@ return (
             clearError("phone");
           }}
           inputMode="numeric"
-          placeholder="+639XXXXXXXXXX or 09XXXXXXXXX"
+          placeholder="+639XXXXXXXXX or 09XXXXXXXXX"
           pattern="^(\+639|09)\d{9}$"
+          maxLength={13}
           autoComplete="tel"
           required
         />

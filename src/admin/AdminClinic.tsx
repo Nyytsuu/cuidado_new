@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import "./AdminClinic.css";
 import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
+import AdminAppointmentDetailsModal, {
+  type AdminAppointmentDetails,
+} from "./AdminAppointmentDetailsModal";
 import searchIcon from "../img/search.png";
 import logo from "../img/logo.png";
 
@@ -66,6 +69,8 @@ export default function AdminClinics() {
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [, setLoadingAppointments] = useState(true);
+  const [appointmentDetails, setAppointmentDetails] =
+    useState<AdminAppointmentDetails | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
@@ -349,8 +354,16 @@ export default function AdminClinics() {
     );
   });
 
-  const onViewAppointment = (id: number) => {
-    console.log("View appointment:", id);
+  const onViewAppointment = async (id: number) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/appointments/${id}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: AdminAppointmentDetails = await res.json();
+      setAppointmentDetails(data);
+    } catch (e) {
+      console.error("View appointment details error:", e);
+      alert("Failed to load appointment details.");
+    }
   };
 
   return (
@@ -841,6 +854,13 @@ export default function AdminClinics() {
             </div>
           </div>
         </div>
+      )}
+
+      {appointmentDetails && (
+        <AdminAppointmentDetailsModal
+          appointment={appointmentDetails}
+          onClose={() => setAppointmentDetails(null)}
+        />
       )}
     </div>
   );

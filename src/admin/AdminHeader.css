@@ -22,6 +22,10 @@
   left: 220px !important;
 }
 
+:root {
+  --admin-footer-space: 96px;
+}
+
 /* Ensure all admin page content clears the 68px fixed header */
 .admin-UserClinics .admin-content,
 .admin-Userpage .admin-content,
@@ -29,6 +33,26 @@
 .admin-UserServices .admin-content,
 .admin-UserReport .admin-content {
   padding-top: 90px !important;
+}
+
+/* Keep the bottom of admin screens from feeling cut off at the viewport edge. */
+.admin-UserClinics .admin-content,
+.admin-Userpage .admin-content,
+.admin-UserAppoint .admin-content,
+.admin-UserServices .admin-content,
+.admin-UserReport .admin-content,
+.admin-dashboard-page .admin-main,
+.Profile {
+  padding-bottom: calc(var(--admin-footer-space) + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.admin-UserClinics .preview-canvas,
+.admin-Userpage .preview-canvas,
+.admin-UserAppoint .preview-canvas,
+.admin-UserServices .preview-canvas,
+.admin-UserReport .preview-canvas,
+.admin-dashboard-page .admin-main {
+  scroll-padding-bottom: var(--admin-footer-space) !important;
 }
 
 .app-header .header-left {
