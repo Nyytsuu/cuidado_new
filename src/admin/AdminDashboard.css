@@ -1006,20 +1006,7 @@ body:has(.admin-dashboard-page) {
 }
 
 .admin-dashboard-page .dash-aside {
-  display: grid !important;
-  grid-template-columns: 1fr;
-  width: 100%;
-  gap: 20px;
-}
-
-.admin-dashboard-page .dash-aside > .dash-panel-title,
-.admin-dashboard-page .dash-aside > .dash-right-top {
   display: none !important;
-}
-
-.admin-dashboard-page .dash-aside > .appointment-panel {
-  order: 0;
-  width: 100%;
 }
 
 .admin-dashboard-page .dash-grid-2col {
@@ -1043,23 +1030,25 @@ body:has(.admin-dashboard-page) {
   flex: 1;
 }
 
-.admin-dashboard-page .dash-left > .dash-panel:first-child .dash-panel-body {
+.admin-dashboard-page .dash-grid-overview .dash-left .dash-panel-body {
   max-height: 260px;
 }
 
-.admin-dashboard-page .dash-left > .dash-panel:last-child .dash-panel-body,
-.admin-dashboard-page .dash-center .dash-panel-body,
-.admin-dashboard-page .appointment-panel .dash-panel-body {
+.admin-dashboard-page .dash-grid-overview .appointment-panel .dash-panel-body {
+  max-height: 260px;
+}
+
+.admin-dashboard-page .dash-grid-data .dash-left .dash-panel-body,
+.admin-dashboard-page .dash-grid-data .dash-center .dash-panel-body {
   max-height: 380px;
 }
 
-.admin-dashboard-page .dash-left > .dash-panel:last-child .dash-table tbody tr:last-child td,
-.admin-dashboard-page .dash-center .dash-table tbody tr:last-child td {
+.admin-dashboard-page .dash-grid-data .dash-table tbody tr:last-child td {
   border-bottom: 0;
 }
 
-.admin-dashboard-page .appointment-panel .appointment-list {
-  max-height: 330px;
+.admin-dashboard-page .dash-grid-overview .appointment-panel .appointment-list {
+  max-height: 210px;
   overflow-y: auto;
 }
 
@@ -1103,15 +1092,15 @@ body:has(.admin-dashboard-page) {
   }
 
   .admin-dashboard-page .activity-panel .dash-panel-body,
-  .admin-dashboard-page .dash-left > .dash-panel:first-child .dash-panel-body,
-  .admin-dashboard-page .dash-left > .dash-panel:last-child .dash-panel-body,
-  .admin-dashboard-page .dash-center .dash-panel-body,
-  .admin-dashboard-page .appointment-panel .dash-panel-body {
+  .admin-dashboard-page .dash-grid-overview .dash-left .dash-panel-body,
+  .admin-dashboard-page .dash-grid-overview .appointment-panel .dash-panel-body,
+  .admin-dashboard-page .dash-grid-data .dash-left .dash-panel-body,
+  .admin-dashboard-page .dash-grid-data .dash-center .dash-panel-body {
     max-height: none;
   }
 
   .admin-dashboard-page .activity-panel .activity-list,
-  .admin-dashboard-page .appointment-panel .appointment-list {
+  .admin-dashboard-page .dash-grid-overview .appointment-panel .appointment-list {
     max-height: none;
   }
 }

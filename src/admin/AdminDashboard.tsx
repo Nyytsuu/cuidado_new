@@ -622,7 +622,7 @@ export default function AdminDashboard() {
               </Panel>
             </section>
 
-            <section className="dash-grid dash-grid-2col">
+            <section className="dash-grid dash-grid-2col dash-grid-overview">
               <div className="dash-left">
                 <Panel title="Pending Approvals ">
                   <table className="dash-table dash-table-pending">
@@ -679,7 +679,55 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </Panel>
+              </div>
 
+              <div className="dash-center">
+                <Panel title="Appointments" className="appointment-panel">
+                  <div className="appointment-list">
+                    {loadingAppointments ? (
+                      <div className="td-empty">Loading...</div>
+                    ) : filteredAppointments.length === 0 ? (
+                      <div className="td-empty">No appointments yet.</div>
+                    ) : (
+                      filteredAppointments.slice(0, 8).map((ap) => {
+                        const statusKey = toStatusKey(ap.status);
+
+                        return (
+                          <div className="appointment-row" key={ap.id}>
+                            <div className="appointment-info">
+                              <div className="t-main">{ap.patient}</div>
+                              <div className="t-sub">
+                                {ap.clinic} - {ap.schedule}
+                              </div>
+                            </div>
+
+                            <div className="appointment-controls">
+                              <span
+                                className={`appt-badge appt-status-badge badge-${statusKey}`}
+                                title={toStatusLabel(ap.status)}
+                              >
+                                {toStatusLabel(ap.status, true)}
+                              </span>
+
+                              <button
+                                type="button"
+                                className="appt-badge appt-view-btn badge-view"
+                                onClick={() => viewDetails(ap.id)}
+                              >
+                                View
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </Panel>
+              </div>
+            </section>
+
+            <section className="dash-grid dash-grid-2col dash-grid-data">
+              <div className="dash-left">
                 <Panel
                   title="Users / Patients"
                   actions={
