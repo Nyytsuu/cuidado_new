@@ -93,7 +93,7 @@ const createBodySystemArticleFallbacks = (topic?: string | null): ArticleItem[] 
     id: `fallback-body-article-${toRelatedArticleSlug(title)}-${index + 1}`,
     title,
     slug: toRelatedArticleSlug(title),
-    searchQuery: title,
+    searchQuery: cleanTopic,
     subtitle: `A quick guide for ${cleanTopic.toLowerCase()} care and awareness.`,
     content:
       `This related guide helps patients review ${cleanTopic.toLowerCase()} basics, symptoms, care options, and when to ask a healthcare professional for help.`,
@@ -611,7 +611,9 @@ export default function BodySystemDetails() {
                   className="related-article-link"
                   onClick={() => {
                     const query =
-                      selectedArticle.searchQuery ||
+                      selectedArticle.source === "Cuidado MediHelp"
+                        ? bodySystem?.name || selectedSlug
+                        : selectedArticle.searchQuery ||
                       selectedArticle.title ||
                       selectedArticle.slug ||
                       "health";

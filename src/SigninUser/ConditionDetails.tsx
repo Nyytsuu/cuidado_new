@@ -84,7 +84,7 @@ const createConditionArticleFallbacks = (topic?: string | null): ArticleItem[] =
     id: `fallback-condition-article-${toRelatedArticleSlug(title)}-${index + 1}`,
     title,
     slug: toRelatedArticleSlug(title),
-    searchQuery: title,
+    searchQuery: cleanTopic,
     subtitle: `A quick guide for ${cleanTopic.toLowerCase()} care and awareness.`,
     content:
       `This related guide helps patients review ${cleanTopic.toLowerCase()} basics, possible symptoms, care options, and when to ask a healthcare professional for help.`,
@@ -758,7 +758,9 @@ export default function ConditionDetails() {
                   className="related-article-link"
                   onClick={() => {
                     const query =
-                      selectedArticle.searchQuery ||
+                      selectedArticle.source === "Cuidado MediHelp"
+                        ? condition?.condition_name || bodySystemName
+                        : selectedArticle.searchQuery ||
                       selectedArticle.title ||
                       selectedArticle.slug ||
                       "health";

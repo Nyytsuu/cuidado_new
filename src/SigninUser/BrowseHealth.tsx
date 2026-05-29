@@ -64,6 +64,62 @@ type QuickAction = {
 const normalizeTag = (tag?: string | null) =>
   (tag || "").toLowerCase().replace(/[_-]+/g, " ").trim();
 
+const SEARCH_STOP_WORDS = new Set([
+  "a",
+  "about",
+  "and",
+  "article",
+  "articles",
+  "care",
+  "common",
+  "doctor",
+  "facts",
+  "for",
+  "guide",
+  "health",
+  "options",
+  "overview",
+  "prevention",
+  "see",
+  "symptom",
+  "symptoms",
+  "the",
+  "tips",
+  "to",
+  "treatment",
+  "watch",
+  "wellness",
+  "when",
+]);
+
+const normalizeSearchText = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+
+const getSearchTokens = (query: string) => {
+  const words = normalizeSearchText(query)
+    .split(" ")
+    .filter(Boolean);
+  const usefulWords = words.filter(
+    (word) => word.length > 2 && !SEARCH_STOP_WORDS.has(word)
+  );
+
+  return usefulWords.length > 0 ? usefulWords : words;
+};
+
+const matchesSearchQuery = (
+  query: string,
+  ...values: Array<string | null | undefined>
+) => {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return true;
+
+  const haystack = normalizeSearchText(values.filter(Boolean).join(" "));
+  if (haystack.includes(normalizedQuery)) return true;
+
+  const tokens = getSearchTokens(query);
+  return tokens.length > 0 && tokens.every((token) => haystack.includes(token));
+};
+
 const quickActions: QuickAction[] = [
   { id: "symptoms", icon: "🧾", label: "Check Symptoms", tone: "mint" },
   { id: "clinics", icon: "📍", label: "Find Clinics", tone: "blue" },
@@ -215,14 +271,12 @@ export default function BrowseHealth() {
   }, [userId]);
 
   const filteredBodySystems = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = search.trim();
 
     const filtered = query
       ? bodySystems.filter(
           (item) =>
-            item.title.toLowerCase().includes(query) ||
-            item.subtitle.toLowerCase().includes(query) ||
-            (item.slug || "").toLowerCase().includes(query)
+            matchesSearchQuery(query, item.title, item.subtitle, item.slug, item.name)
         )
       : bodySystems;
 
@@ -230,15 +284,20 @@ export default function BrowseHealth() {
   }, [bodySystems, search]);
 
   const filteredTopicCards = useMemo(() => {
-    const query = search.trim().toLowerCase();
+    const query = search.trim();
 
     const searchedCards = query
       ? topicCards.filter(
           (card) =>
-            card.title.toLowerCase().includes(query) ||
-            card.subtitle.toLowerCase().includes(query) ||
-            (card.tag || "").toLowerCase().includes(query) ||
-            (card.slug || "").toLowerCase().includes(query)
+            matchesSearchQuery(
+              query,
+              card.title,
+              card.subtitle,
+              card.tag,
+              card.slug,
+              card.body_system_name,
+              card.body_system_slug
+            )
         )
       : topicCards;
 
@@ -256,6 +315,10 @@ export default function BrowseHealth() {
 
   const mobileFeaturedTopicCards = filteredTopicCards;
   const sidebarBodySystems = filteredBodySystems.length > 0 ? filteredBodySystems : bodySystems;
+  const showBodySystemMatches =
+    search.trim().length > 0 &&
+    filteredTopicCards.length === 0 &&
+    filteredBodySystems.length > 0;
 
   const handleBodySystemClick = (item: BodySystem) => {
     if (item.slug) {
@@ -355,6 +418,22 @@ export default function BrowseHealth() {
                 <p className="mobile-health-state">Loading health categories...</p>
               ) : error ? (
                 <p className="mobile-health-state">{error}</p>
+              ) : showBodySystemMatches ? (
+                <div className="mobile-topic-strip">
+                  {filteredBodySystems.map((system) => (
+                    <button
+                      key={`mobile-system-${system.id}`}
+                      className="mobile-topic-card"
+                      type="button"
+                      onClick={() => handleBodySystemClick(system)}
+                    >
+                      <span className="mobile-topic-icon">{system.icon}</span>
+                      <strong>{system.title}</strong>
+                      <span>{system.subtitle || "Open the body system overview."}</span>
+                      <b>{"\u203A"}</b>
+                    </button>
+                  ))}
+                </div>
               ) : mobileFeaturedTopicCards.length === 0 ? (
                 <p className="mobile-health-state">No topics found.</p>
               ) : (
@@ -529,6 +608,31 @@ export default function BrowseHealth() {
                     <p className="health-topic-state">Loading health categories...</p>
                   ) : error ? (
                     <p className="health-topic-state">{error}</p>
+                  ) : showBodySystemMatches ? (
+                    <div className="topic-grid">
+                      {filteredBodySystems.map((system) => (
+                        <button
+                          key={`system-${system.id}`}
+                          className="topic-card"
+                          type="button"
+                          onClick={() => handleBodySystemClick(system)}
+                        >
+                          <div className="topic-left">
+                            <div className="topic-icon-wrap">{system.icon}</div>
+                            <div>
+                              <div className="topic-title-row">
+                                <span className="topic-title">{system.title}</span>
+                                <span className="topic-tag">Body System</span>
+                              </div>
+                              <div className="topic-subtitle">
+                                {system.subtitle || "Open the body system overview."}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="system-arrow">›</span>
+                        </button>
+                      ))}
+                    </div>
                   ) : filteredTopicCards.length === 0 ? (
                     <p className="health-topic-state">No topics found.</p>
                   ) : (
