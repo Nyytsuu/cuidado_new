@@ -835,12 +835,22 @@ body {
   grid-area: symptoms;
   width: 100%;
   min-width: 0;
+  height: 100%;
+  min-height: clamp(330px, 36vh, 390px);
+  max-height: none;
+  align-self: stretch;
+}
+
+.body-system-details-page .overview-grid > .symptoms-card ul {
+  max-height: none;
 }
 
 .body-system-details-page .overview-grid > .prevention-card {
   grid-area: prevention;
   width: 100%;
   min-width: 0;
+  margin-top: 10px;
+  align-self: start;
 }
 
 .body-system-details-page .overview-grid > .footer-voice-row {
