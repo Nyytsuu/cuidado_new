@@ -37,8 +37,11 @@ type ArticleItem = {
   slug?: string | null;
   searchQuery?: string | null;
   subtitle?: string | null;
+  content?: string | null;
+  image?: string | null;
   url?: string | null;
   source?: string | null;
+  publishedAt?: string | null;
 };
 
 type HealthFact = {
@@ -82,6 +85,9 @@ const createConditionArticleFallbacks = (topic?: string | null): ArticleItem[] =
     title,
     slug: toRelatedArticleSlug(title),
     searchQuery: title,
+    subtitle: `A quick guide for ${cleanTopic.toLowerCase()} care and awareness.`,
+    content:
+      `This related guide helps patients review ${cleanTopic.toLowerCase()} basics, possible symptoms, care options, and when to ask a healthcare professional for help.`,
     source: "Cuidado MediHelp",
   }));
 };
@@ -117,6 +123,7 @@ export default function ConditionDetails() {
   const [articles, setArticles] = useState<ArticleItem[]>([]);
   const [symptoms, setSymptoms] = useState<SymptomItem[]>([]);
   const [healthFacts, setHealthFacts] = useState<HealthFact[]>([]);
+  const [selectedArticle, setSelectedArticle] = useState<ArticleItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeSupportIndex, setActiveSupportIndex] = useState<number | null>(null);
@@ -260,13 +267,7 @@ export default function ConditionDetails() {
   };
 
   const handleArticleClick = (article: ArticleItem) => {
-    if (article.url) {
-      window.open(article.url, "_blank", "noopener,noreferrer");
-      return;
-    }
-
-    const articleQuery = article.searchQuery || article.title || article.slug || "health";
-    navigate(`/browse-health?search=${encodeURIComponent(articleQuery)}`);
+    setSelectedArticle(article);
   };
 
   const conditionImageUrl = toAssetUrl(condition?.hero_image || condition?.thumbnail_image);
@@ -557,7 +558,7 @@ export default function ConditionDetails() {
                                     </span>
                                   )}
                                 </span>
-                                <span className="related-arrow">›</span>
+                                <span className="related-arrow">Open</span>
                               </button>
                             );
                           })
@@ -710,6 +711,67 @@ export default function ConditionDetails() {
           </div>
         </main>
       </div>
+
+      {selectedArticle && (
+        <div
+          className="related-article-modal-overlay"
+          onClick={() => setSelectedArticle(null)}
+        >
+          <article
+            className="related-article-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="related-article-modal-close"
+              onClick={() => setSelectedArticle(null)}
+              aria-label="Close related article"
+            >
+              x
+            </button>
+
+            <div className="related-article-modal-head">
+              <span>{selectedArticle.source || "Cuidado MediHelp"}</span>
+              <h2>{selectedArticle.title}</h2>
+              {selectedArticle.subtitle && <p>{selectedArticle.subtitle}</p>}
+            </div>
+
+            <div className="related-article-modal-body">
+              <h3>Summary</h3>
+              <p>
+                {selectedArticle.content ||
+                  `Review ${selectedArticle.title.toLowerCase()} and use it as a starting point for discussing symptoms, care options, or next steps with a healthcare professional.`}
+              </p>
+
+              {selectedArticle.url ? (
+                <a
+                  href={selectedArticle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="related-article-link"
+                >
+                  Read full article
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  className="related-article-link"
+                  onClick={() => {
+                    const query =
+                      selectedArticle.searchQuery ||
+                      selectedArticle.title ||
+                      selectedArticle.slug ||
+                      "health";
+                    navigate(`/browse-health?search=${encodeURIComponent(query)}`);
+                  }}
+                >
+                  Search related topics
+                </button>
+              )}
+            </div>
+          </article>
+        </div>
+      )}
     </div>
   );
 }
