@@ -510,28 +510,6 @@ export default function BodySystemDetails() {
                       </div>
                     </div>
 
-                    <div className="symptoms-card">
-                      <h3>Common Symptoms</h3>
-                      <ul>
-                        {displayedSymptoms.length > 0 ? (
-                          displayedSymptoms.map((item) => (
-                            <li key={item.symptom_id}>
-                              <strong>{item.symptom_name}</strong>
-                              <span>
-                                {item.description ||
-                                  `${bodySystem?.name || "Health"} symptom to watch.`}
-                              </span>
-                            </li>
-                          ))
-                        ) : (
-                          <li>
-                            <strong>No symptoms found</strong>
-                            <span>Try a different search or body system.</span>
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-
                     <div className="prevention-card">
                       <h3>Did You Know?</h3>
                       <ul>

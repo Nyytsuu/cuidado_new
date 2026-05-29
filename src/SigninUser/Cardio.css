@@ -781,10 +781,6 @@ body {
   grid-area: diseases;
 }
 
-.body-system-details-page .overview-grid > .symptoms-card {
-  grid-area: symptoms;
-}
-
 .body-system-details-page .overview-grid > .prevention-card {
   grid-area: prevention;
 }
