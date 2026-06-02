@@ -51,7 +51,7 @@
 .admin-UserAppoint .admin-content,
 .admin-UserServices .admin-content,
 .admin-UserReport .admin-content {
-  min-height: calc(100vh - 68px) !important;
+  min-height: calc(100vh - 68px - var(--admin-footer-space)) !important;
 }
 
 .admin-UserClinics .preview-canvas,
@@ -110,6 +110,25 @@
   flex: 0 0 auto;
   width: 100%;
   height: calc(var(--admin-footer-space) + env(safe-area-inset-bottom, 0px));
+}
+
+/* The older admin pages use their own full-height scroll canvas. Shrink that
+   canvas by the footer space so the last visible card never touches the edge. */
+.admin-UserClinics .preview-canvas,
+.admin-Userpage .preview-canvas,
+.admin-UserAppoint .preview-canvas,
+.admin-UserServices .preview-canvas,
+.admin-UserReport .preview-canvas {
+  height: calc(100vh - var(--admin-footer-space)) !important;
+  margin-bottom: var(--admin-footer-space) !important;
+}
+
+.admin-UserClinics .dash-aside,
+.admin-Userpage .dash-aside,
+.admin-UserAppoint .admin-right,
+.admin-UserServices .dash-aside,
+.admin-UserReport .dash-aside {
+  padding-bottom: var(--admin-footer-space) !important;
 }
 
 .app-header .header-left {

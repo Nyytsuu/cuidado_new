@@ -1,0 +1,94 @@
+:root {
+  --admin-footer-space: 20px;
+}
+
+body:has(.admin-dashboard-page),
+body:has(.admin-UserClinics.with-sidebar),
+body:has(.admin-Userpage.with-sidebar),
+body:has(.admin-UserAppoint.with-sidebar),
+body:has(.admin-UserServices.with-sidebar),
+body:has(.admin-UserReport.with-sidebar) {
+  background: #eef6f5 !important;
+}
+
+.admin-dashboard-page,
+.admin-UserClinics.with-sidebar,
+.admin-Userpage.with-sidebar,
+.admin-UserAppoint.with-sidebar,
+.admin-UserServices.with-sidebar,
+.admin-UserReport.with-sidebar {
+  min-height: 100vh !important;
+  box-sizing: border-box !important;
+}
+
+.admin-UserClinics.with-sidebar,
+.admin-Userpage.with-sidebar,
+.admin-UserAppoint.with-sidebar,
+.admin-UserServices.with-sidebar,
+.admin-UserReport.with-sidebar {
+  height: 100vh !important;
+  overflow: hidden !important;
+  background: #eef6f5 !important;
+}
+
+.admin-UserClinics .preview-canvas,
+.admin-Userpage .preview-canvas,
+.admin-UserAppoint .preview-canvas,
+.admin-UserServices .preview-canvas,
+.admin-UserReport .preview-canvas {
+  height: calc(100vh - var(--admin-footer-space)) !important;
+  max-height: calc(100vh - var(--admin-footer-space)) !important;
+  margin-bottom: var(--admin-footer-space) !important;
+  padding-bottom: var(--admin-footer-space) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  scroll-padding-bottom: var(--admin-footer-space) !important;
+}
+
+.admin-UserClinics .admin-content,
+.admin-Userpage .admin-content,
+.admin-UserAppoint .admin-content,
+.admin-UserServices .admin-content,
+.admin-UserReport .admin-content {
+  min-height: calc(100vh - 68px - var(--admin-footer-space)) !important;
+  padding-bottom: var(--admin-footer-space) !important;
+  box-sizing: border-box !important;
+}
+
+.admin-UserClinics .admin-content-inner,
+.admin-Userpage .admin-content-inner,
+.admin-UserAppoint .admin-content-inner,
+.admin-UserServices .admin-content-inner,
+.admin-UserReport .admin-content-inner,
+.admin-UserClinics .admin-grid,
+.admin-Userpage .admin-grid,
+.admin-UserAppoint .admin-grid,
+.admin-UserServices .admin-grid,
+.admin-UserReport .admin-grid,
+.admin-UserClinics .dash-aside,
+.admin-Userpage .dash-aside,
+.admin-UserAppoint .admin-right,
+.admin-UserServices .dash-aside,
+.admin-UserReport .dash-aside {
+  margin-bottom: var(--admin-footer-space) !important;
+  padding-bottom: var(--admin-footer-space) !important;
+}
+
+.admin-dashboard-page {
+  padding-bottom: var(--admin-footer-space) !important;
+}
+
+.admin-dashboard-page .admin-main {
+  min-height: calc(100vh - var(--admin-footer-space)) !important;
+  padding-bottom: var(--admin-footer-space) !important;
+  scroll-padding-bottom: var(--admin-footer-space) !important;
+}
+
+.admin-dashboard-page .dash-layout,
+.admin-dashboard-page .dash-grid-data,
+.admin-dashboard-page .dash-maincol,
+.admin-profile-page .ap-grid {
+  margin-bottom: var(--admin-footer-space) !important;
+  padding-bottom: var(--admin-footer-space) !important;
+}

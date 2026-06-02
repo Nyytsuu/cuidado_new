@@ -45,6 +45,8 @@ import ClinicProfile from "./Clinic/ClinicProfile";
 import ClinicSettings from "./Clinic/ClinicSettings";
 import Schedule from "./Clinic/Schedule";
 import ClinicReviews from "./Clinic/ClinicReviews";
+import "./admin/AdminLayout.css";
+
 function App() {
   return (
     <BrowserRouter>
