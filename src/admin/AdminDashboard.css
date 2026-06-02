@@ -64,7 +64,7 @@ body:has(.admin-dashboard-page) {
   right: 0;
   z-index: 999;
   min-height: var(--admin-header-height);
-  padding: 0 28px;
+  padding: 0 clamp(44px, 4vw, 72px) 0 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -179,7 +179,7 @@ body:has(.admin-dashboard-page) {
   column-gap: 12px;
   height: 100%;
   margin-left: auto;
-  margin-right: 10px;
+  margin-right: 0;
 }
 
 .admin-dashboard-page .nav-link {
