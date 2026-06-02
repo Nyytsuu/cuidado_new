@@ -23,7 +23,7 @@
 }
 
 :root {
-  --admin-footer-space: 96px;
+  --admin-footer-space: 128px;
 }
 
 /* Ensure all admin page content clears the 68px fixed header */
@@ -53,6 +53,21 @@
 .admin-UserReport .preview-canvas,
 .admin-dashboard-page .admin-main {
   scroll-padding-bottom: var(--admin-footer-space) !important;
+}
+
+/* Shared admin bottom breathing room. Most admin pages use nested scroll
+   containers, so a real spacer is more reliable than padding alone. */
+.admin-UserClinics .preview-canvas::after,
+.admin-Userpage .preview-canvas::after,
+.admin-UserAppoint .preview-canvas::after,
+.admin-UserServices .preview-canvas::after,
+.admin-UserReport .preview-canvas::after,
+.admin-dashboard-page .admin-main::after {
+  content: "";
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: calc(var(--admin-footer-space) + env(safe-area-inset-bottom, 0px));
 }
 
 .app-header .header-left {
