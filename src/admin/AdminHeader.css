@@ -23,7 +23,7 @@
 }
 
 :root {
-  --admin-footer-space: 60px;
+  --admin-footer-space: 40px;
 }
 
 /* Ensure all admin page content clears the 68px fixed header */
