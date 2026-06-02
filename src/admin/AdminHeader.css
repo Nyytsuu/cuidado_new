@@ -59,9 +59,9 @@
   min-width: 0 !important;
   flex: 0 0 auto !important;
   display: grid !important;
-  grid-template-columns: 160px minmax(280px, 430px) !important;
+  grid-template-columns: 140px 380px !important;
   align-items: center !important;
-  gap: 24px !important;
+  gap: 20px !important;
   position: static !important;
   right: auto !important;
 }
@@ -132,7 +132,7 @@
   flex: 0 0 auto !important;
   display: flex !important;
   align-items: center !important;
-  gap: 38px !important;
+  gap: 8px !important;
   height: 100% !important;
   position: static !important;
   right: auto !important;
@@ -232,7 +232,7 @@
   }
 
   .app-header .header-left {
-    grid-template-columns: 140px minmax(240px, 400px) !important;
+    grid-template-columns: 130px 340px !important;
     gap: 18px !important;
   }
 
@@ -253,7 +253,7 @@
   }
 
   .app-header .header-left {
-    grid-template-columns: 120px minmax(200px, 360px) !important;
+    grid-template-columns: 120px 300px !important;
     gap: 14px !important;
   }
 
