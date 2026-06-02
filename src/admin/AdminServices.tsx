@@ -5,8 +5,7 @@ import SidebarAdmin from "./SidebarAdmin";
 import AdminAppointmentDetailsModal, {
   type AdminAppointmentDetails,
 } from "./AdminAppointmentDetailsModal";
-import searchIcon from "../img/search.png";
-import logo from "../img/logo.png";
+import AdminHeader from "./AdminHeader";
 
 type Service = {
   id: number;
@@ -53,8 +52,6 @@ const matchesSearch = (
 export default function AdminServices() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
-
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [appointmentDetails, setAppointmentDetails] =
@@ -326,48 +323,7 @@ export default function AdminServices() {
       />
 
       <main className="preview-canvas">
-        <header className="app-header">
-          <div className="header-left">
-            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-
-            <form className="header-search" onSubmit={(event) => event.preventDefault()}>
-              <input
-                type="text"
-                placeholder="Search services..."
-                value={q}
-                onChange={(event) => setQ(event.target.value)}
-              />
-              <button aria-label="Search" type="submit" className="search-btn">
-                <img src={searchIcon} alt="Search" />
-              </button>
-            </form>
-          </div>
-
-          <nav className="header-nav">
-            <a className="nav-link" href="../admin/dashboard">
-              Home
-            </a>
-            <a className="nav-link" href="../admin/appointments">
-              Appointments
-            </a>
-
-            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="nav-link profile-btn"
-                onClick={() => setHeaderProfileOpen((v) => !v)}
-              >
-                Profile <span className="caret">▾</span>
-              </button>
-
-              <div className="profile-dropdown">
-                <a href="#">My Profile</a>
-                <a href="#">Settings</a>
-                <a href="#">Logout</a>
-              </div>
-            </div>
-          </nav>
-        </header>
+        <AdminHeader searchValue={q} onSearchChange={setQ} searchPlaceholder="Search services..." />
 
         <section className="admin-content">
           <div className="admin-content-inner">

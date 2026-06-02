@@ -6,8 +6,7 @@ import Sidebar from "./SidebarAdmin";
 import AdminAppointmentDetailsModal, {
   type AdminAppointmentDetails,
 } from "./AdminAppointmentDetailsModal";
-import searchIcon from "../img/search.png";
-import logo from "../img/logo.png";
+import AdminHeader from "./AdminHeader";
 
 
 type ClinicRow = {
@@ -376,50 +375,7 @@ export default function AdminClinics() {
       />
 
       <main className="preview-canvas">
-        <header className="app-header">
-          <div className="header-left">
-            <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-
-            <div className="header-search">
-              <input
-                type="text"
-                placeholder="Search keywords..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-              <button aria-label="Search" type="button" className="search-btn">
-                <img src={searchIcon} alt="Search" />
-              </button>
-            </div>
-          </div>
-
-          <nav className="header-nav">
-            <a className="nav-link" href="../admin/dashboard">Home</a>
-            <a className="nav-link" href="../admin/appointments">Appointments</a>
-
-            <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-              <button
-                type="button"
-                className="nav-link profile-btn"
-                onClick={() => setHeaderProfileOpen((v) => !v)}
-              >
-                Profile <span className="caret">▾</span>
-              </button>
-
-              <div className="profile-dropdown">
-                <Link to="/admin/profile">My Profile</Link>
-                <Link to="/admin/settings">Settings</Link>
-                <button
-                  type="button"
-                  className="dropdown-logout"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </nav>
-        </header>
+        <AdminHeader searchValue={q} onSearchChange={setQ} />
 
         <section className="admin-content">
           <div className="admin-content-inner">

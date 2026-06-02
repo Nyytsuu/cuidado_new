@@ -3,13 +3,11 @@ import profile from "../img/profile1.jpg";
 import "./AdminProfile.css";
 import "./AdminHeader.css";
 import SidebarAdmin from "./SidebarAdmin";
-import searchIcon from "../img/search.png";
-import logo from "../img/logo.png";
+import AdminHeader from "./AdminHeader";
 
 function AdminProfile() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [q, setQ] = useState("");
 
   const [isEditing, setIsEditing] = useState(false);
@@ -58,48 +56,7 @@ function AdminProfile() {
         setProfileOpen={setProfileOpen}
       />
 
-      <header className="app-header">
-        <div className="header-left">
-          <img src={logo} alt="CUIDADO logo" className="brand-logo" />
-
-          <form className="header-search" onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Search profile..."
-              value={q}
-              onChange={(event) => setQ(event.target.value)}
-            />
-            <button aria-label="Search" type="submit" className="search-btn">
-              <img src={searchIcon} alt="Search" />
-            </button>
-          </form>
-        </div>
-
-        <nav className="header-nav">
-          <a className="nav-link" href="../admin/dashboard">
-            Home
-          </a>
-          <a className="nav-link" href="../admin/appointments">
-            Appointments
-          </a>
-
-          <div className={`profile-menu ${headerProfileOpen ? "open" : ""}`}>
-            <button
-              type="button"
-              className="nav-link profile-btn"
-              onClick={() => setHeaderProfileOpen((v) => !v)}
-            >
-              Profile <span className="caret">▾</span>
-            </button>
-
-            <div className="profile-dropdown">
-              <a href="#">My Profile</a>
-              <a href="#">Settings</a>
-              <a href="#">Logout</a>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <AdminHeader searchValue={q} onSearchChange={setQ} searchPlaceholder="Search profile..." />
 
       <div className="Profile">
         <h1 className="profileTitle">Profile</h1>
