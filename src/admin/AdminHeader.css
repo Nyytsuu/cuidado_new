@@ -131,9 +131,10 @@
 .app-header .header-nav {
   flex: 0 0 auto !important;
   display: grid !important;
-  grid-template-columns: repeat(3, max-content) !important;
+  grid-template-columns: 96px 150px 96px !important;
   align-items: center !important;
-  column-gap: 28px !important;
+  justify-items: center !important;
+  column-gap: 18px !important;
   height: 100% !important;
   position: static !important;
   right: auto !important;
@@ -142,6 +143,7 @@
 
 .app-header .nav-link,
 .app-header .profile-btn {
+  width: 100% !important;
   height: 68px !important;
   display: flex !important;
   align-items: center !important;
@@ -242,7 +244,8 @@
   }
 
   .app-header .header-nav {
-    column-gap: 24px !important;
+    grid-template-columns: 90px 138px 90px !important;
+    column-gap: 14px !important;
   }
 }
 
@@ -263,7 +266,8 @@
   }
 
   .app-header .header-nav {
-    column-gap: 20px !important;
+    grid-template-columns: 82px 126px 82px !important;
+    column-gap: 10px !important;
   }
 }
 
@@ -279,6 +283,7 @@
   }
 
   .app-header .header-nav {
+    grid-template-columns: repeat(3, max-content) !important;
     column-gap: 16px !important;
   }
 
@@ -305,6 +310,7 @@
   }
 
   .app-header .header-nav {
+    grid-template-columns: repeat(3, max-content) !important;
     column-gap: 12px !important;
   }
 
