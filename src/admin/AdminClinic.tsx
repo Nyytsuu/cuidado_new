@@ -160,7 +160,10 @@ export default function AdminClinics() {
       ? normalizedPath
       : `uploads/${normalizedPath}`;
 
-    return `${backendUrl}/${uploadPath}`;
+    return `${backendUrl}/${uploadPath
+      .split("/")
+      .map((part) => encodeURIComponent(part))
+      .join("/")}`;
   };
 
   const getUploadFileName = (value?: string | null) => {

@@ -4,6 +4,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 
@@ -76,6 +77,45 @@ const uploadDirs = [
 
 uploadDirs.forEach((dir) => {
   app.use("/uploads", express.static(dir));
+});
+
+app.use("/uploads", async (req, res) => {
+  try {
+    const requestedPath = decodeURIComponent(req.path || "").replace(/^\/+/, "");
+    const normalizedPath = path.normalize(requestedPath);
+
+    if (!normalizedPath || normalizedPath.startsWith("..") || path.isAbsolute(normalizedPath)) {
+      return res.status(400).json({ message: "Invalid upload path." });
+    }
+
+    for (const dir of uploadDirs) {
+      const candidate = path.join(dir, normalizedPath);
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return res.sendFile(candidate);
+      }
+
+      const parentDir = path.dirname(candidate);
+      const requestedName = path.basename(candidate).toLowerCase();
+      if (fs.existsSync(parentDir)) {
+        const match = fs
+          .readdirSync(parentDir)
+          .find((fileName) => fileName.toLowerCase() === requestedName);
+
+        if (match) {
+          return res.sendFile(path.join(parentDir, match));
+        }
+      }
+    }
+
+    return res.status(404).json({
+      message: "Upload file not found",
+      path: req.originalUrl,
+      note: "The file record exists, but the uploaded file is not present on this server.",
+    });
+  } catch (error) {
+    console.error("Upload file lookup error:", error);
+    return res.status(500).json({ message: "Failed to load uploaded file." });
+  }
 });
 
 /* TEST ROUTES */
