@@ -224,18 +224,225 @@
   margin-top: 10px;
   border: 1px solid #bfe8d1;
   border-radius: 12px;
-  background: #edfff4;
-  color: #0d5f43;
+  background: linear-gradient(180deg, #f1fff8 0%, #ffffff 100%);
+  color: #123333;
   display: grid;
-  gap: 5px;
-  padding: 10px 12px;
+  gap: 10px;
+  padding: 12px;
   font-size: 12px;
   font-weight: 800;
   line-height: 1.35;
 }
 
-.sympcheck-result-card strong {
-  color: #006c49;
+.sympcheck-result-head {
+  display: grid;
+  gap: 3px;
+}
+
+.sympcheck-result-head span,
+.sympcheck-result-section > span,
+.sympcheck-result-stats span {
+  color: #08776f;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sympcheck-result-head strong {
+  color: #172033;
+  font-size: 20px;
+  line-height: 1.12;
+  font-weight: 900;
+}
+
+.sympcheck-result-head p {
+  margin: 0;
+  color: #546675;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sympcheck-result-stats {
+  display: grid;
+  grid-template-columns: 0.78fr 1.22fr;
+  gap: 8px;
+}
+
+.sympcheck-result-stats div,
+.sympcheck-result-section,
+.sympcheck-advice-card {
+  min-width: 0;
+  border: 1px solid #d4eaec;
+  border-radius: 11px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.sympcheck-result-stats strong {
+  display: block;
+  margin-top: 4px;
+  color: #172033;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.sympcheck-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.sympcheck-chip-row small {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #e4f8f6;
+  color: #08776f;
+  font-size: 10.5px;
+  font-weight: 900;
+}
+
+.sympcheck-chip-row small.danger {
+  background: #ffe8e8;
+  color: #a91d1d;
+}
+
+.sympcheck-condition-list {
+  display: grid;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding-right: 2px;
+}
+
+.sympcheck-condition-list > p {
+  margin: 0;
+  color: #637486;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.sympcheck-condition-card {
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid #e0eeee;
+  border-radius: 10px;
+  background: #fbfefe;
+}
+
+.sympcheck-condition-top {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.sympcheck-condition-top b {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #0c918a;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.sympcheck-condition-top strong {
+  display: block;
+  color: #172033;
+  font-size: 12px;
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.sympcheck-condition-top em {
+  display: block;
+  margin-top: 2px;
+  color: #667789;
+  font-style: normal;
+  font-size: 9.5px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.sympcheck-condition-top span {
+  color: #08776f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sympcheck-condition-meter {
+  height: 7px;
+  border-radius: 999px;
+  background: #dcebec;
+  overflow: hidden;
+}
+
+.sympcheck-condition-meter i {
+  display: block;
+  height: 100%;
+  min-width: 6px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #23b9ad, #08776f);
+}
+
+.sympcheck-advice-card {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #91400f;
+}
+
+.sympcheck-advice-card.urgent {
+  background: #fff1f0;
+  border-color: #f4b7b1;
+  color: #9f1d1d;
+}
+
+.sympcheck-advice-card.consult {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #91400f;
+}
+
+.sympcheck-advice-card.self-care {
+  background: #effaf5;
+  border-color: #b7ebc6;
+  color: #0b6f49;
+}
+
+.sympcheck-advice-card strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sympcheck-advice-card p {
+  margin: 5px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.sympcheck-result-action {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: 9px;
+  background: #0c918a;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 .common-symptoms-section,

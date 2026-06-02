@@ -85,14 +85,56 @@ type SymptomCheckerResponse = {
     selectedSymptoms: string[];
     matchedSymptoms: string[];
     possibleConditions: string[];
-    adviceLevel: "self-care" | "consult" | "urgent";
+    conditionDetails?: ConditionMatch[];
+    redFlagSymptoms?: string[];
+    adviceLevel: AdviceLevel;
+    guidance?: string;
   };
+};
+
+type AdviceLevel = "self-care" | "consult" | "urgent";
+
+type ConditionMatch = {
+  id?: number;
+  name: string;
+  adviceLevel?: AdviceLevel;
+  score?: number;
+  scorePercent?: number;
+  matchedCount?: number;
+  totalSymptoms?: number;
+  matchedSymptoms?: string[];
+  whenToSeekHelp?: string | null;
 };
 
 const LANGUAGE_OPTIONS = [
   { label: "English", value: "en-PH" },
   { label: "Filipino", value: "fil-PH" },
 ];
+
+const ADVICE_LABELS: Record<string, { title: string; detail: string }> = {
+  "self-care": {
+    title: "Self-care guidance",
+    detail: "Monitor symptoms and seek care if they persist or worsen.",
+  },
+  consult: {
+    title: "Clinic consultation recommended",
+    detail: "Booking a clinic visit is a good next step.",
+  },
+  urgent: {
+    title: "Urgent care recommended",
+    detail: "Contact a healthcare professional as soon as possible.",
+  },
+};
+
+const getConditionPercent = (condition: ConditionMatch) =>
+  Math.max(
+    0,
+    Math.min(
+      100,
+      condition.scorePercent ??
+        Math.round(Number(condition.score || 0) * 100)
+    )
+  );
 
 const getStoredUserId = () => {
   try {
@@ -122,9 +164,18 @@ export default function SympCheck() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [possibleConditions, setPossibleConditions] = useState<string[]>([]);
+  const [conditionDetails, setConditionDetails] = useState<ConditionMatch[]>([]);
   const [matchedSymptoms, setMatchedSymptoms] = useState<string[]>([]);
+  const [redFlagSymptoms, setRedFlagSymptoms] = useState<string[]>([]);
   const [adviceLevel, setAdviceLevel] = useState("");
+  const [guidance, setGuidance] = useState("");
   const isFilipino = language === "fil-PH";
+  const topCondition = conditionDetails[0] || null;
+  const visibleConditionDetails = conditionDetails.slice(0, 5);
+  const adviceInfo = ADVICE_LABELS[adviceLevel] || {
+    title: "Review with care",
+    detail: "Use this result as a guide before consulting a professional.",
+  };
 
   const handleSymptomCardClick = (symptom: string) => {
     const currentSymptoms = symptomInput
@@ -147,8 +198,11 @@ export default function SympCheck() {
     setError("");
     setSuccessMessage("");
     setPossibleConditions([]);
+    setConditionDetails([]);
     setMatchedSymptoms([]);
+    setRedFlagSymptoms([]);
     setAdviceLevel("");
+    setGuidance("");
 
     const selectedSymptoms = symptomInput
       .split(",")
@@ -185,8 +239,11 @@ export default function SympCheck() {
 
       setSuccessMessage(result.message || "Symptom check completed.");
       setPossibleConditions(result.data?.possibleConditions || []);
+      setConditionDetails(result.data?.conditionDetails || []);
       setMatchedSymptoms(result.data?.matchedSymptoms || []);
+      setRedFlagSymptoms(result.data?.redFlagSymptoms || []);
       setAdviceLevel(result.data?.adviceLevel || "");
+      setGuidance(result.data?.guidance || "");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -291,14 +348,95 @@ export default function SympCheck() {
               {error && <p className="sympcheck-alert error">{error}</p>}
               {successMessage && (
                 <div className="sympcheck-result-card">
-                  <strong>{successMessage}</strong>
-                  {matchedSymptoms.length > 0 && (
-                    <span>Matched: {matchedSymptoms.join(", ")}</span>
-                  )}
-                  {possibleConditions.length > 0 && (
-                    <span>Possible: {possibleConditions.join(", ")}</span>
-                  )}
-                  {adviceLevel && <span>Advice: {adviceLevel}</span>}
+                  <div className="sympcheck-result-head">
+                    <span>Symptom check completed</span>
+                    <strong>{topCondition?.name || possibleConditions[0] || "Review your result"}</strong>
+                    <p>
+                      {matchedSymptoms.length > 0
+                        ? `${matchedSymptoms.length} matched symptom${
+                            matchedSymptoms.length === 1 ? "" : "s"
+                          } found`
+                        : "No exact symptom match found"}
+                    </p>
+                  </div>
+
+                  <div className="sympcheck-result-stats">
+                    <div>
+                      <span>Top match</span>
+                      <strong>
+                        {topCondition ? `${getConditionPercent(topCondition)}%` : "--"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Care level</span>
+                      <strong>{adviceInfo.title}</strong>
+                    </div>
+                  </div>
+
+                  <div className="sympcheck-result-section">
+                    <span>Matched symptoms</span>
+                    <div className="sympcheck-chip-row">
+                      {matchedSymptoms.length > 0 ? (
+                        matchedSymptoms.map((symptom) => (
+                          <small
+                            className={redFlagSymptoms.includes(symptom) ? "danger" : ""}
+                            key={symptom}
+                          >
+                            {symptom}
+                          </small>
+                        ))
+                      ) : (
+                        <small>No exact symptom match</small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="sympcheck-result-section">
+                    <span>Possible conditions</span>
+                    <div className="sympcheck-condition-list">
+                      {visibleConditionDetails.length > 0 ? (
+                        visibleConditionDetails.map((condition, index) => {
+                          const percent = getConditionPercent(condition);
+                          return (
+                            <article className="sympcheck-condition-card" key={condition.name}>
+                              <div className="sympcheck-condition-top">
+                                <b>{index + 1}</b>
+                                <div>
+                                  <strong>{condition.name}</strong>
+                                  <em>
+                                    {condition.matchedCount ||
+                                      condition.matchedSymptoms?.length ||
+                                      0}
+                                    {" of "}
+                                    {condition.totalSymptoms || "mapped"} symptoms matched
+                                  </em>
+                                </div>
+                                <span>{percent}%</span>
+                              </div>
+                              <div className="sympcheck-condition-meter">
+                                <i style={{ width: `${percent}%` }} />
+                              </div>
+                            </article>
+                          );
+                        })
+                      ) : (
+                        <p>No possible conditions returned.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={`sympcheck-advice-card ${adviceLevel || ""}`}>
+                    <strong>{adviceInfo.title}</strong>
+                    <p>{guidance || adviceInfo.detail}</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="sympcheck-result-action"
+                    onClick={() => navigate("/find-clinic")}
+                  >
+                    Find Clinic
+                  </button>
                 </div>
               )}
             </div>

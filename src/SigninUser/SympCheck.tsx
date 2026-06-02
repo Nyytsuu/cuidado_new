@@ -104,6 +104,20 @@ const LANGUAGE_OPTIONS = [
   { label: "Filipino", value: "fil-PH" },
 ];
 
+type AdviceLevel = "self-care" | "consult" | "urgent";
+
+type ConditionMatch = {
+  id?: number;
+  name: string;
+  adviceLevel?: AdviceLevel;
+  score?: number;
+  scorePercent?: number;
+  matchedCount?: number;
+  totalSymptoms?: number;
+  matchedSymptoms?: string[];
+  whenToSeekHelp?: string | null;
+};
+
 type SymptomCheckerResponse = {
   success: boolean;
   message: string;
@@ -112,9 +126,37 @@ type SymptomCheckerResponse = {
     selectedSymptoms: string[];
     matchedSymptoms: string[];
     possibleConditions: string[];
-    adviceLevel: "self-care" | "consult" | "urgent";
+    conditionDetails?: ConditionMatch[];
+    redFlagSymptoms?: string[];
+    adviceLevel: AdviceLevel;
+    guidance?: string;
   };
 };
+
+const ADVICE_LABELS: Record<string, { title: string; detail: string }> = {
+  "self-care": {
+    title: "Self-care guidance",
+    detail: "Monitor symptoms and seek care if they persist or worsen.",
+  },
+  consult: {
+    title: "Clinic consultation recommended",
+    detail: "Booking a clinic visit is a good next step.",
+  },
+  urgent: {
+    title: "Urgent care recommended",
+    detail: "Contact a healthcare professional as soon as possible.",
+  },
+};
+
+const getConditionPercent = (condition: ConditionMatch) =>
+  Math.max(
+    0,
+    Math.min(
+      100,
+      condition.scorePercent ??
+        Math.round(Number(condition.score || 0) * 100)
+    )
+  );
 
 function getStoredUserId() {
   try {
@@ -141,10 +183,19 @@ export default function SympCheck() {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [possibleConditions, setPossibleConditions] = useState<string[]>([]);
+  const [conditionDetails, setConditionDetails] = useState<ConditionMatch[]>([]);
   const [matchedSymptoms, setMatchedSymptoms] = useState<string[]>([]);
+  const [redFlagSymptoms, setRedFlagSymptoms] = useState<string[]>([]);
   const [adviceLevel, setAdviceLevel] = useState("");
+  const [guidance, setGuidance] = useState("");
   const [resultModalOpen, setResultModalOpen] = useState(false);
   const isFilipino = language === "fil-PH";
+  const topCondition = conditionDetails[0] || null;
+  const visibleConditionDetails = conditionDetails.slice(0, 5);
+  const adviceInfo = ADVICE_LABELS[adviceLevel] || {
+    title: "Review with care",
+    detail: "Use this result as a guide before consulting a professional.",
+  };
 
   const handleSymptomCardClick = (title: string) => {
     const mappedTitle =
@@ -172,8 +223,11 @@ export default function SympCheck() {
     setError("");
     setSuccessMessage("");
     setPossibleConditions([]);
+    setConditionDetails([]);
     setMatchedSymptoms([]);
+    setRedFlagSymptoms([]);
     setAdviceLevel("");
+    setGuidance("");
     setResultModalOpen(false);
 
     const selectedSymptoms = symptomInput
@@ -211,8 +265,11 @@ export default function SympCheck() {
 
       setSuccessMessage(result.message || "Symptom check completed.");
       setPossibleConditions(result.data?.possibleConditions || []);
+      setConditionDetails(result.data?.conditionDetails || []);
       setMatchedSymptoms(result.data?.matchedSymptoms || []);
+      setRedFlagSymptoms(result.data?.redFlagSymptoms || []);
       setAdviceLevel(result.data?.adviceLevel || "");
+      setGuidance(result.data?.guidance || "");
       setResultModalOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -505,42 +562,118 @@ export default function SympCheck() {
                   <div>
                     <span>Symptom check completed</span>
                     <h2 id="symptomResultTitle">
-                      {possibleConditions[0] || "Review your result"}
+                      {topCondition?.name || possibleConditions[0] || "Review your result"}
                     </h2>
-                    <p>{successMessage || "Your symptom check is ready."}</p>
-                  </div>
-                </div>
-
-                <div className="symptom-result-grid">
-                  <div className="symptom-result-panel">
-                    <span>Matched Symptoms</span>
-                    <strong>
+                    <p>
+                      {successMessage || "Your symptom check is ready."}{" "}
                       {matchedSymptoms.length > 0
-                        ? matchedSymptoms.join(", ")
-                        : "No exact symptom match found."}
-                    </strong>
-                  </div>
-
-                  <div className="symptom-result-panel">
-                    <span>Possible Conditions</span>
-                    <strong>
-                      {possibleConditions.length > 0
-                        ? possibleConditions.join(", ")
-                        : "No possible conditions returned."}
-                    </strong>
-                  </div>
-
-                  <div className="symptom-result-panel highlight">
-                    <span>Advice Level</span>
-                    <strong>{adviceLevel || "Review with care"}</strong>
+                        ? `${matchedSymptoms.length} symptom match${
+                            matchedSymptoms.length === 1 ? "" : "es"
+                          } found.`
+                        : "No exact symptom match was found."}
+                    </p>
                   </div>
                 </div>
 
-                <div className="symptom-result-note">
+                <div className="symptom-result-summary">
+                  <div className="symptom-result-stat">
+                    <span>Top match</span>
+                    <strong>
+                      {topCondition ? `${getConditionPercent(topCondition)}%` : "--"}
+                    </strong>
+                    <small>match strength</small>
+                  </div>
+                  <div className="symptom-result-stat">
+                    <span>Symptoms</span>
+                    <strong>{matchedSymptoms.length}</strong>
+                    <small>matched terms</small>
+                  </div>
+                  <div className="symptom-result-stat urgent">
+                    <span>Care level</span>
+                    <strong>{adviceInfo.title}</strong>
+                    <small>{adviceInfo.detail}</small>
+                  </div>
+                </div>
+
+                <section className="symptom-result-section">
+                  <div className="symptom-result-section-head">
+                    <span>Matched symptoms</span>
+                    {redFlagSymptoms.length > 0 && (
+                      <strong>{redFlagSymptoms.length} red flag</strong>
+                    )}
+                  </div>
+                  <div className="symptom-chip-row">
+                    {matchedSymptoms.length > 0 ? (
+                      matchedSymptoms.map((symptom) => (
+                        <span
+                          className={`symptom-chip${
+                            redFlagSymptoms.includes(symptom) ? " danger" : ""
+                          }`}
+                          key={symptom}
+                        >
+                          {symptom}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="symptom-chip muted">No exact symptom match</span>
+                    )}
+                  </div>
+                </section>
+
+                <section className="symptom-result-section">
+                  <div className="symptom-result-section-head">
+                    <span>Possible conditions</span>
+                    <strong>{possibleConditions.length} found</strong>
+                  </div>
+
+                  <div className="symptom-condition-list">
+                    {visibleConditionDetails.length > 0 ? (
+                      visibleConditionDetails.map((condition, index) => {
+                        const percent = getConditionPercent(condition);
+                        return (
+                          <article className="symptom-condition-card" key={condition.name}>
+                            <div className="symptom-condition-title">
+                              <span>{index + 1}</span>
+                              <div>
+                                <h3>{condition.name}</h3>
+                                <p>
+                                  {condition.matchedCount || condition.matchedSymptoms?.length || 0}
+                                  {" of "}
+                                  {condition.totalSymptoms || "mapped"} symptoms matched
+                                </p>
+                              </div>
+                              <strong>{percent}%</strong>
+                            </div>
+                            <div className="symptom-condition-meter">
+                              <span style={{ width: `${percent}%` }} />
+                            </div>
+                            {condition.matchedSymptoms &&
+                              condition.matchedSymptoms.length > 0 && (
+                                <div className="symptom-condition-tags">
+                                  {condition.matchedSymptoms.slice(0, 4).map((symptom) => (
+                                    <small key={`${condition.name}-${symptom}`}>
+                                      {symptom}
+                                    </small>
+                                  ))}
+                                </div>
+                              )}
+                          </article>
+                        );
+                      })
+                    ) : (
+                      <div className="symptom-result-empty">
+                        No possible conditions returned from the matched symptoms.
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                <div className={`symptom-result-note ${adviceLevel || ""}`}>
                   <Lightbulb size={18} />
                   <p>
-                    This result is for general guidance. If symptoms are severe,
-                    worsening, or urgent, contact a healthcare professional.
+                    <strong>{adviceInfo.title}.</strong>{" "}
+                    {guidance ||
+                      "This result is for general guidance. If symptoms are severe, worsening, or urgent, contact a healthcare professional."}
                   </p>
                 </div>
 

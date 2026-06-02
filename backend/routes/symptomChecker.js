@@ -76,6 +76,26 @@ const buildSearchableSymptomText = (symptoms) => {
   return [normalizedInput, ...aliasSymptoms].filter(Boolean).join(" ");
 };
 
+const getAdviceCopy = (adviceLevel, topCondition, hasRedFlag) => {
+  if (hasRedFlag) {
+    return "A red-flag symptom was matched. Please seek urgent medical care or contact a healthcare professional immediately.";
+  }
+
+  if (topCondition?.whenToSeekHelp) {
+    return topCondition.whenToSeekHelp;
+  }
+
+  if (adviceLevel === "urgent") {
+    return "Your symptoms may need urgent care. Please contact a healthcare professional or visit an urgent care facility as soon as possible.";
+  }
+
+  if (adviceLevel === "consult") {
+    return "A clinic consultation is recommended, especially if symptoms persist, worsen, or affect your daily activities.";
+  }
+
+  return "Monitor your symptoms, rest, stay hydrated, and consult a healthcare professional if symptoms persist or worsen.";
+};
+
 router.post("/", async (req, res) => {
   try {
     const { userId = null, selectedSymptoms } = req.body;
@@ -113,6 +133,7 @@ router.post("/", async (req, res) => {
     const matchedSymptomIds = matchedSymptoms.map((row) => row.symptom_id);
 
     let possibleConditions = [];
+    let conditionDetails = [];
     let adviceLevel = "self-care";
 
     if (matchedSymptomIds.length > 0) {
@@ -124,17 +145,62 @@ router.post("/", async (req, res) => {
           c.condition_id,
           c.condition_name,
           c.advice_level,
-          COUNT(*) AS matched_count
+          c.when_to_seek_help,
+          COALESCE(SUM(cs.weight), 0) AS matched_weight,
+          COUNT(cs.symptom_id) AS matched_count,
+          totals.total_weight,
+          totals.total_count,
+          string_agg(s.symptom_name, '||' ORDER BY s.symptom_name) AS matched_symptoms
         FROM condition_symptoms cs
         INNER JOIN conditions c ON c.condition_id = cs.condition_id
+        INNER JOIN symptoms s ON s.symptom_id = cs.symptom_id
+        INNER JOIN (
+          SELECT
+            condition_id,
+            COALESCE(SUM(weight), 0) AS total_weight,
+            COUNT(*) AS total_count
+          FROM condition_symptoms
+          GROUP BY condition_id
+        ) totals ON totals.condition_id = c.condition_id
         WHERE cs.symptom_id IN (${conditionPlaceholders})
-        GROUP BY c.condition_id, c.condition_name, c.advice_level
-        ORDER BY matched_count DESC, c.condition_name ASC
+        GROUP BY
+          c.condition_id,
+          c.condition_name,
+          c.advice_level,
+          c.when_to_seek_help,
+          totals.total_weight,
+          totals.total_count
+        ORDER BY matched_weight DESC, matched_count DESC, c.condition_name ASC
         `,
         matchedSymptomIds
       );
 
-      possibleConditions = conditionRows.map((row) => row.condition_name);
+      conditionDetails = conditionRows.map((row) => {
+        const matchedWeight = Number(row.matched_weight) || 0;
+        const totalWeight = Number(row.total_weight) || 0;
+        const matchedCount = Number(row.matched_count) || 0;
+        const totalSymptoms = Number(row.total_count) || matchedCount || 1;
+        const score =
+          totalWeight > 0
+            ? matchedWeight / totalWeight
+            : matchedCount / totalSymptoms;
+
+        return {
+          id: row.condition_id,
+          name: row.condition_name,
+          adviceLevel: row.advice_level || "self-care",
+          score: Math.max(0, Math.min(1, score)),
+          scorePercent: Math.round(Math.max(0, Math.min(1, score)) * 100),
+          matchedCount,
+          totalSymptoms,
+          matchedSymptoms: row.matched_symptoms
+            ? String(row.matched_symptoms).split("||")
+            : [],
+          whenToSeekHelp: row.when_to_seek_help || null,
+        };
+      });
+
+      possibleConditions = conditionDetails.map((condition) => condition.name);
 
       if (conditionRows.some((row) => row.advice_level === "urgent")) {
         adviceLevel = "urgent";
@@ -150,6 +216,13 @@ router.post("/", async (req, res) => {
     if (hasRedFlag) {
       adviceLevel = "urgent";
     }
+
+    const redFlagSymptoms = matchedSymptoms
+      .filter((row) => Number(row.is_red_flag) === 1)
+      .map((row) => row.symptom_name);
+
+    const topCondition = conditionDetails[0] || null;
+    const guidance = getAdviceCopy(adviceLevel, topCondition, hasRedFlag);
 
     const [insertResult] = await pool.query(
       `
@@ -173,7 +246,10 @@ router.post("/", async (req, res) => {
         selectedSymptoms: cleanedSymptoms,
         matchedSymptoms: matchedSymptoms.map((row) => row.symptom_name),
         possibleConditions,
+        conditionDetails,
+        redFlagSymptoms,
         adviceLevel,
+        guidance,
       },
     });
   } catch (error) {
