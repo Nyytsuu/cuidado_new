@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
+const axios = require("axios");
 const pool = require("../db/pool");
 const db = pool;
 const { verifyToken, requireRole } = require("../middleware/auth");
@@ -29,13 +30,21 @@ router.use((req, res, next) => {
 const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const safeName = Date.now() + "-" + file.originalname.replace(/\s+/g, "_");
-    cb(null, safeName);
-  },
-});
+const SUPABASE_URL = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
+const CLINIC_DOCUMENTS_BUCKET =
+  process.env.CLINIC_DOCUMENTS_BUCKET || process.env.SUPABASE_BUCKET || "profile-pictures";
+const USE_SUPABASE_DOCUMENT_STORAGE = Boolean(SUPABASE_URL && SUPABASE_SERVICE_KEY);
+
+const storage = USE_SUPABASE_DOCUMENT_STORAGE
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+      filename: (req, file, cb) => {
+        const safeName = Date.now() + "-" + file.originalname.replace(/\s+/g, "_");
+        cb(null, safeName);
+      },
+    });
 
 const upload = multer({
   storage,
@@ -324,6 +333,59 @@ const removeUploadedFile = async (filePath) => {
   await fs.promises.unlink(filePath).catch(() => {});
 };
 
+const removeUploadedFiles = async (...files) => {
+  await Promise.all(files.map((file) => removeUploadedFile(file?.path)));
+};
+
+const getSafeUploadBaseName = (file, fallback) => {
+  const extension = path.extname(file.originalname || "").toLowerCase();
+  const baseName = path
+    .basename(file.originalname || fallback, extension)
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .slice(0, 60);
+
+  return {
+    extension: extension || ".jpg",
+    baseName: baseName || fallback,
+  };
+};
+
+const persistClinicDocument = async (file, label) => {
+  if (!file) return null;
+
+  if (!USE_SUPABASE_DOCUMENT_STORAGE) {
+    return path.posix.join("uploads", file.filename);
+  }
+
+  const { extension, baseName } = getSafeUploadBaseName(file, label);
+  const objectPath = `clinic-documents/${label}-${Date.now()}-${baseName}${extension}`;
+
+  try {
+    await axios.post(
+      `${SUPABASE_URL}/storage/v1/object/${CLINIC_DOCUMENTS_BUCKET}/${objectPath}`,
+      file.buffer,
+      {
+        headers: {
+          Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+          "Content-Type": file.mimetype,
+          "x-upsert": "true",
+        },
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+      }
+    );
+  } catch (uploadErr) {
+    const detail =
+      uploadErr?.response?.data?.message ||
+      uploadErr?.message ||
+      "Unknown storage upload error";
+    console.error("Clinic document storage upload error:", detail);
+    throw new Error("Failed to upload clinic verification documents.");
+  }
+
+  return `${SUPABASE_URL}/storage/v1/object/public/${CLINIC_DOCUMENTS_BUCKET}/${objectPath}`;
+};
+
 const ensureClinicProfilePictureColumn = async () => {
   const [columns] = await pool.query(
     `
@@ -509,6 +571,7 @@ router.post(
       if (repValidIdError) validationErrors.push(repValidIdError);
 
       if (validationErrors.length > 0) {
+        await removeUploadedFiles(clinicLicense, repValidId);
         return res.status(400).json({
           message: validationErrors[0],
           errors: validationErrors,
@@ -530,11 +593,13 @@ router.post(
         !locationCheck?.municipality_exists ||
         !locationCheck?.barangay_exists
       ) {
+        await removeUploadedFiles(clinicLicense, repValidId);
         return res.status(400).json({ message: "Selected clinic location is invalid." });
       }
 
       const [existingAccounts] = await findAccountByEmail(normalizedEmail);
       if (existingAccounts.length > 0) {
+        await removeUploadedFiles(clinicLicense, repValidId);
         return res.status(400).json({ message: "Email is already registered." });
       }
 
@@ -549,6 +614,7 @@ router.post(
       );
 
       if (existingClinics.length > 0) {
+        await removeUploadedFiles(clinicLicense, repValidId);
         return res.status(400).json({
           message: "A clinic with this name or license number is already registered.",
         });
@@ -569,12 +635,15 @@ router.post(
       );
 
       if (emailVerificationRows.length === 0) {
+        await removeUploadedFiles(clinicLicense, repValidId);
         return res.status(400).json({
           message: "Please verify the clinic email before submitting signup.",
         });
       }
 
       const password_hash = await bcrypt.hash(normalizedPassword, 10);
+      const clinicLicensePath = await persistClinicDocument(clinicLicense, "license");
+      const repValidIdPath = await persistClinicDocument(repValidId, "valid-id");
 
       const sql = `
         INSERT INTO clinics (
@@ -609,8 +678,8 @@ router.post(
           normalizedOpeningTime,
           normalizedClosingTime,
           normalizedOperatingDays,
-          clinicLicense.filename,
-          repValidId.filename,
+          clinicLicensePath,
+          repValidIdPath,
           password_hash,
         ],
         (err) => {
