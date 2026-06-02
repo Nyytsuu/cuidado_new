@@ -854,72 +854,6 @@ body {
   padding: 22px 16px;
 }
 
-/* ===== EDIT POPUP ONLY ===== */
-.admin-UserClinics .clinic-edit-popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999999;
-  padding: 20px;
-}
-
-.admin-UserClinics .clinic-edit-popup-card {
-  width: 100%;
-  max-width: 430px;
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
-  text-align: center;
-}
-
-.admin-UserClinics .clinic-edit-popup-title {
-  margin: 0 0 16px;
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f4242;
-}
-
-.admin-UserClinics .clinic-edit-popup-input {
-  width: 100%;
-  height: 46px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
-  padding: 0 14px;
-  font-size: 15px;
-  outline: none;
-  margin-bottom: 18px;
-}
-
-.admin-UserClinics .clinic-edit-popup-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-}
-
-.admin-UserClinics .clinic-edit-popup-btn {
-  min-width: 110px;
-  height: 40px;
-  border: none;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.admin-UserClinics .clinic-edit-popup-cancel {
-  background: #e8e8e8;
-  color: #333;
-}
-
-.admin-UserClinics .clinic-edit-popup-save {
-  background: #399a91;
-  color: #fff;
-}
-
 /* ===== STATUS POPUP ONLY ===== */
 .admin-UserClinics .clinic-status-popup-overlay {
   position: fixed;
@@ -1224,18 +1158,6 @@ body {
   border-color: #c62828;
 }
 
-/* Edit — neutral */
-.ca-btn--edit {
-  background: #f0f4f4;
-  color: #2e4a4a;
-  border: 1.5px solid #d0dede;
-}
-
-.ca-btn--edit:hover {
-  background: #ddecea;
-  border-color: #b0cecc;
-}
-
 /* Activate — solid green */
 .ca-btn--activate {
   background: #0a8a4e;
@@ -1483,6 +1405,118 @@ body {
   grid-column: 1 / -1;
 }
 
+.admin-UserClinics .clinic-document-section {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #d8e8e6;
+  border-radius: 18px;
+  background: #f8fcfb;
+}
+
+.admin-UserClinics .clinic-document-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-UserClinics .clinic-document-head span {
+  color: #70858a;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-UserClinics .clinic-document-head strong {
+  color: #102a2a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.admin-UserClinics .clinic-document-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-UserClinics .clinic-document-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dce9e8;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 66, 66, 0.06);
+}
+
+.admin-UserClinics .clinic-document-preview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #eef7f6;
+  display: grid;
+  place-items: center;
+}
+
+.admin-UserClinics .clinic-document-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.admin-UserClinics .clinic-document-placeholder {
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  border: 2px dashed #aacdca;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #0f7d73;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.admin-UserClinics .clinic-document-info {
+  padding: 12px 14px 14px;
+}
+
+.admin-UserClinics .clinic-document-info span {
+  display: block;
+  margin-bottom: 5px;
+  color: #70858a;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-UserClinics .clinic-document-info strong {
+  display: block;
+  overflow: hidden;
+  color: #102a2a;
+  font-size: 13px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-UserClinics .clinic-document-info a,
+.admin-UserClinics .clinic-document-info small {
+  display: inline-flex;
+  margin-top: 8px;
+  color: #078b7d;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-UserClinics .clinic-document-info a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .admin-UserClinics .clinic-detail-note {
   margin: 14px 0 0 !important;
   padding: 12px 14px;
@@ -1496,7 +1530,8 @@ body {
 @media screen and (max-width: 760px) {
   .admin-UserClinics .clinic-detail-hero,
   .admin-UserClinics .clinic-detail-stats,
-  .admin-UserClinics .clinic-detail-grid {
+  .admin-UserClinics .clinic-detail-grid,
+  .admin-UserClinics .clinic-document-grid {
     grid-template-columns: 1fr;
   }
 

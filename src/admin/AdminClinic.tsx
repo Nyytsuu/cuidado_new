@@ -7,6 +7,7 @@ import AdminAppointmentDetailsModal, {
   type AdminAppointmentDetails,
 } from "./AdminAppointmentDetailsModal";
 import AdminHeader from "./AdminHeader";
+import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
 
 type ClinicRow = {
@@ -27,10 +28,12 @@ type ClinicProfile = {
   address: string | null;
   specialization?: string | null;
   license_number?: string | null;
+  clinic_license_file?: string | null;
   years_operation?: number | string | null;
   rep_full_name?: string | null;
   rep_position?: string | null;
   rep_phone?: string | null;
+  rep_valid_id_file?: string | null;
   services_offered?: string | null;
   opening_time?: string | null;
   closing_time?: string | null;
@@ -76,10 +79,6 @@ export default function AdminClinics() {
   const [isClinicPopupOpen, setIsClinicPopupOpen] = useState(false);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [q, setQ] = useState("");
-
-  const [editPopupOpen, setEditPopupOpen] = useState(false);
-  const [editingClinic, setEditingClinic] = useState<ClinicRow | null>(null);
-  const [editClinicNameInput, setEditClinicNameInput] = useState("");
 
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
   const [statusClinic, setStatusClinic] = useState<ClinicRow | null>(null);
@@ -146,6 +145,44 @@ export default function AdminClinics() {
     if (open === "Not set" && close === "Not set") return "Not provided";
     return `${open} - ${close}`;
   };
+
+  const toUploadUrl = (value?: string | null) => {
+    const rawPath = String(value || "").trim();
+    if (!rawPath) return "";
+
+    const backendUrl = getConfiguredBackendUrl();
+    if (/^https?:\/\//i.test(rawPath)) {
+      return rawPath.replace("http://localhost:5000", backendUrl);
+    }
+
+    const normalizedPath = rawPath.replace(/^\/+/, "");
+    const uploadPath = normalizedPath.includes("/")
+      ? normalizedPath
+      : `uploads/${normalizedPath}`;
+
+    return `${backendUrl}/${uploadPath}`;
+  };
+
+  const getUploadFileName = (value?: string | null) => {
+    const rawPath = String(value || "").trim();
+    if (!rawPath) return "No file uploaded";
+
+    return rawPath.split(/[\\/]/).filter(Boolean).pop() || rawPath;
+  };
+
+  const isPreviewableImage = (value?: string | null) =>
+    /\.(png|jpe?g|webp|gif)$/i.test(String(value || ""));
+
+  const uploadedDocuments = (clinic: ClinicProfile) => [
+    {
+      label: "Clinic license",
+      value: clinic.clinic_license_file,
+    },
+    {
+      label: "Representative valid ID",
+      value: clinic.rep_valid_id_file,
+    },
+  ];
 
   const loadActivity = async () => {
     try {
@@ -276,45 +313,6 @@ export default function AdminClinics() {
       console.error("Update clinic status error:", e);
       alert("Failed to update clinic status.");
     }
-  };
-
-  const editClinicName = async (id: number, newName: string) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/admin/clinics/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clinic_name: newName }),
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      setClinics((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, clinic_name: newName } : c))
-      );
-    } catch (e) {
-      console.error("Edit clinic error:", e);
-      alert("Failed to edit clinic.");
-    }
-  };
-
-  const openEditPopup = (clinic: ClinicRow) => {
-    setEditingClinic(clinic);
-    setEditClinicNameInput(clinic.clinic_name);
-    setEditPopupOpen(true);
-  };
-
-  const closeEditPopup = () => {
-    setEditPopupOpen(false);
-    setEditingClinic(null);
-    setEditClinicNameInput("");
-  };
-
-  const saveEditedClinic = async () => {
-    if (!editingClinic) return;
-    const newName = editClinicNameInput.trim();
-    if (!newName) return;
-
-    await editClinicName(editingClinic.id, newName);
-    closeEditPopup();
   };
 
   const openStatusPopup = (clinic: ClinicRow, status: "active" | "disabled") => {
@@ -469,14 +467,6 @@ export default function AdminClinics() {
                                       </button>
                                     </>
                                   )}
-
-                                  <button
-                                    type="button"
-                                    className="ca-btn ca-btn--edit"
-                                    onClick={() => openEditPopup(c)}
-                                  >
-                                    <span className="ca-icon">✎</span> Edit
-                                  </button>
 
                                   {isApproved &&
                                     (isDisabled ? (
@@ -702,6 +692,47 @@ export default function AdminClinics() {
                 </div>
               </section>
 
+              <section className="clinic-document-section">
+                <div className="clinic-document-head">
+                  <span>Uploaded documents</span>
+                  <strong>Clinic verification files</strong>
+                </div>
+
+                <div className="clinic-document-grid">
+                  {uploadedDocuments(selectedClinic).map((doc) => {
+                    const url = toUploadUrl(doc.value);
+                    const fileName = getUploadFileName(doc.value);
+                    const canPreview = isPreviewableImage(doc.value);
+
+                    return (
+                      <article className="clinic-document-card" key={doc.label}>
+                        <div className="clinic-document-preview">
+                          {url && canPreview ? (
+                            <img src={url} alt={`${doc.label} preview`} />
+                          ) : (
+                            <div className="clinic-document-placeholder">
+                              <span>{url ? "FILE" : "NONE"}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="clinic-document-info">
+                          <span>{doc.label}</span>
+                          <strong>{fileName}</strong>
+                          {url ? (
+                            <a href={url} target="_blank" rel="noreferrer">
+                              Open file
+                            </a>
+                          ) : (
+                            <small>No uploaded file found</small>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+
               <p className="clinic-detail-note">
                 Activity is estimated from clinic registration and appointment request history.
               </p>
@@ -714,50 +745,6 @@ export default function AdminClinics() {
                 onClick={() => setIsClinicPopupOpen(false)}
               >
                 Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {editPopupOpen && editingClinic && (
-        <div
-          className="clinic-edit-popup-overlay"
-          onClick={closeEditPopup}
-        >
-          <div
-            className="clinic-edit-popup-card"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="clinic-edit-popup-title">Edit Clinic</h3>
-
-            <input
-              className="clinic-edit-popup-input"
-              type="text"
-              value={editClinicNameInput}
-              onChange={(e) => setEditClinicNameInput(e.target.value)}
-              placeholder="Enter clinic name..."
-              onKeyDown={(e) => {
-                if (e.key === "Enter") saveEditedClinic();
-                if (e.key === "Escape") closeEditPopup();
-              }}
-              autoFocus
-            />
-
-            <div className="clinic-edit-popup-actions">
-              <button
-                type="button"
-                className="clinic-edit-popup-btn clinic-edit-popup-cancel"
-                onClick={closeEditPopup}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="clinic-edit-popup-btn clinic-edit-popup-save"
-                onClick={saveEditedClinic}
-              >
-                Save
               </button>
             </div>
           </div>
