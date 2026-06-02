@@ -96,7 +96,8 @@ function App() {
       <Route path="/admin/services" element={<AdminServices />} />
       <Route path="/admin/appointments" element={<AdminAppoint />} />
       <Route path="/admin/clinics" element={<AdminClinic />} />
-      <Route path="/admin/settings" element={<AdminProfile/>} />
+      <Route path="/admin/profile" element={<AdminProfile />} />
+      <Route path="/admin/settings" element={<Navigate to="/admin/profile" replace />} />
       <Route path="/admin/reports" element={<AdminReport />} />
       <Route path="/admin/conditional" element={<AdminConditionalManagement />} />
       <Route path="/admin/symptoms" element={ <AdminSymptomsManagement />} />

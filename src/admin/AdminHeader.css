@@ -9,7 +9,7 @@
   padding: 0 28px !important;
   display: flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
+  justify-content: flex-start !important;
   gap: 28px !important;
   background: #58aea8 !important;
   border-radius: 0 !important;
@@ -57,9 +57,9 @@
 
 .app-header .header-left {
   min-width: 0 !important;
-  flex: 1 1 auto !important;
+  flex: 0 0 auto !important;
   display: grid !important;
-  grid-template-columns: 160px minmax(280px, 430px) minmax(0, 1fr) !important;
+  grid-template-columns: 160px minmax(280px, 430px) !important;
   align-items: center !important;
   gap: 24px !important;
   position: static !important;
@@ -231,7 +231,7 @@
   }
 
   .app-header .header-left {
-    grid-template-columns: 140px minmax(240px, 400px) minmax(0, 1fr) !important;
+    grid-template-columns: 140px minmax(240px, 400px) !important;
     gap: 18px !important;
   }
 
@@ -252,7 +252,7 @@
   }
 
   .app-header .header-left {
-    grid-template-columns: 120px minmax(200px, 360px) minmax(0, 1fr) !important;
+    grid-template-columns: 120px minmax(200px, 360px) !important;
     gap: 14px !important;
   }
 
