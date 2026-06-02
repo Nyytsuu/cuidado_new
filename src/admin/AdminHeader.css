@@ -131,14 +131,15 @@
 .app-header .header-nav {
   flex: 0 0 auto !important;
   display: grid !important;
-  grid-template-columns: 96px 150px 96px !important;
+  grid-template-columns: 82px 132px 82px !important;
   align-items: center !important;
   justify-items: center !important;
-  column-gap: 18px !important;
+  column-gap: 12px !important;
   height: 100% !important;
   position: static !important;
   right: auto !important;
   margin-left: auto !important;
+  margin-right: 10px !important;
 }
 
 .app-header .nav-link,
@@ -244,8 +245,8 @@
   }
 
   .app-header .header-nav {
-    grid-template-columns: 90px 138px 90px !important;
-    column-gap: 14px !important;
+    grid-template-columns: 78px 126px 78px !important;
+    column-gap: 10px !important;
   }
 }
 
@@ -266,8 +267,8 @@
   }
 
   .app-header .header-nav {
-    grid-template-columns: 82px 126px 82px !important;
-    column-gap: 10px !important;
+    grid-template-columns: 74px 118px 74px !important;
+    column-gap: 8px !important;
   }
 }
 

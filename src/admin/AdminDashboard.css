@@ -173,12 +173,13 @@ body:has(.admin-dashboard-page) {
 .admin-dashboard-page .header-nav {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: 96px 150px 96px;
+  grid-template-columns: 82px 132px 82px;
   align-items: center;
   justify-items: center;
-  column-gap: 18px;
+  column-gap: 12px;
   height: 100%;
   margin-left: auto;
+  margin-right: 10px;
 }
 
 .admin-dashboard-page .nav-link {
