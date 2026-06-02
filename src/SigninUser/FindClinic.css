@@ -953,6 +953,10 @@
 /* CLINIC PROFILE */
 .fc-profile-modal {
   max-width: 940px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(100dvh - 40px);
 }
 
 .fc-profile-header h2 {
@@ -960,6 +964,10 @@
 }
 
 .fc-profile-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 20px 24px 24px;
   display: grid;
   gap: 16px;
@@ -1128,8 +1136,10 @@
 }
 
 .fc-profile-reviews {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  min-height: 0;
 }
 
 .fc-profile-section-head {
@@ -1152,9 +1162,30 @@
 .fc-profile-review-list {
   display: grid;
   gap: 10px;
-  max-height: 270px;
+  max-height: min(340px, 38dvh);
   overflow-y: auto;
-  padding-right: 4px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+}
+
+.fc-profile-review-list::-webkit-scrollbar {
+  width: 7px;
+}
+
+.fc-profile-review-list::-webkit-scrollbar-track {
+  background: #eef8f7;
+  border-radius: 999px;
+}
+
+.fc-profile-review-list::-webkit-scrollbar-thumb {
+  background: #a9d2ce;
+  border-radius: 999px;
+}
+
+.fc-profile-review-list::-webkit-scrollbar-thumb:hover {
+  background: #7fb9b3;
 }
 
 .fc-profile-review {
@@ -1586,7 +1617,7 @@
   }
 
   .fc-profile-review-list {
-    max-height: 220px;
+    max-height: min(280px, 34dvh);
   }
 }
 .fc-success-overlay {
