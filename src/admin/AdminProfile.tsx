@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./AdminDashboard.css";
 import "./AdminHeader.css";
 import "./AdminProfile.css";
@@ -31,7 +32,25 @@ const getInitials = (value: string) => {
     .toUpperCase();
 };
 
-function AdminProfile() {
+const PERMISSIONS = [
+  "Clinic Management",
+  "Appointment Oversight",
+  "User Management",
+  "Health Content",
+  "Reports & Analytics",
+  "Services Management",
+];
+
+const TOOL_LINKS: { label: string; to: string }[] = [
+  { label: "Clinics", to: "/admin/clinics" },
+  { label: "Appointments", to: "/admin/appointments" },
+  { label: "Users", to: "/admin/users" },
+  { label: "Health Content", to: "/admin/conditions" },
+  { label: "Reports", to: "/admin/reports" },
+  { label: "Services", to: "/admin/services" },
+];
+
+export default function AdminProfile() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [q, setQ] = useState("");
@@ -46,7 +65,7 @@ function AdminProfile() {
   const [draftEmail, setDraftEmail] = useState(email);
 
   const role = String(storedUser.role || localStorage.getItem("role") || "admin");
-  const adminId = storedUser.id ? `#${storedUser.id}` : "Not available";
+  const adminId = storedUser.id ? `#${storedUser.id}` : "—";
   const initials = getInitials(displayName);
 
   const handleEdit = () => {
@@ -64,20 +83,13 @@ function AdminProfile() {
   const handleSave = () => {
     const nextName = draftName.trim() || "Cuidado Admin";
     const nextEmail = draftEmail.trim() || email;
-
     setDisplayName(nextName);
     setEmail(nextEmail);
     setIsEditing(false);
-
-    const nextUser = {
-      ...storedUser,
-      name: nextName,
-      full_name: nextName,
-      email: nextEmail,
-      role,
-    };
-
-    localStorage.setItem("user", JSON.stringify(nextUser));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ ...storedUser, name: nextName, full_name: nextName, email: nextEmail, role })
+    );
   };
 
   return (
@@ -93,120 +105,181 @@ function AdminProfile() {
         setProfileOpen={setProfileOpen}
       />
 
-      <main className="admin-main admin-profile-main">
-        <AdminHeader
-          searchValue={q}
-          onSearchChange={setQ}
-          searchPlaceholder="Search profile..."
-        />
+      <main className="admin-main ap-main">
+        <AdminHeader searchValue={q} onSearchChange={setQ} searchPlaceholder="Search profile..." />
 
-        <section className="admin-profile-hero">
-          <div className="admin-profile-avatar" aria-hidden="true">
-            {initials}
-          </div>
+        {/* ── Cover card ── */}
+        <div className="ap-cover">
+          <div className="ap-banner" />
+          <div className="ap-cover-body">
+            <div className="ap-avatar" aria-hidden="true">{initials}</div>
 
-          <div className="admin-profile-heading">
-            <p className="admin-profile-kicker">My Admin Profile</p>
-            <h1>{displayName}</h1>
-            <span>{email}</span>
-          </div>
+            <div className="ap-identity">
+              <h1>{displayName}</h1>
+              <p>{email}</p>
+              <span className="ap-role-badge">
+                {role.charAt(0).toUpperCase() + role.slice(1)}
+              </span>
+            </div>
 
-          <div className="admin-profile-actions">
-            {isEditing ? (
-              <>
-                <button type="button" className="profile-btn secondary" onClick={handleCancel}>
-                  Cancel
+            <div className="ap-cover-actions">
+              {isEditing ? (
+                <>
+                  <button type="button" className="ap-btn ap-ghost" onClick={handleCancel}>
+                    Cancel
+                  </button>
+                  <button type="button" className="ap-btn ap-solid" onClick={handleSave}>
+                    Save Changes
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="ap-btn ap-solid" onClick={handleEdit}>
+                  Edit Profile
                 </button>
-                <button type="button" className="profile-btn primary" onClick={handleSave}>
-                  Save
-                </button>
-              </>
-            ) : (
-              <button type="button" className="profile-btn primary" onClick={handleEdit}>
-                Edit Profile
-              </button>
-            )}
+              )}
+            </div>
           </div>
-        </section>
+        </div>
 
-        <section className="admin-profile-grid">
-          <article className="admin-profile-panel account-panel">
-            <div className="panel-heading">
-              <h2>Account Details</h2>
-              <span className="status-pill">Active</span>
-            </div>
+        {/* ── Stats strip ── */}
+        <div className="ap-stats">
+          <div className="ap-stat">
+            <span>Status</span>
+            <strong className="ap-stat-active">Active</strong>
+          </div>
+          <div className="ap-stat">
+            <span>Role</span>
+            <strong>{role.charAt(0).toUpperCase() + role.slice(1)}</strong>
+          </div>
+          <div className="ap-stat">
+            <span>Admin ID</span>
+            <strong>{adminId}</strong>
+          </div>
+          <div className="ap-stat">
+            <span>Access Level</span>
+            <strong>Full Access</strong>
+          </div>
+        </div>
 
-            <div className="profile-field-grid">
-              <label className="profile-field">
-                <span>Display name</span>
-                {isEditing ? (
-                  <input
-                    value={draftName}
-                    onChange={(event) => setDraftName(event.target.value)}
-                    placeholder="Admin name"
-                  />
-                ) : (
-                  <strong>{displayName}</strong>
-                )}
-              </label>
+        {/* ── Main grid ── */}
+        <div className="ap-grid">
 
-              <label className="profile-field">
-                <span>Email address</span>
-                {isEditing ? (
-                  <input
-                    type="email"
-                    value={draftEmail}
-                    onChange={(event) => setDraftEmail(event.target.value)}
-                    placeholder="admin@email.com"
-                  />
-                ) : (
-                  <strong>{email}</strong>
-                )}
-              </label>
+          {/* Left column */}
+          <div className="ap-col-main">
 
-              <div className="profile-field">
-                <span>Role</span>
-                <strong>{role.charAt(0).toUpperCase() + role.slice(1)}</strong>
+            {/* Account details */}
+            <article className="ap-card">
+              <div className="ap-card-head">
+                <h2>Account Details</h2>
+                <span className="ap-status-pill">Active</span>
               </div>
+              <div className="ap-fields">
+                <label className="ap-field">
+                  <span>Display name</span>
+                  {isEditing ? (
+                    <input
+                      value={draftName}
+                      onChange={(e) => setDraftName(e.target.value)}
+                      placeholder="Admin name"
+                    />
+                  ) : (
+                    <strong>{displayName}</strong>
+                  )}
+                </label>
 
-              <div className="profile-field">
-                <span>Admin ID</span>
-                <strong>{adminId}</strong>
-              </div>
-            </div>
-          </article>
+                <label className="ap-field">
+                  <span>Email address</span>
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      value={draftEmail}
+                      onChange={(e) => setDraftEmail(e.target.value)}
+                      placeholder="admin@email.com"
+                    />
+                  ) : (
+                    <strong>{email}</strong>
+                  )}
+                </label>
 
-          <article className="admin-profile-panel compact-panel">
-            <h2>Access</h2>
-            <div className="profile-info-list">
-              <div>
-                <span>Permissions</span>
-                <strong>Full admin access</strong>
-              </div>
-              <div>
-                <span>Session</span>
-                <strong>Signed in on this browser</strong>
-              </div>
-              <div>
-                <span>Password</span>
-                <strong>Managed from login credentials</strong>
-              </div>
-            </div>
-          </article>
+                <div className="ap-field">
+                  <span>Role</span>
+                  <strong>{role.charAt(0).toUpperCase() + role.slice(1)}</strong>
+                </div>
 
-          <article className="admin-profile-panel compact-panel">
-            <h2>Admin Tools</h2>
-            <div className="tool-list">
-              <span>Clinics</span>
-              <span>Appointments</span>
-              <span>Users</span>
-              <span>Health content</span>
-            </div>
-          </article>
-        </section>
+                <div className="ap-field">
+                  <span>Admin ID</span>
+                  <strong>{adminId}</strong>
+                </div>
+              </div>
+            </article>
+
+            {/* Security */}
+            <article className="ap-card">
+              <div className="ap-card-head">
+                <h2>Security</h2>
+              </div>
+              <div className="ap-security-list">
+                <div className="ap-security-item">
+                  <div className="ap-security-icon">🔒</div>
+                  <div className="ap-security-text">
+                    <strong>Password</strong>
+                    <span>Managed from your login credentials</span>
+                  </div>
+                </div>
+                <div className="ap-security-item">
+                  <div className="ap-security-icon">💻</div>
+                  <div className="ap-security-text">
+                    <strong>Active Session</strong>
+                    <span>Currently signed in on this browser</span>
+                  </div>
+                </div>
+                <div className="ap-security-item">
+                  <div className="ap-security-icon">🛡️</div>
+                  <div className="ap-security-text">
+                    <strong>Two-Factor Auth</strong>
+                    <span>Not configured for this account</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          {/* Right column */}
+          <div className="ap-col-side">
+
+            {/* Permissions */}
+            <article className="ap-card">
+              <div className="ap-card-head">
+                <h2>Permissions</h2>
+                <span className="ap-badge-full">Full Admin</span>
+              </div>
+              <ul className="ap-perm-list">
+                {PERMISSIONS.map((perm) => (
+                  <li key={perm} className="ap-perm-item">
+                    <span className="ap-check">✓</span>
+                    {perm}
+                  </li>
+                ))}
+              </ul>
+            </article>
+
+            {/* Quick links */}
+            <article className="ap-card">
+              <div className="ap-card-head">
+                <h2>Admin Tools</h2>
+              </div>
+              <div className="ap-tools">
+                {TOOL_LINKS.map(({ label, to }) => (
+                  <Link key={label} to={to} className="ap-tool-chip">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </article>
+
+          </div>
+        </div>
       </main>
     </div>
   );
 }
-
-export default AdminProfile;
