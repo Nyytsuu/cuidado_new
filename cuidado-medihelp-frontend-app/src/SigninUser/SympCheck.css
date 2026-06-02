@@ -187,6 +187,9 @@
 }
 
 .sympcheck-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   min-height: 42px;
   border: 0;
@@ -196,6 +199,7 @@
   font: inherit;
   font-size: 14px;
   font-weight: 900;
+  line-height: 1;
   cursor: pointer;
   box-shadow: 0 12px 26px rgba(8, 119, 111, 0.18);
 }
@@ -626,6 +630,9 @@
 }
 
 .tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 76px;
   height: 28px;
   border: 0;
@@ -635,6 +642,7 @@
   font: inherit;
   font-size: 9px;
   font-weight: 900;
+  line-height: 1;
   cursor: pointer;
   padding: 0 10px;
   white-space: nowrap;
