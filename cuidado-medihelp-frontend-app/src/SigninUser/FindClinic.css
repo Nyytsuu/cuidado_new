@@ -1631,6 +1631,7 @@
   flex-direction: column;
   gap: 12px;
   min-height: 0;
+  overflow: hidden;
 }
 
 .fc-profile-section-head {
@@ -1654,14 +1655,16 @@
   display: flex;
   gap: 12px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   min-height: 126px;
   max-height: none;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   scroll-snap-type: x mandatory;
-  padding: 0 0 10px;
+  padding: 0 0 8px;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1684,7 +1687,8 @@
 }
 
 .fc-profile-review {
-  flex: 0 0 100%;
+  flex: 0 0 calc(100% - 2px);
+  max-width: calc(100% - 2px);
   box-sizing: border-box;
   min-height: 126px;
   padding: 13px;
@@ -1809,7 +1813,8 @@
   }
 
   .fc-profile-review {
-    flex-basis: 100%;
+    flex-basis: calc(100% - 2px);
+    max-width: calc(100% - 2px);
     min-height: 136px;
   }
 }
