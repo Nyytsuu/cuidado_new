@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./AdminDashboard.css";
 import "./AdminHeader.css";
@@ -6,12 +6,21 @@ import "./AdminProfile.css";
 import SidebarAdmin from "./SidebarAdmin";
 import AdminHeader from "./AdminHeader";
 
+const ADMIN_API = "http://localhost:5000/api/admin";
+
 type StoredUser = {
   id?: number | string;
   name?: string | null;
   full_name?: string | null;
   email?: string | null;
   role?: string | null;
+};
+
+type PlatformMetrics = {
+  totalUsers: number;
+  totalClinics: number;
+  pendingClinics: number;
+  scheduledAppointments: number;
 };
 
 const readStoredUser = (): StoredUser => {
@@ -25,11 +34,7 @@ const readStoredUser = (): StoredUser => {
 const getInitials = (value: string) => {
   const parts = value.trim().split(/\s+/).filter(Boolean);
   if (!parts.length) return "AD";
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  return parts.slice(0, 2).map((p) => p[0]).join("").toUpperCase();
 };
 
 const PERMISSIONS = [
@@ -64,40 +69,32 @@ export default function AdminProfile() {
   const [draftName, setDraftName] = useState(displayName);
   const [draftEmail, setDraftEmail] = useState(email);
 
+  const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
+
   const role = String(storedUser.role || localStorage.getItem("role") || "admin");
   const adminId = storedUser.id ? `#${storedUser.id}` : "—";
   const initials = getInitials(displayName);
 
-  const handleEdit = () => {
-    setDraftName(displayName);
-    setDraftEmail(email);
-    setIsEditing(true);
-  };
+  useEffect(() => {
+    fetch(`${ADMIN_API}/metrics`)
+      .then((r) => r.json())
+      .then((d: PlatformMetrics) => setMetrics(d))
+      .catch(() => {});
+  }, []);
 
-  const handleCancel = () => {
-    setDraftName(displayName);
-    setDraftEmail(email);
-    setIsEditing(false);
-  };
-
+  const handleEdit = () => { setDraftName(displayName); setDraftEmail(email); setIsEditing(true); };
+  const handleCancel = () => { setDraftName(displayName); setDraftEmail(email); setIsEditing(false); };
   const handleSave = () => {
     const nextName = draftName.trim() || "Cuidado Admin";
     const nextEmail = draftEmail.trim() || email;
     setDisplayName(nextName);
     setEmail(nextEmail);
     setIsEditing(false);
-    localStorage.setItem(
-      "user",
-      JSON.stringify({ ...storedUser, name: nextName, full_name: nextName, email: nextEmail, role })
-    );
+    localStorage.setItem("user", JSON.stringify({ ...storedUser, name: nextName, full_name: nextName, email: nextEmail, role }));
   };
 
   return (
-    <div
-      className={`admin-dashboard-page admin-profile-page ${
-        sidebarExpanded ? "sidebar-expanded" : ""
-      }`}
-    >
+    <div className={`admin-dashboard-page admin-profile-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
       <SidebarAdmin
         sidebarExpanded={sidebarExpanded}
         setSidebarExpanded={setSidebarExpanded}
@@ -108,34 +105,24 @@ export default function AdminProfile() {
       <main className="admin-main ap-main">
         <AdminHeader searchValue={q} onSearchChange={setQ} searchPlaceholder="Search profile..." />
 
-        {/* ── Cover card ── */}
+        {/* ── Cover ── */}
         <div className="ap-cover">
           <div className="ap-banner" />
           <div className="ap-cover-body">
             <div className="ap-avatar" aria-hidden="true">{initials}</div>
-
             <div className="ap-identity">
               <h1>{displayName}</h1>
               <p>{email}</p>
-              <span className="ap-role-badge">
-                {role.charAt(0).toUpperCase() + role.slice(1)}
-              </span>
+              <span className="ap-role-badge">{role.charAt(0).toUpperCase() + role.slice(1)}</span>
             </div>
-
             <div className="ap-cover-actions">
               {isEditing ? (
                 <>
-                  <button type="button" className="ap-btn ap-ghost" onClick={handleCancel}>
-                    Cancel
-                  </button>
-                  <button type="button" className="ap-btn ap-solid" onClick={handleSave}>
-                    Save Changes
-                  </button>
+                  <button type="button" className="ap-btn ap-ghost" onClick={handleCancel}>Cancel</button>
+                  <button type="button" className="ap-btn ap-solid" onClick={handleSave}>Save Changes</button>
                 </>
               ) : (
-                <button type="button" className="ap-btn ap-solid" onClick={handleEdit}>
-                  Edit Profile
-                </button>
+                <button type="button" className="ap-btn ap-solid" onClick={handleEdit}>Edit Profile</button>
               )}
             </div>
           </div>
@@ -167,7 +154,6 @@ export default function AdminProfile() {
           {/* Left column */}
           <div className="ap-col-main">
 
-            {/* Account details */}
             <article className="ap-card">
               <div className="ap-card-head">
                 <h2>Account Details</h2>
@@ -177,35 +163,23 @@ export default function AdminProfile() {
                 <label className="ap-field">
                   <span>Display name</span>
                   {isEditing ? (
-                    <input
-                      value={draftName}
-                      onChange={(e) => setDraftName(e.target.value)}
-                      placeholder="Admin name"
-                    />
+                    <input value={draftName} onChange={(e) => setDraftName(e.target.value)} placeholder="Admin name" />
                   ) : (
                     <strong>{displayName}</strong>
                   )}
                 </label>
-
                 <label className="ap-field">
                   <span>Email address</span>
                   {isEditing ? (
-                    <input
-                      type="email"
-                      value={draftEmail}
-                      onChange={(e) => setDraftEmail(e.target.value)}
-                      placeholder="admin@email.com"
-                    />
+                    <input type="email" value={draftEmail} onChange={(e) => setDraftEmail(e.target.value)} placeholder="admin@email.com" />
                   ) : (
                     <strong>{email}</strong>
                   )}
                 </label>
-
                 <div className="ap-field">
                   <span>Role</span>
                   <strong>{role.charAt(0).toUpperCase() + role.slice(1)}</strong>
                 </div>
-
                 <div className="ap-field">
                   <span>Admin ID</span>
                   <strong>{adminId}</strong>
@@ -213,41 +187,57 @@ export default function AdminProfile() {
               </div>
             </article>
 
-            {/* Security */}
-            <article className="ap-card">
+            {/* Platform Overview — replaces Security */}
+            <article className="ap-card ap-card--overview">
               <div className="ap-card-head">
-                <h2>Security</h2>
+                <h2>Platform Overview</h2>
+                <span className="ap-badge-live">Live</span>
               </div>
-              <div className="ap-security-list">
-                <div className="ap-security-item">
-                  <div className="ap-security-icon">🔒</div>
-                  <div className="ap-security-text">
-                    <strong>Password</strong>
-                    <span>Managed from your login credentials</span>
+              <div className="ap-overview-grid">
+                <div className="ap-overview-stat">
+                  <div className="ap-overview-icon ap-ov--users">👥</div>
+                  <div className="ap-overview-info">
+                    <span>Total Users</span>
+                    <strong>{metrics ? metrics.totalUsers.toLocaleString() : "—"}</strong>
                   </div>
                 </div>
-                <div className="ap-security-item">
-                  <div className="ap-security-icon">💻</div>
-                  <div className="ap-security-text">
-                    <strong>Active Session</strong>
-                    <span>Currently signed in on this browser</span>
+                <div className="ap-overview-stat">
+                  <div className="ap-overview-icon ap-ov--clinics">🏥</div>
+                  <div className="ap-overview-info">
+                    <span>Registered Clinics</span>
+                    <strong>{metrics ? metrics.totalClinics.toLocaleString() : "—"}</strong>
                   </div>
                 </div>
-                <div className="ap-security-item">
-                  <div className="ap-security-icon">🛡️</div>
-                  <div className="ap-security-text">
-                    <strong>Two-Factor Auth</strong>
-                    <span>Not configured for this account</span>
+                <div className="ap-overview-stat">
+                  <div className="ap-overview-icon ap-ov--pending">⏳</div>
+                  <div className="ap-overview-info">
+                    <span>Pending Approvals</span>
+                    <strong className={metrics && metrics.pendingClinics > 0 ? "ap-ov-warn" : ""}>
+                      {metrics ? metrics.pendingClinics : "—"}
+                    </strong>
                   </div>
                 </div>
+                <div className="ap-overview-stat">
+                  <div className="ap-overview-icon ap-ov--appt">📅</div>
+                  <div className="ap-overview-info">
+                    <span>Scheduled Appointments</span>
+                    <strong>{metrics ? metrics.scheduledAppointments.toLocaleString() : "—"}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ap-overview-links">
+                <Link to="/admin/users" className="ap-ov-link">Manage Users →</Link>
+                <Link to="/admin/clinics" className="ap-ov-link">Manage Clinics →</Link>
+                <Link to="/admin/appointments" className="ap-ov-link">View Appointments →</Link>
               </div>
             </article>
+
           </div>
 
           {/* Right column */}
           <div className="ap-col-side">
 
-            {/* Permissions */}
             <article className="ap-card">
               <div className="ap-card-head">
                 <h2>Permissions</h2>
@@ -263,16 +253,13 @@ export default function AdminProfile() {
               </ul>
             </article>
 
-            {/* Quick links */}
             <article className="ap-card">
               <div className="ap-card-head">
                 <h2>Admin Tools</h2>
               </div>
               <div className="ap-tools">
                 {TOOL_LINKS.map(({ label, to }) => (
-                  <Link key={label} to={to} className="ap-tool-chip">
-                    {label}
-                  </Link>
+                  <Link key={label} to={to} className="ap-tool-chip">{label}</Link>
                 ))}
               </div>
             </article>

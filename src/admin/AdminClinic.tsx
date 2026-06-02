@@ -9,6 +9,136 @@ import AdminAppointmentDetailsModal, {
 import AdminHeader from "./AdminHeader";
 import { getConfiguredBackendUrl } from "../sharedBackendFetch";
 
+const addUniqueUrl = (urls: string[], url: string) => {
+  if (url && !urls.includes(url)) {
+    urls.push(url);
+  }
+};
+
+const encodeUploadPath = (pathValue: string) =>
+  pathValue
+    .split("/")
+    .filter(Boolean)
+    .map((part) => {
+      try {
+        return encodeURIComponent(decodeURIComponent(part));
+      } catch {
+        return encodeURIComponent(part);
+      }
+    })
+    .join("/");
+
+const getUploadFileName = (value?: string | null) => {
+  const rawPath = String(value || "").trim();
+  if (!rawPath) return "No file uploaded";
+
+  return rawPath.split(/[\\/]/).filter(Boolean).pop() || rawPath;
+};
+
+const isPreviewableImage = (value?: string | null) =>
+  /\.(png|jpe?g|webp|gif)$/i.test(String(value || ""));
+
+const getUploadUrlCandidates = (value?: string | null) => {
+  const rawPath = String(value || "").trim();
+  if (!rawPath) return [];
+
+  const backendUrl = getConfiguredBackendUrl();
+  const urls: string[] = [];
+  const fileName = getUploadFileName(rawPath);
+  const normalizedPath = rawPath.replace(/\\/g, "/").replace(/^\/+/, "");
+
+  if (/^https?:\/\//i.test(rawPath)) {
+    addUniqueUrl(
+      urls,
+      rawPath
+        .replace(/^http:\/\/localhost:5000/i, backendUrl)
+        .replace(/^http:\/\/127\.0\.0\.1:5000/i, backendUrl)
+    );
+
+    try {
+      const parsedUrl = new URL(rawPath);
+      const parsedPath = parsedUrl.pathname.replace(/^\/+/, "");
+      if (parsedPath) {
+        addUniqueUrl(urls, `${backendUrl}/${encodeUploadPath(parsedPath)}`);
+      }
+    } catch {
+      // Keep the original absolute URL as the main fallback.
+    }
+  } else {
+    const uploadPath = normalizedPath.includes("/")
+      ? normalizedPath
+      : `uploads/${normalizedPath}`;
+    addUniqueUrl(urls, `${backendUrl}/${encodeUploadPath(uploadPath)}`);
+  }
+
+  if (fileName !== "No file uploaded") {
+    addUniqueUrl(urls, `${backendUrl}/${encodeUploadPath(`uploads/${fileName}`)}`);
+  }
+
+  return urls;
+};
+
+type ClinicDocumentCardProps = {
+  label: string;
+  value?: string | null;
+};
+
+function ClinicDocumentCard({ label, value }: ClinicDocumentCardProps) {
+  const urls = getUploadUrlCandidates(value);
+  const fileName = getUploadFileName(value);
+  const canPreview = isPreviewableImage(value);
+  const [activeUrlIndex, setActiveUrlIndex] = useState(0);
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const activeUrl = urls[activeUrlIndex] || "";
+  const resetKey = urls.join("|");
+
+  useEffect(() => {
+    setActiveUrlIndex(0);
+    setPreviewFailed(false);
+  }, [resetKey]);
+
+  return (
+    <article className="clinic-document-card">
+      <div
+        className={`clinic-document-preview${
+          previewFailed ? " clinic-document-preview--unavailable" : ""
+        }`}
+      >
+        {activeUrl && canPreview && !previewFailed ? (
+          <img
+            src={activeUrl}
+            alt={`${label} preview`}
+            loading="lazy"
+            onError={() => {
+              if (activeUrlIndex < urls.length - 1) {
+                setActiveUrlIndex((index) => index + 1);
+              } else {
+                setPreviewFailed(true);
+              }
+            }}
+          />
+        ) : !previewFailed ? (
+          <div className="clinic-document-placeholder">
+            <span>{activeUrl ? "FILE" : "NONE"}</span>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="clinic-document-info">
+        <span>{label}</span>
+        <strong title={fileName}>{fileName}</strong>
+        {activeUrl ? (
+          <a href={activeUrl} target="_blank" rel="noreferrer">
+            Open file
+          </a>
+        ) : (
+          <small>No uploaded file found</small>
+        )}
+      </div>
+    </article>
+  );
+}
+
 
 type ClinicRow = {
   id: number;
@@ -145,36 +275,6 @@ export default function AdminClinics() {
     if (open === "Not set" && close === "Not set") return "Not provided";
     return `${open} - ${close}`;
   };
-
-  const toUploadUrl = (value?: string | null) => {
-    const rawPath = String(value || "").trim();
-    if (!rawPath) return "";
-
-    const backendUrl = getConfiguredBackendUrl();
-    if (/^https?:\/\//i.test(rawPath)) {
-      return rawPath.replace("http://localhost:5000", backendUrl);
-    }
-
-    const normalizedPath = rawPath.replace(/^\/+/, "");
-    const uploadPath = normalizedPath.includes("/")
-      ? normalizedPath
-      : `uploads/${normalizedPath}`;
-
-    return `${backendUrl}/${uploadPath
-      .split("/")
-      .map((part) => encodeURIComponent(part))
-      .join("/")}`;
-  };
-
-  const getUploadFileName = (value?: string | null) => {
-    const rawPath = String(value || "").trim();
-    if (!rawPath) return "No file uploaded";
-
-    return rawPath.split(/[\\/]/).filter(Boolean).pop() || rawPath;
-  };
-
-  const isPreviewableImage = (value?: string | null) =>
-    /\.(png|jpe?g|webp|gif)$/i.test(String(value || ""));
 
   const uploadedDocuments = (clinic: ClinicProfile) => [
     {
@@ -702,47 +802,13 @@ export default function AdminClinics() {
                 </div>
 
                 <div className="clinic-document-grid">
-                  {uploadedDocuments(selectedClinic).map((doc) => {
-                    const url = toUploadUrl(doc.value);
-                    const fileName = getUploadFileName(doc.value);
-                    const canPreview = isPreviewableImage(doc.value);
-
-                    return (
-                      <article className="clinic-document-card" key={doc.label}>
-                        <div className="clinic-document-preview">
-                          {url && canPreview ? (
-                            <img
-                              src={url}
-                              alt={`${doc.label} preview`}
-                              loading="lazy"
-                              onError={(event) => {
-                                event.currentTarget.style.display = "none";
-                                event.currentTarget
-                                  .closest(".clinic-document-preview")
-                                  ?.classList.add("clinic-document-preview--unavailable");
-                              }}
-                            />
-                          ) : (
-                            <div className="clinic-document-placeholder">
-                              <span>{url ? "FILE" : "NONE"}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="clinic-document-info">
-                          <span>{doc.label}</span>
-                          <strong>{fileName}</strong>
-                          {url ? (
-                            <a href={url} target="_blank" rel="noreferrer">
-                              Open file
-                            </a>
-                          ) : (
-                            <small>No uploaded file found</small>
-                          )}
-                        </div>
-                      </article>
-                    );
-                  })}
+                  {uploadedDocuments(selectedClinic).map((doc) => (
+                    <ClinicDocumentCard
+                      key={doc.label}
+                      label={doc.label}
+                      value={doc.value}
+                    />
+                  ))}
                 </div>
               </section>
 

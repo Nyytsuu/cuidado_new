@@ -75,6 +75,39 @@ const uploadDirs = [
   path.resolve(process.cwd(), "uploads"),
 ];
 
+const findUploadFileRecursive = (rootDir, requestedName) => {
+  if (!requestedName || !fs.existsSync(rootDir)) return null;
+
+  const stack = [rootDir];
+  const normalizedRequestedName = requestedName.toLowerCase();
+
+  while (stack.length) {
+    const currentDir = stack.pop();
+    if (!currentDir) continue;
+
+    let entries = [];
+    try {
+      entries = fs.readdirSync(currentDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      const entryPath = path.join(currentDir, entry.name);
+
+      if (entry.isFile() && entry.name.toLowerCase() === normalizedRequestedName) {
+        return entryPath;
+      }
+
+      if (entry.isDirectory()) {
+        stack.push(entryPath);
+      }
+    }
+  }
+
+  return null;
+};
+
 uploadDirs.forEach((dir) => {
   app.use("/uploads", express.static(dir));
 });
@@ -90,12 +123,13 @@ app.use("/uploads", async (req, res) => {
 
     for (const dir of uploadDirs) {
       const candidate = path.join(dir, normalizedPath);
+      const requestedName = path.basename(candidate).toLowerCase();
+
       if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
         return res.sendFile(candidate);
       }
 
       const parentDir = path.dirname(candidate);
-      const requestedName = path.basename(candidate).toLowerCase();
       if (fs.existsSync(parentDir)) {
         const match = fs
           .readdirSync(parentDir)
@@ -104,6 +138,11 @@ app.use("/uploads", async (req, res) => {
         if (match) {
           return res.sendFile(path.join(parentDir, match));
         }
+      }
+
+      const recursiveMatch = findUploadFileRecursive(dir, requestedName);
+      if (recursiveMatch) {
+        return res.sendFile(recursiveMatch);
       }
     }
 

@@ -430,7 +430,7 @@ body:has(.admin-dashboard-page) {
 }
 
 .admin-dashboard-page .dash-left > .dash-panel:last-child .dash-panel-body {
-  max-height: 280px;
+  max-height: 368px;
 }
 
 .admin-dashboard-page .dash-center .dash-panel-body {
