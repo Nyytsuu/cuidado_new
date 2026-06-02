@@ -26,10 +26,11 @@ router.use((req, res, next) => {
 });
 
 /* ================= MULTER SETUP ================= */
-fs.mkdirSync("uploads", { recursive: true });
+const UPLOAD_DIR = path.join(__dirname, "..", "uploads");
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
     const safeName = Date.now() + "-" + file.originalname.replace(/\s+/g, "_");
     cb(null, safeName);
@@ -55,7 +56,7 @@ const UPLOAD_MIME_TYPES = new Set([
   "image/webp",
 ]);
 const MAX_UPLOAD_SIZE = 8 * 1024 * 1024;
-const PROFILE_UPLOAD_DIR = path.join("uploads", "profile-pictures");
+const PROFILE_UPLOAD_DIR = path.join(UPLOAD_DIR, "profile-pictures");
 const PROFILE_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const PROFILE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;

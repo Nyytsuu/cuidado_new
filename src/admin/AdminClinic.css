@@ -1466,6 +1466,19 @@ body {
   display: block;
 }
 
+.admin-UserClinics .clinic-document-preview--unavailable::after {
+  content: "Preview unavailable";
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  border: 2px dashed #aacdca;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  color: #0f7d73;
+  font-size: 14px;
+  font-weight: 900;
+}
+
 .admin-UserClinics .clinic-document-placeholder {
   width: calc(100% - 24px);
   height: calc(100% - 24px);

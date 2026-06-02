@@ -27,6 +27,7 @@ const clinicFeedbackRouter = require("./routes/clinicFeedback");
 const clinicDashboardRoutes = require("./routes/clinicDashboard");
 
 const app = express();
+app.set("trust proxy", true);
 
 // CORS — restrict to known origins in production; allow all in development.
 // Capacitor WebViews can send localhost-style origins even for bundled apps.
@@ -68,7 +69,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+const uploadDirs = [
+  path.join(__dirname, "uploads"),
+  path.resolve(process.cwd(), "uploads"),
+];
+
+uploadDirs.forEach((dir) => {
+  app.use("/uploads", express.static(dir));
+});
 
 /* TEST ROUTES */
 app.get("/", (req, res) => {

@@ -708,7 +708,17 @@ export default function AdminClinics() {
                       <article className="clinic-document-card" key={doc.label}>
                         <div className="clinic-document-preview">
                           {url && canPreview ? (
-                            <img src={url} alt={`${doc.label} preview`} />
+                            <img
+                              src={url}
+                              alt={`${doc.label} preview`}
+                              loading="lazy"
+                              onError={(event) => {
+                                event.currentTarget.style.display = "none";
+                                event.currentTarget
+                                  .closest(".clinic-document-preview")
+                                  ?.classList.add("clinic-document-preview--unavailable");
+                              }}
+                            />
                           ) : (
                             <div className="clinic-document-placeholder">
                               <span>{url ? "FILE" : "NONE"}</span>
