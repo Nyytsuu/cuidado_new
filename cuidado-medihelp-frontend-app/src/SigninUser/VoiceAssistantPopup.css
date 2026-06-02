@@ -236,6 +236,33 @@
   padding-top: 20px;
   font-size: 12px;
   color: #7d858b;
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  font-weight: 800;
+}
+
+.voice-assistant-popup .voice-popup-language select {
+  min-width: min(100%, 220px);
+  min-height: 38px;
+  border: 1px solid rgba(10, 125, 115, 0.22);
+  border-radius: 999px;
+  background: #f7fbfb;
+  color: #172232;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 14px;
+  outline: none;
+}
+
+.voice-assistant-popup .voice-popup-language select:focus {
+  border-color: #0a7d73;
+  box-shadow: 0 0 0 3px rgba(10, 125, 115, 0.12);
+}
+
+.voice-assistant-popup .voice-popup-language select:disabled {
+  opacity: 0.65;
 }
 
 .voice-assistant-popup .voice-emergency-text,

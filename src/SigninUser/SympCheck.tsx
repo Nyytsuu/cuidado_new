@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ClipboardList,
   HeartPulse,
+  Languages,
   Lightbulb,
   MapPin,
   Scale,
@@ -17,6 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
+import { apiUrl } from "../sharedBackendFetch";
 import "./SympCheck.css";
 
 type IconTone = "teal" | "blue" | "amber" | "rose" | "lime";
@@ -97,6 +99,11 @@ const checkerSteps = [
   },
 ];
 
+const LANGUAGE_OPTIONS = [
+  { label: "English", value: "en-PH" },
+  { label: "Filipino", value: "fil-PH" },
+];
+
 type SymptomCheckerResponse = {
   success: boolean;
   message: string;
@@ -126,6 +133,7 @@ export default function SympCheck() {
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [symptomInput, setSymptomInput] = useState("");
+  const [language, setLanguage] = useState("en-PH");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
 
@@ -136,6 +144,7 @@ export default function SympCheck() {
   const [matchedSymptoms, setMatchedSymptoms] = useState<string[]>([]);
   const [adviceLevel, setAdviceLevel] = useState("");
   const [resultModalOpen, setResultModalOpen] = useState(false);
+  const isFilipino = language === "fil-PH";
 
   const handleSymptomCardClick = (title: string) => {
     const mappedTitle =
@@ -180,7 +189,7 @@ export default function SympCheck() {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:5000/api/symptom-checker", {
+      const response = await fetch(apiUrl("/api/symptom-checker"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -190,6 +199,7 @@ export default function SympCheck() {
           selectedSymptoms,
           age,
           gender,
+          language,
         }),
       });
 
@@ -249,7 +259,11 @@ export default function SympCheck() {
                   <div className="sympcheck-input-row full">
                     <input
                       type="text"
-                      placeholder="e.g. Fever, cough, shortness of breath"
+                      placeholder={
+                        isFilipino
+                          ? "hal. lagnat, ubo, sakit ng ulo, hirap huminga"
+                          : "e.g. Fever, cough, shortness of breath"
+                      }
                       value={symptomInput}
                       onChange={(e) => setSymptomInput(e.target.value)}
                     />
@@ -283,6 +297,23 @@ export default function SympCheck() {
                       </select>
                     </div>
 
+                    <div className="sympcheck-select">
+                      <span className="select-icon">
+                        <Languages size={18} />
+                      </span>
+                      <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        aria-label="Symptom language"
+                      >
+                        {LANGUAGE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <button
                       type="button"
                       className="sympcheck-btn-primary"
@@ -298,7 +329,11 @@ export default function SympCheck() {
                   <div className="sympcheck-helper-strip">
                     <div>
                       <CheckCircle2 size={18} />
-                      <span>Separate symptoms with commas</span>
+                      <span>
+                        {isFilipino
+                          ? "Tumatanggap ng Filipino symptoms"
+                          : "Separate symptoms with commas"}
+                      </span>
                     </div>
                     <div>
                       <Stethoscope size={18} />

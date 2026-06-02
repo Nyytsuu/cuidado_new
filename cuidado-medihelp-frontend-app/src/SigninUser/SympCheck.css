@@ -143,7 +143,7 @@
 .sympcheck-bottom-row {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 9px;
   margin: 0 0 10px;
 }
@@ -564,6 +564,10 @@
     overflow: visible !important;
     padding-bottom: 0 !important;
     margin-bottom: 9px !important;
+  }
+
+  .sympcheck-page .sympcheck-bottom-row .sympcheck-select:nth-child(3) {
+    grid-column: 1 / -1 !important;
   }
 
   .sympcheck-page .sympcheck-select {

@@ -227,7 +227,11 @@
 
 .sympcheck-bottom-row {
   display: grid;
-  grid-template-columns: minmax(150px, 176px) minmax(150px, 176px) minmax(180px, 300px);
+  grid-template-columns:
+    minmax(116px, 150px)
+    minmax(128px, 154px)
+    minmax(150px, 176px)
+    minmax(180px, 1fr);
   align-items: center;
   gap: 10px;
   width: 100%;

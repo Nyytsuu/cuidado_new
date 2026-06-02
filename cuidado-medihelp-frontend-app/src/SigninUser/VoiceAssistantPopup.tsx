@@ -59,6 +59,12 @@ type VoiceAssistantPopupProps = {
 
 const LISTENING_TIMEOUT_MS = 12000;
 
+const LANGUAGES = [
+  { label: "English (Philippines)", value: "en-PH" },
+  { label: "English (US)", value: "en-US" },
+  { label: "Filipino", value: "fil-PH" },
+];
+
 const getStoredUserId = () => {
   try {
     const storedUser = localStorage.getItem("user");
@@ -81,6 +87,7 @@ export default function VoiceAssistantPopup({
   const [typedSymptoms, setTypedSymptoms] = useState("");
   const [voiceError, setVoiceError] = useState("");
   const [symptomResult, setSymptomResult] = useState<SymptomResult | null>(null);
+  const [selectedLang, setSelectedLang] = useState("en-PH");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const listeningTimeoutRef = useRef<number | null>(null);
   const latestTranscriptRef = useRef("");
@@ -205,7 +212,7 @@ export default function VoiceAssistantPopup({
     const recognition = new SpeechRecognitionAPI();
     recognitionRef.current = recognition;
 
-    recognition.lang = "en-US";
+    recognition.lang = selectedLang;
     recognition.continuous = false;
     recognition.interimResults = true;
 
@@ -259,15 +266,21 @@ export default function VoiceAssistantPopup({
     recognition.onerror = (event) => {
       recognitionSettledRef.current = true;
       clearListeningTimer();
+      const selectedLanguageLabel =
+        LANGUAGES.find((language) => language.value === selectedLang)?.label ||
+        "The selected language";
+      const isFilipino = selectedLang.toLowerCase().startsWith("fil");
       const errorMessages: Record<string, string> = {
-        network: "Speech recognition could not connect. Check your internet connection and try again.",
+        network: isFilipino
+          ? "Filipino speech recognition is not available in this browser right now. Your internet is fine; try English (Philippines) or type symptoms below."
+          : "The browser speech service could not start. Try again, choose another language, or type symptoms below.",
         "not-allowed": "Microphone permission is blocked. Allow Microphone for Cuidado, then try again.",
         "no-speech": "I did not receive microphone audio. Check the emulator microphone input, then try again and speak clearly.",
         "not-supported": "Speech recognition is not available on this device.",
         audio: "Android could not open the microphone audio stream. Check the emulator microphone setting and try again.",
         client: "Android speech recognition could not start on this emulator. Restart the emulator or try typed symptoms below.",
         service: "The Android speech recognition service stopped unexpectedly. Restart the emulator and try again.",
-        language: "English (US) is not available on this emulator. Please use typed symptoms instead.",
+        language: `${selectedLanguageLabel} is not available on this device. Try another language or type symptoms instead.`,
         busy: "The microphone is already listening. Please wait a moment and try again.",
       };
 
@@ -339,7 +352,11 @@ export default function VoiceAssistantPopup({
               id="voice-manual-symptoms"
               value={typedSymptoms}
               onChange={(event) => setTypedSymptoms(event.target.value)}
-              placeholder="Example: I have cough, fever, and headache"
+              placeholder={
+                selectedLang === "fil-PH"
+                  ? "Halimbawa: May lagnat, ubo, at sakit ng ulo ako"
+                  : "Example: I have cough, fever, and headache"
+              }
               rows={3}
             />
             <button
@@ -369,7 +386,20 @@ export default function VoiceAssistantPopup({
           </button>
         )}
 
-        <div className="voice-popup-language">English (US)</div>
+        <label className="voice-popup-language">
+          <span>Language</span>
+          <select
+            value={selectedLang}
+            onChange={(event) => setSelectedLang(event.target.value)}
+            disabled={voiceStep === "listening" || voiceStep === "processing"}
+          >
+            {LANGUAGES.map((language) => (
+              <option key={language.value} value={language.value}>
+                {language.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </div>
   ) : null;

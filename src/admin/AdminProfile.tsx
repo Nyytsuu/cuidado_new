@@ -5,8 +5,7 @@ import "./AdminHeader.css";
 import "./AdminProfile.css";
 import SidebarAdmin from "./SidebarAdmin";
 import AdminHeader from "./AdminHeader";
-
-const ADMIN_API = "http://localhost:5000/api/admin";
+import { apiUrl } from "../sharedBackendFetch";
 
 type StoredUser = {
   id?: number | string;
@@ -22,6 +21,25 @@ type PlatformMetrics = {
   pendingClinics: number;
   scheduledAppointments: number;
 };
+
+const EMPTY_METRICS: PlatformMetrics = {
+  totalUsers: 0,
+  totalClinics: 0,
+  pendingClinics: 0,
+  scheduledAppointments: 0,
+};
+
+const toMetricNumber = (value: unknown) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
+const normalizeMetrics = (value: Partial<PlatformMetrics> | null | undefined): PlatformMetrics => ({
+  totalUsers: toMetricNumber(value?.totalUsers),
+  totalClinics: toMetricNumber(value?.totalClinics),
+  pendingClinics: toMetricNumber(value?.pendingClinics),
+  scheduledAppointments: toMetricNumber(value?.scheduledAppointments),
+});
 
 const readStoredUser = (): StoredUser => {
   try {
@@ -76,10 +94,30 @@ export default function AdminProfile() {
   const initials = getInitials(displayName);
 
   useEffect(() => {
-    fetch(`${ADMIN_API}/metrics`)
-      .then((r) => r.json())
-      .then((d: PlatformMetrics) => setMetrics(d))
-      .catch(() => {});
+    let isMounted = true;
+
+    const loadMetrics = async () => {
+      try {
+        const response = await fetch(apiUrl("/api/admin/dashboard-metrics"));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = (await response.json()) as Partial<PlatformMetrics>;
+        if (isMounted) {
+          setMetrics(normalizeMetrics(data));
+        }
+      } catch (error) {
+        console.error("Admin profile metrics error:", error);
+        if (isMounted) {
+          setMetrics(EMPTY_METRICS);
+        }
+      }
+    };
+
+    loadMetrics();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleEdit = () => { setDraftName(displayName); setDraftEmail(email); setIsEditing(true); };

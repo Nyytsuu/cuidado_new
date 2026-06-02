@@ -6,6 +6,7 @@ import {
   ChevronDown,
   ClipboardList,
   HeartPulse,
+  Languages,
   Lightbulb,
   MapPin,
   Scale,
@@ -88,6 +89,11 @@ type SymptomCheckerResponse = {
   };
 };
 
+const LANGUAGE_OPTIONS = [
+  { label: "English", value: "en-PH" },
+  { label: "Filipino", value: "fil-PH" },
+];
+
 const getStoredUserId = () => {
   try {
     const directId = localStorage.getItem("userId");
@@ -108,6 +114,7 @@ export default function SympCheck() {
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [symptomInput, setSymptomInput] = useState("");
+  const [language, setLanguage] = useState("en-PH");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
 
@@ -117,6 +124,7 @@ export default function SympCheck() {
   const [possibleConditions, setPossibleConditions] = useState<string[]>([]);
   const [matchedSymptoms, setMatchedSymptoms] = useState<string[]>([]);
   const [adviceLevel, setAdviceLevel] = useState("");
+  const isFilipino = language === "fil-PH";
 
   const handleSymptomCardClick = (symptom: string) => {
     const currentSymptoms = symptomInput
@@ -165,6 +173,7 @@ export default function SympCheck() {
           selectedSymptoms,
           age,
           gender,
+          language,
         }),
       });
 
@@ -216,7 +225,11 @@ export default function SympCheck() {
               <div className="sympcheck-input-row full">
                 <input
                   type="text"
-                  placeholder="e.g. Fever, Cough, Shortness of Breath"
+                  placeholder={
+                    isFilipino
+                      ? "hal. lagnat, ubo, sakit ng ulo"
+                      : "e.g. Fever, Cough, Shortness of Breath"
+                  }
                   value={symptomInput}
                   onChange={(e) => setSymptomInput(e.target.value)}
                 />
@@ -245,6 +258,22 @@ export default function SympCheck() {
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
+                  </select>
+                  <ChevronDown size={13} className="dropdown-arrow" />
+                </label>
+
+                <label className="sympcheck-select">
+                  <Languages size={16} className="select-icon" />
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    aria-label="Symptom language"
+                  >
+                    {LANGUAGE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown size={13} className="dropdown-arrow" />
                 </label>
