@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+
 import "./AdminClinic.css";
 import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
