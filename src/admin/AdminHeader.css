@@ -136,6 +136,7 @@
   height: 100% !important;
   position: static !important;
   right: auto !important;
+  margin-left: auto !important;
 }
 
 .app-header .nav-link,
