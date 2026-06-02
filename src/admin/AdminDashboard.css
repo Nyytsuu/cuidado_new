@@ -114,12 +114,12 @@ body:has(.admin-dashboard-page) {
 }
 
 .admin-dashboard-page .header-search {
-  width: min(100%, 430px);
-  height: 40px;
+  width: min(100%, 620px);
+  height: 46px;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 6px 0 16px;
+  padding: 0 7px 0 22px;
   border: 1px solid rgba(15, 66, 66, 0.18);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
@@ -128,8 +128,8 @@ body:has(.admin-dashboard-page) {
 .admin-dashboard-page .app-header .header-search {
   grid-column: auto !important;
   justify-self: auto !important;
-  width: min(100%, 430px) !important;
-  height: 40px !important;
+  width: min(100%, 620px) !important;
+  height: 46px !important;
 }
 
 .admin-dashboard-page .header-search input {
@@ -148,8 +148,8 @@ body:has(.admin-dashboard-page) {
 }
 
 .admin-dashboard-page .search-btn {
-  width: 30px;
-  height: 30px;
+  width: 34px;
+  height: 34px;
   border: 0;
   border-radius: 50%;
   display: grid;
@@ -166,9 +166,10 @@ body:has(.admin-dashboard-page) {
 
 .admin-dashboard-page .header-nav {
   flex: 0 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
   align-items: center;
-  gap: 22px;
+  column-gap: 44px;
 }
 
 .admin-dashboard-page .nav-link {

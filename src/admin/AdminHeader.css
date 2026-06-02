@@ -59,9 +59,9 @@
   min-width: 0 !important;
   flex: 0 0 auto !important;
   display: grid !important;
-  grid-template-columns: 140px 440px !important;
+  grid-template-columns: 150px minmax(520px, 620px) !important;
   align-items: center !important;
-  gap: 20px !important;
+  gap: 24px !important;
   position: static !important;
   right: auto !important;
 }
@@ -80,9 +80,9 @@
   grid-column: 2 !important;
   justify-self: center !important;
   width: 100% !important;
-  max-width: 430px !important;
-  height: 42px !important;
-  padding: 0 6px 0 18px !important;
+  max-width: 620px !important;
+  height: 46px !important;
+  padding: 0 7px 0 22px !important;
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -111,8 +111,8 @@
 
 .app-header .search-btn {
   flex: 0 0 auto !important;
-  width: 32px !important;
-  height: 32px !important;
+  width: 34px !important;
+  height: 34px !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 50% !important;
@@ -130,9 +130,10 @@
 
 .app-header .header-nav {
   flex: 0 0 auto !important;
-  display: flex !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, max-content) !important;
   align-items: center !important;
-  gap: 0 !important;
+  column-gap: 44px !important;
   height: 100% !important;
   position: static !important;
   right: auto !important;
@@ -146,7 +147,7 @@
   align-items: center !important;
   justify-content: center !important;
 
-  padding: 0 18px !important;
+  padding: 0 4px !important;
   margin: 0 !important;
   border: 0 !important;
 
@@ -232,7 +233,7 @@
   }
 
   .app-header .header-left {
-    grid-template-columns: 130px 340px !important;
+    grid-template-columns: 130px minmax(420px, 520px) !important;
     gap: 18px !important;
   }
 
@@ -241,7 +242,7 @@
   }
 
   .app-header .header-nav {
-    gap: 24px !important;
+    column-gap: 34px !important;
   }
 }
 
@@ -253,7 +254,7 @@
   }
 
   .app-header .header-left {
-    grid-template-columns: 120px 300px !important;
+    grid-template-columns: 120px minmax(340px, 440px) !important;
     gap: 14px !important;
   }
 
@@ -262,7 +263,7 @@
   }
 
   .app-header .header-nav {
-    gap: 18px !important;
+    column-gap: 26px !important;
   }
 }
 
@@ -278,7 +279,7 @@
   }
 
   .app-header .header-nav {
-    gap: 14px !important;
+    column-gap: 18px !important;
   }
 
   .app-header .nav-link,
@@ -304,7 +305,7 @@
   }
 
   .app-header .header-nav {
-    gap: 12px !important;
+    column-gap: 14px !important;
   }
 
   .app-header .nav-link,
