@@ -357,6 +357,11 @@ export default function AdminClinics() {
     }
   };
 
+  const formatStatusLabel = (value: string) =>
+    value
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
   return (
     <div className="admin-UserClinics with-sidebar">
       <Sidebar
@@ -410,28 +415,28 @@ export default function AdminClinics() {
                             <tr key={c.id}>
                               <td className="users-name">{c.clinic_name}</td>
 
-                              <td>
+                              <td className="clinic-status-cell">
                                 <span
                                   className={[
-                                    "pill",
-                                    isPending ? "pill-warning" : "",
-                                    isApproved ? "pill-success" : "",
-                                    isRejected ? "pill-danger" : "",
+                                    "clinic-status-pill",
+                                    isPending ? "clinic-status-pill--pending" : "",
+                                    isApproved ? "clinic-status-pill--approved" : "",
+                                    isRejected ? "clinic-status-pill--rejected" : "",
                                   ].join(" ")}
                                 >
-                                  {c.status}
+                                  {formatStatusLabel(c.status)}
                                 </span>
                               </td>
 
-                              <td>
+                              <td className="clinic-status-cell">
                                 <span
                                   className={[
-                                    "pill",
-                                    isActive ? "pill-success" : "",
-                                    isDisabled ? "pill-dark" : "",
+                                    "clinic-status-pill",
+                                    isActive ? "clinic-status-pill--active" : "",
+                                    isDisabled ? "clinic-status-pill--disabled" : "",
                                   ].join(" ")}
                                 >
-                                  {c.account_status}
+                                  {formatStatusLabel(c.account_status)}
                                 </span>
                               </td>
 

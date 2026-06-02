@@ -314,19 +314,19 @@ body {
 
 .admin-UserClinics .clinics-table th:nth-child(2),
 .admin-UserClinics .clinics-table td:nth-child(2) {
-  width: 15%;
+  width: 16%;
   text-align: center;
 }
 
 .admin-UserClinics .clinics-table th:nth-child(3),
 .admin-UserClinics .clinics-table td:nth-child(3) {
-  width: 14%;
+  width: 15%;
   text-align: center;
 }
 
 .admin-UserClinics .clinics-table th:nth-child(4),
 .admin-UserClinics .clinics-table td:nth-child(4) {
-  width: 43%;
+  width: 41%;
 }
 
 .admin-UserClinics .clinics-table td[colspan="4"] {
@@ -387,6 +387,68 @@ body {
 .admin-UserClinics .pill:active {
   outline: none;
   box-shadow: none;
+}
+
+.admin-UserClinics .clinic-status-cell {
+  text-align: center !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+.admin-UserClinics .clinic-status-pill {
+  min-width: 112px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 8px 16px rgba(15, 66, 66, 0.08);
+}
+
+.admin-UserClinics .clinic-status-pill::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+
+.admin-UserClinics .clinic-status-pill--pending {
+  background: #fff4d8;
+  border-color: #f1c36b;
+  color: #9a5b00;
+}
+
+.admin-UserClinics .clinic-status-pill--approved {
+  background: #dcfce7;
+  border-color: #9be7b4;
+  color: #057a37;
+}
+
+.admin-UserClinics .clinic-status-pill--rejected {
+  background: #fee2e2;
+  border-color: #f5b5b5;
+  color: #b91c1c;
+}
+
+.admin-UserClinics .clinic-status-pill--active {
+  background: #dff7f3;
+  border-color: #9edfd7;
+  color: #087b70;
+}
+
+.admin-UserClinics .clinic-status-pill--disabled {
+  background: #f1f5f9;
+  border-color: #d4dee8;
+  color: #576879;
 }
 
 /* ================= CLINIC ACTIONS ================= */
