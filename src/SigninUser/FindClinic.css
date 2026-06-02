@@ -955,8 +955,10 @@
   max-width: 940px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   max-height: calc(100dvh - 40px);
+  -webkit-overflow-scrolling: touch;
 }
 
 .fc-profile-header h2 {
@@ -964,10 +966,9 @@
 }
 
 .fc-profile-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  flex: 0 0 auto;
+  min-height: auto;
+  overflow: visible;
   padding: 20px 24px 24px;
   display: grid;
   gap: 16px;
@@ -1586,12 +1587,14 @@
 
   .fc-profile-modal {
     width: min(100%, 390px);
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .fc-profile-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
+    flex: 0 0 auto;
+    min-height: auto;
+    overflow: visible;
     padding: 12px 14px;
   }
 

@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import {
   Apple,
   Building2,
@@ -336,6 +337,40 @@ function toPhilippineLocalMobileNumber(value: string): string {
 
 function isValidPhilippineMobileNumber(value: string): boolean {
   return /^09\d{9}$/.test(toPhilippineLocalMobileNumber(value));
+}
+
+function sanitizeInteger(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+function sanitizeDecimal(value: string): string {
+  const cleaned = value.replace(/[^0-9.]/g, "");
+  const firstDot = cleaned.indexOf(".");
+
+  if (firstDot === -1) return cleaned;
+  return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+}
+
+const editableInputKeys = new Set([
+  "Backspace",
+  "Delete",
+  "Tab",
+  "ArrowLeft",
+  "ArrowRight",
+  "Home",
+  "End",
+]);
+
+function allowIntegerInput(event: ReactKeyboardEvent<HTMLInputElement>): void {
+  if (editableInputKeys.has(event.key) || event.ctrlKey || event.metaKey) return;
+  if (!/^\d$/.test(event.key)) event.preventDefault();
+}
+
+function allowDecimalInput(event: ReactKeyboardEvent<HTMLInputElement>): void {
+  if (editableInputKeys.has(event.key) || event.ctrlKey || event.metaKey) return;
+  if (/^\d$/.test(event.key)) return;
+  if (event.key === "." && !event.currentTarget.value.includes(".")) return;
+  event.preventDefault();
 }
 
 function getClinicSummary(clinic: Clinic): string {
@@ -883,8 +918,11 @@ const bmiCheckupAdvice = useMemo(() => {
                     <span className="input-icon">👤</span>
                     <input
                       type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={age}
-                      onChange={(e) => setAge(e.target.value)}
+                      onKeyDown={allowIntegerInput}
+                      onChange={(e) => setAge(sanitizeInteger(e.target.value))}
                     />
                     <span className="label-text">Age</span>
                   </div>
@@ -899,8 +937,11 @@ const bmiCheckupAdvice = useMemo(() => {
                     </span>
                     <input
                       type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
                       value={weight}
-                      onChange={(e) => setWeight(e.target.value)}
+                      onKeyDown={allowDecimalInput}
+                      onChange={(e) => setWeight(sanitizeDecimal(e.target.value))}
                       aria-label={unit === "Metric" ? "Weight in kilograms" : "Weight in pounds"}
                     />
                     <span className="unit-text">
@@ -918,8 +959,11 @@ const bmiCheckupAdvice = useMemo(() => {
                     </span>
                     <input
                       type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
                       value={height}
-                      onChange={(e) => setHeight(e.target.value)}
+                      onKeyDown={allowDecimalInput}
+                      onChange={(e) => setHeight(sanitizeDecimal(e.target.value))}
                       aria-label={unit === "Metric" ? "Height in centimeters" : "Height in inches"}
                     />
                     <span className="unit-text">

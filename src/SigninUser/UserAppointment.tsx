@@ -1,5 +1,6 @@
 
 
+import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import "./UserAppointment.css";
 import UserSidebar from "../Categories/UserSidebar";
@@ -2531,7 +2532,11 @@ function UserAppointmentsContent({
             <div className="card quick-card">
               <h3>Quick Actions</h3>
 
-              <div className="quick-action" onClick={() => setBookingOpen(true)}>
+              <button
+                type="button"
+                className="quick-action"
+                onClick={() => setBookingOpen(true)}
+              >
                 <div className="quick-icon">
                   <CalendarDays size={20} />
                 </div>
@@ -2539,9 +2544,10 @@ function UserAppointmentsContent({
                   <h4>Book Appointment</h4>
                   <p>Find a doctor and time</p>
                 </div>
-              </div>
+                <ChevronRight className="quick-chevron" size={18} />
+              </button>
 
-              <div className="quick-action">
+              <Link className="quick-action" to="/find-clinic">
                 <div className="quick-icon">
                   <MapPin size={20} />
                 </div>
@@ -2549,9 +2555,10 @@ function UserAppointmentsContent({
                   <h4>Find Clinic</h4>
                   <p>Search nearby clinics</p>
                 </div>
-              </div>
+                <ChevronRight className="quick-chevron" size={18} />
+              </Link>
 
-              <div className="quick-action">
+              <Link className="quick-action" to="/help">
                 <div className="quick-icon">
                   <Video size={20} />
                 </div>
@@ -2559,7 +2566,8 @@ function UserAppointmentsContent({
                   <h4>Telehealth Visit</h4>
                   <p>Consult from home</p>
                 </div>
-              </div>
+                <ChevronRight className="quick-chevron" size={18} />
+              </Link>
             </div>
 
             <div className="card health-card">

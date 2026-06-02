@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import { apiUrl } from "../sharedBackendFetch";
@@ -333,6 +334,28 @@ function sanitizeDecimal(value: string): string {
   const firstDot = cleaned.indexOf(".");
   if (firstDot === -1) return cleaned;
   return cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+}
+
+const editableInputKeys = new Set([
+  "Backspace",
+  "Delete",
+  "Tab",
+  "ArrowLeft",
+  "ArrowRight",
+  "Home",
+  "End",
+]);
+
+function allowIntegerInput(event: ReactKeyboardEvent<HTMLInputElement>): void {
+  if (editableInputKeys.has(event.key) || event.ctrlKey || event.metaKey) return;
+  if (!/^\d$/.test(event.key)) event.preventDefault();
+}
+
+function allowDecimalInput(event: ReactKeyboardEvent<HTMLInputElement>): void {
+  if (editableInputKeys.has(event.key) || event.ctrlKey || event.metaKey) return;
+  if (/^\d$/.test(event.key)) return;
+  if (event.key === "." && !event.currentTarget.value.includes(".")) return;
+  event.preventDefault();
 }
 
 function getClinicSummary(clinic: Clinic): string {
@@ -841,6 +864,7 @@ const bmiCheckupAdvice = useMemo(() => {
                       inputMode="numeric"
                       pattern="[0-9]*"
                       value={age}
+                      onKeyDown={allowIntegerInput}
                       onChange={(e) => setAge(sanitizeInteger(e.target.value))}
                       placeholder="0"
                     />
@@ -859,6 +883,7 @@ const bmiCheckupAdvice = useMemo(() => {
                       inputMode="decimal"
                       pattern="[0-9]*\.?[0-9]*"
                       value={weight}
+                      onKeyDown={allowDecimalInput}
                       onChange={(e) => setWeight(sanitizeDecimal(e.target.value))}
                       placeholder="0"
                       aria-label={unit === "Metric" ? "Weight in kilograms" : "Weight in pounds"}
@@ -880,6 +905,7 @@ const bmiCheckupAdvice = useMemo(() => {
                       inputMode="decimal"
                       pattern="[0-9]*\.?[0-9]*"
                       value={height}
+                      onKeyDown={allowDecimalInput}
                       onChange={(e) => setHeight(sanitizeDecimal(e.target.value))}
                       placeholder="0"
                       aria-label={unit === "Metric" ? "Height in centimeters" : "Height in inches"}

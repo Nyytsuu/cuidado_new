@@ -2241,7 +2241,7 @@ function UserAppointmentsContent({
                 <ChevronRight className="quick-chevron" size={18} />
               </Link>
 
-              <button type="button" className="quick-action">
+              <Link className="quick-action" to="/help">
                 <div className="quick-icon">
                   <Video size={20} />
                 </div>
@@ -2250,7 +2250,7 @@ function UserAppointmentsContent({
                   <p>Consult from home</p>
                 </div>
                 <ChevronRight className="quick-chevron" size={18} />
-              </button>
+              </Link>
             </div>
 
             <div className="card health-card">

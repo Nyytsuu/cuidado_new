@@ -483,7 +483,11 @@ export default function UserVoiceAssistant() {
               <h3>Need Help?</h3>
               <p>If you need any assistance, our support team is here to help.</p>
 
-              <button type="button" className="support-btn">
+              <button
+                type="button"
+                className="support-btn"
+                onClick={() => navigate("/help")}
+              >
                 <Headphones size={19} />
                 Contact Support
                 <ChevronRight size={19} />

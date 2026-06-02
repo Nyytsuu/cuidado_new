@@ -9,7 +9,7 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import UserSidebar from "../Categories/UserSidebar";
 import "./Notification.css";
 import { notifyNotificationsChanged } from "../useUnreadNotifications";
@@ -109,6 +109,7 @@ const matchesFilter = (item: NotificationItem, name: FilterName) => {
 
 export default function Notifications() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
@@ -368,7 +369,11 @@ export default function Notifications() {
                 <p className="notification-side-copy">
                   If you have any questions about notifications, we're here to help.
                 </p>
-                <button className="notification-action-btn" type="button">
+                <button
+                  className="notification-action-btn"
+                  type="button"
+                  onClick={() => navigate("/help")}
+                >
                   Contact Support
                 </button>
               </div>
