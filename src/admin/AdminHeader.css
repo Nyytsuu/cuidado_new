@@ -23,7 +23,7 @@
 }
 
 :root {
-  --admin-footer-space: 30px;
+  --admin-footer-space: 20px;
 }
 
 /* Ensure all admin page content clears the 68px fixed header */
@@ -46,6 +46,14 @@
   padding-bottom: calc(var(--admin-footer-space) + env(safe-area-inset-bottom, 0px)) !important;
 }
 
+.admin-UserClinics .admin-content,
+.admin-Userpage .admin-content,
+.admin-UserAppoint .admin-content,
+.admin-UserServices .admin-content,
+.admin-UserReport .admin-content {
+  min-height: calc(100vh - 68px) !important;
+}
+
 .admin-UserClinics .preview-canvas,
 .admin-Userpage .preview-canvas,
 .admin-UserAppoint .preview-canvas,
@@ -60,6 +68,17 @@
 .admin-UserAppoint .preview-canvas,
 .admin-UserServices .preview-canvas,
 .admin-UserReport .preview-canvas {
+  padding-bottom: var(--admin-footer-space) !important;
+}
+
+.admin-UserClinics .admin-grid,
+.admin-Userpage .admin-grid,
+.admin-UserAppoint .admin-grid,
+.admin-UserServices .admin-grid,
+.admin-UserReport .admin-grid,
+.admin-dashboard-page .dash-grid-data,
+.admin-dashboard-page .dash-layout,
+.admin-profile-page .admin-profile-grid {
   padding-bottom: var(--admin-footer-space) !important;
 }
 

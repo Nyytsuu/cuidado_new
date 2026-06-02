@@ -1085,6 +1085,115 @@ body {
   min-height: 345px !important;
 }
 
+/* ================= CLINIC ACTION BUTTONS ================= */
+.ca-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.ca-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 8px;
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+
+.ca-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.ca-btn:active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.ca-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+/* View — outlined teal */
+.ca-btn--view {
+  background: transparent;
+  color: #0a7a6e;
+  border: 1.5px solid #0a7a6e;
+}
+
+.ca-btn--view:hover {
+  background: #eaf7f5;
+}
+
+/* Approve — soft green */
+.ca-btn--approve {
+  background: #d4f5e2;
+  color: #0a6b42;
+  border: 1.5px solid #a8e6c1;
+}
+
+.ca-btn--approve:hover {
+  background: #0a8a4e;
+  color: #ffffff;
+  border-color: #0a8a4e;
+}
+
+/* Reject — soft red */
+.ca-btn--reject {
+  background: #fde8e8;
+  color: #b91c1c;
+  border: 1.5px solid #f8c0c0;
+}
+
+.ca-btn--reject:hover {
+  background: #c62828;
+  color: #ffffff;
+  border-color: #c62828;
+}
+
+/* Edit — neutral */
+.ca-btn--edit {
+  background: #f0f4f4;
+  color: #2e4a4a;
+  border: 1.5px solid #d0dede;
+}
+
+.ca-btn--edit:hover {
+  background: #ddecea;
+  border-color: #b0cecc;
+}
+
+/* Activate — solid green */
+.ca-btn--activate {
+  background: #0a8a4e;
+  color: #ffffff;
+  border: 1.5px solid #0a8a4e;
+}
+
+/* Deactivate — outlined red */
+.ca-btn--deactivate {
+  background: transparent;
+  color: #b91c1c;
+  border: 1.5px solid #e57373;
+}
+
+.ca-btn--deactivate:hover {
+  background: #c62828;
+  color: #ffffff;
+  border-color: #c62828;
+}
+
 /* ================= CLINIC DETAILS MODAL ================= */
 .admin-UserClinics .modal-backdrop {
   position: fixed;

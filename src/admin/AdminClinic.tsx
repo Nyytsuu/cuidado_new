@@ -436,59 +436,59 @@ export default function AdminClinics() {
                               </td>
 
                               <td>
-                                <div className="users-actions clinics-actions slots">
+                                <div className="ca-actions">
                                   <button
                                     type="button"
-                                    className="pill pill-view pill-wide"
+                                    className="ca-btn ca-btn--view"
                                     onClick={() => viewClinic(c.id)}
                                   >
-                                    View
+                                    <span className="ca-icon">👁</span> View
                                   </button>
 
                                   {isPending && (
                                     <>
                                       <button
                                         type="button"
-                                        className="pill pill-success pill-wide"
+                                        className="ca-btn ca-btn--approve"
                                         onClick={() => approveClinic(c.id)}
                                       >
-                                        Approve
+                                        <span className="ca-icon">✓</span> Approve
                                       </button>
 
                                       <button
                                         type="button"
-                                        className="pill pill-danger pill-wide"
+                                        className="ca-btn ca-btn--reject"
                                         onClick={() => rejectClinic(c.id)}
                                       >
-                                        Reject
+                                        <span className="ca-icon">✕</span> Reject
                                       </button>
                                     </>
                                   )}
 
                                   <button
                                     type="button"
-                                    className="pill pill-gray pill-wide"
+                                    className="ca-btn ca-btn--edit"
                                     onClick={() => openEditPopup(c)}
                                   >
-                                    Edit
+                                    <span className="ca-icon">✎</span> Edit
                                   </button>
 
                                   {isApproved &&
                                     (isDisabled ? (
                                       <button
                                         type="button"
-                                        className="pill pill-success pill-wide"
+                                        className="ca-btn ca-btn--activate"
                                         onClick={() => openStatusPopup(c, "active")}
                                       >
-                                        Activate
+                                        <span className="ca-icon">▶</span> Activate
                                       </button>
                                     ) : (
                                       <button
                                         type="button"
-                                        className="pill pill-dark pill-wide"
+                                        className="ca-btn ca-btn--deactivate"
                                         onClick={() => openStatusPopup(c, "disabled")}
                                       >
-                                        Deactivate
+                                        <span className="ca-icon">⏸</span> Deactivate
                                       </button>
                                     ))}
                                 </div>
