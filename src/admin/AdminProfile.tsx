@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import profile from "../img/profile1.jpg";
 import "./AdminProfile.css";
 import "./AdminHeader.css";
@@ -34,17 +34,6 @@ function AdminProfile() {
     setTempUsername(username);
     setTempEmail(email);
     setIsEditing(false);
-  };
-
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const keyword = q.trim();
-    const browserFind = (window as Window & { find?: (query: string) => boolean }).find;
-
-    if (keyword && browserFind) {
-      browserFind(keyword);
-    }
   };
 
   return (

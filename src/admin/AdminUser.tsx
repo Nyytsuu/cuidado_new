@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import "./AdminUser.css";
 import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
@@ -60,24 +59,16 @@ export default function AdminUsers() {
     useState<AdminAppointmentDetails | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [isUserPopupOpen, setIsUserPopupOpen] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [q, setQ] = useState("");
-  const navigate = useNavigate();
 
   const [statusPopupOpen, setStatusPopupOpen] = useState(false);
   const [statusUser, setStatusUser] = useState<UserRow | null>(null);
   const [pendingAccountStatus, setPendingAccountStatus] = useState<"active" | "disabled" | null>(
     null
   );
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/signin");
-  };
 
   const getUserStatus = (
     user: UserRow | UserProfile | null | undefined

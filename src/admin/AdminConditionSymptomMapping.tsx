@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import "./AdminConditionSymptomMapping.css";
 import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
@@ -31,11 +30,8 @@ type SelectedSymptom = {
 const API_BASE = "http://localhost:5000/api/admin/condition-symptoms";
 
 export default function AdminConditionSymptomMapping() {
-  const navigate = useNavigate();
-
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
 
   const [q, setQ] = useState("");
   const [conditions, setConditions] = useState<ConditionItem[]>([]);
@@ -52,11 +48,6 @@ export default function AdminConditionSymptomMapping() {
 
 
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    navigate("/signin");
-  };
 
   const fetchConditions = async () => {
     try {

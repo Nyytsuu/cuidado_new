@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./AdminClinic.css";
 import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
@@ -72,12 +72,10 @@ export default function AdminClinics() {
     useState<AdminAppointmentDetails | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [selectedClinic, setSelectedClinic] = useState<ClinicProfile | null>(null);
   const [isClinicPopupOpen, setIsClinicPopupOpen] = useState(false);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [q, setQ] = useState("");
-  const navigate = useNavigate();
 
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const [editingClinic, setEditingClinic] = useState<ClinicRow | null>(null);
@@ -88,12 +86,6 @@ export default function AdminClinics() {
   const [pendingAccountStatus, setPendingAccountStatus] = useState<"active" | "disabled" | null>(
     null
   );
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/signin");
-  };
 
   const formatDateTime = (value?: string | null) => {
     if (!value) return "Not recorded";

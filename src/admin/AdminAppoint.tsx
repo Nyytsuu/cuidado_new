@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import {Link, useNavigate} from "react-router-dom";
 import "./AdminAppoint.css";
 import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
@@ -49,7 +48,6 @@ type ActivityItem = {
 export default function AdminAppoint() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [headerProfileOpen, setHeaderProfileOpen] = useState(false);
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<AppointmentRow[]>([]);
@@ -57,21 +55,8 @@ export default function AdminAppoint() {
   // modal
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [selected, setSelected] = useState<AppointmentDetails | null>(null);
-  const navigate = useNavigate();
-   
    const [cancelPopupOpen, setCancelPopupOpen] = useState(false);
 const [cancelId, setCancelId] = useState<number | null>(null);
-
-const handleLogout = () => {
-  // remove auth data
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-
-  // optional: clear session cookie via API
-  // await fetch("/api/logout", { method: "POST", credentials: "include" });
-
-  navigate("/signin");
-};
  const loadActivity = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/admin/recent-activity?limit=8");
