@@ -175,7 +175,7 @@ body:has(.admin-dashboard-page) {
   display: grid;
   grid-template-columns: repeat(3, max-content);
   align-items: center;
-  column-gap: 44px;
+  column-gap: 28px;
   height: 100%;
   margin-left: auto;
 }
