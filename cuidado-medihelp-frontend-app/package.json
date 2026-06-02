@@ -8,7 +8,7 @@
     "dev:frontend": "vite --host 0.0.0.0",
     "android:live:server": "vite --host 0.0.0.0 --port 5173 --strictPort",
     "android:live:sync": "node ./scripts/capacitor-live-sync.mjs",
-    "android:bundled:sync": "npx cap sync android",
+    "android:bundled:sync": "node ./scripts/capacitor-bundled-sync.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

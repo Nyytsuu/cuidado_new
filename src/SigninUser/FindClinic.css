@@ -1160,18 +1160,22 @@
 }
 
 .fc-profile-review-list {
-  display: grid;
-  gap: 10px;
-  max-height: min(340px, 38dvh);
-  overflow-y: auto;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  height: 188px;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
-  padding-right: 6px;
+  scroll-snap-type: x mandatory;
+  padding: 0 4px 10px 0;
 }
 
 .fc-profile-review-list::-webkit-scrollbar {
-  width: 7px;
+  height: 7px;
 }
 
 .fc-profile-review-list::-webkit-scrollbar-track {
@@ -1189,10 +1193,15 @@
 }
 
 .fc-profile-review {
+  flex: 0 0 min(440px, calc(100% - 8px));
+  height: 100%;
   padding: 13px;
   border: 1px solid #dce8e9;
   border-radius: 14px;
   background: #f9fcfc;
+  overflow-y: auto;
+  scroll-snap-align: start;
+  -webkit-overflow-scrolling: touch;
 }
 
 .fc-profile-review > div:first-child {
@@ -1617,7 +1626,11 @@
   }
 
   .fc-profile-review-list {
-    max-height: min(280px, 34dvh);
+    height: 190px;
+  }
+
+  .fc-profile-review {
+    flex-basis: calc(100% - 6px);
   }
 }
 .fc-success-overlay {
