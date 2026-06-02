@@ -384,7 +384,7 @@ export default function AdminClinics() {
                         <th>Registered Clinics</th>
                         <th>Approval</th>
                         <th>Account</th>
-                        <th>Actions:</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
 

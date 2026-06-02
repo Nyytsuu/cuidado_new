@@ -189,20 +189,21 @@ body {
   background: rgba(0, 0, 0, 0.05);
 }
 .admin-UserClinics .clinics-table td:last-child {
-  text-align: right;
-  padding-left: 1px !important;
-  padding-right: 1px !important;
+  text-align: left;
+  padding-left: 18px !important;
+  padding-right: 18px !important;
 }
+
 .admin-UserClinics .clinics-table thead th:nth-child(4) {
-  padding-left: 109px !important;
+  padding-left: 18px !important;
 }
 
 .admin-UserClinics .clinics-actions.slots {
-  padding-left: 1px;
+  padding-left: 0;
 }
 
 .admin-UserClinics .clinics-table tbody td:nth-child(4) .clinics-actions {
-  transform: translateX(100px);
+  transform: none;
 }
 /* ================= CONTENT ================= */
 .admin-UserClinics .admin-content {
@@ -308,24 +309,24 @@ body {
 
 .admin-UserClinics .clinics-table th:nth-child(1),
 .admin-UserClinics .clinics-table td:nth-child(1) {
-  width: 33%;
+  width: 28%;
 }
 
 .admin-UserClinics .clinics-table th:nth-child(2),
 .admin-UserClinics .clinics-table td:nth-child(2) {
-  width: 17%;
+  width: 15%;
   text-align: center;
 }
 
 .admin-UserClinics .clinics-table th:nth-child(3),
 .admin-UserClinics .clinics-table td:nth-child(3) {
-  width: 16%;
+  width: 14%;
   text-align: center;
 }
 
 .admin-UserClinics .clinics-table th:nth-child(4),
 .admin-UserClinics .clinics-table td:nth-child(4) {
-  width: 34%;
+  width: 43%;
 }
 
 .admin-UserClinics .clinics-table td[colspan="4"] {
@@ -337,11 +338,11 @@ body {
 /* ================= PILLS ================= */
 .admin-UserClinics .pill {
   border: none;
-  border-radius: 999px;
-  padding: 0 16px;
+  border-radius: 10px;
+  padding: 0 12px;
   min-height: 34px;
-  line-height: 34px;
-  font-size: 14px;
+  line-height: 1;
+  font-size: 13px;
   font-weight: 800;
   display: inline-flex;
   align-items: center;
@@ -355,7 +356,7 @@ body {
 }
 
 .admin-UserClinics .pill-wide {
-  width: 100%;
+  width: auto;
 }
 
 .admin-UserClinics .pill-view {
@@ -391,21 +392,34 @@ body {
 /* ================= CLINIC ACTIONS ================= */
 .admin-UserClinics .clinics-table td:last-child {
   text-align: left;
-  padding-left: 11px;
-  padding-right: 20px;
+  padding-left: 18px;
+  padding-right: 18px;
 }
 
 .admin-UserClinics .clinics-actions .pill {
-  min-width: 92px;
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  box-shadow: 0 6px 14px rgba(15, 66, 66, 0.1);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.admin-UserClinics .clinics-actions .pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(15, 66, 66, 0.16);
+  filter: brightness(0.98);
 }
 
 .admin-UserClinics .clinics-actions.slots {
   display: grid;
-  grid-template-columns: repeat(5, minmax(var(--action-slot-w), 1fr));
-  column-gap: var(--actions-gap);
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 8px;
   align-items: center;
   justify-content: stretch;
-  width: 100%;
+  width: min(100%, 440px);
 }
 
 .admin-UserClinics .is-hidden {
