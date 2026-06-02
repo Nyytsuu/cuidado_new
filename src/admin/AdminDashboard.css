@@ -17,7 +17,7 @@ body:has(.admin-dashboard-page) {
 .admin-dashboard-page {
   --admin-sidebar-collapsed: 78px;
   --admin-sidebar-expanded: 220px;
-  --admin-header-height: 64px;
+  --admin-header-height: 68px;
   --admin-header-bg: #58aea8;
   --admin-text: #102a2a;
   --admin-muted: #627878;
@@ -90,27 +90,32 @@ body:has(.admin-dashboard-page) {
 
 .admin-dashboard-page .header-left {
   min-width: 0;
-  flex: 1 1 auto;
-  display: flex;
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 150px minmax(520px, 620px);
   align-items: center;
   gap: 24px;
 }
 
 .admin-dashboard-page .app-header .header-left {
-  display: flex !important;
-  grid-template-columns: none !important;
+  flex: 0 0 auto !important;
+  display: grid !important;
+  grid-template-columns: 150px minmax(520px, 620px) !important;
+  gap: 24px !important;
 }
 
 .admin-dashboard-page .brand-logo {
-  width: 118px;
-  height: 46px;
+  width: 132px;
+  height: 52px;
+  max-height: 52px;
   object-fit: contain;
   flex: 0 0 auto;
 }
 
 .admin-dashboard-page .app-header .brand-logo {
-  width: 118px !important;
-  height: 46px !important;
+  width: 132px !important;
+  height: 52px !important;
+  max-height: 52px !important;
 }
 
 .admin-dashboard-page .header-search {
@@ -126,9 +131,10 @@ body:has(.admin-dashboard-page) {
 }
 
 .admin-dashboard-page .app-header .header-search {
-  grid-column: auto !important;
-  justify-self: auto !important;
-  width: min(100%, 620px) !important;
+  grid-column: 2 !important;
+  justify-self: center !important;
+  width: 100% !important;
+  max-width: 620px !important;
   height: 46px !important;
 }
 
@@ -170,10 +176,17 @@ body:has(.admin-dashboard-page) {
   grid-template-columns: repeat(3, max-content);
   align-items: center;
   column-gap: 44px;
+  height: 100%;
+  margin-left: auto;
 }
 
 .admin-dashboard-page .nav-link {
   border: 0;
+  padding: 0 4px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   color: #0f4242;
   text-decoration: none;
