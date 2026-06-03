@@ -38,7 +38,7 @@
   display: flex !important;
   flex-direction: column !important;
   gap: 0 !important;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 14px !important;
 }
 
@@ -254,7 +254,7 @@
   flex-direction: column;
   gap: 8px;
   flex: 1;
-  padding: 14px 16px 12px;
+  padding: 14px 18px 14px;
   overflow-y: auto;
 }
 
