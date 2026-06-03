@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Link } from "react-router-dom";
 import {
   MessageSquareText,
@@ -98,6 +105,7 @@ const matchesSearch = (
   );
 
 export default function ClinicReviews() {
+  const layoutFixed = useRef(false);
   const clinicId = useMemo(() => getStoredClinicId(), []);
 
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
@@ -119,6 +127,59 @@ export default function ClinicReviews() {
     String(review.clinic_reply || "").trim()
   ).length;
   const needsReplyCount = Math.max(reviews.length - repliedCount, 0);
+
+  useLayoutEffect(() => {
+    if (layoutFixed.current) return;
+    layoutFixed.current = true;
+
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById("root");
+
+    const previous = {
+      htmlHeight: html.style.height,
+      htmlOverflowY: html.style.overflowY,
+      bodyHeight: body.style.height,
+      bodyOverflowY: body.style.overflowY,
+      bodyDisplay: body.style.display,
+      bodyAlignItems: body.style.alignItems,
+      bodyJustifyContent: body.style.justifyContent,
+      rootHeight: root?.style.height ?? "",
+      rootMinHeight: root?.style.minHeight ?? "",
+      rootWidth: root?.style.width ?? "",
+    };
+
+    html.style.height = "auto";
+    html.style.overflowY = "auto";
+    body.style.height = "auto";
+    body.style.overflowY = "auto";
+    body.style.display = "block";
+    body.style.alignItems = "stretch";
+    body.style.justifyContent = "flex-start";
+
+    if (root) {
+      root.style.height = "auto";
+      root.style.minHeight = "100vh";
+      root.style.width = "100%";
+    }
+
+    return () => {
+      layoutFixed.current = false;
+      html.style.height = previous.htmlHeight;
+      html.style.overflowY = previous.htmlOverflowY;
+      body.style.height = previous.bodyHeight;
+      body.style.overflowY = previous.bodyOverflowY;
+      body.style.display = previous.bodyDisplay;
+      body.style.alignItems = previous.bodyAlignItems;
+      body.style.justifyContent = previous.bodyJustifyContent;
+
+      if (root) {
+        root.style.height = previous.rootHeight;
+        root.style.minHeight = previous.rootMinHeight;
+        root.style.width = previous.rootWidth;
+      }
+    };
+  }, []);
 
   const fetchReviews = useCallback(async () => {
     try {
