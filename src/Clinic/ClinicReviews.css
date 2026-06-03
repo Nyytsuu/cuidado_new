@@ -22,11 +22,8 @@
   --rev-radius-sm:    8px;
 
   min-height: 100vh;
-  height: 100vh;
   width: 100%;
-  overflow-y: auto;
   overflow-x: hidden;
-  overscroll-behavior: contain;
   background: var(--rev-bg);
   color: var(--rev-text);
   font-family: "Poppins", sans-serif;
@@ -183,15 +180,19 @@
    REVIEW PANEL
 ════════════════════════════════════════════════════════ */
 .clinic-reviews-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
   background: var(--rev-surface);
   border: 1px solid var(--rev-line);
   border-radius: var(--rev-radius);
   box-shadow: var(--rev-shadow);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* ── Toolbar ── */
 .clinic-reviews-toolbar {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -257,7 +258,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding-bottom: 22px;
+  padding-bottom: 8px;
 }
 
 /* ════════════════════════════════════════════════════════
