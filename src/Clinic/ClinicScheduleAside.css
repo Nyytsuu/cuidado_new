@@ -31,14 +31,14 @@
 .ClinicAppoint .clinic-schedule-aside .big-card,
 .Patient .clinic-schedule-aside .big-card,
 .services .clinic-schedule-aside .big-card {
-  padding: 0 !important;   /* header and editor handle their own spacing */
-  min-height: 430px;
-  height: auto;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
   background: #ffffff !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 0 !important;
-  overflow: visible;
+  overflow: hidden;
   border-radius: 14px !important;
 }
 
@@ -253,9 +253,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
   padding: 14px 18px 14px;
-  overflow-y: auto;
 }
 
 /* ── Each day row ── */
