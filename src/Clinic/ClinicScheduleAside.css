@@ -260,11 +260,10 @@
 
 /* ── Each day row ── */
 .clinic-schedule-row {
-  display: grid;
-  grid-template-columns: 34px 38px 1fr;
-  gap: 6px;
+  display: flex;
   align-items: center;
-  padding: 9px 12px;
+  gap: 10px;
+  padding: 10px 14px;
   border: 1px solid #daecea;
   border-radius: 10px;
   background: #f8fffe;
@@ -293,6 +292,7 @@
   cursor: pointer;
   width: 32px;
   height: 18px;
+  flex-shrink: 0;
 }
 
 .sch-toggle-switch input {
@@ -343,6 +343,8 @@
   font-weight: 800;
   text-align: left;
   transition: color 0.15s;
+  flex-shrink: 0;
+  min-width: 30px;
 }
 
 .sch-day-name.active { color: #0f4242; }
@@ -352,21 +354,21 @@
 .sch-times {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .sch-times input[type="time"] {
   flex: 1;
-  min-width: 0;
-  height: 30px;
+  min-width: 88px;
+  height: 32px;
   border: 1px solid #c9e2df;
   border-radius: 8px;
-  padding: 0 8px;
+  padding: 0 6px;
   color: #0f4242;
   background: #ffffff;
-  font-size: 0.73rem;
+  font-size: 0.76rem;
   font-weight: 700;
   outline: none;
   font-family: inherit;
