@@ -1,8 +1,20 @@
+/* ── Aside container: self-contained layout (no reliance on page CSS) ── */
+.clinic-schedule-aside.admin-right {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  align-self: start;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
 /* ── Base card wrapper ── */
 .clinic-schedule-aside .admin-card {
   background: #ffffff;
   border: 1px solid #d9ebe8;
   box-shadow: 0 10px 24px rgba(15, 66, 66, 0.08);
+  flex-shrink: 0;
 }
 
 .Patient .clinic-schedule-aside .admin-card,
