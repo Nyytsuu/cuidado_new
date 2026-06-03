@@ -252,9 +252,9 @@
 .clinic-schedule-editor {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
-  padding: 12px 14px 10px;
+  padding: 14px 16px 12px;
   overflow-y: auto;
 }
 
@@ -361,18 +361,23 @@
 
 .sch-times input[type="time"] {
   flex: 1;
-  min-width: 88px;
+  min-width: 90px;
   height: 32px;
   border: 1px solid #c9e2df;
   border-radius: 8px;
-  padding: 0 6px;
+  padding: 0 8px;
   color: #0f4242;
   background: #ffffff;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 700;
   outline: none;
   font-family: inherit;
   box-sizing: border-box;
+}
+
+/* Hide the native clock picker icon — frees ~20px so AM/PM is never clipped */
+.sch-times input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none;
 }
 
 .sch-times input[type="time"]:focus {
