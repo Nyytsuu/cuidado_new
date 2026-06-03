@@ -187,7 +187,7 @@
   border: 1px solid var(--rev-line);
   border-radius: var(--rev-radius);
   box-shadow: var(--rev-shadow);
-  overflow: visible;
+  overflow: hidden;
 }
 
 /* ── Toolbar ── */
