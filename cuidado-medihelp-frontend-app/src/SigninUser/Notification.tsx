@@ -40,8 +40,43 @@ type RawNotification = {
   appointment_id?: number | null;
 };
 
+type NotificationPreferenceKey = "appointments" | "system" | "promotions" | "push";
+type NotificationPreferences = Record<NotificationPreferenceKey, boolean>;
+
 const API_BASE = "http://localhost:5000";
 const FILTERS: FilterName[] = ["All", "Unread", "Appointments", "System", "Promotions"];
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
+  appointments: true,
+  system: true,
+  promotions: true,
+  push: true,
+};
+const PREFERENCE_OPTIONS: Array<{
+  key: NotificationPreferenceKey;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: "appointments",
+    label: "Appointment updates",
+    description: "Booking requests, confirmations, reschedules, cancellations, and reminders.",
+  },
+  {
+    key: "system",
+    label: "System and support replies",
+    description: "Account notices, support ticket replies, and important platform messages.",
+  },
+  {
+    key: "promotions",
+    label: "Health tips and announcements",
+    description: "General health articles, care tips, and optional Cuidado announcements.",
+  },
+  {
+    key: "push",
+    label: "Phone notifications",
+    description: "Allow enabled notifications to appear in the phone notification shade.",
+  },
+];
 const ICONS: Record<string, LucideIcon> = {
   bell: Bell,
   calendar: CalendarDays,
@@ -62,6 +97,32 @@ const getStoredUserId = () => {
   } catch {
     return "";
   }
+};
+
+const getPreferenceStorageKey = (userId: string) =>
+  `cuidado-notification-preferences-${userId || "guest"}`;
+
+const readNotificationPreferences = (userId: string): NotificationPreferences => {
+  try {
+    const stored = localStorage.getItem(getPreferenceStorageKey(userId));
+    if (!stored) return DEFAULT_NOTIFICATION_PREFERENCES;
+    return {
+      ...DEFAULT_NOTIFICATION_PREFERENCES,
+      ...(JSON.parse(stored) as Partial<NotificationPreferences>),
+    };
+  } catch {
+    return DEFAULT_NOTIFICATION_PREFERENCES;
+  }
+};
+
+const writeNotificationPreferences = (
+  userId: string,
+  preferences: NotificationPreferences
+) => {
+  localStorage.setItem(
+    getPreferenceStorageKey(userId),
+    JSON.stringify(preferences)
+  );
 };
 
 const toNotification = (item: RawNotification): NotificationItem => ({
@@ -107,6 +168,19 @@ const matchesFilter = (item: NotificationItem, name: FilterName) => {
   return item.category.toLowerCase() === name.toLowerCase();
 };
 
+const isNotificationAllowed = (
+  item: NotificationItem,
+  preferences: NotificationPreferences
+) => {
+  const category = item.category.toLowerCase();
+
+  if (category === "appointments") return preferences.appointments;
+  if (category === "promotions") return preferences.promotions;
+  if (category === "system") return preferences.system;
+
+  return true;
+};
+
 export default function Notifications() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -121,6 +195,33 @@ export default function Notifications() {
   const [error, setError] = useState("");
 
   const userId = useMemo(() => getStoredUserId(), []);
+  const [preferences, setPreferences] = useState<NotificationPreferences>(() =>
+    readNotificationPreferences(userId)
+  );
+  const [preferenceStatus, setPreferenceStatus] = useState("");
+  const [highlightPreferences, setHighlightPreferences] = useState(false);
+
+  useEffect(() => {
+    setPreferences(readNotificationPreferences(userId));
+  }, [userId]);
+
+  useEffect(() => {
+    const state = location.state as { focusPreferences?: boolean } | null;
+    if (!state?.focusPreferences) return;
+
+    setHighlightPreferences(true);
+    const frame = window.requestAnimationFrame(() => {
+      document
+        .getElementById("notification-preferences")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    const timer = window.setTimeout(() => setHighlightPreferences(false), 1800);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [location.state]);
 
   useEffect(() => {
     window.history.scrollRestoration = "manual";
@@ -174,7 +275,14 @@ export default function Notifications() {
 
         const parsedNotifications = Array.isArray(data) ? data.map(toNotification) : [];
         setNotifications(parsedNotifications);
-        void showUnreadPhoneNotifications(userId, parsedNotifications);
+        if (preferences.push) {
+          void showUnreadPhoneNotifications(
+            userId,
+            parsedNotifications.filter((item) =>
+              isNotificationAllowed(item, preferences)
+            )
+          );
+        }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Failed to load notifications.");
@@ -186,16 +294,24 @@ export default function Notifications() {
     loadNotifications();
 
     return () => controller.abort();
-  }, [userId]);
+  }, [userId, preferences]);
+
+  const visibleNotifications = useMemo(
+    () =>
+      notifications.filter((item) =>
+        isNotificationAllowed(item, preferences)
+      ),
+    [notifications, preferences]
+  );
 
   const filteredNotifications = useMemo(() => {
-    let data = notifications;
+    let data = visibleNotifications;
 
     data = data.filter((item) => matchesFilter(item, activeTab));
     data = data.filter((item) => matchesFilter(item, filter));
 
     return data;
-  }, [activeTab, filter, notifications]);
+  }, [activeTab, filter, visibleNotifications]);
 
   useEffect(() => {
     const resetFeedScroll = () => {
@@ -213,7 +329,20 @@ export default function Notifications() {
   }, [activeTab, filter, filteredNotifications.length]);
 
   const getCount = (name: FilterName) => {
-    return notifications.filter((item) => matchesFilter(item, name)).length;
+    return visibleNotifications.filter((item) => matchesFilter(item, name)).length;
+  };
+
+  const updateNotificationPreference = (key: NotificationPreferenceKey) => {
+    const next = { ...preferences, [key]: !preferences[key] };
+    setPreferences(next);
+    writeNotificationPreferences(userId, next);
+    setPreferenceStatus("Preferences saved.");
+  };
+
+  const resetNotificationPreferences = () => {
+    setPreferences(DEFAULT_NOTIFICATION_PREFERENCES);
+    writeNotificationPreferences(userId, DEFAULT_NOTIFICATION_PREFERENCES);
+    setPreferenceStatus("Preferences reset to default.");
   };
 
   const markNotificationRead = async (notification: NotificationItem) => {
@@ -356,12 +485,43 @@ export default function Notifications() {
                 ))}
               </div>
 
-              <div className="sidebar-box">
+              <div
+                className={`sidebar-box notification-preferences-box ${
+                  highlightPreferences ? "is-highlighted" : ""
+                }`}
+                id="notification-preferences"
+              >
                 <h3 className="group-title">Notification Preferences</h3>
-                <p className="notification-side-copy">Manage how you receive notifications</p>
-                <button className="notification-action-btn" type="button">
-                  Manage Preferences
+                <p className="notification-side-copy">
+                  Choose which updates are shown in your notification feed.
+                </p>
+                <div className="notification-preference-list">
+                  {PREFERENCE_OPTIONS.map((item) => (
+                    <label className="notification-preference-row" key={item.key}>
+                      <span>
+                        <strong>{item.label}</strong>
+                        <small>{item.description}</small>
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={preferences[item.key]}
+                        onChange={() => updateNotificationPreference(item.key)}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <button
+                  className="notification-action-btn notification-secondary-btn"
+                  type="button"
+                  onClick={resetNotificationPreferences}
+                >
+                  Reset Preferences
                 </button>
+                {preferenceStatus && (
+                  <p className="notification-action-status success" aria-live="polite">
+                    {preferenceStatus}
+                  </p>
+                )}
               </div>
 
               <div className="sidebar-box">

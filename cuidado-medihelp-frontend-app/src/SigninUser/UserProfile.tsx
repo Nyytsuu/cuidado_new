@@ -830,7 +830,9 @@ export default function UserProfile() {
                 <button
                   className="preference-manage-btn"
                   type="button"
-                  onClick={() => navigate("/notifications")}
+                  onClick={() =>
+                    navigate("/notifications", { state: { focusPreferences: true } })
+                  }
                 >
                   Manage Preferences
                 </button>

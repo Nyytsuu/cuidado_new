@@ -432,6 +432,68 @@
   filter: brightness(0.96);
 }
 
+.notification-preferences-box {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.notification-preferences-box.is-highlighted {
+  border-color: #0d9488 !important;
+  background: #fbffff !important;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.14),
+    0 12px 28px rgba(31, 49, 66, 0.1) !important;
+}
+
+.notification-preference-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.notification-preference-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #dcebed;
+  border-radius: 10px;
+  background: #f8fcfc;
+  cursor: pointer;
+}
+
+.notification-preference-row strong {
+  display: block;
+  color: #1f2c3f;
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.notification-preference-row small {
+  display: block;
+  margin-top: 4px;
+  color: #667783;
+  font-size: 9.6px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.notification-preference-row input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #078d82;
+  cursor: pointer;
+}
+
+.notification-secondary-btn {
+  border: 1px solid #d5e8e7;
+  background: #eef8f7;
+  color: #0a6f66;
+  box-shadow: none;
+}
+
 .notification-action-status {
   margin: 8px 0 0;
   padding: 8px 9px;
@@ -784,6 +846,10 @@
     grid-column: 1 / -1;
   }
 
+  .notification-preferences-box {
+    grid-column: 1 / -1;
+  }
+
   .notification-side-panel .sidebar-box {
     padding: 10px;
     border-radius: 12px;
@@ -838,6 +904,29 @@
     padding: 0 8px;
     border-radius: 8px;
     font-size: 9px;
+  }
+
+  .notification-preference-list {
+    gap: 7px;
+    margin-top: 9px;
+  }
+
+  .notification-preference-row {
+    padding: 9px;
+    border-radius: 9px;
+  }
+
+  .notification-preference-row strong {
+    font-size: 9.6px;
+  }
+
+  .notification-preference-row small {
+    font-size: 8.4px;
+  }
+
+  .notification-preference-row input {
+    width: 16px;
+    height: 16px;
   }
 
   .notification-action-status {
