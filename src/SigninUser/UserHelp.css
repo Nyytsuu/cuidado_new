@@ -418,133 +418,237 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 10px;
-  min-height: 62px;
-  padding: 9px 10px;
-}
-
-.request-card > div:first-child {
-  min-width: 0;
-}
-
-.request-card h3 {
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.request-card p {
-  color: #60757a;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.request-card strong {
-  height: fit-content;
-  border-radius: 999px;
-  padding: 5px 9px;
-  background: #e8f3f1;
-  color: #0b5d56;
-  font-size: 11px;
-  font-weight: 900;
-  text-transform: capitalize;
-  white-space: nowrap;
-}
-
-.request-card-actions {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.request-close-btn {
-  min-height: 30px;
-  border: 1px solid #bddbd8;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #0b716b;
-  padding: 0 12px;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid #e0ece9;
+  border-radius: 10px;
+  background: #fbfefd;
   font: inherit;
-  font-size: 11px;
-  font-weight: 900;
+  text-align: left;
   cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 
-.request-close-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+.request-card:hover {
+  border-color: #b6ddd7;
+  box-shadow: 0 4px 14px rgba(15, 143, 131, 0.12);
 }
 
-.request-card strong.resolved,
-.request-card strong.closed {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.request-card strong.answered {
-  background: #d6f0ff;
-  color: #1462a0;
-}
-
-/* ── Admin reply shown to the patient ── */
-.request-card {
-  align-items: start;
+.request-card:active {
+  transform: scale(0.995);
 }
 
 .request-card-main {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
-.request-card-head {
-  min-width: 0;
-}
-
-.request-reply {
-  border: 1px solid rgba(15, 143, 131, 0.22);
-  border-left: 3px solid #0f8f83;
-  border-radius: 0 8px 8px 0;
-  background: #f3faf9;
-  padding: 9px 11px;
-}
-
-.request-reply-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-  color: #0b5d56;
-}
-
-.request-reply-head strong {
-  padding: 0;
-  background: none;
-  color: #0b5d56;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: none;
-}
-
-.request-reply-head span {
-  margin-left: auto;
-  color: #60757a;
+.request-card-topic {
+  display: inline-flex;
+  color: #0f8f83;
   font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.request-card h3 {
+  margin: 3px 0 2px;
+  font-size: 14px;
+  font-weight: 900;
+  color: #17363f;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.request-card-date {
+  margin: 0;
+  color: #60757a;
+  font-size: 12px;
   font-weight: 700;
 }
 
-.request-reply p {
-  margin: 0;
-  color: #335450;
+.request-card-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.request-status {
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #fdeccb;
+  color: #8a5a12;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.request-status.answered {
+  background: #d6f0ff;
+  color: #1462a0;
+}
+
+.request-status.resolved,
+.request-status.closed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.request-replied-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: #e6f7f4;
+  color: #0b6c63;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.request-card-chevron {
+  color: #9bb3b0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ════════ Request detail modal ════════ */
+.request-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 14000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(17, 38, 38, 0.46);
+  backdrop-filter: blur(4px);
+}
+
+.request-modal {
+  position: relative;
+  width: min(540px, 100%);
+  max-height: 86vh;
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(12, 40, 38, 0.28);
+}
+
+.request-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: #eef4f3;
+  color: #2e4a4a;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.request-modal-close:hover {
+  background: #dfeae8;
+}
+
+.request-modal-head {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #eef4f3;
+}
+
+.request-modal-head .request-card-topic {
+  font-size: 11px;
+}
+
+.request-modal-head h3 {
+  margin: 6px 40px 12px 0;
+  color: #14333b;
+  font-size: 20px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.request-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  color: #60757a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.request-modal-body {
+  padding: 18px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.request-modal-section h4 {
+  margin: 0 0 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #14333b;
   font-size: 13px;
+  font-weight: 900;
+}
+
+.request-modal-section p {
+  margin: 0;
+  color: #44605c;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 1.5;
-  white-space: normal;
+  line-height: 1.6;
   overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.request-modal-reply {
+  border: 1px solid rgba(15, 143, 131, 0.22);
+  border-left: 3px solid #0f8f83;
+  border-radius: 0 12px 12px 0;
+  background: #f3faf9;
+  padding: 14px 16px;
+}
+
+.request-modal-reply h4 {
+  color: #0b5d56;
+}
+
+.request-modal-waiting {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 12px;
+  background: #fff7e8;
+  border: 1px solid #f3e0bb;
+  padding: 13px 15px;
+  color: #8a6a2e;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.request-modal-waiting svg {
+  flex-shrink: 0;
+  color: #c08a2e;
 }
 
 .help-contact-card {

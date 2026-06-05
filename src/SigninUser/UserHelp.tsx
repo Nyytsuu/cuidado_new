@@ -32,6 +32,7 @@ type SupportRequest = {
   topic: string;
   priority: string;
   subject: string;
+  message?: string | null;
   status: string;
   created_at: string;
   admin_reply?: string | null;
@@ -183,7 +184,7 @@ export default function UserHelp() {
   const [errorMessage, setErrorMessage] = useState("");
   const [requests, setRequests] = useState<SupportRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(false);
-  const [closingRequestId, setClosingRequestId] = useState<number | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<SupportRequest | null>(null);
   const [highlightSupport, setHighlightSupport] = useState(false);
 
   const faqCategories = useMemo(
@@ -327,41 +328,6 @@ export default function UserHelp() {
     }
   };
 
-  const closeSupportRequest = async (requestId: number) => {
-    if (!userId || closingRequestId) return;
-
-    const shouldClose = window.confirm("Close this support ticket?");
-    if (!shouldClose) return;
-
-    try {
-      setClosingRequestId(requestId);
-      setErrorMessage("");
-      setStatusMessage("");
-
-      const res = await fetch(
-        apiUrl(`/api/users/${userId}/support-requests/${requestId}/close`),
-        { method: "PATCH" }
-      );
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok) {
-        throw new Error(data.message || "Failed to close support request.");
-      }
-
-      setRequests((prev) =>
-        prev.map((request) =>
-          request.id === requestId ? { ...request, status: "closed" } : request
-        )
-      );
-      setStatusMessage("Support ticket closed.");
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "Failed to close support request."
-      );
-    } finally {
-      setClosingRequestId(null);
-    }
-  };
 
   return (
     <div className={`user-help-page ${sidebarExpanded ? "sidebar-expanded" : ""}`}>
@@ -588,40 +554,33 @@ export default function UserHelp() {
               ) : (
                 <div className="request-list">
                   {requests.map((request) => (
-                    <article className="request-card" key={request.id}>
+                    <button
+                      type="button"
+                      className="request-card"
+                      key={request.id}
+                      onClick={() => setSelectedRequest(request)}
+                    >
                       <div className="request-card-main">
-                        <div className="request-card-head">
-                          <span>{request.topic}</span>
-                          <h3>{request.subject}</h3>
-                          <p>{formatDate(request.created_at)}</p>
-                        </div>
-                        {request.admin_reply && (
-                          <div className="request-reply">
-                            <div className="request-reply-head">
-                              <MessageSquareText size={14} />
-                              <strong>Support replied</strong>
-                              {request.replied_at && (
-                                <span>{formatDate(request.replied_at)}</span>
-                              )}
-                            </div>
-                            <p>{request.admin_reply}</p>
-                          </div>
-                        )}
+                        <span className="request-card-topic">{request.topic}</span>
+                        <h3>{request.subject}</h3>
+                        <p className="request-card-date">
+                          {formatDate(request.created_at)}
+                        </p>
                       </div>
-                      <div className="request-card-actions">
-                        <strong className={request.status}>{request.status}</strong>
-                        {request.status.toLowerCase() !== "closed" && (
-                          <button
-                            type="button"
-                            className="request-close-btn"
-                            onClick={() => closeSupportRequest(request.id)}
-                            disabled={closingRequestId === request.id}
-                          >
-                            {closingRequestId === request.id ? "Closing" : "Close"}
-                          </button>
-                        )}
+                      <div className="request-card-side">
+                        <strong className={`request-status ${request.status.toLowerCase()}`}>
+                          {request.status}
+                        </strong>
+                        {request.admin_reply ? (
+                          <span className="request-replied-tag">
+                            <MessageSquareText size={12} /> Reply
+                          </span>
+                        ) : null}
+                        <span className="request-card-chevron" aria-hidden="true">
+                          ›
+                        </span>
                       </div>
-                    </article>
+                    </button>
                   ))}
                 </div>
               )}
@@ -641,6 +600,73 @@ export default function UserHelp() {
           </aside>
         </section>
       </main>
+
+      {selectedRequest && (
+        <div
+          className="request-modal-overlay"
+          onClick={() => setSelectedRequest(null)}
+        >
+          <div
+            className="request-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Support request details"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="request-modal-close"
+              onClick={() => setSelectedRequest(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <div className="request-modal-head">
+              <span className="request-card-topic">{selectedRequest.topic}</span>
+              <h3>{selectedRequest.subject}</h3>
+              <div className="request-modal-meta">
+                <strong className={`request-status ${selectedRequest.status.toLowerCase()}`}>
+                  {selectedRequest.status}
+                </strong>
+                <span className="request-modal-priority">
+                  {selectedRequest.priority
+                    ? `${selectedRequest.priority.charAt(0).toUpperCase()}${selectedRequest.priority.slice(1)} priority`
+                    : "Normal priority"}
+                </span>
+                <span>{formatDate(selectedRequest.created_at)}</span>
+              </div>
+            </div>
+
+            <div className="request-modal-body">
+              <div className="request-modal-section">
+                <h4>Your message</h4>
+                <p>{selectedRequest.message || "No message provided."}</p>
+              </div>
+
+              {selectedRequest.admin_reply ? (
+                <div className="request-modal-section request-modal-reply">
+                  <h4>
+                    <MessageSquareText size={15} /> Support response
+                    {selectedRequest.replied_at
+                      ? ` · ${formatDate(selectedRequest.replied_at)}`
+                      : ""}
+                  </h4>
+                  <p>{selectedRequest.admin_reply}</p>
+                </div>
+              ) : (
+                <div className="request-modal-waiting">
+                  <LifeBuoy size={16} />
+                  <span>
+                    Our team is reviewing your request. A reply will appear here
+                    once they respond.
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
