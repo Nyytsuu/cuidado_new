@@ -145,7 +145,7 @@
   border: 1px solid #d6e8e5;
   border-radius: 14px;
   box-shadow: 0 2px 14px rgba(15, 63, 60, 0.06);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .tk-toolbar {
@@ -236,7 +236,7 @@
 
 /* ── Ticket item ── */
 .tk-item {
-  padding: 22px;
+  padding: 22px 22px 28px;
   border-bottom: 1px solid #eef4f3;
 }
 
@@ -447,10 +447,11 @@
 .tk-action-btns {
   display: flex;
   gap: 8px;
+  align-items: stretch;
 }
 
 .tk-btn {
-  height: 38px;
+  min-height: 42px;
   padding: 0 18px;
   border: 0;
   border-radius: 999px;
@@ -459,6 +460,9 @@
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.15s, opacity 0.15s;
 }
 
@@ -491,6 +495,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(260px, auto);
   align-items: end;
   gap: 14px;
+  overflow: visible;
 }
 
 .tk-quick-reply .tk-reply-field {
@@ -498,13 +503,14 @@
 }
 
 .tk-quick-reply .tk-reply-field textarea {
-  min-height: 78px;
+  min-height: 86px;
 }
 
 .tk-quick-reply .tk-actions {
   margin-top: 0;
   align-items: flex-end;
   flex-direction: column;
+  gap: 10px;
 }
 
 .tk-quick-reply .tk-action-btns {
