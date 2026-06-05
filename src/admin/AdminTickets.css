@@ -145,7 +145,7 @@
   border: 1px solid #d6e8e5;
   border-radius: 14px;
   box-shadow: 0 2px 14px rgba(15, 63, 60, 0.06);
-  overflow: visible;
+  overflow: hidden;
 }
 
 .tk-toolbar {
@@ -210,6 +210,10 @@
 .tk-list {
   display: flex;
   flex-direction: column;
+  max-height: 560px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-bottom: 12px;
 }
 
 .tk-empty {
@@ -236,7 +240,7 @@
 
 /* ── Ticket item ── */
 .tk-item {
-  padding: 22px 22px 28px;
+  padding: 18px 22px 22px;
   border-bottom: 1px solid #eef4f3;
 }
 
@@ -317,7 +321,7 @@
 
 /* ── Meta ── */
 .tk-meta-row {
-  margin-top: 16px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -339,8 +343,8 @@
 }
 
 .tk-message {
-  margin: 10px 0 0;
-  padding: 13px 16px;
+  margin: 8px 0 0;
+  padding: 11px 14px;
   border-left: 3px solid #0f8f83;
   border-radius: 0 8px 8px 0;
   background: #f3faf9;
@@ -486,8 +490,8 @@
 }
 
 .tk-quick-reply {
-  margin-top: 16px;
-  padding: 14px;
+  margin-top: 14px;
+  padding: 12px;
   border: 1px solid rgba(15, 143, 131, 0.2);
   border-radius: 12px;
   background: #f8fdfc;
@@ -503,7 +507,7 @@
 }
 
 .tk-quick-reply .tk-reply-field textarea {
-  min-height: 86px;
+  min-height: 76px;
 }
 
 .tk-quick-reply .tk-actions {
