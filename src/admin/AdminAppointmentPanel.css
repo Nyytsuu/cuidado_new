@@ -1,0 +1,552 @@
+/* ════════════════════════════════════════════════════════════════
+   SHARED right-side appointment panel for ALL admin pages.
+
+   This file is the SINGLE source of truth for the appointment panel.
+   Selectors double the `.appointment-panel` class so every rule reaches
+   specificity (0,4,x)–(0,5,x) — high enough to beat any leftover
+   per-page rule (which max out at (0,4,0)) regardless of bundle order.
+   Combined with !important, the panel renders identically on every page.
+   ════════════════════════════════════════════════════════════════ */
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel {
+  display: flex !important;
+  flex-direction: column !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  max-height: 392px !important;
+  overflow: hidden !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+/* ── Header band ── */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-panel-head {
+  flex: 0 0 auto !important;
+  min-height: 54px !important;
+  margin: 0 !important;
+  padding: 16px 18px 12px !important;
+  border-bottom: 1px solid rgba(16, 42, 42, 0.1) !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-panel-title {
+  margin: 0 !important;
+  color: #102a2a !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+}
+
+/* ── Scroll body (normalize border/radius/background so Clinic's teal
+      ring and other per-page treatments are wiped out everywhere) ── */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-panel-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-panel-body::-webkit-scrollbar,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appointment-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-panel-body::-webkit-scrollbar-thumb,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appointment-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(15, 143, 131, 0.34);
+}
+
+/* ── Table ── */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+  height: 44px !important;
+  padding: 10px 12px !important;
+  background: #eef4f3 !important;
+  color: #102a2a !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Column widths — identical on every page */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table th:nth-child(1),
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table td:nth-child(1) {
+  width: 38% !important;
+  text-align: left !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table th:nth-child(2),
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table td:nth-child(2) {
+  width: 27% !important;
+  text-align: center !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table th:nth-child(3),
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table td:nth-child(3) {
+  width: 35% !important;
+  text-align: center !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .dash-table tbody td {
+  height: 72px !important;
+  padding: 12px !important;
+  border-top: 1px solid rgba(16, 42, 42, 0.08) !important;
+  color: #102a2a !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  vertical-align: middle !important;
+  background: #ffffff !important;
+}
+
+/* ── Cell text ── */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .t-main {
+  color: #102a2a !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 900 !important;
+  line-height: 1.2 !important;
+  overflow-wrap: anywhere !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .t-sub {
+  margin-top: 4px !important;
+  color: #7c9292 !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* ── Badges + view button ── */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .btn-sm.btn-view {
+  min-width: 0 !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  text-transform: capitalize !important;
+  white-space: nowrap !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge:not(.badge-view),
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-status-cell .appt-badge {
+  min-width: 84px !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-view,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .btn-sm.btn-view {
+  min-width: 104px !important;
+  background: #45aeea !important;
+  color: #06324e !important;
+  cursor: pointer !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-view:hover,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .btn-sm.btn-view:hover {
+  background: #2e9dd7 !important;
+}
+
+/* Status badge colors — unified across pages */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-pending,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge.badge-pending {
+  background: #fbe7b8 !important;
+  color: #7a5212 !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-approved,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-confirmed,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-completed,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge.badge-approved,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge.badge-confirmed,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge.badge-completed {
+  background: #c8efd6 !important;
+  color: #11663b !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-cancelled,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-rejected,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .badge-declined,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge.badge-cancelled,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge.badge-rejected,
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appt-badge.badge-declined {
+  background: #f7cdcd !important;
+  color: #8a1c1c !important;
+}
+
+/* ── Empty state ── */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .td-empty {
+  height: 120px !important;
+  padding: 24px 14px !important;
+  color: #7c9292 !important;
+  font-family: "Poppins", sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+}
+
+/* ── Dashboard's div/list markup variant ── */
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appointment-list {
+  max-height: none !important;
+  overflow: visible !important;
+  font-family: "Poppins", sans-serif !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appointment-row {
+  min-height: 74px !important;
+  padding: 12px 16px !important;
+  grid-template-columns: minmax(0, 1fr) minmax(178px, auto) !important;
+  gap: 12px !important;
+}
+
+:is(
+  .admin-dashboard-page,
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .appointment-panel.appointment-panel .appointment-controls {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1180px) {
+  :is(
+    .admin-dashboard-page,
+    .admin-UserClinics,
+    .admin-Userpage,
+    .admin-UserServices,
+    .admin-UserReport
+  ) .appointment-panel.appointment-panel {
+    max-height: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  :is(
+    .admin-dashboard-page,
+    .admin-UserClinics,
+    .admin-Userpage,
+    .admin-UserServices,
+    .admin-UserReport
+  ) .appointment-panel.appointment-panel .appointment-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  :is(
+    .admin-dashboard-page,
+    .admin-UserClinics,
+    .admin-Userpage,
+    .admin-UserServices,
+    .admin-UserReport
+  ) .appointment-panel.appointment-panel .appointment-controls {
+    justify-content: flex-start !important;
+  }
+}

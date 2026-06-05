@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import "./AdminClinic.css";
 import "./AdminHeader.css";
+import "./AdminAppointmentPanel.css";
 import Sidebar from "./SidebarAdmin";
 import AdminAppointmentDetailsModal, {
   type AdminAppointmentDetails,

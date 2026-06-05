@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./AdminUser.css";
 import "./AdminHeader.css";
+import "./AdminAppointmentPanel.css";
 import Sidebar from "./SidebarAdmin";
 import AdminAppointmentDetailsModal, {
   type AdminAppointmentDetails,
@@ -433,7 +434,7 @@ export default function AdminUsers() {
                       <tr>
                         <th>Patient</th>
                         <th>Status</th>
-                        <th className="th-action">Action:</th>
+                        <th className="th-action">Action</th>
                       </tr>
                     </thead>
 

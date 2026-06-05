@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useState, type ReactNode } from "r
 import SidebarAdmin from "./SidebarAdmin";
 import "./AdminDashboard.css";
 import "./AdminHeader.css";
+import "./AdminAppointmentPanel.css";
 import { Link } from "react-router-dom";
 import {
   ResponsiveContainer,

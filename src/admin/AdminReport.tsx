@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import "./AdminReport.css";
 import "./AdminHeader.css";
+import "./AdminAppointmentPanel.css";
 import SidebarAdmin from "./SidebarAdmin";
 import AdminAppointmentDetailsModal, {
   type AdminAppointmentDetails,
