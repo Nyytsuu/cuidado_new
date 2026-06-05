@@ -415,10 +415,48 @@ router.patch("/appointments/:id/status", async (req, res) => {
 // =========================
 // SERVICES (ADMIN)
 // =========================
+const DEFAULT_SERVICE_NAMES = ["General Consultation", "Dental", "Pediatric", "Laboratory"];
+
+const ensureServicesTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS services (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(160) NOT NULL UNIQUE,
+      is_active SMALLINT NOT NULL DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    ALTER TABLE services
+    ADD COLUMN IF NOT EXISTS is_active SMALLINT NOT NULL DEFAULT 1
+  `);
+
+  await pool.query(`
+    ALTER TABLE services
+    ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  `);
+
+  for (const serviceName of DEFAULT_SERVICE_NAMES) {
+    await pool.query(
+      `
+      INSERT INTO services (name, is_active)
+      SELECT ?, 1
+      WHERE NOT EXISTS (
+        SELECT 1 FROM services WHERE LOWER(name) = LOWER(?)
+      )
+      `,
+      [serviceName, serviceName]
+    );
+  }
+};
 
 // GET /api/admin/services
 router.get("/services", async (req, res) => {
   try {
+    await ensureServicesTable();
+
     const [rows] = await pool.query(`
       SELECT id, name, is_active
       FROM services
@@ -434,8 +472,21 @@ router.get("/services", async (req, res) => {
 // POST /api/admin/services
 router.post("/services", async (req, res) => {
   try {
+    await ensureServicesTable();
+
     const name = String(req.body?.name || "").trim();
     if (!name) return res.status(400).json({ message: "Service name required" });
+
+    const [existing] = await pool.query(
+      `SELECT id FROM services WHERE LOWER(name) = LOWER(?) LIMIT 1`,
+      [name]
+    );
+
+    if (existing.length > 0) {
+      return res.status(409).json({
+        message: "That service already exists. Edit the existing service or reactivate it if it is inactive.",
+      });
+    }
 
     const [result] = await pool.query(
       `INSERT INTO services (name, is_active) VALUES (?, 1)`,
@@ -449,7 +500,7 @@ router.post("/services", async (req, res) => {
     });
   } catch (err) {
     console.error("Create service error:", err);
-    if (err.code === "ER_DUP_ENTRY") {
+    if (err.code === "ER_DUP_ENTRY" || err.code === "23505") {
       return res.status(409).json({
         message: "That service already exists. Edit the existing service or reactivate it if it is inactive.",
       });
@@ -461,12 +512,25 @@ router.post("/services", async (req, res) => {
 // PATCH /api/admin/services/:id
 router.patch("/services/:id", async (req, res) => {
   try {
+    await ensureServicesTable();
+
     const { id } = req.params;
     const name = String(req.body?.name || "").trim();
     if (!name) return res.status(400).json({ message: "Service name required" });
 
+    const [existing] = await pool.query(
+      `SELECT id FROM services WHERE LOWER(name) = LOWER(?) AND id <> ? LIMIT 1`,
+      [name, id]
+    );
+
+    if (existing.length > 0) {
+      return res.status(409).json({
+        message: "Another service already uses that name. Please choose a different service name.",
+      });
+    }
+
     const [result] = await pool.query(
-      `UPDATE services SET name=? WHERE id=?`,
+      `UPDATE services SET name=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`,
       [name, id]
     );
 
@@ -477,7 +541,7 @@ router.patch("/services/:id", async (req, res) => {
     res.json({ id: Number(id), name });
   } catch (err) {
     console.error("Update service error:", err);
-    if (err.code === "ER_DUP_ENTRY") {
+    if (err.code === "ER_DUP_ENTRY" || err.code === "23505") {
       return res.status(409).json({
         message: "Another service already uses that name. Please choose a different service name.",
       });
@@ -489,6 +553,8 @@ router.patch("/services/:id", async (req, res) => {
   // ✅ SERVICES TOGGLE
   router.patch("/services/:id/toggle", async (req, res) => {
     try {
+      await ensureServicesTable();
+
       const { id } = req.params;
 
       const [rows] = await pool.query(
@@ -503,7 +569,7 @@ router.patch("/services/:id", async (req, res) => {
       const newState = Number(rows[0].is_active) === 1 ? 0 : 1;
 
       await pool.query(
-        "UPDATE services SET is_active = ? WHERE id = ?",
+        "UPDATE services SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
         [newState, id]
       );
 
@@ -764,13 +830,113 @@ router.get("/reports/ping", (req, res) => res.send("REPORTS PONG"));
 ========================= */
 const SUPPORT_STATUSES = new Set(["open", "answered", "closed"]);
 
-// Make sure the reply columns exist (idempotent — table itself is created on the user side)
-const ensureSupportReplyColumns = async () => {
+const ensureAdminSupportSchema = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_support_requests (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      topic VARCHAR(80) NOT NULL,
+      priority VARCHAR(20) NOT NULL DEFAULT 'normal',
+      subject VARCHAR(180) NOT NULL,
+      message TEXT NOT NULL,
+      contact_email VARCHAR(255) DEFAULT NULL,
+      contact_phone VARCHAR(40) DEFAULT NULL,
+      status VARCHAR(40) NOT NULL DEFAULT 'open',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_user_support_requests_user
+    ON user_support_requests (user_id, created_at)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_user_support_requests_status
+    ON user_support_requests (status)
+  `);
+
   await pool.query(
     `ALTER TABLE user_support_requests ADD COLUMN IF NOT EXISTS admin_reply TEXT DEFAULT NULL`
   );
   await pool.query(
     `ALTER TABLE user_support_requests ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP DEFAULT NULL`
+  );
+};
+
+const ensureAdminUserNotificationsTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_notifications (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      unique_key VARCHAR(160) NOT NULL,
+      title VARCHAR(180) NOT NULL,
+      message TEXT NOT NULL,
+      category VARCHAR(80) NOT NULL DEFAULT 'System',
+      icon VARCHAR(40) NOT NULL DEFAULT 'bell',
+      is_read SMALLINT NOT NULL DEFAULT 0,
+      appointment_id INTEGER DEFAULT NULL,
+      read_at TIMESTAMP DEFAULT NULL,
+      email_sent_at TIMESTAMP DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT unique_user_notification UNIQUE (user_id, unique_key)
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS idx_user_notifications_user
+    ON user_notifications (user_id, is_read, created_at)
+  `);
+
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS unique_user_notification
+    ON user_notifications (user_id, unique_key)
+  `);
+};
+
+const createSupportActionNotification = async ({ ticket, status, hasReply }) => {
+  if (!ticket?.user_id) return;
+
+  await ensureAdminUserNotificationsTable();
+
+  const title =
+    status === "closed"
+      ? "Support Ticket Closed"
+      : status === "open" && !hasReply
+        ? "Support Ticket Reopened"
+        : "Support Replied";
+
+  const message =
+    status === "closed"
+      ? `Support ticket #${ticket.id} was marked resolved.`
+      : status === "open" && !hasReply
+        ? `Support ticket #${ticket.id} was reopened.`
+        : `Admin replied to your support ticket "${ticket.subject}".`;
+
+  await pool.query(
+    `
+    INSERT INTO user_notifications (
+      user_id,
+      unique_key,
+      title,
+      message,
+      category,
+      icon,
+      created_at
+    )
+    VALUES (?, ?, ?, ?, 'System', 'info', CURRENT_TIMESTAMP)
+    ON CONFLICT (user_id, unique_key) DO UPDATE SET
+      title = EXCLUDED.title,
+      message = EXCLUDED.message,
+      category = EXCLUDED.category,
+      icon = EXCLUDED.icon,
+      is_read = 0,
+      read_at = NULL,
+      updated_at = CURRENT_TIMESTAMP
+    `,
+    [ticket.user_id, `support:${ticket.id}:admin-response`, title, message]
   );
 };
 
@@ -787,7 +953,7 @@ const SUPPORT_SELECT = `
 // GET /api/admin/support-requests?status=open|answered|closed
 router.get("/support-requests", async (req, res) => {
   try {
-    await ensureSupportReplyColumns();
+    await ensureAdminSupportSchema();
 
     const status = String(req.query.status || "").trim().toLowerCase();
     const params = [];
@@ -835,7 +1001,7 @@ router.patch("/support-requests/:id/reply", async (req, res) => {
         ? "answered"
         : "open";
 
-    await ensureSupportReplyColumns();
+    await ensureAdminSupportSchema();
 
     // Stamp replied_at only when there is reply text; otherwise keep the existing value.
     const repliedClause = reply ? "CURRENT_TIMESTAMP" : "replied_at";
@@ -853,10 +1019,23 @@ router.patch("/support-requests/:id/reply", async (req, res) => {
     }
 
     const [rows] = await pool.query(`${SUPPORT_SELECT} WHERE t.id = ?`, [id]);
+    const ticket = rows[0] || null;
+
+    if (ticket) {
+      try {
+        await createSupportActionNotification({
+          ticket,
+          status,
+          hasReply: Boolean(reply),
+        });
+      } catch (notificationError) {
+        console.error("Support ticket notification error:", notificationError);
+      }
+    }
 
     res.json({
       message: reply ? "Reply saved." : "Ticket updated.",
-      ticket: rows[0] || null,
+      ticket,
     });
   } catch (err) {
     console.error("PATCH /admin/support-requests/:id/reply error:", err);

@@ -6,6 +6,7 @@ import AdminAppointmentDetailsModal, {
   type AdminAppointmentDetails,
 } from "./AdminAppointmentDetailsModal";
 import AdminHeader from "./AdminHeader";
+import { apiUrl } from "../sharedBackendFetch";
 
 type Service = {
   id: number;
@@ -36,7 +37,7 @@ type ActivityItem = {
   time: string;
 };
 
-const API = "http://localhost:5000/api/admin";
+const adminApi = (path: string) => apiUrl(`/api/admin${path}`);
 
 const matchesSearch = (
   query: string,
@@ -91,7 +92,7 @@ export default function AdminServices() {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API}/services`);
+      const res = await fetch(adminApi("/services"));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: Service[] = await res.json();
       setServices(data);
@@ -123,7 +124,7 @@ export default function AdminServices() {
     try {
       setLoadingAppointments(true);
 
-      const res = await fetch("http://localhost:5000/api/admin/appointments");
+      const res = await fetch(adminApi("/appointments"));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data: AdminAppointmentApiRow[] = await res.json();
@@ -149,7 +150,7 @@ export default function AdminServices() {
 
   const loadActivity = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/recent-activity?limit=8");
+      const res = await fetch(adminApi("/recent-activity?limit=8"));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: ActivityItem[] = await res.json();
       setActivities(data);
@@ -236,14 +237,14 @@ export default function AdminServices() {
       setServiceError("");
 
       if (editingId === null) {
-        const res = await fetch(`${API}/services`, {
+        const res = await fetch(adminApi("/services"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name }),
         });
         if (!res.ok) throw new Error(await getApiMessage(res));
       } else {
-        const res = await fetch(`${API}/services/${editingId}`, {
+        const res = await fetch(adminApi(`/services/${editingId}`), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name }),
@@ -271,7 +272,7 @@ export default function AdminServices() {
 
     try {
       setUpdatingServiceStatus(true);
-      const res = await fetch(`${API}/services/${selectedService.id}/toggle`, {
+      const res = await fetch(adminApi(`/services/${selectedService.id}/toggle`), {
         method: "PATCH",
       });
 
@@ -303,7 +304,7 @@ export default function AdminServices() {
 
   const onViewAppointment = async (id: number) => {
     try {
-      const res = await fetch(`${API}/appointments/${id}`);
+      const res = await fetch(adminApi(`/appointments/${id}`));
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: AdminAppointmentDetails = await res.json();
       setAppointmentDetails(data);

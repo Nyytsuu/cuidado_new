@@ -448,7 +448,41 @@ const ensureEmailVerificationTokensTable = async () => {
   `);
 };
 
+const DEFAULT_SIGNUP_SERVICE_NAMES = ["General Consultation", "Dental", "Pediatric", "Laboratory"];
+
+const ensureServicesTable = async () => {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS services (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(160) NOT NULL UNIQUE,
+      is_active SMALLINT NOT NULL DEFAULT 1,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await pool.query(`
+    ALTER TABLE services
+    ADD COLUMN IF NOT EXISTS is_active SMALLINT NOT NULL DEFAULT 1
+  `);
+
+  for (const serviceName of DEFAULT_SIGNUP_SERVICE_NAMES) {
+    await pool.query(
+      `
+      INSERT INTO services (name, is_active)
+      SELECT ?, 1
+      WHERE NOT EXISTS (
+        SELECT 1 FROM services WHERE LOWER(name) = LOWER(?)
+      )
+      `,
+      [serviceName, serviceName]
+    );
+  }
+};
+
 const getActiveSignupServices = async () => {
+  await ensureServicesTable();
+
   const [rows] = await pool.query(`
     SELECT id, name, is_active
     FROM services

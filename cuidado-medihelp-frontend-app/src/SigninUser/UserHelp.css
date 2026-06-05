@@ -408,7 +408,7 @@
 .request-card {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: start;
   gap: 8px;
   min-height: 58px;
   padding: 8px 9px;
@@ -418,6 +418,17 @@
 }
 
 .request-card > div:first-child {
+  min-width: 0;
+}
+
+.request-card-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.request-card-head {
   min-width: 0;
 }
 
@@ -485,6 +496,54 @@
 .request-card strong.closed {
   background: #dcfce7;
   color: #166534;
+}
+
+.request-card strong.answered {
+  background: #d6f0ff;
+  color: #1462a0;
+}
+
+.request-reply {
+  border: 1px solid rgba(15, 143, 131, 0.22);
+  border-left: 3px solid #0f8f83;
+  border-radius: 0 8px 8px 0;
+  background: #f3faf9;
+  padding: 8px 9px;
+}
+
+.request-reply-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: #0b5d56;
+}
+
+.request-reply-head strong {
+  padding: 0;
+  background: none;
+  color: #0b5d56;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: none;
+}
+
+.request-reply-head em {
+  margin-left: auto;
+  color: #607083;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.request-reply p {
+  margin: 0;
+  color: #335450;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.45;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .help-contact-card {

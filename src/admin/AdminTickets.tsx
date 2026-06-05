@@ -377,7 +377,7 @@ export default function AdminTickets() {
                             disabled={isSaving}
                             onClick={() => saveReply(ticket.id, "closed")}
                           >
-                            Mark Resolved
+                            Close Ticket
                           </button>
                         )}
                         <button
