@@ -368,7 +368,7 @@ body:has(.admin-dashboard-page) {
   position: absolute;
   left: 18px;
   right: 18px;
-  bottom: 12px;
+  bottom: 1px;
   padding: 8px 10px;
   border: 1px solid var(--admin-line);
   border-radius: 8px;
