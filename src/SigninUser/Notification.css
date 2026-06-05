@@ -422,6 +422,10 @@
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 8px 14px rgba(7, 141, 130, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .notification-action-btn:hover {

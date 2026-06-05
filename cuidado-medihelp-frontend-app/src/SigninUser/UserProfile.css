@@ -316,6 +316,7 @@ textarea {
 .account-card,
 .setting-box,
 .security-card,
+.preference-card,
 .side-widget {
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid #dfe7ea;
@@ -447,6 +448,54 @@ textarea {
 
 .security-card {
   padding: 14px;
+}
+
+.profile-section-heading {
+  margin-top: 28px !important;
+}
+
+.preference-card {
+  margin-bottom: 18px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.preference-card-copy h3 {
+  margin: 0 0 6px;
+  color: #143636;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.preference-card-copy p {
+  margin: 0;
+  color: #65737c;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.preference-manage-btn {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: #078d82;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 10px 20px rgba(7, 141, 130, 0.14);
+}
+
+.preference-manage-btn:active {
+  transform: translateY(1px);
 }
 
 .security-row1,

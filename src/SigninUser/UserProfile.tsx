@@ -1073,6 +1073,25 @@ export default function UserProfile() {
                 </div>
               </div>
 
+              <h2 className="profile-section-heading">Notification Preferences</h2>
+
+              <div className="preference-card">
+                <div className="preference-card-copy">
+                  <h3>Manage how you receive notifications</h3>
+                  <p>
+                    Choose how Cuidado updates you about appointments, clinic replies,
+                    support messages, and reminders.
+                  </p>
+                </div>
+                <button
+                  className="preference-manage-btn"
+                  type="button"
+                  onClick={() => navigate("/notifications")}
+                >
+                  Manage Preferences
+                </button>
+              </div>
+
               {/* ── Deactivate Account ── */}
               <h2 style={{ marginTop: 28 }}>Account Management</h2>
 
