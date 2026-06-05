@@ -11,6 +11,7 @@
   left: 0;
   width: var(--sidebar-width-collapsed);
   height: 100vh;
+  height: 100dvh;
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
@@ -49,15 +50,30 @@
 
 .SidebarAdmin .sidebar-content {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
-
-  padding: 1px 6px 12px; /* adjust this number */
+  padding: 56px 6px 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(15, 47, 47, 0.45) transparent;
 }
 
+.SidebarAdmin .sidebar-content::-webkit-scrollbar {
+  width: 6px;
+}
 
+.SidebarAdmin .sidebar-content::-webkit-scrollbar-track {
+  background: transparent;
+}
 
+.SidebarAdmin .sidebar-content::-webkit-scrollbar-thumb {
+  background: rgba(15, 47, 47, 0.35);
+  border-radius: 999px;
+}
 
 .SidebarAdmin .sidebar-group {
   margin-top: 6px;
@@ -129,18 +145,35 @@
   opacity: 1;
   width: auto;
 }
-.logout-btn {
-  display: flex;          /* enable flex */
-  align-items: center;
-  justify-content: flex-start; /* move icon + text to the left */
+.SidebarAdmin .sidebar-item.logout {
+  margin-top: auto;
+  padding-top: 8px;
+}
 
+.SidebarAdmin .logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent;
   border: none;
   gap: 10px;
-  color: black;
+  color: var(--sidebar-text);
+  padding: 0 12px;
+  width: 100%;
+  min-height: 42px;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  box-sizing: border-box;
+}
 
-  padding: 6px 12px 10px;
-  width: 80%;            /* makes alignment work properly */
+.SidebarAdmin .sidebar.expanded .logout-btn {
+  justify-content: flex-start;
+}
+
+.SidebarAdmin .logout-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
 }
 
 /* CONFIRM MODAL */

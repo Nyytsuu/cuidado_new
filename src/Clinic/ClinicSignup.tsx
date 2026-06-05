@@ -27,6 +27,12 @@ interface Barangay {
   name: string;
 }
 
+interface SignupServiceOption {
+  id: number;
+  name: string;
+  is_active?: number | boolean | string | null;
+}
+
 /* ✅ FIXED: add missing keys used in Step 2 */
 type Errors = {
   // Step 1
@@ -75,7 +81,24 @@ const MAX_UPLOAD_SIZE = 8 * 1024 * 1024;
 const UPLOAD_TYPES = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
 const UPLOAD_EXTENSIONS = [".pdf", ".png", ".jpg", ".jpeg", ".webp"];
 const VALID_OPERATING_DAYS = new Set(["mon-fri", "mon-sat", "daily"]);
-const VALID_SERVICE_VALUES = new Set(["general", "dental", "pediatric", "laboratory"]);
+const DEFAULT_SERVICE_OPTIONS: SignupServiceOption[] = [
+  { id: 1, name: "General Consultation", is_active: 1 },
+  { id: 2, name: "Dental", is_active: 1 },
+  { id: 3, name: "Pediatric", is_active: 1 },
+  { id: 4, name: "Laboratory", is_active: 1 },
+];
+
+const normalizeServiceValue = (value: string) =>
+  value.trim().replace(/\s+/g, " ").toLowerCase();
+
+const isActiveService = (value: SignupServiceOption["is_active"]) =>
+  value === undefined ||
+  value === null ||
+  value === true ||
+  value === 1 ||
+  value === "1" ||
+  String(value).toLowerCase() === "true" ||
+  String(value).toLowerCase() === "t";
 
 const normalizePhPhone = (value: string) => {
   let v = value.replace(/[^\d+]/g, "");
@@ -142,6 +165,9 @@ export default function ClinicSignup() {
   const [repPhone, setRepPhone] = useState("");
 
   const [servicesOffered, setServicesOffered] = useState("");
+  const [serviceOptions, setServiceOptions] =
+    useState<SignupServiceOption[]>(DEFAULT_SERVICE_OPTIONS);
+  const [loadingServices, setLoadingServices] = useState(false);
   const [openingTime, setOpeningTime] = useState("");
   const [closingTime, setClosingTime] = useState("");
   const [operatingDays, setOperatingDays] = useState("");
@@ -179,6 +205,22 @@ export default function ClinicSignup() {
   const result = useMemo(() => zxcvbn(password), [password]);
   const score = result.score;
   const labels = ["Very weak", "Weak", "Fair", "Good", "Strong"];
+  const activeServiceOptions = useMemo(
+    () =>
+      serviceOptions
+        .filter((service) => isActiveService(service.is_active))
+        .map((service) => ({
+          ...service,
+          name: service.name.trim(),
+        }))
+        .filter((service) => service.name.length > 0),
+    [serviceOptions]
+  );
+  const validServiceValues = useMemo(
+    () => new Set(activeServiceOptions.map((service) => normalizeServiceValue(service.name))),
+    [activeServiceOptions]
+  );
+
   /* ---------- FETCH PROVINCES ---------- */
   useEffect(() => {
     fetch(apiUrl("/api/provinces"))
@@ -189,6 +231,47 @@ export default function ClinicSignup() {
       .then((data: Province[]) => setProvinces(data))
       .catch((err) => console.error("Failed to fetch provinces:", err));
   }, []);
+
+  /* ---------- FETCH ADMIN-MANAGED SERVICES ---------- */
+  useEffect(() => {
+    let cancelled = false;
+
+    setLoadingServices(true);
+    fetch(apiUrl("/api/clinic/public/services"))
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! ${res.status}`);
+        return res.json();
+      })
+      .then((data: SignupServiceOption[]) => {
+        if (cancelled) return;
+
+        const nextServices =
+          Array.isArray(data) && data.length > 0 ? data : DEFAULT_SERVICE_OPTIONS;
+
+        setServiceOptions(nextServices);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch signup services:", err);
+        if (!cancelled) setServiceOptions(DEFAULT_SERVICE_OPTIONS);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingServices(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      servicesOffered &&
+      validServiceValues.size > 0 &&
+      !validServiceValues.has(servicesOffered)
+    ) {
+      setServicesOffered("");
+    }
+  }, [servicesOffered, validServiceValues]);
 
   /* ---------- FETCH MUNICIPALITIES ---------- */
   useEffect(() => {
@@ -260,7 +343,11 @@ export default function ClinicSignup() {
     if (repPosition.trim().length < 2) e.repPosition = "Position is required.";
     if (!PH_PHONE_RE.test(repPhone)) e.repPhone = "Use +639XXXXXXXXX or 09XXXXXXXXX.";
 
-    if (!VALID_SERVICE_VALUES.has(servicesOffered)) e.servicesOffered = "Select service offered.";
+    if (loadingServices || validServiceValues.size === 0) {
+      e.servicesOffered = "Services are still loading. Please try again.";
+    } else if (!validServiceValues.has(servicesOffered)) {
+      e.servicesOffered = "Select service offered.";
+    }
     if (!openingTime) e.openingTime = "Opening time required.";
     if (!closingTime) e.closingTime = "Closing time required.";
     if (openingTime && closingTime && openingTime >= closingTime) {
@@ -813,16 +900,24 @@ return (
                       value={servicesOffered}
                       className={errors.servicesOffered ? "error-input" : ""}
                       onChange={(e) => {
-                        setServicesOffered(e.target.value);
+                        setServicesOffered(normalizeServiceValue(e.target.value));
                         clearError("servicesOffered");
                       }}
+                      disabled={loadingServices || activeServiceOptions.length === 0}
                       required
                     >
-                      <option value="">Select</option>
-                      <option value="general">General Consultation</option>
-                      <option value="dental">Dental</option>
-                      <option value="pediatric">Pediatric</option>
-                      <option value="laboratory">Laboratory</option>
+                      <option value="">
+                        {loadingServices ? "Loading services..." : "Select"}
+                      </option>
+                      {activeServiceOptions.map((service) => {
+                        const value = normalizeServiceValue(service.name);
+
+                        return (
+                          <option value={value} key={`${service.id}-${value}`}>
+                            {service.name}
+                          </option>
+                        );
+                      })}
                     </select>
                     {errors.servicesOffered && (
                       <div className="error-text">{errors.servicesOffered}</div>

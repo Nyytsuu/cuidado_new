@@ -759,4 +759,109 @@ router.get("/reports/export/csv", async (req, res) => {
 // (duplicate route removed — handled above)
 router.get("/reports/ping", (req, res) => res.send("REPORTS PONG"));
 
+/* =========================
+   SUPPORT TICKETS
+========================= */
+const SUPPORT_STATUSES = new Set(["open", "answered", "closed"]);
+
+// Make sure the reply columns exist (idempotent — table itself is created on the user side)
+const ensureSupportReplyColumns = async () => {
+  await pool.query(
+    `ALTER TABLE user_support_requests ADD COLUMN IF NOT EXISTS admin_reply TEXT DEFAULT NULL`
+  );
+  await pool.query(
+    `ALTER TABLE user_support_requests ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP DEFAULT NULL`
+  );
+};
+
+const SUPPORT_SELECT = `
+  SELECT
+    t.id, t.user_id, t.topic, t.priority, t.subject, t.message,
+    t.contact_email, t.contact_phone, t.status, t.admin_reply,
+    t.replied_at, t.created_at, t.updated_at,
+    u.full_name AS user_name, u.email AS user_email
+  FROM user_support_requests t
+  LEFT JOIN users u ON u.id = t.user_id
+`;
+
+// GET /api/admin/support-requests?status=open|answered|closed
+router.get("/support-requests", async (req, res) => {
+  try {
+    await ensureSupportReplyColumns();
+
+    const status = String(req.query.status || "").trim().toLowerCase();
+    const params = [];
+    let where = "";
+
+    if (SUPPORT_STATUSES.has(status)) {
+      where = "WHERE t.status = ?";
+      params.push(status);
+    }
+
+    const [rows] = await pool.query(
+      `${SUPPORT_SELECT}
+       ${where}
+       ORDER BY
+         CASE WHEN t.status = 'open' THEN 0 ELSE 1 END,
+         CASE WHEN t.priority = 'urgent' THEN 0 WHEN t.priority = 'normal' THEN 1 ELSE 2 END,
+         t.created_at DESC, t.id DESC`,
+      params
+    );
+
+    res.json({ tickets: rows });
+  } catch (err) {
+    console.error("GET /admin/support-requests error:", err);
+    res.status(500).json({ message: "Failed to load support tickets." });
+  }
+});
+
+// PATCH /api/admin/support-requests/:id/reply  { reply, status? }
+router.patch("/support-requests/:id/reply", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) {
+      return res.status(400).json({ message: "Valid ticket id is required." });
+    }
+
+    const reply = String(req.body.reply ?? "").trim();
+    if (reply.length > 2000) {
+      return res.status(400).json({ message: "Reply must be 2,000 characters or fewer." });
+    }
+
+    const rawStatus = String(req.body.status || "").trim().toLowerCase();
+    const status = SUPPORT_STATUSES.has(rawStatus)
+      ? rawStatus
+      : reply
+        ? "answered"
+        : "open";
+
+    await ensureSupportReplyColumns();
+
+    // Stamp replied_at only when there is reply text; otherwise keep the existing value.
+    const repliedClause = reply ? "CURRENT_TIMESTAMP" : "replied_at";
+
+    const [result] = await pool.query(
+      `UPDATE user_support_requests
+       SET admin_reply = ?, replied_at = ${repliedClause}, status = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?
+       RETURNING id`,
+      [reply || null, status, id]
+    );
+
+    if (!result || result.affectedRows === 0) {
+      return res.status(404).json({ message: "Support ticket not found." });
+    }
+
+    const [rows] = await pool.query(`${SUPPORT_SELECT} WHERE t.id = ?`, [id]);
+
+    res.json({
+      message: reply ? "Reply saved." : "Ticket updated.",
+      ticket: rows[0] || null,
+    });
+  } catch (err) {
+    console.error("PATCH /admin/support-requests/:id/reply error:", err);
+    res.status(500).json({ message: "Failed to save reply." });
+  }
+});
+
 module.exports = router;

@@ -34,6 +34,8 @@ type SupportRequest = {
   subject: string;
   status: string;
   created_at: string;
+  admin_reply?: string | null;
+  replied_at?: string | null;
 };
 
 type SupportForm = {
@@ -587,10 +589,24 @@ export default function UserHelp() {
                 <div className="request-list">
                   {requests.map((request) => (
                     <article className="request-card" key={request.id}>
-                      <div>
-                        <span>{request.topic}</span>
-                        <h3>{request.subject}</h3>
-                        <p>{formatDate(request.created_at)}</p>
+                      <div className="request-card-main">
+                        <div className="request-card-head">
+                          <span>{request.topic}</span>
+                          <h3>{request.subject}</h3>
+                          <p>{formatDate(request.created_at)}</p>
+                        </div>
+                        {request.admin_reply && (
+                          <div className="request-reply">
+                            <div className="request-reply-head">
+                              <MessageSquareText size={14} />
+                              <strong>Support replied</strong>
+                              {request.replied_at && (
+                                <span>{formatDate(request.replied_at)}</span>
+                              )}
+                            </div>
+                            <p>{request.admin_reply}</p>
+                          </div>
+                        )}
                       </div>
                       <div className="request-card-actions">
                         <strong className={request.status}>{request.status}</strong>

@@ -34,6 +34,7 @@ import AdminReport from "./admin/AdminReport";
 import AdminConditionalManagement  from "./admin/AdminConditionManagement";
 import AdminSymptomsManagement from "./admin/AdminSymptomsManagement";
 import AdminConditionSymptomMapping from "./admin/AdminConditionSymptomMapping";
+import AdminTickets from "./admin/AdminTickets";
 //clinic
 import ClinicSignup from "./Clinic/ClinicSignup";
 import ClinicProtectedRoute from "./routes/ClinicProtectedRoute";
@@ -104,6 +105,7 @@ function App() {
       <Route path="/admin/conditional" element={<AdminConditionalManagement />} />
       <Route path="/admin/symptoms" element={ <AdminSymptomsManagement />} />
       <Route path="/admin/condition-symptom-mapping" element={<AdminConditionSymptomMapping />} />
+      <Route path="/admin/tickets" element={<AdminTickets />} />
         </Route>
       
       </Routes>

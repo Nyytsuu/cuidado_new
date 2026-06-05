@@ -328,6 +328,14 @@ const ensureUserSupportRequestsTable = async () => {
     CREATE INDEX IF NOT EXISTS idx_user_support_requests_status
     ON user_support_requests (status)
   `);
+
+  // Admin reply fields (added after initial release — safe to run repeatedly)
+  await pool.query(`
+    ALTER TABLE user_support_requests ADD COLUMN IF NOT EXISTS admin_reply TEXT DEFAULT NULL
+  `);
+  await pool.query(`
+    ALTER TABLE user_support_requests ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP DEFAULT NULL
+  `);
 };
 
 const toDisplayDate = (value) => {
@@ -858,6 +866,8 @@ router.get("/:userId/support-requests", async (req, res) => {
         contact_email,
         contact_phone,
         status,
+        admin_reply,
+        replied_at,
         created_at,
         updated_at
       FROM user_support_requests

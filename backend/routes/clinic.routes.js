@@ -10,15 +10,19 @@ const db = pool;
 const { verifyToken, requireRole } = require("../middleware/auth");
 
 // Clinic signup is public; everything else requires a valid clinic (or admin) JWT
-const CLINIC_PUBLIC_PATHS = new Set(["/clinic/signup", "/signup"]);
+const CLINIC_PUBLIC_POST_PATHS = new Set(["/clinic/signup", "/signup"]);
+const CLINIC_PUBLIC_GET_PATHS = new Set(["/public/services"]);
+const isPublicClinicRoute = (req) =>
+  (req.method === "POST" && CLINIC_PUBLIC_POST_PATHS.has(req.path)) ||
+  (req.method === "GET" && CLINIC_PUBLIC_GET_PATHS.has(req.path));
 
 router.use((req, res, next) => {
-  if (req.method === "POST" && CLINIC_PUBLIC_PATHS.has(req.path)) return next();
+  if (isPublicClinicRoute(req)) return next();
   return verifyToken(req, res, next);
 });
 
 router.use((req, res, next) => {
-  if (req.method === "POST" && CLINIC_PUBLIC_PATHS.has(req.path)) return next();
+  if (isPublicClinicRoute(req)) return next();
   if (!req.user) return next(); // verifyToken already rejected if no user
   if (req.user.role === "clinic" || req.user.role === "admin") return next();
   // Regular users need read access to clinic data (profile, schedule, services) for booking
@@ -56,7 +60,6 @@ const PH_PHONE_RE = /^(\+639|09)\d{9}$/;
 const LICENSE_RE = /^R\d{2}-\d{2}-\d{6}$/;
 const PASSWORD_RE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 const SIGNUP_SPECIALIZATIONS = new Set(["general", "dental", "pediatric", "laboratory"]);
-const SIGNUP_SERVICES = new Set(["general", "dental", "pediatric", "laboratory"]);
 const UPLOAD_EXTENSIONS = new Set([".pdf", ".png", ".jpg", ".jpeg", ".webp"]);
 const UPLOAD_MIME_TYPES = new Set([
   "application/pdf",
@@ -106,6 +109,13 @@ const uploadProfilePicture = (req, res, next) => {
 const cleanText = (value) => String(value || "").trim();
 const cleanEmail = (value) => cleanText(value).toLowerCase();
 const cleanLicense = (value) => cleanText(value).toUpperCase();
+const normalizeServiceName = (value) => cleanText(value).replace(/\s+/g, " ").toLowerCase();
+const isActiveServiceFlag = (value) =>
+  value === true ||
+  value === 1 ||
+  value === "1" ||
+  String(value || "").toLowerCase() === "true" ||
+  String(value || "").toLowerCase() === "t";
 const isPositiveInteger = (value) => Number.isInteger(value) && value > 0;
 const isValidClinicTime = (value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ""));
 const clinicTimeToMinutes = (value) => {
@@ -438,6 +448,33 @@ const ensureEmailVerificationTokensTable = async () => {
   `);
 };
 
+const getActiveSignupServices = async () => {
+  const [rows] = await pool.query(`
+    SELECT id, name, is_active
+    FROM services
+    ORDER BY name ASC
+  `);
+
+  return rows
+    .filter((row) => isActiveServiceFlag(row.is_active))
+    .map((row) => ({
+      id: Number(row.id),
+      name: cleanText(row.name),
+      is_active: row.is_active,
+    }))
+    .filter((row) => row.name);
+};
+
+router.get("/public/services", async (_req, res) => {
+  try {
+    const services = await getActiveSignupServices();
+    res.json(services);
+  } catch (err) {
+    console.error("Fetch public clinic services error:", err);
+    res.status(500).json({ message: "Failed to fetch services" });
+  }
+});
+
 /* =================================================
    CLINIC SIGNUP
    Mounted at: /api
@@ -490,13 +527,17 @@ router.post(
       const normalizedRepName = cleanText(rep_full_name);
       const normalizedRepPosition = cleanText(rep_position);
       const normalizedRepPhone = cleanText(rep_phone);
-      const normalizedServicesOffered = cleanText(services_offered).toLowerCase();
+      const normalizedServicesOffered = normalizeServiceName(services_offered);
       const normalizedOpeningTime = cleanText(opening_time);
       const normalizedClosingTime = cleanText(closing_time);
       const normalizedOperatingDays = cleanText(operating_days).toLowerCase();
       const normalizedPassword = String(password || "");
       const emailVerificationToken = cleanText(email_verification_token);
       const validationErrors = [];
+      const activeSignupServices = await getActiveSignupServices();
+      const validSignupServices = new Set(
+        activeSignupServices.map((service) => normalizeServiceName(service.name))
+      );
 
       if (normalizedClinicName.length < 3) {
         validationErrors.push("Clinic name must be at least 3 characters.");
@@ -542,7 +583,7 @@ router.post(
         validationErrors.push("Representative phone must use +639XXXXXXXXX or 09XXXXXXXXX.");
       }
 
-      if (!SIGNUP_SERVICES.has(normalizedServicesOffered)) {
+      if (!validSignupServices.has(normalizedServicesOffered)) {
         validationErrors.push("Invalid service offered.");
       }
 

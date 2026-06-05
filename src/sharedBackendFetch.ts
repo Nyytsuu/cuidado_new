@@ -101,6 +101,7 @@ const PUBLIC_PATHS = [
   "/api/signup",
   "/api/auth/",
   "/api/clinic/signup",
+  "/api/clinic/public/services",
 ];
 
 const isPublicEndpoint = (url: string): boolean =>

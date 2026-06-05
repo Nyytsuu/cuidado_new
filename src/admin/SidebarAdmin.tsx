@@ -13,6 +13,7 @@ import reportIcon from "../img/graph-analysis.png"
 import conditionIcon from "../img/stethoscope.png";
 import symptomIcon from "../img/thermometer.png";
 import mappingIcon from "../img/link.png";
+import ticketIcon from "../img/information-button.png";
 
 interface SidebarProps {
   sidebarExpanded: boolean;
@@ -107,6 +108,13 @@ const cancelLogout = () => {
             <Link to="/admin/reports">
               <img src={reportIcon} alt="Reports" />
               <span>Reports</span>
+            </Link>
+          </div>
+
+          <div className="sidebar-item">
+            <Link to="/admin/tickets">
+              <img src={ticketIcon} alt="Support Tickets" />
+              <span>Tickets</span>
             </Link>
           </div>
 
