@@ -326,6 +326,60 @@ export default function AdminTickets() {
                       </div>
                     </div>
 
+                    <div className="tk-quick-reply">
+                      <label className="tk-reply-field">
+                        <span>{savedReply ? "Update reply" : "Admin reply"}</span>
+                        <textarea
+                          value={draft}
+                          maxLength={2000}
+                          placeholder="Type your reply to the user here..."
+                          onChange={(e) =>
+                            setReplyDrafts((current) => ({
+                              ...current,
+                              [ticket.id]: e.target.value,
+                            }))
+                          }
+                        />
+                      </label>
+
+                      <div className="tk-actions">
+                        <span className="tk-count">{draft.trim().length} / 2000</span>
+                        <div className="tk-action-btns">
+                          {isClosed ? (
+                            <button
+                              type="button"
+                              className="tk-btn tk-ghost"
+                              disabled={isSaving}
+                              onClick={() => saveReply(ticket.id, "open")}
+                            >
+                              Reopen
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="tk-btn tk-ghost"
+                              disabled={isSaving}
+                              onClick={() => saveReply(ticket.id, "closed")}
+                            >
+                              Close Ticket
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="tk-btn tk-solid"
+                            disabled={isSaving || (!hasChanges && !!savedReply)}
+                            onClick={() => saveReply(ticket.id, "answered")}
+                          >
+                            {isSaving
+                              ? "Saving..."
+                              : savedReply
+                                ? "Update Reply"
+                                : "Send Reply"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="tk-meta-row">
                       <span className="tk-topic">{ticket.topic}</span>
                       <h3 className="tk-subject">{ticket.subject}</h3>
