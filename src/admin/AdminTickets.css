@@ -210,7 +210,8 @@
 .tk-list {
   display: flex;
   flex-direction: column;
-  max-height: 560px;
+  height: clamp(440px, 58vh, 640px);
+  max-height: none;
   overflow-y: auto;
   scrollbar-gutter: stable;
   padding-bottom: 12px;
@@ -242,11 +243,16 @@
 .tk-item {
   padding: 18px 22px 22px;
   border-bottom: 1px solid #eef4f3;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(420px, 1.05fr);
+  align-items: start;
+  gap: 10px 18px;
 }
 
 .tk-item:last-child { border-bottom: 0; }
 
 .tk-item-head {
+  grid-column: 1;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -321,6 +327,7 @@
 
 /* ── Meta ── */
 .tk-meta-row {
+  grid-column: 1;
   margin-top: 12px;
   display: flex;
   flex-direction: column;
@@ -343,6 +350,7 @@
 }
 
 .tk-message {
+  grid-column: 1;
   margin: 8px 0 0;
   padding: 11px 14px;
   border-left: 3px solid #0f8f83;
@@ -352,11 +360,14 @@
   font-size: 14px;
   font-weight: 500;
   line-height: 1.6;
+  max-height: 86px;
+  overflow-y: auto;
   overflow-wrap: anywhere;
 }
 
 /* ── Existing reply ── */
 .tk-current-reply {
+  grid-column: 1 / -1;
   margin-top: 12px;
   padding: 12px 14px;
   border: 1px solid rgba(15, 143, 131, 0.2);
@@ -455,7 +466,7 @@
 }
 
 .tk-btn {
-  min-height: 42px;
+  min-height: 38px;
   padding: 0 18px;
   border: 0;
   border-radius: 999px;
@@ -490,7 +501,9 @@
 }
 
 .tk-quick-reply {
-  margin-top: 14px;
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  margin-top: 0;
   padding: 12px;
   border: 1px solid rgba(15, 143, 131, 0.2);
   border-radius: 12px;
@@ -507,7 +520,7 @@
 }
 
 .tk-quick-reply .tk-reply-field textarea {
-  min-height: 76px;
+  min-height: 70px;
 }
 
 .tk-quick-reply .tk-actions {
@@ -534,7 +547,26 @@
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .tk-stats { grid-template-columns: repeat(2, 1fr); }
-  .tk-quick-reply { grid-template-columns: 1fr; }
+  .tk-list {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .tk-item {
+    grid-template-columns: 1fr;
+  }
+  .tk-item-head,
+  .tk-meta-row,
+  .tk-message,
+  .tk-current-reply,
+  .tk-quick-reply {
+    grid-column: 1;
+  }
+  .tk-quick-reply {
+    grid-row: auto;
+    grid-template-columns: 1fr;
+    margin-top: 12px;
+  }
 }
 
 @media (max-width: 640px) {

@@ -702,6 +702,7 @@ body {
 .admin-UserAppoint .pill-success { background: #2e7d32; cursor: pointer; }
 .admin-UserAppoint .pill-warning { background: #b7791f; }
 .admin-UserAppoint .pill-gray { background: #6b7280; color: #fff; }
+.admin-UserAppoint .pill-reschedule { background: #2563eb; color: #fff; }
 
 /* actions */
 .admin-UserAppoint .users-actions {

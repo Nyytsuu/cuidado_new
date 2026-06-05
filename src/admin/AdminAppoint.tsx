@@ -4,7 +4,7 @@ import "./AdminHeader.css";
 import Sidebar from "./SidebarAdmin";
 import AdminHeader from "./AdminHeader";
 
-type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
+type AppointmentStatus = "pending" | "confirmed" | "cancelled" | "completed" | "no_show" | "reschedule_requested";
 
 type AppointmentRow = {
   id: number;
@@ -153,8 +153,14 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
   if (status === "cancelled") return "pill pill-danger";
   if (status === "confirmed") return "pill pill-view";
   if (status === "no_show") return "pill pill-gray";
+  if (status === "reschedule_requested") return "pill pill-reschedule";
   return "pill pill-warning"; // pending
-};  
+};
+
+const statusLabel = (status: string) => {
+  if (status === "reschedule_requested") return "Reschedule";
+  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
 
 
    const confirmCancel = () => {
@@ -231,7 +237,7 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
                         </div>
 
                         <div className="users-cell">
-                          <span className={statusPill(a.status)}>{a.status}</span>
+                          <span className={statusPill(a.status)}>{statusLabel(a.status)}</span>
                         </div>
 
                         <div className="users-cell">
@@ -323,7 +329,7 @@ const setStatus = async (id: number, status: AppointmentStatus, cancel_reason?: 
             <p>{selected.patient_phone_snapshot || "No phone provided"}</p>
           </div>
           <span className={statusPill(selected.status)}>
-            {selected.status.replace("_", " ")}
+            {statusLabel(selected.status)}
           </span>
         </div>
 
