@@ -329,7 +329,7 @@ body {
 
 .ClinicAppoint .admin-table-card {
   height: auto;
-  min-height: 460px;
+  min-height: 820px;
   padding: 0;
   /* No internal scroll. A rounded overflow:auto box with a sticky header,
      nested inside the page scroll, causes a Chromium repaint artifact
