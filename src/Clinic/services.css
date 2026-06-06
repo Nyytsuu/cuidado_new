@@ -17,6 +17,10 @@ body {
   font-family: "Poppins", sans-serif;
 }
 
+.services {
+  --services-bottom-gap: 20px;
+}
+
 /* WRAPPER */
 .services.with-sidebar {
   display: flex;
@@ -184,7 +188,7 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .services .admin-content {
-  padding: calc(var(--header-height) + 24px) 28px 80px;
+  padding: calc(var(--header-height) + 24px) 28px calc(80px + var(--services-bottom-gap));
 }
 
 .services .admin-content-inner {
@@ -933,15 +937,16 @@ body {
   margin-bottom: 8px;
 }
 
-/* Keep the services table and right schedule panel aligned. */
+/* Keep the services page from hugging the viewport bottom. */
 .services .admin-grid {
-  align-items: stretch;
+  align-items: start;
+  margin-bottom: var(--services-bottom-gap);
 }
 
 .services .admin-table-card,
 .services .clinic-schedule-aside {
-  align-self: stretch;
-  height: 100%;
+  align-self: start;
+  height: auto;
   min-height: 0;
 }
 
