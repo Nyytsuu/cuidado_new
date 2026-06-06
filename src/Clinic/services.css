@@ -24,7 +24,7 @@ body {
 /* WRAPPER */
 .services.with-sidebar {
   display: flex;
-  height: 100vh;
+  min-height: 100vh;
   background: #eef3f2;
   padding-left: var(--sidebar-width-collapsed);
   overflow: hidden;
@@ -33,7 +33,7 @@ body {
 /* MAIN scroll area */
 .services .preview-canvas {
   flex: 1;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -188,7 +188,7 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .services .admin-content {
-  padding: calc(var(--header-height) + 24px) 28px calc(80px + var(--services-bottom-gap));
+  padding: calc(var(--header-height) + 24px) 28px 30px;
 }
 
 .services .admin-content-inner {
@@ -954,8 +954,8 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100%;
-  min-height:100px;
+  height: auto;
+  min-height: 100px;
 }
 
 .services .users-table {
