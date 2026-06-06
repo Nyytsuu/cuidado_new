@@ -26,6 +26,16 @@ type SortDirection = "asc" | "desc";
 
 const API_BASE = "http://localhost:5000/api/admin/symptoms";
 
+const getBriefDescription = (value?: string | null, maxLength = 120) => {
+  const text = (value || "").replace(/\s+/g, " ").trim();
+
+  if (!text) {
+    return "--";
+  }
+
+  return text.length > maxLength ? `${text.slice(0, maxLength).trimEnd()}...` : text;
+};
+
 export default function AdminSymptomsManagement() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -524,8 +534,13 @@ setTimeout(() => setToast(null), 2500);
                       filteredSymptoms.map((item) => (
                         <tr key={item.symptom_id}>
                           <td>{item.symptom_name}</td>
-                          <td className="symptom-description-cell">
-                            {item.description || "--"}
+                          <td
+                            className="symptom-description-cell"
+                            title={item.description || ""}
+                          >
+                            <span className="symptom-description-preview">
+                              {getBriefDescription(item.description)}
+                            </span>
                           </td>
                           <td>{item.category || "--"}</td>
                           <td>{item.body_system_name || "--"}</td>

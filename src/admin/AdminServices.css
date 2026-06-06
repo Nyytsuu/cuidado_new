@@ -1063,3 +1063,35 @@ body {
   color: #000 !important;
   cursor: pointer !important;
 }
+
+/* Final Services page height alignment override. Keep this last. */
+.admin-UserServices .admin-grid {
+  --services-panel-height: clamp(620px, calc(100vh - var(--header-height) - 96px), 820px);
+  align-items: stretch !important;
+}
+
+.admin-UserServices .admin-table-card,
+.admin-UserServices .dash-aside {
+  height: var(--services-panel-height) !important;
+  min-height: 0 !important;
+}
+
+.admin-UserServices .dash-aside {
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+.admin-UserServices .appointment-panel {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.admin-UserServices .appointment-panel .dash-panel-body {
+  flex: 1 1 auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}

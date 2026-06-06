@@ -1557,3 +1557,34 @@ body {
     align-items: stretch;
   }
 }
+
+/* Final Clinics page table scroll override. Keep this last. */
+.admin-UserClinics .admin-grid {
+  --clinics-panel-height: clamp(620px, calc(100vh - var(--header-height) - 96px), 820px);
+  align-items: stretch !important;
+}
+
+.admin-UserClinics .admin-table-card {
+  height: var(--clinics-panel-height) !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.admin-UserClinics .clinics-table-wrap {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  scrollbar-gutter: stable;
+}
+
+.admin-UserClinics .clinics-table {
+  min-width: 760px;
+}
+
+.admin-UserClinics .clinics-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}

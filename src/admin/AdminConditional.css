@@ -602,10 +602,13 @@
   }
 }
 
-/* Page-scoped layout guard. Prevent admin-wide CSS from pushing the form
-   buttons over the conditions table. */
+/* Page-scoped layout guard. The actions are forced into normal flow below,
+   so the card just needs to grow to fit them (no clipping, no fixed height). */
 .admin-condition-management .condition-form-card {
-  overflow: hidden;
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
   margin-bottom: 34px;
 }
 
@@ -613,6 +616,7 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  padding-bottom: 24px;
 }
 
 .admin-condition-management .condition-form-grid {

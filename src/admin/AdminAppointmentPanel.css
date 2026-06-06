@@ -614,14 +614,10 @@
   align-items: stretch !important;
 }
 
-:is(
-  .admin-UserClinics,
-  .admin-Userpage,
-  .admin-UserServices,
-  .admin-UserReport
-) .dash-aside.dash-aside {
-  height: 100% !important;
-}
+/* NOTE: do NOT set height:100% on the aside — against the grid's auto row
+   it resolves to content height and cancels the stretch. align-items:
+   stretch already makes the aside fill the row, which gives its flex
+   children a definite height to grow into. */
 
 /* Appointment panel grows to fill the aside (no fixed cap, no margin hack) */
 :is(
