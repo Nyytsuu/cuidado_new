@@ -686,13 +686,13 @@ body {
 
 .Schedule .blocked-form {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   flex: 0 0 auto;
 }
 
 .Schedule .blocked-form input {
   width: 100%;
-  min-height: 40px;
+  min-height: 38px;
   border: 1px solid #d7e8e5;
   border-radius: 10px;
   padding: 0 12px;
@@ -713,11 +713,13 @@ body {
 }
 
 .Schedule .blocked-dates-card {
-  height: clamp(360px, 46vh, 520px);
-  min-height: 0;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: min(410px, calc(100vh - var(--header-height) - 118px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-bottom: 14px;
 }
 
 /* blocked list */
@@ -726,9 +728,9 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  flex: 1 1 auto;
-  min-height: 140px;
-  max-height: clamp(170px, 28vh, 310px);
+  flex: 0 1 auto;
+  min-height: 92px;
+  max-height: clamp(96px, 18vh, 150px);
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
