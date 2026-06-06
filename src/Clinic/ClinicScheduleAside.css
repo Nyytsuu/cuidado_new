@@ -18,16 +18,9 @@
   overflow: visible !important;
 }
 
-/* ClinicAppoint only: match its viewport-capped table card. Cap the WHOLE
-   aside to the same height and let it scroll as a unit — the cards inside
-   keep their natural size (schedule never squeezed), so both columns are
-   the same height and stay top- and bottom-aligned. */
-.ClinicAppoint .clinic-schedule-aside.admin-right {
-  max-height: calc(100vh - 140px) !important;   /* same as the table card */
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  padding-right: 2px !important;                 /* room for the scrollbar */
-}
+/* All clinic pages now use a single page scroll (no internal table/aside
+   scroll), so the aside stays natural height everywhere — top-aligned with
+   the table, page scrolls as one unit. */
 
 /* ── Base card wrapper ── */
 .clinic-schedule-aside .admin-card {

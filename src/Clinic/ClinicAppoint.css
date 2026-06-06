@@ -325,16 +325,17 @@ body {
 
 .ClinicAppoint .admin-table-card {
   height: auto;
-  max-height: calc(100vh - 140px);
   min-height: 460px;
   padding: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* No internal scroll. A rounded overflow:auto box with a sticky header,
+     nested inside the page scroll, causes a Chromium repaint artifact
+     (gray un-painted region after scrolling). Let the whole page scroll
+     instead — single scroll container, no artifact. */
+  overflow: visible;
   border-radius: 20px;
   background: #ffffff;
   border: 1px solid #e0efec;
   box-shadow: 0 4px 28px rgba(15, 66, 66, 0.07), 0 1px 4px rgba(15, 66, 66, 0.04);
-  scrollbar-gutter: stable;
 }
 
 .ClinicAppoint .users-table {
@@ -377,12 +378,14 @@ body {
 
 .ClinicAppoint .users-header {
   position: sticky;
-  top: 0;
-  z-index: 5;
+  /* Stick against the page scroll, just below the fixed clinic header. */
+  top: var(--header-height);
+  z-index: 6;
   min-height: 46px;
   background: #f4f9f8;
   border-bottom: 1px solid #daecea;
   box-shadow: 0 2px 8px rgba(15, 66, 66, 0.05);
+  border-radius: 20px 20px 0 0;
 }
 
 .ClinicAppoint .users-header .users-cell {
