@@ -875,3 +875,36 @@ body {
   padding: 18px 0 8px;
   margin: 0;
 }
+
+/* Keep the left patient table and right schedule panel aligned. */
+.Patient .admin-grid {
+  align-items: stretch;
+}
+
+.Patient .admin-table-card,
+.Patient .patient-schedule-wrapper,
+.Patient .clinic-schedule-aside {
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
+}
+
+.Patient .admin-table-card,
+.Patient .patient-schedule-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.Patient .users-table,
+.Patient .patient-schedule-wrapper > .clinic-schedule-aside {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 900px) {
+  .Patient .admin-table-card,
+  .Patient .patient-schedule-wrapper,
+  .Patient .clinic-schedule-aside {
+    height: auto;
+  }
+}

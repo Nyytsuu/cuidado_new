@@ -932,3 +932,32 @@ body {
   justify-content: center;
   margin-bottom: 8px;
 }
+
+/* Keep the services table and right schedule panel aligned. */
+.services .admin-grid {
+  align-items: stretch;
+}
+
+.services .admin-table-card,
+.services .clinic-schedule-aside {
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
+}
+
+.services .admin-table-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.services .users-table {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 900px) {
+  .services .admin-table-card,
+  .services .clinic-schedule-aside {
+    height: auto;
+  }
+}

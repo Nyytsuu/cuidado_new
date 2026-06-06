@@ -766,3 +766,29 @@
   justify-content: center;
   margin-bottom: 8px;
 }
+
+/* ===== CLINIC-WIDE FOOTER SPACE ===== */
+.ClinicAppoint,
+.Patient,
+.services,
+.Schedule,
+.ClinicProfile,
+.clinic-dashboard-page,
+.clinic-settings-page,
+.clinic-reviews-page {
+  --clinic-footer-height: 20px;
+}
+
+.ClinicAppoint .preview-canvas::after,
+.Patient .preview-canvas::after,
+.services .preview-canvas::after,
+.Schedule .preview-canvas::after,
+.ClinicProfile .clinic-profile-main::after,
+.clinic-dashboard-page .clinic-main::after,
+.clinic-settings-page .settings-main::after,
+.clinic-reviews-page .clinic-reviews-main::after {
+  content: "";
+  display: block;
+  height: var(--clinic-footer-height);
+  flex: 0 0 var(--clinic-footer-height);
+}

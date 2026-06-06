@@ -1431,3 +1431,31 @@ body {
   justify-content: flex-end;
   margin-top: 4px;
 }
+
+/* Keep the appointment table column and right schedule panel aligned. */
+.ClinicAppoint .admin-grid {
+  align-items: stretch;
+}
+
+.ClinicAppoint .table-col,
+.ClinicAppoint .clinic-schedule-aside {
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
+}
+
+.ClinicAppoint .table-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.ClinicAppoint .admin-table-card {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 900px) {
+  .ClinicAppoint .table-col,
+  .ClinicAppoint .clinic-schedule-aside {
+    height: auto;
+  }
+}

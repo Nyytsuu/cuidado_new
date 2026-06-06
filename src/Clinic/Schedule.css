@@ -917,3 +917,32 @@ body {
   justify-content: center;
   margin-bottom: 8px;
 }
+
+/* Keep the schedule table and right-side schedule cards aligned. */
+.Schedule .admin-grid {
+  align-items: stretch;
+}
+
+.Schedule .admin-table-card,
+.Schedule .admin-right {
+  align-self: stretch;
+  height: 100%;
+  min-height: 0;
+}
+
+.Schedule .admin-right {
+  display: flex;
+  flex-direction: column;
+}
+
+.Schedule .admin-right .big-card {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .Schedule .admin-table-card,
+  .Schedule .admin-right {
+    height: auto;
+  }
+}

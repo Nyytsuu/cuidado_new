@@ -3,8 +3,8 @@
   display: flex !important;
   flex-direction: column !important;
   gap: 16px !important;
-  align-self: start;
-  height: auto !important;
+  align-self: stretch;
+  height: 100% !important;
   max-height: none !important;
   overflow: visible !important;
 }
@@ -45,6 +45,7 @@
 .services .clinic-schedule-aside .big-card {
   padding: 0 !important;
   height: auto !important;
+  flex: 1 1 auto !important;
   min-height: 0 !important;
   background: #ffffff !important;
   display: flex !important;
@@ -265,6 +266,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   padding: 14px 18px 14px;
 }
 
