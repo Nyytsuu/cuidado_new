@@ -58,21 +58,15 @@
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(15, 47, 47, 0.45) transparent;
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* IE / old Edge */
 }
 
+/* Hide the scrollbar (WebKit/Chromium) while keeping scroll functional */
 .SidebarAdmin .sidebar-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.SidebarAdmin .sidebar-content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.SidebarAdmin .sidebar-content::-webkit-scrollbar-thumb {
-  background: rgba(15, 47, 47, 0.35);
-  border-radius: 999px;
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .SidebarAdmin .sidebar-group {
