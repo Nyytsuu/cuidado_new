@@ -696,12 +696,16 @@
   position: static !important;
   inset: auto !important;
   z-index: 0 !important;
-  width: 100% !important;
+  width: fit-content !important;
+  max-width: 100%;
   display: flex !important;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
+  justify-content: center;
+  gap: 18px;
   margin: 0 !important;
+  align-self: center;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
@@ -711,10 +715,10 @@
 
 .admin-symptoms-management .save-symptom-btn,
 .admin-symptoms-management .cancel-symptom-btn {
-  flex: 0 1 220px;
-  width: auto !important;
-  min-width: 210px;
-  max-width: 240px;
+  flex: 0 0 230px;
+  width: 230px !important;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .admin-symptoms-management .symptom-list-card {
@@ -727,6 +731,8 @@
   .admin-symptoms-management .symptom-form-actions {
     flex-direction: column;
     align-items: stretch;
+    align-self: stretch;
+    width: 100% !important;
   }
 
   .admin-symptoms-management .save-symptom-btn,

@@ -494,7 +494,7 @@ const [, setError] = useState("");
                           <div className="users-actions">
                             <button
                               type="button"
-                              className="pill pill-view"
+                              className="pill pill-view schedule-toggle-btn"
                               disabled={loading || saving}
                               onClick={() => toggleWorkingDay(row.day)}
                             >

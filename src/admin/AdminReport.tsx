@@ -37,11 +37,6 @@ type AdminAppointmentApiRow = {
   status: string;
 };
 
-type SummaryRow = {
-  label: string;
-  value: string | number;
-};
-
 const reportExamples = [
   "Total appointments per month",
   "Most active clinics",
@@ -200,30 +195,6 @@ export default function AdminReport() {
   };
 
   const query = q.trim().toLowerCase();
-  const summaryRows: SummaryRow[] = [
-    {
-      label: "Total appointments (this month)",
-      value: loadingSummary
-        ? "Loading..."
-        : summary
-        ? summary.totalAppointmentsThisMonth
-        : "-",
-    },
-    {
-      label: "Most active clinic",
-      value: loadingSummary ? "Loading..." : summary ? summary.mostActiveClinic : "-",
-    },
-    {
-      label: "New users (this week)",
-      value: loadingSummary ? "Loading..." : summary ? summary.newUsersThisWeek : "-",
-    },
-  ];
-  const filteredReportExamples = reportExamples.filter((item) =>
-    matchesSearch(query, item)
-  );
-  const filteredSummaryRows = summaryRows.filter((row) =>
-    matchesSearch(query, row.label, row.value)
-  );
   const filteredActivities = activities.filter((activity) =>
     matchesSearch(
       query,
@@ -260,47 +231,70 @@ export default function AdminReport() {
           </div>
 
           <div className="admin-grid">
-            {/* LEFT CARD (UNCHANGED) */}
-            <section className="admin-card admin-table-card reports-card">
-              <div className="admin-table-header" />
+            {/* LEFT — metric cards + export card */}
+            <section className="reports-main-col">
+              <div className="rp-metrics">
+                <article className="rp-metric">
+                  <div className="rp-metric-icon rp-ic-appt">📅</div>
+                  <div className="rp-metric-text">
+                    <span>Appointments This Month</span>
+                    <strong>
+                      {loadingSummary ? "…" : summary ? summary.totalAppointmentsThisMonth : "—"}
+                    </strong>
+                  </div>
+                </article>
 
-              <div className="reports-body">
-                <h3 className="reports-section-title">Examples</h3>
+                <article className="rp-metric">
+                  <div className="rp-metric-icon rp-ic-clinic">🏥</div>
+                  <div className="rp-metric-text">
+                    <span>Most Active Clinic</span>
+                    <strong className="rp-metric-sm" title={summary?.mostActiveClinic || ""}>
+                      {loadingSummary ? "…" : summary && summary.mostActiveClinic ? summary.mostActiveClinic : "—"}
+                    </strong>
+                  </div>
+                </article>
 
-                <ul className="reports-list">
-                  {filteredReportExamples.length === 0 ? (
-                    <li>No report examples match your search.</li>
-                  ) : (
-                    filteredReportExamples.map((item) => <li key={item}>{item}</li>)
-                  )}
-                </ul>
-
-                <h3 className="reports-section-title">Actions</h3>
-
-                <div className="reports-actions">
-                  <button type="button" className="pill pill-view" onClick={handleExportCSV}>
-                    Export CSV
-                  </button>
-                  <button type="button" className="pill pill-danger" onClick={handleExportPDF}>
-                    Export PDF
-                  </button>
-                </div>
-
-                <div className="reports-preview">
-                  {filteredSummaryRows.length === 0 ? (
-                    <div className="preview-row">
-                      <span className="preview-label">No report metrics match your search.</span>
-                    </div>
-                  ) : (
-                    filteredSummaryRows.map((row) => (
-                      <div className="preview-row" key={row.label}>
-                        <span className="preview-label">{row.label}</span>
-                        <span className="preview-value">{row.value}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
+                <article className="rp-metric">
+                  <div className="rp-metric-icon rp-ic-users">👥</div>
+                  <div className="rp-metric-text">
+                    <span>New Users This Week</span>
+                    <strong>
+                      {loadingSummary ? "…" : summary ? summary.newUsersThisWeek : "—"}
+                    </strong>
+                  </div>
+                </article>
               </div>
+
+              <article className="rp-export-card">
+                <div className="rp-export-head">
+                  <div className="rp-export-badge">📊</div>
+                  <div className="rp-export-heading">
+                    <h3>Generate Report</h3>
+                    <p>Download a snapshot of platform activity as CSV or PDF.</p>
+                  </div>
+                </div>
+
+                <div className="rp-includes">
+                  <span className="rp-includes-label">This report includes</span>
+                  <ul>
+                    {reportExamples.map((item) => (
+                      <li key={item}>
+                        <span className="rp-check">✓</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="rp-export-actions">
+                  <button type="button" className="rp-export-btn rp-csv" onClick={handleExportCSV}>
+                    <span className="rp-dl" aria-hidden="true">⬇</span> Export CSV
+                  </button>
+                  <button type="button" className="rp-export-btn rp-pdf" onClick={handleExportPDF}>
+                    <span className="rp-dl" aria-hidden="true">⬇</span> Export PDF
+                  </button>
+                </div>
+              </article>
             </section>
 
             {/* RIGHT SIDE (REPLACED with Recent activity + Appointment Section) */}
