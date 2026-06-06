@@ -600,13 +600,51 @@
   overflow-x: hidden !important;
 }
 
-/* Appointment panel — no top-margin hack; the flex gap handles spacing */
+/* ── Align the aside bottom with the left table ──
+   Stretch the grid row so the right column matches the (taller) table,
+   then let the appointment panel grow to fill the space beneath Recent
+   Activity. Result: the Appointment Section bottom lines up with the
+   left table's bottom on every page. */
+:is(
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .admin-grid {
+  align-items: stretch !important;
+}
+
+:is(
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .dash-aside.dash-aside {
+  height: 100% !important;
+}
+
+/* Appointment panel grows to fill the aside (no fixed cap, no margin hack) */
 :is(
   .admin-UserClinics,
   .admin-Userpage,
   .admin-UserServices,
   .admin-UserReport
 ) .dash-aside.dash-aside > .appointment-panel.appointment-panel {
-  flex: 0 0 auto !important;
+  flex: 1 1 auto !important;
+  min-height: 260px !important;
+  max-height: none !important;
   margin: 0 !important;
+}
+
+/* Its table body fills the panel and scrolls internally when long */
+:is(
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .dash-aside.dash-aside > .appointment-panel.appointment-panel .dash-panel-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
 }

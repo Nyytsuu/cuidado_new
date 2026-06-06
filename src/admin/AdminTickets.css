@@ -210,7 +210,7 @@
 .tk-list {
   display: flex;
   flex-direction: column;
-  height: clamp(440px, 58vh, 640px);
+  height: clamp(520px, 68vh, 760px);
   max-height: none;
   overflow-y: auto;
   scrollbar-gutter: stable;
@@ -510,7 +510,7 @@
   background: #f8fdfc;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(260px, auto);
-  align-items: end;
+  align-items: center;
   gap: 14px;
   overflow: visible;
 }
@@ -525,13 +525,16 @@
 
 .tk-quick-reply .tk-actions {
   margin-top: 0;
-  align-items: flex-end;
+  align-items: center;
+  align-self: center;
   flex-direction: column;
+  justify-content: center;
   gap: 10px;
 }
 
 .tk-quick-reply .tk-action-btns {
   width: 100%;
+  justify-content: center;
 }
 
 .tk-quick-reply .tk-btn {
