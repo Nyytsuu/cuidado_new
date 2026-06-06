@@ -1,4 +1,5 @@
 const DEFAULT_BACKEND_URL = "http://localhost:5000";
+const PRODUCTION_BACKEND_URL = "https://cuidado-new.onrender.com";
 const ANDROID_EMULATOR_BACKEND_URL = "http://10.0.2.2:5000";
 
 declare global {
@@ -25,6 +26,9 @@ const isLocalBackendUrl = (url: string) => {
 };
 
 const isAndroidUserAgent = () => /Android/i.test(navigator.userAgent);
+
+const isLocalFrontendHost = () =>
+  ["localhost", "127.0.0.1", "::1", ""].includes(window.location.hostname);
 
 export const isNativeMobileRuntime = () => {
   const platform = window.Capacitor?.getPlatform?.();
@@ -77,10 +81,14 @@ export const getConfiguredBackendUrl = () => {
     return normalizeBackendUrl(explicitRuntimeUrl);
   }
 
+  const defaultBackendUrl = isLocalFrontendHost()
+    ? DEFAULT_BACKEND_URL
+    : PRODUCTION_BACKEND_URL;
+
   const envBackendUrl =
     import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
-    DEFAULT_BACKEND_URL;
+    defaultBackendUrl;
 
   if (shouldUseAndroidEmulatorBackend(envBackendUrl)) {
     return ANDROID_EMULATOR_BACKEND_URL;

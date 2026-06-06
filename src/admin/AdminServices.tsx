@@ -61,6 +61,7 @@ export default function AdminServices() {
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [servicesError, setServicesError] = useState("");
 
   const [activities, setActivities] = useState<ActivityItem[]>([]);
 
@@ -93,13 +94,16 @@ export default function AdminServices() {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const res = await fetch(adminApi("/services"));
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setServicesError("");
+      const res = await fetch(adminApi("/services"), { cache: "no-store" });
+      if (!res.ok) throw new Error(await getApiMessage(res));
       const data: Service[] = await res.json();
       setServices(data);
     } catch (e) {
       console.error("Load services error:", e);
-      setServices([]);
+      setServicesError(
+        e instanceof Error ? e.message : "Services API is not connected yet."
+      );
     } finally {
       setLoading(false);
     }
@@ -352,6 +356,12 @@ export default function AdminServices() {
                     <div className="users-row services-row">
                       <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
                         Loading...
+                      </div>
+                    </div>
+                  ) : servicesError ? (
+                    <div className="users-row services-row">
+                      <div className="users-cell" style={{ gridColumn: "1 / -1" }}>
+                        {servicesError}
                       </div>
                     </div>
                   ) : filteredServices.length === 0 ? (

@@ -449,21 +449,34 @@ body {
 .admin-UserServices .admin-table-card{
   display: flex !important;
   flex-direction: column !important;
+  height: clamp(500px, calc(100vh - var(--header-height) - 132px), 720px) !important;
+  min-height: 0 !important;
 }
 
 /* put table FIRST */
 .admin-UserServices .users-table{
   order: 1 !important;
   flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-gutter: stable;
 }
 
 /* put add button LAST (bottom) */
 .admin-UserServices .admin-table-header{
   order: 2 !important;
+  flex: 0 0 auto !important;
   margin-top: auto !important;
   padding: 14px 16px 16px !important;
   background: #ffffff !important;
   border-top: 1px solid rgba(0,0,0,0.06) !important;
+}
+
+.admin-UserServices .users-row.users-header.services-row {
+  position: sticky !important;
+  top: 0;
+  z-index: 2;
 }
 
 /* button style */
