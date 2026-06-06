@@ -588,7 +588,7 @@ const [, setError] = useState("");
                 </div>
 
                 {/* ── Blocked Dates Card ── */}
-                <div className="admin-card admin-right-card big-card">
+                <div className="admin-card admin-right-card big-card blocked-dates-card">
                   <div className="blocked-card-header">
                     <h3>Blocked Dates</h3>
                     {blockedDates.length > 0 && (

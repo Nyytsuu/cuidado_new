@@ -17,6 +17,10 @@ body {
   font-family: "Poppins", sans-serif;
 }
 
+.Schedule {
+  --schedule-footer-height: 20px;
+}
+
 /* WRAPPER */
 .Schedule.with-sidebar {
   display: flex;
@@ -185,7 +189,7 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .Schedule .admin-content {
-  padding: calc(var(--header-height) + 26px) 28px 42px;
+  padding: calc(var(--header-height) + 26px) 28px calc(42px + var(--schedule-footer-height));
 }
 
 .Schedule .admin-title h2 {
@@ -683,6 +687,7 @@ body {
 .Schedule .blocked-form {
   display: grid;
   gap: 10px;
+  flex: 0 0 auto;
 }
 
 .Schedule .blocked-form input {
@@ -707,15 +712,24 @@ body {
   opacity: 0.6;
 }
 
+.Schedule .blocked-dates-card {
+  height: clamp(360px, 46vh, 520px);
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* blocked list */
 .Schedule .blocked-list {
   margin-top: 4px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 4px;
-  max-height: 245px;
+  max-height: none;
 }
 
 .Schedule .blocked-empty {
@@ -918,15 +932,16 @@ body {
   margin-bottom: 8px;
 }
 
-/* Keep the schedule table and right-side schedule cards aligned. */
+/* Keep the schedule table and right-side cards aligned without forcing the page height. */
 .Schedule .admin-grid {
-  align-items: stretch;
+  align-items: start;
+  margin-bottom: var(--schedule-footer-height);
 }
 
 .Schedule .admin-table-card,
 .Schedule .admin-right {
-  align-self: stretch;
-  height: 100%;
+  align-self: start;
+  height: auto;
   min-height: 0;
 }
 
@@ -936,7 +951,7 @@ body {
 }
 
 .Schedule .admin-right .big-card {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-height: 0;
 }
 

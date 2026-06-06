@@ -8,10 +8,10 @@
   display: flex !important;
   flex-direction: column !important;
   gap: 16px !important;
-  align-self: stretch;
+  align-self: start;          /* don't stretch to the table — size to content */
   height: auto !important;
-  max-height: calc(100vh - 150px) !important;
-  overflow: hidden !important;
+  max-height: none !important;
+  overflow: visible !important;
 }
 
 /* ── Base card wrapper ── */
@@ -50,8 +50,8 @@
 .services .clinic-schedule-aside .big-card {
   padding: 0 !important;
   height: auto !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
+  flex: 0 0 auto !important;       /* natural height — show all days, don't squeeze */
+  min-height: auto !important;
   background: #ffffff !important;
   display: flex !important;
   flex-direction: column !important;
@@ -266,14 +266,13 @@
   color: #166534;
 }
 
-/* ── Schedule editor rows container ── */
+/* ── Schedule editor rows container — natural height, shows all 7 days ── */
 .clinic-schedule-editor {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  flex: 0 0 auto;
+  overflow: visible;
   padding: 14px 18px 14px;
 }
 
