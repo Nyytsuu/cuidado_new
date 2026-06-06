@@ -1,12 +1,17 @@
-/* ── Aside container: self-contained layout (no reliance on page CSS) ── */
+/* ── Aside container: self-contained layout (no reliance on page CSS) ──
+   IMPORTANT: never use height:100% here — it resolves against the 100vh
+   scroll canvas and makes the aside a full viewport tall, so it spills
+   past the page bottom (hugging the footer / gray cutoff after scroll).
+   Cap it to the viewport like the table card and let the schedule editor
+   scroll internally instead. */
 .clinic-schedule-aside.admin-right {
   display: flex !important;
   flex-direction: column !important;
   gap: 16px !important;
   align-self: stretch;
-  height: 100% !important;
-  max-height: none !important;
-  overflow: visible !important;
+  height: auto !important;
+  max-height: calc(100vh - 150px) !important;
+  overflow: hidden !important;
 }
 
 /* ── Base card wrapper ── */
