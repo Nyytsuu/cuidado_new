@@ -17,6 +17,10 @@ body {
   font-family: "Poppins", sans-serif;
 }
 
+.ClinicAppoint {
+  --appoint-bottom-gap: 72px;
+}
+
 /* WRAPPER */
 .ClinicAppoint.with-sidebar {
   display: flex;
@@ -184,7 +188,7 @@ body {
 
 /* ================= ADMIN CONTENT ================= */
 .ClinicAppoint .admin-content {
-  padding: calc(var(--header-height) + 24px) 28px 80px;
+  padding: calc(var(--header-height) + 24px) 28px calc(80px + var(--appoint-bottom-gap));
 }
 
 /* Override global admin-content-inner padding so we don't double-indent */
@@ -1435,15 +1439,16 @@ body {
   margin-top: 4px;
 }
 
-/* Keep the appointment table column and right schedule panel aligned. */
+/* Keep the appointment page from hugging the viewport bottom. */
 .ClinicAppoint .admin-grid {
-  align-items: stretch;
+  align-items: start;
+  margin-bottom: var(--appoint-bottom-gap);
 }
 
 .ClinicAppoint .table-col,
 .ClinicAppoint .clinic-schedule-aside {
-  align-self: stretch;
-  height: 100%;
+  align-self: start;
+  height: auto;
   min-height: 0;
 }
 
@@ -1453,7 +1458,7 @@ body {
 }
 
 .ClinicAppoint .admin-table-card {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
 }
 
 @media (max-width: 900px) {
