@@ -381,10 +381,9 @@ body {
 }
 
 .ClinicAppoint .users-header {
-  position: sticky;
-  /* Stick against the page scroll, just below the fixed clinic header. */
-  top: var(--header-height);
-  z-index: 6;
+  position: static;
+  top: auto;
+  z-index: 1;
   min-height: 46px;
   background: #f4f9f8;
   border-bottom: 1px solid #daecea;
