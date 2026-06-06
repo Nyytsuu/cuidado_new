@@ -286,6 +286,41 @@ export default function AdminReport() {
                   </ul>
                 </div>
 
+                <div className="rp-export-preview">
+                  <div className="rp-preview-copy">
+                    <span className="rp-includes-label">Report preview</span>
+                    <h4>Platform activity snapshot</h4>
+                    <p>
+                      Review the latest appointment, clinic, and user activity before
+                      downloading the final report.
+                    </p>
+                  </div>
+
+                  <div className="rp-preview-grid">
+                    <div className="rp-preview-stat">
+                      <span>Appointments</span>
+                      <strong>
+                        {loadingSummary ? "..." : summary ? summary.totalAppointmentsThisMonth : "--"}
+                      </strong>
+                      <small>This month</small>
+                    </div>
+                    <div className="rp-preview-stat">
+                      <span>Top clinic</span>
+                      <strong title={summary?.mostActiveClinic || ""}>
+                        {loadingSummary ? "..." : summary?.mostActiveClinic || "--"}
+                      </strong>
+                      <small>Most active</small>
+                    </div>
+                    <div className="rp-preview-stat">
+                      <span>New users</span>
+                      <strong>
+                        {loadingSummary ? "..." : summary ? summary.newUsersThisWeek : "--"}
+                      </strong>
+                      <small>This week</small>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="rp-export-actions">
                   <button type="button" className="rp-export-btn rp-csv" onClick={handleExportCSV}>
                     <span className="rp-dl" aria-hidden="true">⬇</span> Export CSV
