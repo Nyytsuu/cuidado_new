@@ -715,6 +715,8 @@ body {
 .Schedule .blocked-dates-card {
   height: clamp(360px, 46vh, 520px);
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -725,11 +727,30 @@ body {
   flex-direction: column;
   gap: 10px;
   flex: 1 1 auto;
-  min-height: 0;
+  min-height: 140px;
+  max-height: clamp(170px, 28vh, 310px);
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 4px;
-  max-height: none;
+  overscroll-behavior: contain;
+  padding: 0 8px 2px 0;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #9dcac5 #edf7f5;
+}
+
+.Schedule .blocked-list::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+}
+
+.Schedule .blocked-list::-webkit-scrollbar-track {
+  background: #edf7f5;
+  border-radius: 999px;
+}
+
+.Schedule .blocked-list::-webkit-scrollbar-thumb {
+  background: #9dcac5;
+  border-radius: 999px;
 }
 
 .Schedule .blocked-empty {

@@ -2,16 +2,31 @@
    IMPORTANT: never use height:100% here — it resolves against the 100vh
    scroll canvas and makes the aside a full viewport tall, so it spills
    past the page bottom (hugging the footer / gray cutoff after scroll).
-   Cap it to the viewport like the table card and let the schedule editor
-   scroll internally instead. */
+
+   DEFAULT = natural height. Patient & Services tables are natural height
+   and the whole page scrolls, so the aside should match (natural, no cap).
+   ClinicAppoint's table is viewport-capped with an internal scroll, so it
+   gets a matching cap in the page-scoped override below — keeping each
+   page internally consistent (both columns behave the same). */
 .clinic-schedule-aside.admin-right {
   display: flex !important;
   flex-direction: column !important;
   gap: 16px !important;
-  align-self: start;          /* don't stretch to the table — size to content */
+  align-self: start;
   height: auto !important;
   max-height: none !important;
   overflow: visible !important;
+}
+
+/* ClinicAppoint only: match its viewport-capped table card. Cap the WHOLE
+   aside to the same height and let it scroll as a unit — the cards inside
+   keep their natural size (schedule never squeezed), so both columns are
+   the same height and stay top- and bottom-aligned. */
+.ClinicAppoint .clinic-schedule-aside.admin-right {
+  max-height: calc(100vh - 140px) !important;   /* same as the table card */
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-right: 2px !important;                 /* room for the scrollbar */
 }
 
 /* ── Base card wrapper ── */
