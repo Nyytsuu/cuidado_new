@@ -36,7 +36,12 @@ export const getStoredAuthRole = () => {
 };
 
 export const hasActiveAuthSession = () => {
+  const hasStoredAuth =
+    Boolean(localStorage.getItem("token")) &&
+    Boolean(localStorage.getItem("user"));
+
   return (
+    hasStoredAuth ||
     localStorage.getItem("keepLoggedIn") === "true" ||
     sessionStorage.getItem("authSessionActive") === "true"
   );

@@ -550,3 +550,63 @@
     justify-content: flex-start !important;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   ASIDE STACK — Recent Activity + Appointment panel must never overlap.
+   Overrides the scattered per-page `margin-top: 50px` and `min-height`
+   hacks (and the duplicate recent-activity body rules) so the right
+   column stacks consistently on every admin page. A flex column with
+   `flex: 0 0 auto` children physically cannot overlap.
+   ════════════════════════════════════════════════════════════════ */
+:is(
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .dash-aside.dash-aside {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+  min-width: 0 !important;
+}
+
+/* Recent Activity panel — sized to its content, sits above the table */
+:is(
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .dash-aside.dash-aside > .dash-right-top {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Recent Activity scroll body — one consistent height + internal scroll
+   (kills the conflicting 345px / per-page heights that caused the spill) */
+:is(
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .dash-aside.dash-aside > .dash-right-top .dash-panel-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Appointment panel — no top-margin hack; the flex gap handles spacing */
+:is(
+  .admin-UserClinics,
+  .admin-Userpage,
+  .admin-UserServices,
+  .admin-UserReport
+) .dash-aside.dash-aside > .appointment-panel.appointment-panel {
+  flex: 0 0 auto !important;
+  margin: 0 !important;
+}

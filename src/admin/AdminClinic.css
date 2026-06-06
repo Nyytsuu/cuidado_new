@@ -1087,20 +1087,25 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  min-width: max-content;
 }
 
 .ca-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   height: 32px;
+  min-width: max-content;
   padding: 0 13px;
   border: none;
   border-radius: 8px;
+  box-sizing: border-box;
   font-family: "Poppins", sans-serif;
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
+  overflow: visible;
   cursor: pointer;
   transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
 }

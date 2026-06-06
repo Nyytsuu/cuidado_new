@@ -319,7 +319,7 @@ body {
 .admin-Userpage .users-actions-wrap {
   display: flex;
   gap: 8px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
 }
@@ -329,10 +329,14 @@ body {
   cursor: pointer;
   padding: 8px 12px;
   border-radius: 999px;
+  min-width: max-content;
+  box-sizing: border-box;
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
   color: white;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .admin-Userpage .pill-view { background: #109C85; }

@@ -306,7 +306,7 @@ body {
   gap: 12px;
   justify-content: flex-end;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 /* pill buttons */
@@ -314,14 +314,17 @@ body {
   border: none;
   border-radius: 999px;
   padding: 0 16px;
+  min-width: max-content;
   min-height: 34px;
   line-height: 34px;
+  box-sizing: border-box;
   font-size: 13px;
   font-weight: 900;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
+  overflow: visible;
   cursor: pointer;
   color: #fff;
 }

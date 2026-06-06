@@ -103,8 +103,8 @@ export default function LandingPage() {
     statItems.map(() => 0)
   );
 
-  // If the user has an active "keep me logged in" session, skip the landing
-  // page entirely and send them straight to their dashboard/homepage.
+  // If the user already has a stored auth session, skip the landing page and
+  // send them straight to their dashboard/homepage.
   useEffect(() => {
     const destination = getActiveAuthDestination();
     if (destination) {
