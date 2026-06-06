@@ -955,7 +955,7 @@ body {
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  min-height: 1000px;
+  min-height: 100px;
 }
 
 .services .users-table {
