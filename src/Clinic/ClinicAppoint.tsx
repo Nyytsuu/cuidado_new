@@ -104,6 +104,9 @@ const emptyRescheduleForm: RescheduleForm = {
   reason: "",
 };
 
+const isSortedOutAppointment = (row: Pick<AppointmentRow, "status">) =>
+  row.status === "Completed" || row.status === "Cancelled";
+
 const getStoredClinicId = () => {
   try {
     const storedUser = localStorage.getItem("user");
@@ -138,16 +141,8 @@ export default function ClinicAppoint() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "All">("All");
   const [sortColumn, setSortColumn] = useState<"patientName" | "serviceType" | "date" | "status">("date");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [showArchived, setShowArchived] = useState(false);
-  const [archivedIds, setArchivedIds] = useState<Set<string>>(() => {
-    try {
-      const stored = localStorage.getItem(`clinic_archived_${getStoredClinicId()}`);
-      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
-    } catch {
-      return new Set<string>();
-    }
-  });
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [showSortedOut, setShowSortedOut] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedAppointment, setSelectedAppointment] =
     useState<AppointmentRow | null>(null);
@@ -362,24 +357,6 @@ export default function ClinicAppoint() {
       case "Cancelled":            return "row-hl-cancelled";
       default:                     return "";
     }
-  };
-
-  const archiveAppointment = (id: string) => {
-    setArchivedIds((prev) => {
-      const next = new Set(prev);
-      next.add(id);
-      localStorage.setItem(`clinic_archived_${clinicId}`, JSON.stringify([...next]));
-      return next;
-    });
-  };
-
-  const unarchiveAppointment = (id: string) => {
-    setArchivedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(id);
-      localStorage.setItem(`clinic_archived_${clinicId}`, JSON.stringify([...next]));
-      return next;
-    });
   };
 
   const openViewModal = (row: AppointmentRow) => {
@@ -628,40 +605,39 @@ export default function ClinicAppoint() {
     return "";
   }, [rescheduleForm, clinicSchedule, clinicBlockedDates, selectedAppointment]);
 
-  const archivedCount = useMemo(
-    () => appointments.filter((r) => archivedIds.has(r.id)).length,
-    [appointments, archivedIds]
+  const sortedOutCount = useMemo(
+    () => appointments.filter(isSortedOutAppointment).length,
+    [appointments]
   );
 
   const statsTotal = useMemo(
-    () => appointments.filter((r) => !archivedIds.has(r.id)).length,
-    [appointments, archivedIds]
+    () => appointments.filter((r) => !isSortedOutAppointment(r)).length,
+    [appointments]
   );
 
   const statsPending = useMemo(
-    () => appointments.filter((r) => r.status === "Pending" && !archivedIds.has(r.id)).length,
-    [appointments, archivedIds]
+    () => appointments.filter((r) => r.status === "Pending").length,
+    [appointments]
   );
 
   const statsToday = useMemo(() => {
     const todayStr = new Date().toLocaleDateString("en-US", {
       month: "2-digit", day: "2-digit", year: "2-digit",
     });
-    return appointments.filter((r) => r.date === todayStr && !archivedIds.has(r.id)).length;
-  }, [appointments, archivedIds]);
+    return appointments.filter((r) => r.date === todayStr && !isSortedOutAppointment(r)).length;
+  }, [appointments]);
 
   const statsConfirmed = useMemo(
-    () => appointments.filter((r) => r.status === "Confirmed" && !archivedIds.has(r.id)).length,
-    [appointments, archivedIds]
+    () => appointments.filter((r) => r.status === "Confirmed").length,
+    [appointments]
   );
 
   const filteredAppointments = useMemo(() => {
     const keyword = searchTerm.trim().toLowerCase();
 
-    // Split into archived vs active view
-    let list = showArchived
-      ? appointments.filter((r) => archivedIds.has(r.id))
-      : appointments.filter((r) => !archivedIds.has(r.id));
+    let list = showSortedOut
+      ? appointments.filter(isSortedOutAppointment)
+      : appointments.filter((row) => !isSortedOutAppointment(row));
 
     if (keyword) {
       list = list.filter(
@@ -674,7 +650,7 @@ export default function ClinicAppoint() {
       );
     }
 
-    if (!showArchived && statusFilter !== "All") {
+    if (!showSortedOut && statusFilter !== "All") {
       list = list.filter((row) => row.status === statusFilter);
     }
 
@@ -707,7 +683,7 @@ export default function ClinicAppoint() {
     });
 
     return list;
-  }, [appointments, searchTerm, statusFilter, sortColumn, sortDirection, archivedIds, showArchived]);
+  }, [appointments, searchTerm, statusFilter, sortColumn, sortDirection, showSortedOut]);
 
   return (
     <div
@@ -747,7 +723,7 @@ export default function ClinicAppoint() {
                 <button
                   type="button"
                   className="appt-stat-card appt-stat-total"
-                  onClick={() => { setStatusFilter("All"); setShowArchived(false); }}
+                  onClick={() => { setStatusFilter("All"); setShowSortedOut(false); }}
                   title="Show all appointments"
                 >
                   <span className="appt-stat-value">{statsTotal}</span>
@@ -756,7 +732,7 @@ export default function ClinicAppoint() {
                 <button
                   type="button"
                   className="appt-stat-card appt-stat-pending"
-                  onClick={() => { setStatusFilter("Pending"); setShowArchived(false); }}
+                  onClick={() => { setStatusFilter("Pending"); setShowSortedOut(false); }}
                   title="Filter by Pending"
                 >
                   <span className="appt-stat-value">{statsPending}</span>
@@ -765,7 +741,7 @@ export default function ClinicAppoint() {
                 <button
                   type="button"
                   className="appt-stat-card appt-stat-today"
-                  onClick={() => { setStatusFilter("All"); setShowArchived(false); }}
+                  onClick={() => { setStatusFilter("All"); setShowSortedOut(false); }}
                   title="Appointments today"
                 >
                   <span className="appt-stat-value">{statsToday}</span>
@@ -774,7 +750,7 @@ export default function ClinicAppoint() {
                 <button
                   type="button"
                   className="appt-stat-card appt-stat-confirmed"
-                  onClick={() => { setStatusFilter("Confirmed"); setShowArchived(false); }}
+                  onClick={() => { setStatusFilter("Confirmed"); setShowSortedOut(false); }}
                   title="Filter by Confirmed"
                 >
                   <span className="appt-stat-value">{statsConfirmed}</span>
@@ -786,8 +762,8 @@ export default function ClinicAppoint() {
               <div className="table-col">
                 <div className="appoint-toolbar">
                   <div className="appoint-filter-pills">
-                    {!showArchived && (
-                      (["All", "Pending", "Reschedule Requested", "Confirmed", "Completed", "Cancelled"] as const).map((s) => (
+                    {!showSortedOut && (
+                      (["All", "Pending", "Reschedule Requested", "Confirmed"] as const).map((s) => (
                         <button
                           key={s}
                           type="button"
@@ -797,26 +773,29 @@ export default function ClinicAppoint() {
                           {s}
                           {s !== "All" && (
                             <span className="appoint-filter-count">
-                              {appointments.filter((r) => r.status === s && !archivedIds.has(r.id)).length}
+                              {appointments.filter((r) => r.status === s).length}
                             </span>
                           )}
                         </button>
                       ))
                     )}
 
-                    {showArchived && (
+                    {showSortedOut && (
                       <div className="appoint-archive-banner">
                         <FaArchive />
-                        <span>Showing archived cancelled appointments — hidden from the main list</span>
+                        <span>Showing sorted out appointments - completed and cancelled items are hidden from the main list</span>
                       </div>
                     )}
 
                     <button
                       type="button"
-                      className={`appoint-archive-toggle ${showArchived ? "active" : ""}`}
-                      onClick={() => setShowArchived((v) => !v)}
+                      className={`appoint-archive-toggle ${showSortedOut ? "active" : ""}`}
+                      onClick={() => {
+                        setStatusFilter("All");
+                        setShowSortedOut((v) => !v);
+                      }}
                     >
-                      {showArchived ? <><FaBoxOpen /> Exit Archive</> : <><FaArchive /> Archived {archivedCount > 0 && <span className="appoint-filter-count">{archivedCount}</span>}</>}
+                      {showSortedOut ? <><FaBoxOpen /> Exit Sorted Out</> : <><FaArchive /> Sorted Out {sortedOutCount > 0 && <span className="appoint-filter-count">{sortedOutCount}</span>}</>}
                     </button>
                   </div>
                 </div>
@@ -847,7 +826,7 @@ export default function ClinicAppoint() {
                   ) : filteredAppointments.length === 0 ? (
                     <div className="appt-empty-state">
                       <span className="appt-empty-icon">📋</span>
-                      <p>{showArchived ? "No archived appointments." : "No appointments match this filter."}</p>
+                      <p>{showSortedOut ? "No sorted out appointments." : "No appointments match this filter."}</p>
                     </div>
                   ) : (
                     filteredAppointments.map((row) => (
@@ -880,37 +859,15 @@ export default function ClinicAppoint() {
                           
 
 <div className="users-actions">
-  {row.status === "Cancelled" || row.status === "Completed" ? (
-    <>
+  {isSortedOutAppointment(row) ? (
       <button
         type="button"
         className="icon-btn pill-view"
+        title="View"
         onClick={() => openViewModal(row)}
       >
         <FaEye />
       </button>
-      {row.status === "Cancelled" && (
-        archivedIds.has(row.id) ? (
-          <button
-            type="button"
-            className="icon-btn pill-restore"
-            title="Restore from archive"
-            onClick={() => unarchiveAppointment(row.id)}
-          >
-            <FaBoxOpen />
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="icon-btn pill-archive"
-            title="Archive"
-            onClick={() => archiveAppointment(row.id)}
-          >
-            <FaArchive />
-          </button>
-        )
-      )}
-    </>
   ) : (
     <>
       <button

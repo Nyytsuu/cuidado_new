@@ -546,8 +546,6 @@ function MapFlyTo({
   return null;
 }
 
-const DEFAULT_SERVICE_REQUEST_TYPE = "Consultation for selected services";
-
 export default function FindClinic() {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -574,7 +572,6 @@ export default function FindClinic() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
-  const [purpose, setPurpose] = useState(DEFAULT_SERVICE_REQUEST_TYPE);
   const [symptoms, setSymptoms] = useState("");
   const [patientNote, setPatientNote] = useState("");
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
@@ -897,6 +894,10 @@ export default function FindClinic() {
       : 30;
   const needsServiceSelection =
     clinicServices.length > 0 && selectedClinicServices.length === 0;
+  const appointmentPurpose =
+    selectedClinicServices.length > 0
+      ? selectedClinicServices.map((service) => service.name).join(", ")
+      : "General appointment";
   const selectedClinicRating = selectedClinic
     ? getClinicRatingSummary(selectedClinic)
     : null;
@@ -988,7 +989,6 @@ export default function FindClinic() {
     setAppointmentDate(toDateInputValue(plusThirty));
     setAppointmentTime(toTimeInputValue(plusThirty));
 
-    setPurpose(DEFAULT_SERVICE_REQUEST_TYPE);
     setSymptoms("");
     setPatientNote("");
     setClinicServices([]);
@@ -1030,11 +1030,6 @@ export default function FindClinic() {
 
     if (!appointmentDate || !appointmentTime) {
       showBookingError("Please select appointment date and time.");
-      return;
-    }
-
-    if (!purpose.trim()) {
-      showBookingError("Please choose the service request type.");
       return;
     }
 
@@ -1123,7 +1118,7 @@ export default function FindClinic() {
           clinic_id: selectedClinic.id,
           start_at,
           end_at,
-          purpose: purpose.trim(),
+          purpose: appointmentPurpose,
           symptoms: symptoms.trim(),
           patient_note: patientNote.trim(),
           patient_name_snapshot,
@@ -1154,7 +1149,6 @@ export default function FindClinic() {
 
       setAppointmentDate("");
       setAppointmentTime("");
-      setPurpose(DEFAULT_SERVICE_REQUEST_TYPE);
       setSymptoms("");
       setPatientNote("");
     } catch (err) {
@@ -1685,32 +1679,6 @@ export default function FindClinic() {
                     </div>
                   ) : null}
 
-                  <div className="fc-modal-field">
-                    <label>Service request type</label>
-                    <select
-                      value={purpose}
-                      onChange={(e) => {
-                        setPurpose(e.target.value);
-                        setBookingMessage("");
-                      }}
-                    >
-                      <option value="Consultation for selected services">
-                        Consultation for selected services
-                      </option>
-                      <option value="Follow-up for selected services">
-                        Follow-up for selected services
-                      </option>
-                      <option value="Procedure or treatment request">
-                        Procedure or treatment request
-                      </option>
-                      <option value="Service inquiry before visit">
-                        Service inquiry before visit
-                      </option>
-                      <option value="Other service concern">
-                        Other service concern
-                      </option>
-                    </select>
-                  </div>
                 </section>
 
                 <section className="fc-modal-panel">
