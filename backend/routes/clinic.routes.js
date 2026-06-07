@@ -72,6 +72,61 @@ const PROFILE_UPLOAD_DIR = path.join(UPLOAD_DIR, "profile-pictures");
 const PROFILE_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg", ".webp"]);
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 const PROFILE_IMAGE_MAX_SIZE = 5 * 1024 * 1024;
+const ACTIVE_APPOINTMENT_STATUSES = [
+  "pending",
+  "confirmed",
+  "reschedule_requested",
+];
+
+const findAppointmentOverlapConflict = async ({
+  clinicId,
+  userId,
+  startAt,
+  endAt,
+  excludeAppointmentId,
+}) => {
+  const [[clinicOverlap]] = await db.query(
+    `
+    SELECT id
+    FROM appointments
+    WHERE clinic_id = ?
+      AND id <> COALESCE(?, -1)
+      AND status IN (?)
+      AND start_at IS NOT NULL
+      AND end_at IS NOT NULL
+      AND start_at < ?::timestamp
+      AND end_at > ?::timestamp
+    LIMIT 1
+    `,
+    [clinicId, excludeAppointmentId, ACTIVE_APPOINTMENT_STATUSES, endAt, startAt]
+  );
+
+  if (clinicOverlap) {
+    return "That clinic already has an active appointment during that time.";
+  }
+
+  const [[userOverlap]] = await db.query(
+    `
+    SELECT id
+    FROM appointments
+    WHERE user_id = ?
+      AND id <> COALESCE(?, -1)
+      AND status IN (?)
+      AND start_at IS NOT NULL
+      AND end_at IS NOT NULL
+      AND start_at < ?::timestamp
+      AND end_at > ?::timestamp
+    LIMIT 1
+    `,
+    [userId, excludeAppointmentId, ACTIVE_APPOINTMENT_STATUSES, endAt, startAt]
+  );
+
+  if (userOverlap) {
+    return "The patient already has an active appointment during that time.";
+  }
+
+  return null;
+};
 
 fs.mkdirSync(PROFILE_UPLOAD_DIR, { recursive: true });
 
@@ -2347,9 +2402,9 @@ router.patch("/appointments/:id/status", (req, res) => {
 });
 
 // RESCHEDULE appointment (clinic proposes a new time — patient must accept/decline)
-router.patch("/appointments/:id/reschedule", (req, res) => {
+router.patch("/appointments/:id/reschedule", async (req, res) => {
   const { id } = req.params;
-  const { start_at, end_at, reason } = req.body;
+  const { clinic_id, start_at, end_at, reason } = req.body;
 
   if (!start_at) {
     return res.status(400).json({ message: "start_at is required." });
@@ -2369,43 +2424,82 @@ router.patch("/appointments/:id/reschedule", (req, res) => {
     endDate = new Date(startDate.getTime() + 30 * 60000);
   }
 
+  if (endDate.getTime() <= startDate.getTime()) {
+    return res.status(400).json({
+      message: "Appointment end time must be after start time.",
+    });
+  }
+
   const pad = (n) => String(n).padStart(2, "0");
   const toDatetime = (d) =>
     `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(
       d.getHours()
     )}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 
-  // Store the proposed times and mark status as reschedule_requested
-  // The original start_at/end_at are preserved until the patient accepts
-  const sql = `
-    UPDATE appointments
-    SET
-      proposed_start_at = ?,
-      proposed_end_at = ?,
-      reschedule_reason = ?,
-      reschedule_requested_by = 'clinic',
-      reschedule_requested_at = NOW(),
-      status = 'reschedule_requested',
-      updated_at = NOW()
-    WHERE id = ?
-  `;
+  if (startDate.getTime() <= Date.now()) {
+    return res.status(400).json({
+      message: "Please choose a future date and time for the appointment.",
+    });
+  }
 
-  db.query(
-    sql,
-    [toDatetime(startDate), toDatetime(endDate), reason || null, Number(id)],
-    (err, result) => {
-      if (err) {
-        console.error("RESCHEDULE APPOINTMENT ERROR:", err);
-        return res.status(500).json({ message: err.message });
-      }
+  const proposedStartAt = toDatetime(startDate);
+  const proposedEndAt = toDatetime(endDate);
 
-      if (!result.affectedRows) {
-        return res.status(404).json({ message: "Appointment not found." });
-      }
+  try {
+    const [[appointment]] = await db.query(
+      `
+      SELECT id, user_id, clinic_id
+      FROM appointments
+      WHERE id = ?
+      `,
+      [Number(id)]
+    );
 
-      res.json({ message: "Reschedule request sent successfully." });
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found." });
     }
-  );
+
+    if (clinic_id && Number(appointment.clinic_id) !== Number(clinic_id)) {
+      return res.status(403).json({ message: "Appointment does not belong to this clinic." });
+    }
+
+    const overlapConflict = await findAppointmentOverlapConflict({
+      clinicId: appointment.clinic_id,
+      userId: appointment.user_id,
+      startAt: proposedStartAt,
+      endAt: proposedEndAt,
+      excludeAppointmentId: appointment.id,
+    });
+
+    if (overlapConflict) {
+      return res.status(409).json({ message: overlapConflict });
+    }
+
+    const [result] = await db.query(
+      `
+      UPDATE appointments
+      SET
+        proposed_start_at = ?,
+        proposed_end_at = ?,
+        reschedule_reason = ?,
+        reschedule_requested_by = 'clinic',
+        reschedule_requested_at = NOW(),
+        status = 'reschedule_requested',
+        updated_at = NOW()
+      WHERE id = ?
+      `,
+      [proposedStartAt, proposedEndAt, reason || null, Number(id)]
+    );
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ message: "Appointment not found." });
+    }
+
+    res.json({ message: "Reschedule request sent successfully." });
+  } catch (err) {
+    console.error("RESCHEDULE APPOINTMENT ERROR:", err);
+    res.status(500).json({ message: err.message || "Failed to reschedule appointment." });
+  }
 });
 
 module.exports = router;

@@ -18,6 +18,7 @@ import {
   Star,
   Stethoscope,
   UserRound,
+  AlertTriangle,
 } from "lucide-react";
 import { apiUrl } from "../sharedBackendFetch";
 
@@ -829,6 +830,12 @@ function BookingModal({
   const [loadingServices, setLoadingServices] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [errorModalMessage, setErrorModalMessage] = useState<string>("");
+
+  const showBookingError = (message: string) => {
+    setError(message);
+    setErrorModalMessage(message);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -845,7 +852,7 @@ function BookingModal({
         setClinics(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
-        setError("Failed to load clinics.");
+        showBookingError("Failed to load clinics.");
       } finally {
         setLoadingClinics(false);
       }
@@ -877,7 +884,7 @@ function BookingModal({
         );
       } catch (err) {
         console.error(err);
-        setError("Failed to load clinic services.");
+        showBookingError("Failed to load clinic services.");
       } finally {
         setLoadingServices(false);
       }
@@ -925,6 +932,7 @@ function BookingModal({
     setGuestName("");
     setGuestPhone("");
     setError("");
+    setErrorModalMessage("");
     setServices([]);
   };
 
@@ -938,17 +946,17 @@ function BookingModal({
       setError("");
 
       if (!userId) {
-        setError("No logged-in user found.");
+        showBookingError("No logged-in user found.");
         return;
       }
 
       if (!clinicId || !serviceId || !appointmentDate || !appointmentTime) {
-        setError("Please complete clinic, service, date, and time.");
+        showBookingError("Please complete clinic, service, date, and time.");
         return;
       }
 
       if (isPastAppointmentTime(appointmentDate, appointmentTime)) {
-        setError("Please choose a future date and time.");
+        showBookingError("Please choose a future date and time.");
         return;
       }
 
@@ -958,29 +966,31 @@ function BookingModal({
         : toPhilippineLocalMobileNumber(guestPhone);
 
       if (!patientName) {
-        setError(bookingForSelf
-          ? "Your account has no name on file. Please update your profile."
-          : "Please enter the patient's name.");
+        showBookingError(
+          bookingForSelf
+            ? "Your account has no name on file. Please update your profile."
+            : "Please enter the patient's name."
+        );
         return;
       }
 
       if (!bookingForSelf && !isValidPhilippineMobileNumber(patientPhone)) {
-        setError("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
+        showBookingError("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
         return;
       }
 
       if (!selectedClinic || !selectedService) {
-        setError("Please select a valid clinic and service.");
+        showBookingError("Please select a valid clinic and service.");
         return;
       }
 
       if (selectedClinicDisabledReason) {
-        setError(selectedClinicDisabledReason);
+        showBookingError(selectedClinicDisabledReason);
         return;
       }
 
       if (selectedScheduleMessage) {
-        setError(selectedScheduleMessage);
+        showBookingError(selectedScheduleMessage);
         return;
       }
 
@@ -1050,9 +1060,9 @@ function BookingModal({
           friendlyMessage =
             "This clinic is not approved or active for booking yet.";
         } else if (
-          serverMessage
-            .toLowerCase()
-            .includes("already has an appointment at that time")
+          serverMessage.toLowerCase().includes("already has an appointment") ||
+          serverMessage.toLowerCase().includes("active appointment during that time") ||
+          serverMessage.toLowerCase().includes("time slot already")
         ) {
           friendlyMessage =
             "That time slot is already taken. Please choose another schedule.";
@@ -1080,7 +1090,7 @@ function BookingModal({
           friendlyMessage = `Failed to book appointment. Server returned ${res.status}.`;
         }
 
-        setError(friendlyMessage);
+        showBookingError(friendlyMessage);
         return;
       }
 
@@ -1090,9 +1100,9 @@ function BookingModal({
       console.error("BOOKING CATCH:", err);
 
       if (err instanceof Error && err.message.trim()) {
-        setError(err.message);
+        showBookingError(err.message);
       } else {
-        setError("Something went wrong while booking the appointment.");
+        showBookingError("Something went wrong while booking the appointment.");
       }
     } finally {
       setSubmitting(false);
@@ -1102,8 +1112,9 @@ function BookingModal({
   if (!open) return null;
 
   return (
-    <div className="booking-modal-overlay front">
-      <div className="booking-modal">
+    <>
+      <div className="booking-modal-overlay front">
+        <div className="booking-modal">
         <div className="booking-modal-header">
           <div>
             <h2>Book Appointment</h2>
@@ -1339,16 +1350,45 @@ function BookingModal({
             className="book-btn"
             onClick={handleSubmit}
             disabled={
-              submitting ||
-              Boolean(selectedClinicDisabledReason) ||
-              Boolean(selectedScheduleMessage)
+              submitting
             }
           >
             {submitting ? "Sending..." : "Send Request"}
           </button>
         </div>
+        </div>
       </div>
-    </div>
+
+      {errorModalMessage && (
+        <div
+          className="booking-modal-overlay front booking-error-dialog-overlay"
+          onClick={() => setErrorModalMessage("")}
+        >
+          <div
+            className="booking-modal small-modal booking-error-dialog"
+            onClick={(event) => event.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="booking-error-dialog-title"
+          >
+            <div className="booking-error-dialog-icon">
+              <AlertTriangle size={34} strokeWidth={2.4} />
+            </div>
+            <h2 id="booking-error-dialog-title">Unable to Continue</h2>
+            <p>{errorModalMessage}</p>
+            <div className="booking-modal-actions">
+              <button
+                type="button"
+                className="book-btn"
+                onClick={() => setErrorModalMessage("")}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -1378,6 +1418,7 @@ function UserAppointmentsContent({
   const [rescheduleSubmitting, setRescheduleSubmitting] = useState(false);
 
   const [actionMessage, setActionMessage] = useState("");
+  const [actionErrorModalMessage, setActionErrorModalMessage] = useState("");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackAppointment, setFeedbackAppointment] = useState<Appointment | null>(null);
   const [feedbackRating, setFeedbackRating] = useState(5);
@@ -1413,10 +1454,21 @@ function UserAppointmentsContent({
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
   const userId = currentUser?.id;
 
+  const showActionError = (message: string) => {
+    setActionMessage("");
+    setActionErrorModalMessage(message);
+  };
+
+  const showFeedbackError = (message: string) => {
+    setFeedbackError(message);
+    setActionErrorModalMessage(message);
+  };
+
   const loadAppointments = async (silent = false) => {
     try {
       if (!userId) {
         setError("No logged-in user found.");
+        if (!silent) showActionError("No logged-in user found.");
         setAppointments([]);
         if (!silent) setLoading(false);
         return;
@@ -1442,7 +1494,9 @@ function UserAppointmentsContent({
     } catch (err) {
       console.error("Failed to load appointments:", err);
       if (!silent) {
-        setError("Failed to load appointments.");
+        const message = "Failed to load appointments.";
+        setError(message);
+        showActionError(message);
         setAppointments([]);
       }
     } finally {
@@ -1647,12 +1701,12 @@ function UserAppointmentsContent({
 
   const openFeedbackModal = (appointment: Appointment) => {
     if (appointment.status !== "completed") {
-      setActionMessage("You can rate a clinic after the appointment is completed.");
+      showActionError("You can rate a clinic after the appointment is completed.");
       return;
     }
 
     if (appointment.feedback_id) {
-      setActionMessage("You already rated this clinic for this appointment.");
+      showActionError("You already rated this clinic for this appointment.");
       return;
     }
 
@@ -1666,7 +1720,7 @@ function UserAppointmentsContent({
 
   const openCancelModal = (appointment: Appointment) => {
     if (!canCancelAppointment(appointment)) {
-      setActionMessage(
+      showActionError(
         "Only pending, confirmed, or reschedule-requested appointments can be cancelled."
       );
       return;
@@ -1683,7 +1737,7 @@ function UserAppointmentsContent({
 
   const openRescheduleModal = (appointment: Appointment) => {
     if (!canRescheduleAppointment(appointment)) {
-      setActionMessage("Only pending or confirmed appointments can be rescheduled.");
+      showActionError("Only pending or confirmed appointments can be rescheduled.");
       return;
     }
 
@@ -1717,7 +1771,7 @@ function UserAppointmentsContent({
 
     try {
       if (!userId) {
-        setActionMessage("No logged-in user found.");
+        showActionError("No logged-in user found.");
         return;
       }
 
@@ -1749,7 +1803,7 @@ function UserAppointmentsContent({
       setActionMessage("Appointment cancelled successfully.");
       await loadAppointments(true);
     } catch (err) {
-      setActionMessage(
+      showActionError(
         err instanceof Error ? err.message : "Failed to cancel appointment."
       );
     } finally {
@@ -1761,7 +1815,7 @@ function UserAppointmentsContent({
     if (!feedbackAppointment) return;
 
     if (!userId) {
-      setFeedbackError("No logged-in user found.");
+      showFeedbackError("No logged-in user found.");
       return;
     }
 
@@ -1793,7 +1847,7 @@ function UserAppointmentsContent({
       setActionMessage("Thank you. Your clinic rating was saved.");
       await loadAppointments(true);
     } catch (err) {
-      setFeedbackError(
+      showFeedbackError(
         err instanceof Error ? err.message : "Failed to save clinic feedback."
       );
     } finally {
@@ -1806,7 +1860,7 @@ function UserAppointmentsContent({
 
     try {
       if (!userId) {
-        setActionMessage("No logged-in user found.");
+        showActionError("No logged-in user found.");
         return;
       }
 
@@ -1876,7 +1930,7 @@ function UserAppointmentsContent({
       setActionMessage("Appointment rescheduled successfully.");
       await loadAppointments(true);
     } catch (err) {
-      setActionMessage(
+      showActionError(
         err instanceof Error ? err.message : "Failed to reschedule appointment."
       );
     } finally {
@@ -1890,7 +1944,7 @@ function UserAppointmentsContent({
   ) => {
     try {
       if (!userId) {
-        setActionMessage("No logged-in user found.");
+        showActionError("No logged-in user found.");
         return;
       }
 
@@ -1924,7 +1978,7 @@ function UserAppointmentsContent({
       );
       await loadAppointments(true);
     } catch (err) {
-      setActionMessage(
+      showActionError(
         err instanceof Error
           ? err.message
           : "Failed to update reschedule request."
@@ -2609,6 +2663,36 @@ function UserAppointmentsContent({
         }}
         userId={userId || 0}
       />
+
+      {actionErrorModalMessage && (
+        <div
+          className="booking-modal-overlay front booking-error-dialog-overlay"
+          onClick={() => setActionErrorModalMessage("")}
+        >
+          <div
+            className="booking-modal small-modal booking-error-dialog"
+            onClick={(event) => event.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="appointment-error-dialog-title"
+          >
+            <div className="booking-error-dialog-icon">
+              <AlertTriangle size={34} strokeWidth={2.4} />
+            </div>
+            <h2 id="appointment-error-dialog-title">Unable to Continue</h2>
+            <p>{actionErrorModalMessage}</p>
+            <div className="booking-modal-actions">
+              <button
+                type="button"
+                className="book-btn"
+                onClick={() => setActionErrorModalMessage("")}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {feedbackOpen && feedbackAppointment && (
         <div className="booking-modal-overlay">

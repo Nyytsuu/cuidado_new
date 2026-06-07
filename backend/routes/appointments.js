@@ -22,6 +22,12 @@ const DAYS_BY_INDEX = [
   "Saturday",
 ];
 
+const ACTIVE_APPOINTMENT_STATUSES = [
+  "pending",
+  "confirmed",
+  "reschedule_requested",
+];
+
 let appointmentRescheduleSchemaPromise = null;
 let clinicFeedbackSchemaPromise = null;
 let clinicNotificationsSchemaPromise = null;
@@ -139,6 +145,47 @@ const ensureAppointmentsSchema = async () => {
           `ALTER TABLE appointments ALTER COLUMN ${col} DROP NOT NULL`
         ).catch(() => { /* column doesn't exist or already nullable — ignore */ });
       }
+
+      // Time-slot safety is enforced by overlap checks, not by same-day unique
+      // indexes. Drop legacy unique rules on appointments so different time
+      // windows on the same day can be booked.
+      await pool.query(`
+        DO $$
+        DECLARE item record;
+        BEGIN
+          FOR item IN
+            SELECT conname
+            FROM pg_constraint
+            WHERE conrelid = 'appointments'::regclass
+              AND contype = 'u'
+          LOOP
+            EXECUTE format('ALTER TABLE appointments DROP CONSTRAINT IF EXISTS %I', item.conname);
+          END LOOP;
+        END $$;
+      `).catch(() => {});
+
+      await pool.query(`
+        DO $$
+        DECLARE item record;
+        BEGIN
+          FOR item IN
+            SELECT indexname
+            FROM pg_indexes
+            WHERE schemaname = current_schema()
+              AND tablename = 'appointments'
+              AND indexdef ILIKE 'CREATE UNIQUE INDEX%'
+              AND indexname NOT IN (
+                SELECT index_class.relname
+                FROM pg_constraint constraint_row
+                JOIN pg_class index_class ON index_class.oid = constraint_row.conindid
+                WHERE constraint_row.conrelid = 'appointments'::regclass
+                  AND constraint_row.contype = 'p'
+              )
+          LOOP
+            EXECUTE format('DROP INDEX IF EXISTS %I', item.indexname);
+          END LOOP;
+        END $$;
+      `).catch(() => {});
     })().catch((error) => {
       appointmentsSchemaPromise = null;
       throw error;
@@ -339,12 +386,70 @@ const parseLocalDateTime = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+const findActiveAppointmentOverlap = async (
+  connection,
+  {
+    clinicId,
+    userId = null,
+    startAt,
+    endAt,
+    excludeAppointmentId = null,
+  }
+) => {
+  const statusList = ACTIVE_APPOINTMENT_STATUSES;
+
+  const [[clinicOverlap]] = await connection.query(
+    `
+    SELECT id
+    FROM appointments
+    WHERE clinic_id = ?
+      AND id <> COALESCE(?, -1)
+      AND status IN (?)
+      AND start_at IS NOT NULL
+      AND end_at IS NOT NULL
+      AND start_at < ?::timestamp
+      AND end_at > ?::timestamp
+    LIMIT 1
+    `,
+    [clinicId, excludeAppointmentId, statusList, endAt, startAt]
+  );
+
+  if (clinicOverlap) {
+    return "That clinic already has an active appointment during that time.";
+  }
+
+  if (!userId) return null;
+
+  const [[userOverlap]] = await connection.query(
+    `
+    SELECT id
+    FROM appointments
+    WHERE user_id = ?
+      AND id <> COALESCE(?, -1)
+      AND status IN (?)
+      AND start_at IS NOT NULL
+      AND end_at IS NOT NULL
+      AND start_at < ?::timestamp
+      AND end_at > ?::timestamp
+    LIMIT 1
+    `,
+    [userId, excludeAppointmentId, statusList, endAt, startAt]
+  );
+
+  if (userOverlap) {
+    return "You already have an active appointment during that time.";
+  }
+
+  return null;
+};
+
 const getScheduleConflict = async (
   connection,
   clinicId,
   startAt,
   endAt,
-  clinic
+  clinic,
+  options = {}
 ) => {
   // pg driver returns TIMESTAMP columns as JS Date objects, not strings.
   // Normalise to "YYYY-MM-DD HH:MM:SS" so the slice-based parsing below works
@@ -432,6 +537,18 @@ const getScheduleConflict = async (
       timeToMinutes(endTime) > timeToMinutes(closingTime))
   ) {
     return `Selected time is outside clinic hours for ${dayName} (${openingTime} - ${closingTime}).`;
+  }
+
+  const overlapConflict = await findActiveAppointmentOverlap(connection, {
+    clinicId,
+    userId: options.userId,
+    startAt: startAtStr,
+    endAt: endAtStr,
+    excludeAppointmentId: options.excludeAppointmentId,
+  });
+
+  if (overlapConflict) {
+    return overlapConflict;
   }
 
   return null;
@@ -580,7 +697,8 @@ router.post("/book", async (req, res) => {
       clinic_id,
       start_at,
       end_at,
-      clinic
+      clinic,
+      { userId: user_id }
     );
 
     if (scheduleConflict) {
@@ -716,9 +834,9 @@ router.post("/book", async (req, res) => {
   await connection.rollback();
   console.error("Book appointment error:", err);
 
-  if (err.code === "ER_DUP_ENTRY") {
+  if (err.code === "ER_DUP_ENTRY" || err.code === "23505") {
     return res.status(409).json({
-      message: "That clinic already has an appointment at that time",
+      message: "That time slot already has an active appointment.",
       error_code: err.code,
       error_detail: err.sqlMessage || err.message,
     });
@@ -878,7 +996,11 @@ router.patch("/:id/reschedule-response", async (req, res) => {
         appointment.clinic_id,
         appointment.proposed_start_at,
         appointment.proposed_end_at,
-        clinic
+        clinic,
+        {
+          userId: appointment.user_id,
+          excludeAppointmentId: appointment.id,
+        }
       );
 
       if (scheduleConflict) {
@@ -1016,7 +1138,11 @@ router.patch("/:id/reschedule", async (req, res) => {
       appointment.clinic_id,
       start_at,
       end_at,
-      clinic
+      clinic,
+      {
+        userId: appointment.user_id,
+        excludeAppointmentId: appointment.id,
+      }
     );
 
     if (scheduleConflict) {

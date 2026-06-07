@@ -2,7 +2,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./ClinicAppoint.css";
 import SidebarClinic from "./SidebarClinic";
 import ClinicScheduleAside from "./ClinicScheduleAside";
-import { FaCalendarAlt, FaCheck, FaEye, FaTimes, FaArchive, FaBoxOpen } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaCheck,
+  FaEye,
+  FaTimes,
+  FaArchive,
+  FaBoxOpen,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 type AppointmentStatus =
@@ -150,6 +158,7 @@ export default function ClinicAppoint() {
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [savingAction, setSavingAction] = useState(false);
   const [rescheduleSuccessOpen, setRescheduleSuccessOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
 
   /* ── confirm / reject guard modals ── */
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
@@ -165,6 +174,10 @@ export default function ClinicAppoint() {
   const [clinicBlockedDates, setClinicBlockedDates] = useState<ClinicBlockedDate[]>([]);
 
   const navigate = useNavigate();
+
+  const showErrorModal = (message: string) => {
+    setErrorModalMessage(message);
+  };
 
   const mapDbStatusToUi = (
     status: ApiAppointmentRow["status"]
@@ -436,7 +449,7 @@ export default function ClinicAppoint() {
       }
     } catch (error) {
       console.error("Update appointment status error:", error);
-      alert(`Failed to update appointment: ${String(error)}`);
+      showErrorModal(`Failed to update appointment: ${String(error)}`);
     } finally {
       setSavingAction(false);
     }
@@ -482,7 +495,7 @@ export default function ClinicAppoint() {
       await loadAppointments(true);
     } catch (error) {
       console.error("Reject appointment error:", error);
-      alert(`Failed to reject appointment: ${String(error)}`);
+      showErrorModal(`Failed to reject appointment: ${String(error)}`);
     } finally {
       setSavingAction(false);
       setPendingActionRow(null);
@@ -498,12 +511,12 @@ export default function ClinicAppoint() {
     if (!selectedAppointment) return;
 
     if (!rescheduleForm.date || !rescheduleForm.time) {
-      alert("Please enter both date and time.");
+      showErrorModal("Please enter both date and time.");
       return;
     }
 
     if (rescheduleError) {
-      alert(rescheduleError);
+      showErrorModal(rescheduleError);
       return;
     }
 
@@ -512,7 +525,7 @@ export default function ClinicAppoint() {
     );
 
     if (Number.isNaN(startDate.getTime())) {
-      alert("Please enter a valid appointment date and time.");
+      showErrorModal("Please enter a valid appointment date and time.");
       return;
     }
 
@@ -562,7 +575,7 @@ export default function ClinicAppoint() {
       setRescheduleSuccessOpen(true);
     } catch (error) {
       console.error("Reschedule error:", error);
-      alert(`Failed to reschedule appointment: ${String(error)}`);
+      showErrorModal(`Failed to reschedule appointment: ${String(error)}`);
     } finally {
       setSavingAction(false);
     }
@@ -1191,7 +1204,7 @@ export default function ClinicAppoint() {
                     type="button"
                     className="pill pill-success"
                     onClick={handleRescheduleSave}
-                    disabled={savingAction || Boolean(rescheduleError)}
+                    disabled={savingAction}
                     title={rescheduleError || undefined}
                   >
                     {savingAction ? "Sending..." : "Send Request"}
@@ -1338,6 +1351,34 @@ export default function ClinicAppoint() {
               onClick={() => setRescheduleSuccessOpen(false)}
             >
               Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {errorModalMessage && (
+        <div
+          className="appoint-modal-overlay success-overlay"
+          onClick={() => setErrorModalMessage("")}
+        >
+          <div
+            className="appoint-success-modal appoint-error-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="clinic-appointment-error-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="appoint-success-icon appoint-error-icon">
+              <FaExclamationTriangle />
+            </div>
+            <h3 id="clinic-appointment-error-title">Unable to Continue</h3>
+            <p>{errorModalMessage}</p>
+            <button
+              type="button"
+              className="pill pill-danger"
+              onClick={() => setErrorModalMessage("")}
+            >
+              OK
             </button>
           </div>
         </div>
