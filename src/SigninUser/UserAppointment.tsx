@@ -53,6 +53,8 @@ type Appointment = {
   reschedule_reason?: string | null;
   reschedule_requested_by?: string | null;
   reschedule_requested_at?: string | null;
+  proposed_services_json?: string | null;
+  proposed_purpose?: string | null;
   cancelled_at?: string | null;
   cancelled_by?: "patient" | "clinic" | "admin" | null;
   cancel_reason?: string | null;
@@ -233,6 +235,13 @@ function isActiveAppointment(appointment: Appointment): boolean {
   );
 }
 
+function isPatientServiceChangeRequest(appointment: Appointment): boolean {
+  return (
+    appointment.status === "reschedule_requested" &&
+    appointment.reschedule_requested_by === "patient"
+  );
+}
+
 function toMySqlDateTime(date: string, time: string): string {
   return `${date} ${time}:00`;
 }
@@ -317,6 +326,23 @@ function addMinutes(date: string, time: string, minutes: number): string {
   const min = String(base.getMinutes()).padStart(2, "0");
   const ss = String(base.getSeconds()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
+function formatServicePrice(value: string | number | null | undefined): string {
+  const amount = Number(value || 0);
+  return amount > 0 ? `PHP ${amount.toFixed(2)}` : "No listed fee";
+}
+
+function formatServiceDuration(value: string | number | null | undefined): string {
+  const minutes = Number(value || 0);
+  return minutes > 0 ? `${minutes} min` : "Duration varies";
+}
+
+function getServiceDurationMinutes(
+  value: string | number | null | undefined
+): number {
+  const minutes = Number(value || 0);
+  return minutes > 0 ? minutes : 30;
 }
 
 function toMinutes(time: string): number {
@@ -552,19 +578,24 @@ function AppointmentViewModal({
   onClose,
   onReschedule,
   onCancel,
+  onServiceChange,
 }: {
   appointment: Appointment | null;
   onClose: () => void;
   onReschedule: (appointment: Appointment) => void;
   onCancel: (appointment: Appointment) => void;
+  onServiceChange: (appointment: Appointment) => void;
 }) {
   if (!appointment) return null;
 
   const canReschedule =
     appointment.status === "pending" || appointment.status === "confirmed";
+  const canChangeServices =
+    appointment.status === "pending" || appointment.status === "confirmed";
   const canCancel = ["pending", "confirmed", "reschedule_requested"].includes(
     appointment.status
   );
+  const patientServiceChange = isPatientServiceChangeRequest(appointment);
   const displayStart = getTimelineStartAt(appointment);
 
   return (
@@ -720,18 +751,28 @@ function AppointmentViewModal({
           )}
 
           {appointment.status === "reschedule_requested" &&
-            appointment.proposed_start_at && (
+            (appointment.proposed_start_at || patientServiceChange) && (
               <>
                 <div className="appt-view-divider" />
                 <section className="appt-view-section appt-view-section--warning">
-                  <p className="appt-view-section-label">Clinic proposed a new schedule</p>
-                  <div className="appt-view-row">
-                    <CalendarDays size={16} className="appt-view-icon" />
-                    <span>
-                      {formatDate(appointment.proposed_start_at)} at{" "}
-                      {formatTime(appointment.proposed_start_at)}
-                    </span>
-                  </div>
+                  <p className="appt-view-section-label">
+                    {patientServiceChange
+                      ? "Service change pending clinic approval"
+                      : "Clinic proposed a new schedule"}
+                  </p>
+                  {patientServiceChange ? (
+                    <div className="appt-view-note-row">
+                      <p>{appointment.proposed_purpose || appointment.reschedule_reason}</p>
+                    </div>
+                  ) : (
+                    <div className="appt-view-row">
+                      <CalendarDays size={16} className="appt-view-icon" />
+                      <span>
+                        {formatDate(appointment.proposed_start_at)} at{" "}
+                        {formatTime(appointment.proposed_start_at)}
+                      </span>
+                    </div>
+                  )}
                   {appointment.reschedule_reason && (
                     <p className="appt-view-muted">{appointment.reschedule_reason}</p>
                   )}
@@ -760,8 +801,22 @@ function AppointmentViewModal({
             )}
         </div>
 
-        {(canReschedule || canCancel) && (
+        {(canReschedule || canChangeServices || canCancel) && (
           <div className="appt-view-actions">
+            {canChangeServices && (
+              <button
+                type="button"
+                className="appt-view-action-btn"
+                onClick={() => {
+                  onClose();
+                  onServiceChange(appointment);
+                }}
+              >
+                {appointment.status === "confirmed"
+                  ? "Request Service Change"
+                  : "Edit Services"}
+              </button>
+            )}
             {canReschedule && (
               <button
                 type="button"
@@ -1392,6 +1447,264 @@ function BookingModal({
   );
 }
 
+function ServiceChangeModal({
+  appointment,
+  userId,
+  onClose,
+  onSaved,
+}: {
+  appointment: Appointment | null;
+  userId: number;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
+  const [services, setServices] = useState<ClinicService[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
+
+  useEffect(() => {
+    if (!appointment) return;
+
+    const loadServices = async () => {
+      try {
+        setLoadingServices(true);
+        setErrorModalMessage("");
+
+        const res = await fetch(
+          apiUrl(`/api/clinic/services?clinic_id=${appointment.clinic_id}`)
+        );
+        const data: ClinicService[] = await res.json();
+
+        if (!res.ok) {
+          throw new Error("Failed to load clinic services.");
+        }
+
+        const activeServices = Array.isArray(data)
+          ? data.filter((service) => Number(service.is_active) === 1)
+          : [];
+        const currentServiceIds = new Set(
+          (appointment.services || [])
+            .map((service) => String(service.service_id))
+            .filter(Boolean)
+        );
+        const initiallySelected = activeServices
+          .filter((service) => currentServiceIds.has(String(service.id)))
+          .map((service) => String(service.id));
+
+        setServices(activeServices);
+        setSelectedServiceIds(
+          initiallySelected.length > 0
+            ? initiallySelected
+            : activeServices.length > 0
+            ? [String(activeServices[0].id)]
+            : []
+        );
+      } catch (err) {
+        setServices([]);
+        setSelectedServiceIds([]);
+        setErrorModalMessage(
+          err instanceof Error ? err.message : "Failed to load clinic services."
+        );
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+
+    void loadServices();
+  }, [appointment]);
+
+  if (!appointment) return null;
+
+  const selectedServices = services.filter((service) =>
+    selectedServiceIds.includes(String(service.id))
+  );
+  const totalDuration = selectedServices.reduce(
+    (sum, service) => sum + getServiceDurationMinutes(service.duration_minutes),
+    0
+  );
+  const isConfirmed = appointment.status === "confirmed";
+
+  const toggleService = (serviceId: string) => {
+    setSelectedServiceIds((current) =>
+      current.includes(serviceId)
+        ? current.filter((id) => id !== serviceId)
+        : [...current, serviceId]
+    );
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedServices.length) {
+      setErrorModalMessage("Please select at least one clinic service.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setErrorModalMessage("");
+
+      const res = await fetch(apiUrl(`/api/appointments/${appointment.id}/services`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          services: selectedServices.map((service) => ({
+            service_id: service.id,
+          })),
+        }),
+      });
+
+      const raw = await res.text();
+      const data = raw ? JSON.parse(raw) : {};
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update appointment services.");
+      }
+
+      onSaved(
+        data.message ||
+          (isConfirmed
+            ? "Service change request sent to the clinic."
+            : "Appointment services updated.")
+      );
+      onClose();
+    } catch (err) {
+      setErrorModalMessage(
+        err instanceof Error ? err.message : "Failed to update appointment services."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="booking-modal-overlay front">
+      <div className="booking-modal small-modal">
+        <div className="booking-modal-header">
+          <div>
+            <h2>{isConfirmed ? "Request Service Change" : "Edit Services"}</h2>
+            <p>
+              {isConfirmed
+                ? "The clinic must approve service changes for confirmed appointments."
+                : "Update the services before the clinic confirms your request."}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="modal-close-btn"
+            onClick={onClose}
+            aria-label="Close service change modal"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="booking-field full-width">
+          <label>Services</label>
+          {loadingServices ? (
+            <div className="booking-service-empty">Loading services...</div>
+          ) : services.length > 0 ? (
+            <div className="booking-service-picker" role="group" aria-label="Appointment services">
+              {services.map((service) => {
+                const serviceId = String(service.id);
+                const selected = selectedServiceIds.includes(serviceId);
+
+                return (
+                  <label
+                    className={`booking-service-option ${selected ? "selected" : ""}`}
+                    key={service.id}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected}
+                      onChange={() => toggleService(serviceId)}
+                      disabled={submitting}
+                    />
+                    <span>
+                      <strong>{service.name}</strong>
+                      <small>
+                        {formatServicePrice(service.price)} -{" "}
+                        {formatServiceDuration(service.duration_minutes)}
+                      </small>
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="booking-service-empty">
+              This clinic has no active services listed.
+            </div>
+          )}
+        </div>
+
+        {selectedServices.length > 0 && (
+          <div className="booking-summary-box">
+            <h4>Selected Services</h4>
+            <p>{selectedServices.map((service) => service.name).join(", ")}</p>
+            <small>
+              Total estimated time: {formatServiceDuration(totalDuration || 30)}
+            </small>
+          </div>
+        )}
+
+        <div className="booking-modal-actions">
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="book-btn"
+            onClick={handleSubmit}
+            disabled={submitting || loadingServices}
+          >
+            {submitting
+              ? "Saving..."
+              : isConfirmed
+              ? "Send Request"
+              : "Save Services"}
+          </button>
+        </div>
+      </div>
+
+      {errorModalMessage && (
+        <div
+          className="booking-modal-overlay front booking-error-dialog-overlay"
+          onClick={() => setErrorModalMessage("")}
+        >
+          <div
+            className="booking-modal small-modal booking-error-dialog"
+            onClick={(event) => event.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+          >
+            <div className="booking-error-dialog-icon">
+              <AlertTriangle size={34} strokeWidth={2.4} />
+            </div>
+            <h2>Unable to Continue</h2>
+            <p>{errorModalMessage}</p>
+            <div className="booking-modal-actions">
+              <button
+                type="button"
+                className="book-btn"
+                onClick={() => setErrorModalMessage("")}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function UserAppointmentsContent({
   searchTerm,
   setSearchTerm,
@@ -1401,6 +1714,8 @@ function UserAppointmentsContent({
   const [error, setError] = useState<string>("");
   const [bookingOpen, setBookingOpen] = useState<boolean>(false);
   const [viewModalAppointment, setViewModalAppointment] =
+    useState<Appointment | null>(null);
+  const [serviceChangeAppointment, setServiceChangeAppointment] =
     useState<Appointment | null>(null);
 
   const [selectedAppointment, setSelectedAppointment] =
@@ -1574,7 +1889,8 @@ function UserAppointmentsContent({
   }, [activeTab, pastAppointments, allAppointments, upcomingAppointments]);
 
   const needsAppointmentResponse = (appointment: Appointment) =>
-    appointment.status === "reschedule_requested";
+    appointment.status === "reschedule_requested" &&
+    appointment.reschedule_requested_by !== "patient";
 
   const isRecentAppointment = (appointment: Appointment) => {
     const recentAnchor = parseDateTime(
@@ -2454,11 +2770,19 @@ function UserAppointmentsContent({
                         <div className="appointment-reschedule-row">
                           <div className="reschedule-row-icon">🗓️</div>
                           <div className="reschedule-row-body">
-                            <strong>Clinic proposed a new schedule</strong>
-                            <span>
-                              {formatDate(item.proposed_start_at)} at{" "}
-                              {formatTime(item.proposed_start_at)}
-                            </span>
+                            <strong>
+                              {isPatientServiceChangeRequest(item)
+                                ? "Service change pending clinic approval"
+                                : "Clinic proposed a new schedule"}
+                            </strong>
+                            {isPatientServiceChangeRequest(item) ? (
+                              <span>{item.proposed_purpose || item.reschedule_reason}</span>
+                            ) : (
+                              <span>
+                                {formatDate(item.proposed_start_at)} at{" "}
+                                {formatTime(item.proposed_start_at)}
+                              </span>
+                            )}
                             {item.reschedule_reason && (
                               <small>{item.reschedule_reason}</small>
                             )}
@@ -2482,6 +2806,15 @@ function UserAppointmentsContent({
                         </button>
 
                         {item.status === "reschedule_requested" ? (
+                          isPatientServiceChangeRequest(item) ? (
+                            <button
+                              className="mini-action-btn"
+                              type="button"
+                              onClick={() => setViewModalAppointment(item)}
+                            >
+                              Pending Clinic Approval
+                            </button>
+                          ) : (
                           <>
                             <button
                               className="mini-action-btn accept"
@@ -2505,6 +2838,7 @@ function UserAppointmentsContent({
                               {respondingId === item.id ? "Saving…" : "Decline and Cancel"}
                             </button>
                           </>
+                          )
                         ) : item.status === "completed" ? (
                           <button
                             className={`mini-action-btn feedback ${
@@ -2525,6 +2859,18 @@ function UserAppointmentsContent({
                           </button>
                         ) : (
                           <>
+                            {(item.status === "pending" || item.status === "confirmed") && (
+                              <button
+                                className="mini-action-btn"
+                                type="button"
+                                onClick={() => setServiceChangeAppointment(item)}
+                              >
+                                {item.status === "confirmed"
+                                  ? "Request Services"
+                                  : "Edit Services"}
+                              </button>
+                            )}
+
                             <button
                               className="mini-action-btn"
                               type="button"
@@ -2649,6 +2995,21 @@ function UserAppointmentsContent({
         onCancel={(appointment) => {
           setViewModalAppointment(null);
           openCancelModal(appointment);
+        }}
+        onServiceChange={(appointment) => {
+          setViewModalAppointment(null);
+          setServiceChangeAppointment(appointment);
+        }}
+      />
+
+      <ServiceChangeModal
+        appointment={serviceChangeAppointment}
+        userId={userId || 0}
+        onClose={() => setServiceChangeAppointment(null)}
+        onSaved={(message) => {
+          setServiceChangeAppointment(null);
+          setActionMessage(message);
+          void loadAppointments();
         }}
       />
 

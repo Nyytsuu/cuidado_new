@@ -797,6 +797,7 @@
 }
 
 .fc-modal-selected-slot,
+.fc-service-summary,
 .fc-service-preview,
 .fc-patient-summary {
   border: 1px solid #dce8e9;
@@ -857,6 +858,161 @@
 
 .fc-service-preview.muted {
   background: #f5f8f8;
+}
+
+.fc-service-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.fc-service-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fc-service-field-header label {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fc-service-field-header small {
+  color: #60717d;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fc-service-picker {
+  display: grid;
+  gap: 8px;
+  max-height: 190px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-gutter: stable;
+}
+
+.fc-service-option {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 11px;
+  border: 1px solid #dce8e9;
+  border-radius: 12px;
+  background: #f9fcfc;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.fc-service-option:hover,
+.fc-service-option.selected {
+  border-color: #0f8f83;
+  background: #eefcf9;
+}
+
+.fc-service-option.selected {
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.1);
+}
+
+.fc-service-option input {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0;
+  accent-color: #0f8f83;
+  cursor: pointer;
+}
+
+.fc-service-option-main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fc-service-option-main strong {
+  color: #203241;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.fc-service-option-main small {
+  color: #60717d;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.fc-service-summary {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  padding: 11px 12px;
+  margin: -2px 0 12px;
+}
+
+.fc-service-summary > svg {
+  margin-top: 2px;
+  color: #2f8b91;
+}
+
+.fc-service-summary > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.fc-service-summary > span strong {
+  color: #203241;
+  font-size: 13px;
+}
+
+.fc-service-summary > span small {
+  color: #60717d;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.fc-service-summary ul {
+  grid-column: 2;
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fc-service-summary li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid #e2ecee;
+  min-width: 0;
+}
+
+.fc-service-summary li span {
+  min-width: 0;
+  overflow: hidden;
+  color: #203241;
+  font-size: 12px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fc-service-summary li small {
+  flex-shrink: 0;
+  color: #60717d;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .fc-patient-summary {
@@ -963,6 +1119,21 @@
   margin-bottom: 10px;
 }
 
+.fc-error-card {
+  border: 1px solid #fecaca;
+}
+
+.fc-error-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 12px;
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #b91c1c;
+  display: grid;
+  place-items: center;
+}
+
 .fc-success-card h3 {
   margin: 0 0 8px;
   color: #1f2937;
@@ -986,6 +1157,14 @@
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.fc-error-btn {
+  background: #b91c1c;
+}
+
+.fc-error-btn:hover {
+  background: #991b1b;
 }
 
 .fc-success-btn:hover {
@@ -1206,6 +1385,36 @@
   .fc-service-preview {
     margin-bottom: 9px;
     padding: 9px 10px;
+  }
+
+  .fc-service-picker {
+    max-height: 154px;
+  }
+
+  .fc-service-option {
+    grid-template-columns: 18px minmax(0, 1fr);
+    gap: 8px;
+    padding: 9px 10px;
+  }
+
+  .fc-service-option input {
+    width: 16px;
+    height: 16px;
+  }
+
+  .fc-service-summary {
+    margin-bottom: 9px;
+    padding: 9px 10px;
+  }
+
+  .fc-service-summary li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .fc-service-summary li small {
+    flex-shrink: 1;
   }
 
   .fc-patient-summary {

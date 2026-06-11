@@ -31,6 +31,7 @@ import {
   Mic,
   Calculator,
   UserRound,
+  AlertTriangle,
 } from "lucide-react";
 
 type AppointmentService = {
@@ -64,6 +65,8 @@ type Appointment = {
   reschedule_reason?: string | null;
   reschedule_requested_by?: string | null;
   reschedule_requested_at?: string | null;
+  proposed_services_json?: string | null;
+  proposed_purpose?: string | null;
   cancelled_at?: string | null;
   cancelled_by?: "patient" | "clinic" | "admin" | null;
   cancel_reason?: string | null;
@@ -206,6 +209,13 @@ function getTimelineStartAt(appointment: Appointment): string {
     : appointment.start_at;
 }
 
+function isPatientServiceChangeRequest(appointment: Appointment): boolean {
+  return (
+    appointment.status === "reschedule_requested" &&
+    appointment.reschedule_requested_by === "patient"
+  );
+}
+
 function toMySqlDateTime(date: string, time: string): string {
   return `${date} ${time}:00`;
 }
@@ -292,6 +302,23 @@ function addMinutes(date: string, time: string, minutes: number): string {
   return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
 }
 
+function formatServicePrice(value: string | number | null | undefined): string {
+  const amount = Number(value || 0);
+  return amount > 0 ? `PHP ${amount.toFixed(2)}` : "No listed fee";
+}
+
+function formatServiceDuration(value: string | number | null | undefined): string {
+  const minutes = Number(value || 0);
+  return minutes > 0 ? `${minutes} min` : "Duration varies";
+}
+
+function getServiceDurationMinutes(
+  value: string | number | null | undefined
+): number {
+  const minutes = Number(value || 0);
+  return minutes > 0 ? minutes : 30;
+}
+
 function toMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
@@ -375,19 +402,24 @@ function AppointmentViewModal({
   onClose,
   onReschedule,
   onCancel,
+  onServiceChange,
 }: {
   appointment: Appointment | null;
   onClose: () => void;
   onReschedule: (a: Appointment) => void;
   onCancel: (a: Appointment) => void;
+  onServiceChange: (a: Appointment) => void;
 }) {
   if (!appointment) return null;
 
   const canReschedule =
     appointment.status === "pending" || appointment.status === "confirmed";
+  const canChangeServices =
+    appointment.status === "pending" || appointment.status === "confirmed";
   const canCancel = ["pending", "confirmed", "reschedule_requested"].includes(
     appointment.status
   );
+  const patientServiceChange = isPatientServiceChangeRequest(appointment);
 
   const displayStart = getTimelineStartAt(appointment);
 
@@ -560,19 +592,27 @@ function AppointmentViewModal({
 
           {/* Reschedule info */}
           {appointment.status === "reschedule_requested" &&
-            appointment.proposed_start_at && (
+            (appointment.proposed_start_at || patientServiceChange) && (
               <>
                 <div className="appt-view-section appt-view-section--warning">
                   <p className="appt-view-section-label">
-                    Clinic proposed a new schedule
+                    {patientServiceChange
+                      ? "Service change pending clinic approval"
+                      : "Clinic proposed a new schedule"}
                   </p>
-                  <div className="appt-view-row">
-                    <CalendarDays size={16} className="appt-view-icon" />
-                    <span>
-                      {formatDate(appointment.proposed_start_at)} at{" "}
-                      {formatTime(appointment.proposed_start_at)}
-                    </span>
-                  </div>
+                  {patientServiceChange ? (
+                    <div className="appt-view-note-row">
+                      <p>{appointment.proposed_purpose || appointment.reschedule_reason}</p>
+                    </div>
+                  ) : (
+                    <div className="appt-view-row">
+                      <CalendarDays size={16} className="appt-view-icon" />
+                      <span>
+                        {formatDate(appointment.proposed_start_at)} at{" "}
+                        {formatTime(appointment.proposed_start_at)}
+                      </span>
+                    </div>
+                  )}
                   {appointment.reschedule_reason && (
                     <p className="appt-view-muted appt-view-note-row">
                       {appointment.reschedule_reason}
@@ -605,8 +645,22 @@ function AppointmentViewModal({
         </div>
 
         {/* ── Footer actions ── */}
-        {(canReschedule || canCancel) && (
+        {(canReschedule || canChangeServices || canCancel) && (
           <div className="appt-view-actions">
+            {canChangeServices && (
+              <button
+                type="button"
+                className="appt-view-action-btn"
+                onClick={() => {
+                  onClose();
+                  onServiceChange(appointment);
+                }}
+              >
+                {appointment.status === "confirmed"
+                  ? "Request Service Change"
+                  : "Edit Services"}
+              </button>
+            )}
             {canReschedule && (
               <button
                 type="button"
@@ -648,10 +702,9 @@ function BookingModal({
   const [services, setServices] = useState<ClinicService[]>([]);
 
   const [clinicId, setClinicId] = useState<string>("");
-  const [serviceId, setServiceId] = useState<string>("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [appointmentDate, setAppointmentDate] = useState<string>("");
   const [appointmentTime, setAppointmentTime] = useState<string>("");
-  const [purpose, setPurpose] = useState<string>("");
   const [symptoms, setSymptoms] = useState<string>("");
   const [patientNote, setPatientNote] = useState<string>("");
 
@@ -673,6 +726,12 @@ function BookingModal({
   const [loadingServices, setLoadingServices] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
+  const [errorModalMessage, setErrorModalMessage] = useState<string>("");
+
+  const showBookingError = (message: string) => {
+    setError(message);
+    setErrorModalMessage(message);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -682,14 +741,14 @@ function BookingModal({
         setLoadingClinics(true);
         setError("");
 
-        const res = await fetch("http://localhost:5000/api/clinics");
+        const res = await fetch(apiUrl("/api/clinics"));
         if (!res.ok) throw new Error("Failed to load clinics");
 
         const data: Clinic[] = await res.json();
         setClinics(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error(err);
-        setError("Failed to load clinics.");
+        showBookingError("Failed to load clinics.");
       } finally {
         setLoadingClinics(false);
       }
@@ -701,7 +760,7 @@ function BookingModal({
   useEffect(() => {
     if (!open || !clinicId) {
       setServices([]);
-      setServiceId("");
+      setSelectedServiceIds([]);
       return;
     }
 
@@ -711,17 +770,23 @@ function BookingModal({
         setError("");
 
         const res = await fetch(
-          `http://localhost:5000/api/clinic/services?clinic_id=${clinicId}`
+          apiUrl(`/api/clinic/services?clinic_id=${clinicId}`)
         );
         if (!res.ok) throw new Error("Failed to load services");
 
         const data: ClinicService[] = await res.json();
-        setServices(
-          Array.isArray(data) ? data.filter((s) => s.is_active === 1) : []
+        const activeServices = Array.isArray(data)
+          ? data.filter((s) => s.is_active === 1)
+          : [];
+        setServices(activeServices);
+        setSelectedServiceIds(
+          activeServices.length > 0 ? [String(activeServices[0].id)] : []
         );
       } catch (err) {
         console.error(err);
-        setError("Failed to load clinic services.");
+        setServices([]);
+        setSelectedServiceIds([]);
+        showBookingError("Failed to load clinic services.");
       } finally {
         setLoadingServices(false);
       }
@@ -735,23 +800,38 @@ function BookingModal({
     [clinics, clinicId]
   );
 
-  const selectedService = useMemo(
-    () => services.find((s) => s.id === Number(serviceId)) || null,
-    [services, serviceId]
+  const selectedServices = useMemo(
+    () => services.filter((s) => selectedServiceIds.includes(String(s.id))),
+    [services, selectedServiceIds]
   );
+  const selectedService = selectedServices[0] || null;
+  const selectedServicesDurationMinutes =
+    selectedServices.length > 0
+      ? selectedServices.reduce(
+          (total, service) =>
+            total + getServiceDurationMinutes(service.duration_minutes),
+          0
+        )
+      : 30;
+  const needsServiceSelection =
+    services.length > 0 && selectedServices.length === 0;
+  const appointmentPurpose =
+    selectedServices.length > 0
+      ? selectedServices.map((service) => service.name).join(", ")
+      : "General appointment";
 
   const resetForm = () => {
     setClinicId("");
-    setServiceId("");
+    setSelectedServiceIds([]);
     setAppointmentDate("");
     setAppointmentTime("");
-    setPurpose("");
     setSymptoms("");
     setPatientNote("");
     setBookingForSelf(true);
     setGuestName("");
     setGuestPhone("");
     setError("");
+    setErrorModalMessage("");
     setServices([]);
   };
 
@@ -760,22 +840,36 @@ function BookingModal({
     onClose();
   };
 
+  const toggleSelectedService = (serviceId: string) => {
+    setSelectedServiceIds((current) =>
+      current.includes(serviceId)
+        ? current.filter((id) => id !== serviceId)
+        : [...current, serviceId]
+    );
+    setError("");
+  };
+
   const handleSubmit = async () => {
     try {
       setError("");
 
       if (!userId) {
-        setError("No logged-in user found.");
+        showBookingError("No logged-in user found.");
         return;
       }
 
-      if (!clinicId || !serviceId || !appointmentDate || !appointmentTime) {
-        setError("Please complete clinic, service, date, and time.");
+      if (!clinicId || !appointmentDate || !appointmentTime) {
+        showBookingError("Please complete clinic, date, and time.");
+        return;
+      }
+
+      if (needsServiceSelection) {
+        showBookingError("Please select at least one clinic service.");
         return;
       }
 
       if (isPastAppointmentTime(appointmentDate, appointmentTime)) {
-        setError("Please choose a future date and time.");
+        showBookingError("Please choose a future date and time.");
         return;
       }
 
@@ -785,17 +879,17 @@ function BookingModal({
         : toPhilippineLocalMobileNumber(guestPhone);
 
       if (!patientName) {
-        setError(bookingForSelf ? "Your account name is missing." : "Please enter the patient's name.");
+        showBookingError(bookingForSelf ? "Your account name is missing." : "Please enter the patient's name.");
         return;
       }
 
       if (!bookingForSelf && !isValidPhilippineMobileNumber(patientPhone)) {
-        setError("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
+        showBookingError("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
         return;
       }
 
-      if (!selectedClinic || !selectedService) {
-        setError("Please select a valid clinic and service.");
+      if (!selectedClinic) {
+        showBookingError("Please select a valid clinic.");
         return;
       }
 
@@ -805,7 +899,7 @@ function BookingModal({
       const endAt = addMinutes(
         appointmentDate,
         appointmentTime,
-        Number(selectedService.duration_minutes || 30)
+        selectedServicesDurationMinutes
       );
 
       const payload = {
@@ -813,21 +907,21 @@ function BookingModal({
         clinic_id: Number(clinicId),
         start_at: startAt,
         end_at: endAt,
-        purpose: purpose || selectedService.name,
+        purpose: appointmentPurpose,
         symptoms,
         patient_note: patientNote,
         patient_name_snapshot: patientName,
         patient_phone_snapshot: patientPhone,
         clinic_name_snapshot: selectedClinic.clinic_name,
-        services: [
-          {
-            service_id: selectedService.id,
-            service_name_snapshot: selectedService.name,
-            price_snapshot: selectedService.price,
-            duration_minutes_snapshot: selectedService.duration_minutes,
-            description: selectedService.description || "",
-          },
-        ],
+        services: selectedServices.map((service) => ({
+          service_id: service.id,
+          service_name_snapshot: service.name,
+          price_snapshot: service.price,
+          duration_minutes_snapshot: getServiceDurationMinutes(
+            service.duration_minutes
+          ),
+          description: service.description || "",
+        })),
       };
 
       console.log("BOOK PAYLOAD:", payload);
@@ -895,7 +989,7 @@ function BookingModal({
           friendlyMessage = `Failed to book appointment. Server returned ${res.status}.`;
         }
 
-        setError(friendlyMessage);
+        showBookingError(friendlyMessage);
         return;
       }
 
@@ -905,9 +999,9 @@ function BookingModal({
       console.error("BOOKING CATCH:", err);
 
       if (err instanceof Error && err.message.trim()) {
-        setError(err.message);
+        showBookingError(err.message);
       } else {
-        setError("Something went wrong while booking the appointment.");
+        showBookingError("Something went wrong while booking the appointment.");
       }
     } finally {
       setSubmitting(false);
@@ -954,14 +1048,19 @@ function BookingModal({
             </select>
           </div>
 
-          <div className="booking-field">
-            <label>Service</label>
+          <div className="booking-field full-width">
+            <label>Services</label>
             <select
-              value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
+              multiple
+              size={Math.min(Math.max(services.length, 2), 5)}
+              value={selectedServiceIds}
+              onChange={(e) =>
+                setSelectedServiceIds(
+                  Array.from(e.currentTarget.selectedOptions, (option) => option.value)
+                )
+              }
               disabled={!clinicId || loadingServices || submitting}
             >
-              <option value="">Select service</option>
               {services.map((service) => (
                 <option key={service.id} value={service.id}>
                   {service.name} - ₱{Number(service.price).toFixed(2)}
@@ -1057,17 +1156,6 @@ function BookingModal({
           )}
 
           <div className="booking-field full-width">
-            <label>Purpose</label>
-            <input
-              type="text"
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="Reason for appointment"
-              disabled={submitting}
-            />
-          </div>
-
-          <div className="booking-field full-width">
             <label>Symptoms</label>
             <textarea
               value={symptoms}
@@ -1098,7 +1186,18 @@ function BookingModal({
           </div>
         )}
 
-        {selectedService && (
+        {selectedServices.length > 0 && (
+          <div className="booking-summary-box">
+            <h4>Selected Services</h4>
+            <p>{selectedServices.map((service) => service.name).join(", ")}</p>
+            <small>
+              Total estimated time:{" "}
+              {formatServiceDuration(selectedServicesDurationMinutes)}
+            </small>
+          </div>
+        )}
+
+        {false && selectedService && (
           <div className="booking-summary-box">
             <h4>Selected Service</h4>
             <p>{selectedService.name}</p>
@@ -1122,6 +1221,273 @@ function BookingModal({
           </button>
         </div>
       </div>
+
+      {errorModalMessage && (
+        <div
+          className="booking-modal-overlay front booking-error-dialog-overlay"
+          onClick={() => setErrorModalMessage("")}
+        >
+          <div
+            className="booking-modal small-modal booking-error-dialog"
+            onClick={(e) => e.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="booking-error-dialog-title"
+          >
+            <div className="booking-error-dialog-icon">
+              <AlertTriangle size={42} strokeWidth={2.4} />
+            </div>
+            <h2 id="booking-error-dialog-title">Unable to Continue</h2>
+            <p>{errorModalMessage}</p>
+            <div className="booking-modal-actions">
+              <button
+                type="button"
+                className="book-btn"
+                onClick={() => setErrorModalMessage("")}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ServiceChangeModal({
+  appointment,
+  userId,
+  onClose,
+  onSaved,
+}: {
+  appointment: Appointment | null;
+  userId: number;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
+  const [services, setServices] = useState<ClinicService[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [loadingServices, setLoadingServices] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
+
+  useEffect(() => {
+    if (!appointment) return;
+
+    const loadServices = async () => {
+      try {
+        setLoadingServices(true);
+        setErrorModalMessage("");
+
+        const res = await fetch(
+          apiUrl(`/api/clinic/services?clinic_id=${appointment.clinic_id}`)
+        );
+        const data: ClinicService[] = await res.json();
+
+        if (!res.ok) {
+          throw new Error("Failed to load clinic services.");
+        }
+
+        const activeServices = Array.isArray(data)
+          ? data.filter((service) => Number(service.is_active) === 1)
+          : [];
+        const currentServiceIds = new Set(
+          (appointment.services || [])
+            .map((service) => String(service.service_id))
+            .filter(Boolean)
+        );
+        const initiallySelected = activeServices
+          .filter((service) => currentServiceIds.has(String(service.id)))
+          .map((service) => String(service.id));
+
+        setServices(activeServices);
+        setSelectedServiceIds(
+          initiallySelected.length > 0
+            ? initiallySelected
+            : activeServices.length > 0
+            ? [String(activeServices[0].id)]
+            : []
+        );
+      } catch (err) {
+        setServices([]);
+        setSelectedServiceIds([]);
+        setErrorModalMessage(
+          err instanceof Error ? err.message : "Failed to load clinic services."
+        );
+      } finally {
+        setLoadingServices(false);
+      }
+    };
+
+    void loadServices();
+  }, [appointment]);
+
+  if (!appointment) return null;
+
+  const selectedServices = services.filter((service) =>
+    selectedServiceIds.includes(String(service.id))
+  );
+  const totalDuration = selectedServices.reduce(
+    (sum, service) => sum + getServiceDurationMinutes(service.duration_minutes),
+    0
+  );
+  const isConfirmed = appointment.status === "confirmed";
+
+  const handleSubmit = async () => {
+    if (!selectedServices.length) {
+      setErrorModalMessage("Please select at least one clinic service.");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setErrorModalMessage("");
+
+      const res = await fetch(apiUrl(`/api/appointments/${appointment.id}/services`), {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          services: selectedServices.map((service) => ({
+            service_id: service.id,
+          })),
+        }),
+      });
+
+      const raw = await res.text();
+      const data = raw ? JSON.parse(raw) : {};
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to update appointment services.");
+      }
+
+      onSaved(
+        data.message ||
+          (isConfirmed
+            ? "Service change request sent to the clinic."
+            : "Appointment services updated.")
+      );
+      onClose();
+    } catch (err) {
+      setErrorModalMessage(
+        err instanceof Error ? err.message : "Failed to update appointment services."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="booking-modal-overlay front">
+      <div className="booking-modal small-modal">
+        <div className="booking-modal-header">
+          <div>
+            <h2>{isConfirmed ? "Request Service Change" : "Edit Services"}</h2>
+            <p>
+              {isConfirmed
+                ? "The clinic must approve service changes for confirmed appointments."
+                : "Update the services before the clinic confirms your request."}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="modal-close-btn"
+            onClick={onClose}
+            aria-label="Close service change modal"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="booking-field full-width">
+          <label>Services</label>
+          <select
+            multiple
+            size={Math.min(Math.max(services.length, 2), 5)}
+            value={selectedServiceIds}
+            onChange={(event) =>
+              setSelectedServiceIds(
+                Array.from(event.currentTarget.selectedOptions, (option) => option.value)
+              )
+            }
+            disabled={loadingServices || submitting}
+          >
+            {services.map((service) => (
+              <option key={service.id} value={service.id}>
+                {service.name} - {formatServicePrice(service.price)}
+              </option>
+            ))}
+          </select>
+          {!loadingServices && services.length === 0 && (
+            <small className="booking-field-hint">
+              This clinic has no active services listed.
+            </small>
+          )}
+        </div>
+
+        {selectedServices.length > 0 && (
+          <div className="booking-summary-box">
+            <h4>Selected Services</h4>
+            <p>{selectedServices.map((service) => service.name).join(", ")}</p>
+            <small>
+              Total estimated time: {formatServiceDuration(totalDuration || 30)}
+            </small>
+          </div>
+        )}
+
+        <div className="booking-modal-actions">
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="book-btn"
+            onClick={handleSubmit}
+            disabled={submitting || loadingServices}
+          >
+            {submitting
+              ? "Saving..."
+              : isConfirmed
+              ? "Send Request"
+              : "Save Services"}
+          </button>
+        </div>
+      </div>
+
+      {errorModalMessage && (
+        <div
+          className="booking-modal-overlay front booking-error-dialog-overlay"
+          onClick={() => setErrorModalMessage("")}
+        >
+          <div
+            className="booking-modal small-modal booking-error-dialog"
+            onClick={(event) => event.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+          >
+            <div className="booking-error-dialog-icon">
+              <AlertTriangle size={34} strokeWidth={2.4} />
+            </div>
+            <h2>Unable to Continue</h2>
+            <p>{errorModalMessage}</p>
+            <div className="booking-modal-actions">
+              <button
+                type="button"
+                className="book-btn"
+                onClick={() => setErrorModalMessage("")}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1137,6 +1503,8 @@ function UserAppointmentsContent({
   const [bookingOpen, setBookingOpen] = useState<boolean>(false);
 
   const [viewModalAppointment, setViewModalAppointment] =
+    useState<Appointment | null>(null);
+  const [serviceChangeAppointment, setServiceChangeAppointment] =
     useState<Appointment | null>(null);
 
   const [selectedAppointment, setSelectedAppointment] =
@@ -1304,7 +1672,8 @@ function UserAppointmentsContent({
   }, [activeTab, pastAppointments, allAppointments, upcomingAppointments]);
 
   const needsAppointmentResponse = (appointment: Appointment) =>
-    appointment.status === "reschedule_requested";
+    appointment.status === "reschedule_requested" &&
+    appointment.reschedule_requested_by !== "patient";
 
   const isRecentAppointment = (appointment: Appointment) => {
     const recentAnchor = parseDateTime(
@@ -2131,6 +2500,15 @@ function UserAppointmentsContent({
                         </button>
 
                         {item.status === "reschedule_requested" ? (
+                          isPatientServiceChangeRequest(item) ? (
+                            <button
+                              className="mini-action-btn"
+                              type="button"
+                              onClick={() => setViewModalAppointment(item)}
+                            >
+                              Pending Clinic Approval
+                            </button>
+                          ) : (
                           <>
                             <button
                               className="mini-action-btn accept"
@@ -2152,8 +2530,21 @@ function UserAppointmentsContent({
                               Decline and Cancel
                             </button>
                           </>
+                          )
                         ) : (
                           <>
+                            {(item.status === "pending" || item.status === "confirmed") && (
+                              <button
+                                className="mini-action-btn"
+                                type="button"
+                                onClick={() => setServiceChangeAppointment(item)}
+                              >
+                                {item.status === "confirmed"
+                                  ? "Request Services"
+                                  : "Edit Services"}
+                              </button>
+                            )}
+
                             <button
                               className="mini-action-btn"
                               type="button"
@@ -2315,6 +2706,21 @@ function UserAppointmentsContent({
         onClose={() => setViewModalAppointment(null)}
         onReschedule={(a) => { setViewModalAppointment(null); openRescheduleModal(a); }}
         onCancel={(a) => { setViewModalAppointment(null); openCancelModal(a); }}
+        onServiceChange={(appointment) => {
+          setViewModalAppointment(null);
+          setServiceChangeAppointment(appointment);
+        }}
+      />
+
+      <ServiceChangeModal
+        appointment={serviceChangeAppointment}
+        userId={userId || 0}
+        onClose={() => setServiceChangeAppointment(null)}
+        onSaved={(message) => {
+          setServiceChangeAppointment(null);
+          setActionMessage(message);
+          void loadAppointments();
+        }}
       />
 
       <BookingModal

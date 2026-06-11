@@ -42,6 +42,8 @@ type ApiAppointmentRow = {
   cancel_reason: string | null;
   proposed_start_at?: string | null;
   proposed_end_at?: string | null;
+  proposed_services_json?: string | null;
+  proposed_purpose?: string | null;
   reschedule_reason?: string | null;
   reschedule_requested_by?: string | null;
   reschedule_requested_at?: string | null;
@@ -64,7 +66,9 @@ type AppointmentRow = {
   endAtRaw?: string | null;
   proposedStartAtRaw?: string | null;
   proposedEndAtRaw?: string | null;
+  proposedPurpose?: string | null;
   rescheduleReason?: string;
+  rescheduleRequestedBy?: string | null;
   rescheduleRequestedAt?: string | null;
   symptoms?: string;
   patientNote?: string;
@@ -106,6 +110,12 @@ const emptyRescheduleForm: RescheduleForm = {
 
 const isSortedOutAppointment = (row: Pick<AppointmentRow, "status">) =>
   row.status === "Completed" || row.status === "Cancelled";
+
+const isPatientServiceChangeRequest = (
+  row: Pick<AppointmentRow, "status" | "rescheduleRequestedBy">
+) =>
+  row.status === "Reschedule Requested" &&
+  row.rescheduleRequestedBy === "patient";
 
 const getStoredClinicId = () => {
   try {
@@ -276,7 +286,9 @@ export default function ClinicAppoint() {
             endAtRaw: item.end_at,
             proposedStartAtRaw: item.proposed_start_at || null,
             proposedEndAtRaw: item.proposed_end_at || null,
+            proposedPurpose: item.proposed_purpose || null,
             rescheduleReason: item.reschedule_reason || "",
+            rescheduleRequestedBy: item.reschedule_requested_by || null,
             rescheduleRequestedAt: item.reschedule_requested_at || null,
             symptoms: item.symptoms || "",
             patientNote: item.patient_note || "",
@@ -482,6 +494,47 @@ export default function ClinicAppoint() {
 
   const handleComplete = async (id: string) => {
     await updateAppointmentStatus(id, "completed");
+  };
+
+  const handleServiceChangeResponse = async (
+    id: string,
+    action: "approve" | "reject"
+  ) => {
+    try {
+      setSavingAction(true);
+
+      const res = await fetch(
+        `${API}/clinic/appointments/${id}/service-change-response`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clinic_id: clinicId,
+            action,
+          }),
+        }
+      );
+
+      const raw = await res.text();
+      let message = raw;
+      try {
+        message = JSON.parse(raw)?.message || raw;
+      } catch {
+        message = raw.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+      }
+
+      if (!res.ok) {
+        throw new Error(message || `HTTP ${res.status}`);
+      }
+
+      await loadAppointments(true);
+      closeModal();
+    } catch (error) {
+      console.error("Service change response error:", error);
+      showErrorModal(`Failed to update service change request: ${String(error)}`);
+    } finally {
+      setSavingAction(false);
+    }
   };
 
   const handleRescheduleSave = async () => {
@@ -901,9 +954,34 @@ export default function ClinicAppoint() {
         </>
       )}
 
+      {isPatientServiceChangeRequest(row) && (
+        <>
+          <button
+            type="button"
+            className="icon-btn pill-success"
+            title="Approve service change"
+            onClick={() => handleServiceChangeResponse(row.id, "approve")}
+            disabled={savingAction}
+          >
+            <FaCheck />
+          </button>
+
+          <button
+            type="button"
+            className="icon-btn pill-danger"
+            title="Reject service change"
+            onClick={() => handleServiceChangeResponse(row.id, "reject")}
+            disabled={savingAction}
+          >
+            <FaTimes />
+          </button>
+        </>
+      )}
+
       {(row.status === "Pending" ||
         row.status === "Confirmed" ||
-        row.status === "Reschedule Requested") && (
+        row.status === "Reschedule Requested") &&
+        !isPatientServiceChangeRequest(row) && (
         <button
           type="button"
           className="icon-btn pill-resched"
@@ -1006,9 +1084,17 @@ export default function ClinicAppoint() {
 
                   {selectedAppointment.status === "Reschedule Requested" && (
                     <section className="appoint-reschedule-card">
-                      <span>Clinic proposed a new schedule</span>
+                      <span>
+                        {isPatientServiceChangeRequest(selectedAppointment)
+                          ? "Patient requested service changes"
+                          : "Clinic proposed a new schedule"}
+                      </span>
                       <strong>
-                        {selectedAppointment.proposedStartAtRaw
+                        {isPatientServiceChangeRequest(selectedAppointment)
+                          ? selectedAppointment.proposedPurpose ||
+                            selectedAppointment.rescheduleReason ||
+                            "No requested services provided"
+                          : selectedAppointment.proposedStartAtRaw
                           ? `${formatDate(selectedAppointment.proposedStartAtRaw)} at ${formatTime(
                               selectedAppointment.proposedStartAtRaw
                             )}`
@@ -1124,9 +1210,42 @@ export default function ClinicAppoint() {
                     Close
                   </button>
 
+                  {isPatientServiceChangeRequest(selectedAppointment) && (
+                    <>
+                      <button
+                        type="button"
+                        className="pill pill-success"
+                        onClick={() =>
+                          handleServiceChangeResponse(
+                            selectedAppointment.id,
+                            "approve"
+                          )
+                        }
+                        disabled={savingAction}
+                      >
+                        {savingAction ? "Saving..." : "Approve Changes"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="pill pill-danger"
+                        onClick={() =>
+                          handleServiceChangeResponse(
+                            selectedAppointment.id,
+                            "reject"
+                          )
+                        }
+                        disabled={savingAction}
+                      >
+                        {savingAction ? "Saving..." : "Reject Changes"}
+                      </button>
+                    </>
+                  )}
+
                   {(selectedAppointment.status === "Pending" ||
                     selectedAppointment.status === "Confirmed" ||
-                    selectedAppointment.status === "Reschedule Requested") && (
+                    selectedAppointment.status === "Reschedule Requested") &&
+                    !isPatientServiceChangeRequest(selectedAppointment) && (
                     <button
                       type="button"
                       className="pill pill-resched"

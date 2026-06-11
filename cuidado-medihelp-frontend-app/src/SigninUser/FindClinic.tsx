@@ -15,6 +15,7 @@ import {
   Mail,
   ClipboardList,
   CheckCircle2,
+  AlertTriangle,
   Building2,
 } from "lucide-react";
 import UserSidebar from "../Categories/UserSidebar";
@@ -331,6 +332,13 @@ function formatServiceDuration(value: string | number | null | undefined): strin
   return minutes > 0 ? `${minutes} min` : "Duration varies";
 }
 
+function getServiceDurationMinutes(
+  value: string | number | null | undefined
+): number {
+  const minutes = Number(value || 0);
+  return minutes > 0 ? minutes : 30;
+}
+
 function formatReviewDate(value: string | null | undefined): string {
   if (!value) return "Recent";
   const date = new Date(value);
@@ -568,11 +576,10 @@ export default function FindClinic() {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
-  const [purpose, setPurpose] = useState("General consultation");
   const [symptoms, setSymptoms] = useState("");
   const [patientNote, setPatientNote] = useState("");
   const [clinicServices, setClinicServices] = useState<ClinicService[]>([]);
-  const [selectedServiceId, setSelectedServiceId] = useState("");
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [loadingClinicServices, setLoadingClinicServices] = useState(false);
   const [profileClinic, setProfileClinic] = useState<ClinicWithDistance | null>(null);
   const [profileServices, setProfileServices] = useState<ClinicService[]>([]);
@@ -593,6 +600,7 @@ export default function FindClinic() {
   const [guestPhone, setGuestPhone] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [successPopupMessage, setSuccessPopupMessage] = useState("");
+  const [bookingErrorPopupMessage, setBookingErrorPopupMessage] = useState("");
   const clinicFetchIdRef = useRef(0);
 
   const fetchClinics = useCallback(async (searchOverride = search) => {
@@ -672,7 +680,7 @@ export default function FindClinic() {
   useEffect(() => {
     if (!showBookingModal || !selectedClinic?.id) {
       setClinicServices([]);
-      setSelectedServiceId("");
+      setSelectedServiceIds([]);
       setLoadingClinicServices(false);
       return;
     }
@@ -698,15 +706,15 @@ export default function FindClinic() {
 
         if (!cancelled) {
           setClinicServices(activeServices);
-          setSelectedServiceId(
-            activeServices.length > 0 ? String(activeServices[0].id) : ""
+          setSelectedServiceIds(
+            activeServices.length > 0 ? [String(activeServices[0].id)] : []
           );
         }
       } catch (err) {
         console.error("Clinic services load error:", err);
         if (!cancelled) {
           setClinicServices([]);
-          setSelectedServiceId("");
+          setSelectedServiceIds([]);
         }
       } finally {
         if (!cancelled) {
@@ -863,9 +871,23 @@ export default function FindClinic() {
       })
     : "Select a date";
   const selectedTimeLabel = appointmentTime || "Select a time";
-  const selectedClinicService =
-    clinicServices.find((service) => String(service.id) === selectedServiceId) ||
-    null;
+  const selectedClinicServices = clinicServices.filter((service) =>
+    selectedServiceIds.includes(String(service.id))
+  );
+  const selectedServicesDurationMinutes =
+    selectedClinicServices.length > 0
+      ? selectedClinicServices.reduce(
+          (total, service) =>
+            total + getServiceDurationMinutes(service.duration_minutes),
+          0
+        )
+      : 30;
+  const needsServiceSelection =
+    clinicServices.length > 0 && selectedClinicServices.length === 0;
+  const appointmentPurpose =
+    selectedClinicServices.length > 0
+      ? selectedClinicServices.map((service) => service.name).join(", ")
+      : "General appointment";
   const selectedClinicRating = selectedClinic
     ? getClinicRatingSummary(selectedClinic)
     : null;
@@ -937,25 +959,30 @@ export default function FindClinic() {
     setProfileLoading(false);
   };
 
+  const showBookingError = (message: string) => {
+    setBookingMessage(message);
+    setBookingErrorPopupMessage(message);
+  };
+
   const openBookingModal = (clinic: ClinicWithDistance) => {
     if (!clinic.isOpenNow) {
-      setBookingMessage(`${clinic.clinic_name} is currently closed.`);
+      showBookingError(`${clinic.clinic_name} is currently closed.`);
       return;
     }
 
     setSelectedClinic(clinic);
     setShowBookingModal(true);
     setBookingMessage("");
+    setBookingErrorPopupMessage("");
 
     const plusThirty = new Date(Date.now() + 30 * 60 * 1000);
     setAppointmentDate(toDateInputValue(plusThirty));
     setAppointmentTime(toTimeInputValue(plusThirty));
 
-    setPurpose("General consultation");
     setSymptoms("");
     setPatientNote("");
     setClinicServices([]);
-    setSelectedServiceId("");
+    setSelectedServiceIds([]);
     setBookingForSelf(true);
     setGuestName("");
     setGuestPhone("");
@@ -966,33 +993,43 @@ export default function FindClinic() {
     setShowBookingModal(false);
     setSelectedClinic(null);
     setClinicServices([]);
-    setSelectedServiceId("");
+    setSelectedServiceIds([]);
     setBookingMessage("");
+    setBookingErrorPopupMessage("");
     setBookingForSelf(true);
     setGuestName("");
     setGuestPhone("");
+  };
+
+  const toggleSelectedService = (serviceId: string) => {
+    setSelectedServiceIds((current) =>
+      current.includes(serviceId)
+        ? current.filter((id) => id !== serviceId)
+        : [...current, serviceId]
+    );
+    setBookingMessage("");
   };
 
   const handleConfirmBooking = async () => {
     if (!selectedClinic) return;
 
     if (!currentUser?.id) {
-      setBookingMessage("No logged-in user found.");
+      showBookingError("No logged-in user found.");
       return;
     }
 
     if (!appointmentDate || !appointmentTime) {
-      setBookingMessage("Please select appointment date and time.");
+      showBookingError("Please select appointment date and time.");
       return;
     }
 
-    if (!purpose.trim()) {
-      setBookingMessage("Please choose the purpose of the visit.");
+    if (needsServiceSelection) {
+      showBookingError("Please select at least one clinic service.");
       return;
     }
 
     if (isPastAppointmentTime(appointmentDate, appointmentTime)) {
-      setBookingMessage("Please choose a future date and time.");
+      showBookingError("Please choose a future date and time.");
       return;
     }
 
@@ -1003,7 +1040,7 @@ export default function FindClinic() {
     );
 
     if (scheduleMessage) {
-      setBookingMessage(scheduleMessage);
+      showBookingError(scheduleMessage);
       return;
     }
 
@@ -1020,7 +1057,7 @@ export default function FindClinic() {
         : guestPhone.trim();
 
       if (!bookingForSelf && !patient_name_snapshot) {
-        setBookingMessage("Please enter the patient's name.");
+        showBookingError("Please enter the patient's name.");
         setBooking(false);
         return;
       }
@@ -1029,7 +1066,7 @@ export default function FindClinic() {
         !bookingForSelf &&
         !isValidPhilippineMobileNumber(patient_phone_snapshot)
       ) {
-        setBookingMessage("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
+        showBookingError("Please enter a valid Philippine mobile number starting with 09 or 63, e.g. 09171234567.");
         setBooking(false);
         return;
       }
@@ -1037,7 +1074,9 @@ export default function FindClinic() {
       const start_at = `${appointmentDate} ${appointmentTime}:00`;
 
       const startDateObj = new Date(`${appointmentDate}T${appointmentTime}:00`);
-      const endDateObj = new Date(startDateObj.getTime() + 30 * 60 * 1000);
+      const endDateObj = new Date(
+        startDateObj.getTime() + selectedServicesDurationMinutes * 60 * 1000
+      );
       const end_at = `${endDateObj.getFullYear()}-${String(
         endDateObj.getMonth() + 1
       ).padStart(2, "0")}-${String(endDateObj.getDate()).padStart(
@@ -1046,19 +1085,15 @@ export default function FindClinic() {
       )} ${String(endDateObj.getHours()).padStart(2, "0")}:${String(
         endDateObj.getMinutes()
       ).padStart(2, "0")}:00`;
-      const selectedServicePayload = selectedClinicService
-        ? [
-            {
-              service_id: selectedClinicService.id,
-              service_name_snapshot: selectedClinicService.name,
-              price_snapshot: Number(selectedClinicService.price || 0),
-              duration_minutes_snapshot: Number(
-                selectedClinicService.duration_minutes || 0
-              ),
-              description: selectedClinicService.description || null,
-            },
-          ]
-        : [];
+      const selectedServicePayload = selectedClinicServices.map((service) => ({
+        service_id: service.id,
+        service_name_snapshot: service.name,
+        price_snapshot: Number(service.price || 0),
+        duration_minutes_snapshot: getServiceDurationMinutes(
+          service.duration_minutes
+        ),
+        description: service.description || null,
+      }));
 
       const res = await fetch(apiUrl("/api/appointments/book"), {
         method: "POST",
@@ -1070,7 +1105,7 @@ export default function FindClinic() {
           clinic_id: selectedClinic.id,
           start_at,
           end_at,
-          purpose: purpose.trim(),
+          purpose: appointmentPurpose,
           symptoms: symptoms.trim(),
           patient_note: patientNote.trim(),
           patient_name_snapshot,
@@ -1083,7 +1118,8 @@ export default function FindClinic() {
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.message || "Failed to book appointment");
+        const detail = result.error_detail ? ` (${result.error_detail})` : "";
+        throw new Error((result.message || "Failed to book appointment") + detail);
       }
 
       const clinicName = selectedClinic.clinic_name;
@@ -1091,7 +1127,7 @@ export default function FindClinic() {
       setShowBookingModal(false);
       setSelectedClinic(null);
       setClinicServices([]);
-      setSelectedServiceId("");
+      setSelectedServiceIds([]);
 
       setSuccessPopupMessage(
         `Your appointment request with ${clinicName} was sent successfully.`
@@ -1100,11 +1136,10 @@ export default function FindClinic() {
 
       setAppointmentDate("");
       setAppointmentTime("");
-      setPurpose("General consultation");
       setSymptoms("");
       setPatientNote("");
     } catch (err) {
-      setBookingMessage(err instanceof Error ? err.message : "Booking failed.");
+      showBookingError(err instanceof Error ? err.message : "Booking failed.");
     } finally {
       setBooking(false);
     }
@@ -1511,76 +1546,124 @@ export default function FindClinic() {
                   <div className="fc-modal-selected-slot">
                     <span>{selectedDateLabel}</span>
                     <strong>{selectedTimeLabel}</strong>
-                    <small>Estimated duration: 30 minutes</small>
+                    <small>
+                      Estimated duration:{" "}
+                      {formatServiceDuration(selectedServicesDurationMinutes)}
+                    </small>
                   </div>
 
-                  <div className="fc-modal-field">
-                    <label>Clinic service</label>
-                    <select
-                      value={selectedServiceId}
-                      onChange={(e) => setSelectedServiceId(e.target.value)}
-                      disabled={loadingClinicServices || clinicServices.length === 0}
-                    >
-                      <option value="">
+                  <div className="fc-service-field">
+                    <div className="fc-service-field-header">
+                      <label>Clinic services</label>
+                      <small>
                         {loadingClinicServices
-                          ? "Loading services..."
+                          ? "Loading"
                           : clinicServices.length > 0
-                          ? "No specific service"
-                          : "No services listed yet"}
-                      </option>
-                      {clinicServices.map((service) => (
-                        <option key={service.id} value={service.id}>
-                          {service.name}
-                        </option>
-                      ))}
-                    </select>
+                          ? "Pick one or more"
+                          : "No active services"}
+                      </small>
+                    </div>
+
+                    {loadingClinicServices ? (
+                      <div className="fc-service-preview muted">
+                        <ClipboardList size={16} />
+                        <span>
+                          <strong>Loading services</strong>
+                          <small>Please wait while the clinic list loads.</small>
+                        </span>
+                      </div>
+                    ) : clinicServices.length > 0 ? (
+                      <div
+                        className="fc-service-picker"
+                        role="group"
+                        aria-label="Clinic services"
+                      >
+                        {clinicServices.map((service) => {
+                          const serviceId = String(service.id);
+                          const isSelected =
+                            selectedServiceIds.includes(serviceId);
+
+                          return (
+                            <label
+                              className={`fc-service-option ${
+                                isSelected ? "selected" : ""
+                              }`}
+                              key={service.id}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleSelectedService(serviceId)}
+                              />
+                              <span className="fc-service-option-main">
+                                <strong>{service.name}</strong>
+                                <small>
+                                  {formatServicePrice(service.price)} -{" "}
+                                  {formatServiceDuration(
+                                    service.duration_minutes
+                                  )}
+                                </small>
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="fc-service-preview muted">
+                        <ClipboardList size={16} />
+                        <span>
+                          <strong>No active services listed</strong>
+                          <small>
+                            You can still send the clinic a general request.
+                          </small>
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {selectedClinicService ? (
-                    <div className="fc-service-preview">
+                  {selectedClinicServices.length > 0 ? (
+                    <div className="fc-service-summary">
                       <ClipboardList size={16} />
                       <span>
-                        <strong>{selectedClinicService.name}</strong>
+                        <strong>
+                          {selectedClinicServices.length}{" "}
+                          {selectedClinicServices.length === 1
+                            ? "service"
+                            : "services"}{" "}
+                          selected
+                        </strong>
                         <small>
-                          {formatServicePrice(selectedClinicService.price)} -{" "}
+                          Total estimated time:{" "}
                           {formatServiceDuration(
-                            selectedClinicService.duration_minutes
+                            selectedServicesDurationMinutes
                           )}
                         </small>
                       </span>
+                      <ul>
+                        {selectedClinicServices.map((service) => (
+                          <li key={service.id}>
+                            <span>{service.name}</span>
+                            <small>
+                              {formatServicePrice(service.price)} -{" "}
+                              {formatServiceDuration(
+                                service.duration_minutes
+                              )}
+                            </small>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  ) : (
+                  ) : clinicServices.length > 0 ? (
                     <div className="fc-service-preview muted">
                       <ClipboardList size={16} />
                       <span>
-                        <strong>General appointment</strong>
-                        <small>The clinic can assign the exact service later.</small>
+                        <strong>Select services</strong>
+                        <small>
+                          Choose one or more services before sending the request.
+                        </small>
                       </span>
                     </div>
-                  )}
-
-                  <div className="fc-modal-field">
-                    <label>Purpose</label>
-                    <select
-                      value={purpose}
-                      onChange={(e) => {
-                        setPurpose(e.target.value);
-                        setBookingMessage("");
-                      }}
-                    >
-                      <option value="General consultation">
-                        General consultation
-                      </option>
-                      <option value="Follow-up checkup">Follow-up checkup</option>
-                      <option value="New symptoms">New symptoms</option>
-                      <option value="Medication concern">
-                        Medication concern
-                      </option>
-                      <option value="Clinic service inquiry">
-                        Clinic service inquiry
-                      </option>
-                    </select>
-                  </div>
+                  ) : null}
                 </section>
 
                 <section className="fc-modal-panel">
@@ -1707,9 +1790,7 @@ export default function FindClinic() {
                   onClick={handleConfirmBooking}
                   disabled={
                     booking ||
-                    !appointmentDate ||
-                    !appointmentTime ||
-                    Boolean(appointmentValidationMessage)
+                    loadingClinicServices
                   }
                 >
                   {booking ? "Sending..." : "Send Request"}
@@ -1940,6 +2021,36 @@ export default function FindClinic() {
               type="button"
               className="fc-success-btn"
               onClick={() => setShowSuccessPopup(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {bookingErrorPopupMessage && createPortal(
+        <div
+          className="fc-success-overlay"
+          onClick={() => setBookingErrorPopupMessage("")}
+        >
+          <div
+            className="fc-success-card fc-error-card"
+            onClick={(e) => e.stopPropagation()}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="fc-booking-error-title"
+          >
+            <div className="fc-success-icon fc-error-icon">
+              <AlertTriangle size={48} strokeWidth={2.4} />
+            </div>
+            <h3 id="fc-booking-error-title">Unable to Book</h3>
+            <p>{bookingErrorPopupMessage}</p>
+
+            <button
+              type="button"
+              className="fc-success-btn fc-error-btn"
+              onClick={() => setBookingErrorPopupMessage("")}
             >
               OK
             </button>

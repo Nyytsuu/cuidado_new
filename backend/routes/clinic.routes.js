@@ -78,6 +78,46 @@ const ACTIVE_APPOINTMENT_STATUSES = [
   "reschedule_requested",
 ];
 
+const ensureAppointmentServiceChangeColumns = async () => {
+  await db.query(
+    `ALTER TABLE appointments ADD COLUMN IF NOT EXISTS proposed_services_json TEXT NULL`
+  );
+  await db.query(
+    `ALTER TABLE appointments ADD COLUMN IF NOT EXISTS proposed_purpose TEXT NULL`
+  );
+};
+
+const insertAppointmentServiceSnapshots = async (
+  connection,
+  appointmentId,
+  services
+) => {
+  for (const service of services) {
+    await connection.query(
+      `
+      INSERT INTO appointment_services (
+        appointment_id,
+        service_id,
+        service_name_snapshot,
+        price_snapshot,
+        duration_minutes_snapshot,
+        created_at,
+        description
+      )
+      VALUES (?, ?, ?, ?, ?, NOW(), ?)
+      `,
+      [
+        appointmentId,
+        service.service_id || null,
+        service.service_name_snapshot || null,
+        service.price_snapshot || 0,
+        service.duration_minutes_snapshot || 0,
+        service.description || null,
+      ]
+    );
+  }
+};
+
 const findAppointmentOverlapConflict = async ({
   clinicId,
   userId,
@@ -2295,12 +2335,16 @@ router.patch("/services/:id/status", (req, res) => {
 ================================================= */
 
 // GET clinic appointments
-router.get("/appointments", (req, res) => {
+router.get("/appointments", async (req, res) => {
   const { clinic_id } = req.query;
 
   if (!clinic_id) {
     return res.status(400).json({ message: "clinic_id is required." });
   }
+
+  await ensureAppointmentServiceChangeColumns().catch((err) => {
+    console.error("ENSURE SERVICE CHANGE COLUMNS ERROR:", err);
+  });
 
   const sql = `
     SELECT
@@ -2322,6 +2366,8 @@ router.get("/appointments", (req, res) => {
       reschedule_reason,
       reschedule_requested_by,
       reschedule_requested_at,
+      proposed_services_json,
+      proposed_purpose,
       completed_at,
       patient_name_snapshot,
       patient_phone_snapshot,
@@ -2402,6 +2448,191 @@ router.patch("/appointments/:id/status", (req, res) => {
 });
 
 // RESCHEDULE appointment (clinic proposes a new time — patient must accept/decline)
+router.patch("/appointments/:id/service-change-response", async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    await ensureAppointmentServiceChangeColumns();
+
+    const { id } = req.params;
+    const { clinic_id, action } = req.body;
+
+    if (!["approve", "reject"].includes(action)) {
+      return res.status(400).json({ message: "Action must be approve or reject." });
+    }
+
+    const [[appointment]] = await connection.query(
+      `
+      SELECT
+        id,
+        user_id,
+        clinic_id,
+        status,
+        start_at,
+        end_at,
+        proposed_start_at,
+        proposed_end_at,
+        proposed_services_json,
+        proposed_purpose,
+        reschedule_requested_by
+      FROM appointments
+      WHERE id = ?
+      `,
+      [Number(id)]
+    );
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found." });
+    }
+
+    if (clinic_id && Number(appointment.clinic_id) !== Number(clinic_id)) {
+      return res.status(403).json({ message: "Appointment does not belong to this clinic." });
+    }
+
+    if (
+      appointment.status !== "reschedule_requested" ||
+      appointment.reschedule_requested_by !== "patient"
+    ) {
+      return res.status(400).json({
+        message: "This appointment does not have a patient service-change request.",
+      });
+    }
+
+    const oldStatus = appointment.status;
+
+    await connection.beginTransaction();
+
+    if (action === "reject") {
+      await connection.query(
+        `
+        UPDATE appointments
+        SET
+          status = 'confirmed',
+          proposed_start_at = NULL,
+          proposed_end_at = NULL,
+          proposed_services_json = NULL,
+          proposed_purpose = NULL,
+          reschedule_reason = NULL,
+          reschedule_requested_by = NULL,
+          reschedule_requested_at = NULL,
+          updated_at = NOW()
+        WHERE id = ?
+        `,
+        [Number(id)]
+      );
+
+      await connection.query(
+        `
+        INSERT INTO appointment_status_history (
+          appointment_id,
+          old_status,
+          new_status,
+          changed_by,
+          changed_by_id,
+          note,
+          changed_at
+        )
+        VALUES (?, ?, 'confirmed', 'clinic', ?, 'Clinic rejected service change request', NOW())
+        `,
+        [Number(id), oldStatus, clinic_id || null]
+      ).catch(() => {});
+
+      await connection.commit();
+      return res.json({ message: "Service change request rejected." });
+    }
+
+    let proposedServices = [];
+    try {
+      proposedServices = JSON.parse(appointment.proposed_services_json || "[]");
+    } catch {
+      proposedServices = [];
+    }
+
+    if (!Array.isArray(proposedServices) || proposedServices.length === 0) {
+      await connection.rollback().catch(() => {});
+      return res.status(400).json({ message: "No requested services found." });
+    }
+
+    const proposedStartAt = appointment.proposed_start_at || appointment.start_at;
+    const proposedEndAt = appointment.proposed_end_at;
+
+    if (!proposedEndAt) {
+      await connection.rollback().catch(() => {});
+      return res.status(400).json({ message: "No proposed appointment duration found." });
+    }
+
+    const overlapConflict = await findAppointmentOverlapConflict({
+      clinicId: appointment.clinic_id,
+      userId: appointment.user_id,
+      startAt: proposedStartAt,
+      endAt: proposedEndAt,
+      excludeAppointmentId: appointment.id,
+    });
+
+    if (overlapConflict) {
+      await connection.rollback().catch(() => {});
+      return res.status(409).json({ message: overlapConflict });
+    }
+
+    await connection.query(
+      `
+      UPDATE appointments
+      SET
+        start_at = ?,
+        end_at = ?,
+        purpose = COALESCE(?, purpose),
+        status = 'confirmed',
+        proposed_start_at = NULL,
+        proposed_end_at = NULL,
+        proposed_services_json = NULL,
+        proposed_purpose = NULL,
+        reschedule_reason = NULL,
+        reschedule_requested_by = NULL,
+        reschedule_requested_at = NULL,
+        updated_at = NOW()
+      WHERE id = ?
+      `,
+      [
+        proposedStartAt,
+        proposedEndAt,
+        appointment.proposed_purpose || null,
+        Number(id),
+      ]
+    );
+
+    await connection.query(
+      `DELETE FROM appointment_services WHERE appointment_id = ?`,
+      [Number(id)]
+    );
+    await insertAppointmentServiceSnapshots(connection, Number(id), proposedServices);
+
+    await connection.query(
+      `
+      INSERT INTO appointment_status_history (
+        appointment_id,
+        old_status,
+        new_status,
+        changed_by,
+        changed_by_id,
+        note,
+        changed_at
+      )
+      VALUES (?, ?, 'confirmed', 'clinic', ?, 'Clinic approved service change request', NOW())
+      `,
+      [Number(id), oldStatus, clinic_id || null]
+    ).catch(() => {});
+
+    await connection.commit();
+    res.json({ message: "Service change request approved." });
+  } catch (err) {
+    await connection.rollback().catch(() => {});
+    console.error("SERVICE CHANGE RESPONSE ERROR:", err);
+    res.status(500).json({ message: err.message || "Failed to update service change request." });
+  } finally {
+    connection.release();
+  }
+});
+
 router.patch("/appointments/:id/reschedule", async (req, res) => {
   const { id } = req.params;
   const { clinic_id, start_at, end_at, reason } = req.body;

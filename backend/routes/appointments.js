@@ -125,6 +125,8 @@ const ensureAppointmentsSchema = async () => {
         ['reschedule_reason',       'TEXT NULL'],
         ['reschedule_requested_by', 'VARCHAR(20) NULL'],
         ['reschedule_requested_at', 'TIMESTAMP NULL'],
+        ['proposed_services_json',  'TEXT NULL'],
+        ['proposed_purpose',        'TEXT NULL'],
         ['patient_name_snapshot',   'VARCHAR(150) NULL'],
         ['patient_phone_snapshot',  'VARCHAR(50) NULL'],
         ['clinic_name_snapshot',    'VARCHAR(150) NULL'],
@@ -386,6 +388,118 @@ const parseLocalDateTime = (value) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
+const toDatetimeString = (value) => {
+  if (!value) return "";
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(String(value).replace(" ", "T"));
+
+  if (Number.isNaN(date.getTime())) return "";
+
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+    date.getDate()
+  )} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(
+    date.getSeconds()
+  )}`;
+};
+
+const addMinutesToDatetimeString = (value, minutes) => {
+  const date = new Date(String(value || "").replace(" ", "T"));
+  if (Number.isNaN(date.getTime())) return "";
+  date.setMinutes(date.getMinutes() + minutes);
+  return toDatetimeString(date);
+};
+
+const getDurationMinutes = (value) => {
+  const minutes = Number(value || 0);
+  return minutes > 0 ? minutes : 30;
+};
+
+const getServiceChangeSnapshots = async (connection, clinicId, services = []) => {
+  if (!Array.isArray(services) || services.length === 0) {
+    return [];
+  }
+
+  const orderedIds = [];
+  const seen = new Set();
+
+  for (const service of services) {
+    const serviceId = Number(service?.service_id ?? service?.id);
+    if (Number.isFinite(serviceId) && serviceId > 0 && !seen.has(serviceId)) {
+      seen.add(serviceId);
+      orderedIds.push(serviceId);
+    }
+  }
+
+  if (!orderedIds.length) {
+    return [];
+  }
+
+  const [rows] = await connection.query(
+    `
+    SELECT id, name, price, duration_minutes, description
+    FROM clinic_services
+    WHERE clinic_id = ?
+      AND id IN (?)
+      AND is_active = 1
+    `,
+    [clinicId, orderedIds]
+  );
+
+  const byId = new Map(rows.map((row) => [Number(row.id), row]));
+
+  if (byId.size !== orderedIds.length) {
+    const missing = orderedIds.find((id) => !byId.has(id));
+    throw Object.assign(new Error(`Selected service is not available: ${missing}`), {
+      statusCode: 400,
+    });
+  }
+
+  return orderedIds.map((id) => {
+    const row = byId.get(id);
+    return {
+      service_id: Number(row.id),
+      service_name_snapshot: row.name || "Clinic service",
+      price_snapshot: Number(row.price || 0),
+      duration_minutes_snapshot: getDurationMinutes(row.duration_minutes),
+      description: row.description || null,
+    };
+  });
+};
+
+const insertAppointmentServiceSnapshots = async (
+  connection,
+  appointmentId,
+  services
+) => {
+  for (const service of services) {
+    await connection.query(
+      `
+      INSERT INTO appointment_services (
+        appointment_id,
+        service_id,
+        service_name_snapshot,
+        price_snapshot,
+        duration_minutes_snapshot,
+        created_at,
+        description
+      )
+      VALUES (?, ?, ?, ?, ?, NOW(), ?)
+      `,
+      [
+        appointmentId,
+        service.service_id || null,
+        service.service_name_snapshot || null,
+        service.price_snapshot || 0,
+        service.duration_minutes_snapshot || 0,
+        service.description || null,
+      ]
+    );
+  }
+};
+
 const findActiveAppointmentOverlap = async (
   connection,
   {
@@ -579,6 +693,8 @@ router.get("/by-user/:userId", async (req, res) => {
         a.reschedule_reason,
         a.reschedule_requested_by,
         TO_CHAR(a.reschedule_requested_at, 'YYYY-MM-DD HH24:MI:SS') AS reschedule_requested_at,
+        a.proposed_services_json,
+        a.proposed_purpose,
         TO_CHAR(a.completed_at, 'YYYY-MM-DD HH24:MI:SS') AS completed_at,
         a.patient_name_snapshot,
         a.patient_phone_snapshot,
@@ -745,30 +861,7 @@ router.post("/book", async (req, res) => {
     const appointmentId = appointmentResult.insertId;
 
     if (Array.isArray(services) && services.length > 0) {
-      for (const service of services) {
-        await connection.query(
-          `
-          INSERT INTO appointment_services (
-            appointment_id,
-            service_id,
-            service_name_snapshot,
-            price_snapshot,
-            duration_minutes_snapshot,
-            created_at,
-            description
-          )
-          VALUES (?, ?, ?, ?, ?, NOW(), ?)
-          `,
-          [
-            appointmentId,
-            service.service_id,
-            service.service_name_snapshot || null,
-            service.price_snapshot || 0,
-            service.duration_minutes_snapshot || 0,
-            service.description || null,
-          ]
-        );
-      }
+      await insertAppointmentServiceSnapshots(connection, appointmentId, services);
     }
 
     await connection.query(
@@ -851,6 +944,192 @@ router.post("/book", async (req, res) => {
   connection.release();
 }
 });
+
+router.patch("/:id/services", async (req, res) => {
+  const connection = await pool.getConnection();
+
+  try {
+    await ensureAppointmentsSchema();
+
+    const { id } = req.params;
+    const { user_id, services = [] } = req.body;
+
+    const [[appointment]] = await connection.query(
+      `
+      SELECT
+        a.id,
+        a.status,
+        a.user_id,
+        a.clinic_id,
+        a.start_at,
+        a.end_at,
+        c.clinic_name,
+        c.status AS clinic_status,
+        c.account_status,
+        c.opening_time,
+        c.closing_time,
+        c.operating_days
+      FROM appointments a
+      JOIN clinics c ON c.id = a.clinic_id
+      WHERE a.id = ?
+      `,
+      [id]
+    );
+
+    if (!appointment) {
+      return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    if (Number(appointment.user_id) !== Number(user_id)) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+
+    if (!["pending", "confirmed"].includes(appointment.status)) {
+      return res.status(400).json({
+        message: "Services can only be changed while an appointment is pending or confirmed.",
+      });
+    }
+
+    const serviceSnapshots = await getServiceChangeSnapshots(
+      connection,
+      appointment.clinic_id,
+      services
+    );
+
+    if (!serviceSnapshots.length) {
+      return res.status(400).json({
+        message: "Please select at least one clinic service.",
+      });
+    }
+
+    const serviceNames = serviceSnapshots
+      .map((service) => service.service_name_snapshot)
+      .filter(Boolean);
+    const purpose = serviceNames.join(", ") || "General appointment";
+    const totalDuration = serviceSnapshots.reduce(
+      (sum, service) => sum + getDurationMinutes(service.duration_minutes_snapshot),
+      0
+    );
+    const startAt = toDatetimeString(appointment.start_at);
+    const newEndAt = addMinutesToDatetimeString(startAt, totalDuration || 30);
+
+    const scheduleConflict = await getScheduleConflict(
+      connection,
+      appointment.clinic_id,
+      startAt,
+      newEndAt,
+      appointment,
+      {
+        userId: appointment.user_id,
+        excludeAppointmentId: appointment.id,
+      }
+    );
+
+    if (scheduleConflict) {
+      return res.status(400).json({ message: scheduleConflict });
+    }
+
+    await connection.beginTransaction();
+
+    if (appointment.status === "pending") {
+      await connection.query(
+        `
+        UPDATE appointments
+        SET
+          end_at = ?,
+          purpose = ?,
+          updated_at = NOW()
+        WHERE id = ?
+        `,
+        [newEndAt, purpose, id]
+      );
+
+      await connection.query(
+        `DELETE FROM appointment_services WHERE appointment_id = ?`,
+        [id]
+      );
+      await insertAppointmentServiceSnapshots(connection, id, serviceSnapshots);
+
+      await connection.query(
+        `
+        INSERT INTO appointment_status_history (
+          appointment_id,
+          old_status,
+          new_status,
+          changed_by,
+          changed_by_id,
+          note,
+          changed_at
+        )
+        VALUES (?, 'pending', 'pending', 'patient', ?, ?, NOW())
+        `,
+        [id, user_id, `Patient updated services to: ${purpose}`]
+      );
+
+      await connection.commit();
+      return res.json({
+        message: "Appointment services updated successfully.",
+        status: "updated",
+      });
+    }
+
+    await connection.query(
+      `
+      UPDATE appointments
+      SET
+        proposed_start_at = start_at,
+        proposed_end_at = ?,
+        proposed_services_json = ?,
+        proposed_purpose = ?,
+        reschedule_reason = ?,
+        reschedule_requested_by = 'patient',
+        reschedule_requested_at = NOW(),
+        status = 'reschedule_requested',
+        updated_at = NOW()
+      WHERE id = ?
+      `,
+      [
+        newEndAt,
+        JSON.stringify(serviceSnapshots),
+        purpose,
+        `Patient requested service change to: ${purpose}`,
+        id,
+      ]
+    );
+
+    await connection.query(
+      `
+      INSERT INTO appointment_status_history (
+        appointment_id,
+        old_status,
+        new_status,
+        changed_by,
+        changed_by_id,
+        note,
+        changed_at
+      )
+      VALUES (?, 'confirmed', 'reschedule_requested', 'patient', ?, ?, NOW())
+      `,
+      [id, user_id, `Patient requested service change to: ${purpose}`]
+    );
+
+    await connection.commit();
+
+    res.json({
+      message: "Service change request sent to the clinic.",
+      status: "requested",
+    });
+  } catch (err) {
+    await connection.rollback().catch(() => {});
+    console.error("Service change error:", err);
+    res.status(err.statusCode || 500).json({
+      message: err.message || "Failed to update appointment services",
+    });
+  } finally {
+    connection.release();
+  }
+});
+
 router.patch("/:id/cancel", async (req, res) => {
   const connection = await pool.getConnection();
 

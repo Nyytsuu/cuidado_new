@@ -1112,6 +1112,17 @@
   resize: vertical;
 }
 
+.booking-field select[multiple] {
+  min-height: 118px;
+  padding: 8px;
+}
+
+.booking-field select[multiple] option {
+  border-radius: 8px;
+  padding: 8px 10px;
+  white-space: normal;
+}
+
 .booking-field-hint {
   color: #6b7f8b;
   font-size: 12px;
@@ -1346,6 +1357,51 @@
 .booking-modal-overlay.front .booking-modal {
   position: relative;
   z-index: 1000000;
+}
+
+.booking-error-dialog-overlay {
+  z-index: 1000002 !important;
+}
+
+.booking-error-dialog {
+  max-width: 420px;
+  text-align: center;
+  border: 1px solid #fecaca;
+}
+
+.booking-error-dialog-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 12px;
+  border-radius: 999px;
+  background: #fef2f2;
+  color: #b91c1c;
+  display: grid;
+  place-items: center;
+}
+
+.booking-error-dialog h2 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 1.35rem;
+}
+
+.booking-error-dialog p {
+  margin: 0;
+  color: #526675;
+  line-height: 1.5;
+}
+
+.booking-error-dialog .booking-modal-actions {
+  align-items: center;
+}
+
+.booking-error-dialog .book-btn {
+  background: #b91c1c;
+}
+
+.booking-error-dialog .book-btn:hover {
+  background: #991b1b;
 }
 
 
